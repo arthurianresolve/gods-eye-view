@@ -518,6 +518,103 @@ function throwingRendererHarness() {
 
 const FIXED_POINT = { lon: -97.7431, lat: 30.2672, height: 0 };
 
+test('screen-only annotations release Cesium demand; an outline reacquires it', async (t) => {
+  installAnimationFrameStubs(t);
+  _resetRenderGovernorForTest();
+  t.after(() => _resetRenderGovernorForTest());
+  let resolveOutline;
+  const { renderer } = fakeRenderer();
+  renderer.requiresContinuousRender = (anno) =>
+    anno.type === 'area' && Array.isArray(anno.ring) && anno.ring.length >= 3;
+  const engine = createAnnotationEngine({
+    viewer: {},
+    renderer,
+    resolveTarget: async () => ({
+      ...FIXED_POINT,
+      source: 'fixture',
+      resolveOutline: () => new Promise((resolve) => { resolveOutline = resolve; }),
+    }),
+  });
+
+  const result = await engine.annotate([{ type: 'area', target: 'Fixture', footprint: true }]);
+  assert.equal(result.drawn, 1);
+  assert.equal(typeof resolveOutline, 'function');
+  assert.ok(!getRenderGovernorDiagnostics().holds.includes('annotations'));
+
+  resolveOutline({
+    ring: [[-97.8, 30.2], [-97.7, 30.2], [-97.7, 30.3], [-97.8, 30.2]],
+    footprintKind: 'area',
+    ...FIXED_POINT,
+  });
+  await flushMicrotasks();
+  assert.ok(getRenderGovernorDiagnostics().holds.includes('annotations'));
+  engine.clear();
+  assert.ok(!getRenderGovernorDiagnostics().holds.includes('annotations'));
+});
+
+test('temporary annotation sleeps during its unchanged TTL and resumes for the fade', async (t) => {
+  const originals = {
+    performance: globalThis.performance,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+    cancelAnimationFrame: globalThis.cancelAnimationFrame,
+    setTimeout: globalThis.setTimeout,
+    clearTimeout: globalThis.clearTimeout,
+  };
+  t.after(() => Object.assign(globalThis, originals));
+  let now = 1000;
+  let sequence = 0;
+  const frames = new Map();
+  const timers = new Map();
+  globalThis.performance = { now: () => now };
+  globalThis.requestAnimationFrame = (callback) => {
+    const id = ++sequence;
+    frames.set(id, callback);
+    return id;
+  };
+  globalThis.cancelAnimationFrame = (id) => frames.delete(id);
+  globalThis.setTimeout = (callback, delay) => {
+    const id = ++sequence;
+    timers.set(id, { callback, delay });
+    return id;
+  };
+  globalThis.clearTimeout = (id) => timers.delete(id);
+  const { renderer } = fakeRenderer();
+  renderer.requiresContinuousRender = () => false;
+  renderer.destroy = () => {};
+  const engine = createAnnotationEngine({
+    viewer: {},
+    renderer,
+    resolveTarget: async () => ({ ...FIXED_POINT, source: 'fixture' }),
+  });
+  const stepFrame = (at) => {
+    now = at;
+    const [id, callback] = frames.entries().next().value;
+    frames.delete(id);
+    callback();
+  };
+
+  await engine.annotate([{ type: 'pin', target: 'Fixture' }], { persist: false });
+  stepFrame(1000);
+  stepFrame(1300);
+  assert.equal(frames.size, 0, 'no RAF runs during the stable TTL');
+  assert.equal(timers.size, 1);
+  assert.equal(timers.values().next().value.delay, 21700);
+
+  now = 23000;
+  const [timerId, timer] = timers.entries().next().value;
+  timers.delete(timerId);
+  timer.callback();
+  assert.equal(frames.size, 1, 'the fade resumes at its original deadline');
+  stepFrame(23000);
+  stepFrame(23600);
+  assert.equal(engine.count(), 1);
+  stepFrame(24201);
+  assert.equal(engine.count(), 0);
+  assert.equal(frames.size, 0);
+  assert.equal(timers.size, 0);
+  engine.destroy();
+});
+
 test('duplicate-replacement: a renderer throw leaves no phantom mark and no leaked hold', async (t) => {
   installAnimationFrameStubs(t);
   _resetRenderGovernorForTest();

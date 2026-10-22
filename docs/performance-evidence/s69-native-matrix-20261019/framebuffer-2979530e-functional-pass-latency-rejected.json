@@ -1,0 +1,186 @@
+{
+  "schema": "gev-framebuffer-functional-pass-latency-rejected-summary/v1",
+  "status": "bounded-functional-pass-no-consistent-native-benefit-not-adopted",
+  "application": {
+    "baseline": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+    "candidate": "2979530ec0d974ae5d351839c678e8d49299f501"
+  },
+  "qaCommit": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "browser": {
+    "product": "Chrome/155.0.8059.85",
+    "executableSha256": "de999bce6a1c954df71a8f15bf751b336172f55ac1a0325bb0580cbc2121268c",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+  },
+  "sourceChange": {
+    "files": ["src/app/viewer.js", "src/app/viewer.test.mjs"],
+    "scope": "Private direct ec0 child changes only the viewer default preserveDrawingBuffer true to false; explicit true override remains. Runtime/defaults on the public branch and production are unchanged.",
+    "adopted": false
+  },
+  "automaticValidation": {
+    "focusedNode24": 222,
+    "focusedNode26": 222,
+    "imports": "passed",
+    "packages": "passed",
+    "isolatedStandardBuild": "passed",
+    "scope": "Revision-bound software/build evidence; no hardware acceptance."
+  },
+  "functionalR5": {
+    "status": "passed-bounded-full-app-functional-only",
+    "raw": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\full-app-capture-ec0-2979530e-chrome85-20261020-r5\\result.json",
+      "bytes": 2134455,
+      "sha256": "4e960d84ec13eb02eef0d59114a6024558bf6d37e1595426d6cf6573d1dc2d04",
+      "status": "passed-full-app-functional-only"
+    },
+    "plan": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\full-app-capture-ec0-2979530e-chrome85-20261020-r5\\plan.json",
+      "sha256": "377f23e16db0674dd3a9919bb34e1eefb245d49e0ec5d0dc1fb4e6832594bbcd"
+    },
+    "review": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\full-app-framebuffer-functional-r5-independent-review-20261020.json",
+      "bytes": 58050,
+      "sha256": "8a755cb0e0728424b97e4f3860a79a263060acea99637b7527934c3c549ae9ff"
+    },
+    "casesPerRole": 10,
+    "imageFilesIndependentlyDecoded": 32,
+    "samePostRenderProductReferencePairsExact": 14,
+    "crossRoleImageComparisonsExact": 4,
+    "crossRoleChangedPixels": 0,
+    "idleParkMs": 2000,
+    "nativeFramesBeforeAfter": {
+      "baseline": [117, 117],
+      "candidate": [117, 117]
+    },
+    "nativePickingDepthHiddenNullAndPendingDestroy": "passed-both-roles",
+    "settlement": {
+      "maximumMsPerCheckpoint": 75000,
+      "maximumRequests": 8,
+      "requiredDistinctCompletedConfirmations": 2,
+      "checkpointCountPerRole": 3,
+      "allOwnersRemovedBeforePark": true,
+      "correction": "Only an eligible completed-frame callback may spend the final reserved validation demand. No bound, geometry predicate, idle or pixel gate was relaxed."
+    },
+    "bothRolesNormalBrowserAndGeometryHelperClosure": true,
+    "performanceCredit": false
+  },
+  "latencyDiagnostic": {
+    "status": "completed-diagnostic-only-no-consistent-native-benefit",
+    "raw": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\framebuffer-preservation-comparison-ec0-2979530e-chrome85-20261020\\process.json",
+      "bytes": 1374906,
+      "sha256": "4c16547c0541d133677b856d7af1a9cf995d351983ebea6b8f79c5c084fbb66d"
+    },
+    "plan": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\framebuffer-preservation-comparison-ec0-2979530e-chrome85-20261020\\plan.json",
+      "sha256": "9e7133865d0615302e8d0c8298878965499680ab2eb95d845fec31a9ab283593"
+    },
+    "review": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\framebuffer-preservation-2979530e-independent-review-20261021.json",
+      "bytes": 31844,
+      "sha256": "cf1a974456a1b73a5801b1692bba59c86206863842a0c3938e47b5bc9ad6e44e"
+    },
+    "actionsPerRole": 6,
+    "firstPairRetained": true,
+    "outcomeRetries": 0,
+    "all12GenerationTimestampTargetMatchedNativeEntries": true,
+    "allFour886AssetInventoriesMatch": true,
+    "allRolesForegroundAndNormalBrowserHelperClosure": true,
+    "contextAttributes": {
+      "baselinePreservation": true,
+      "candidatePreservation": false,
+      "beforeAfterStable": true,
+      "allOtherAttributesStrictlyEqual": true,
+      "contextLost": false,
+      "readsOutsideAllActionDrainSpans": true
+    },
+    "visualSettingsAndNativeViewportStrictlyEqual": true,
+    "extraTimingObserversOrFrames": 0,
+    "comparisonGuardTests": {
+      "actualContext": 8,
+      "originalBoundary": 5,
+      "passed": 13
+    },
+    "roles": {
+      "baseline": {
+        "applicationCommit": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+        "nativeMs": [512, 208, 56, 104, 48, 96],
+        "readinessMs": [
+          695.6999999880791, 30, 136.69999998807907, 12, 119.2999999821186, 10.5
+        ],
+        "completedRenderMs": [
+          701.4000000059605, 39.30000001192093, 140.2999999821186,
+          14.300000011920929, 124.5, 14.800000011920929
+        ],
+        "formalConsumer": {
+          "status": "not-qualified-short-diagnostic",
+          "reason": "Frozen V6 canonical consumer requires all20; this retains6/role and is not rerated.",
+          "retainedFailure": {
+            "message": "Expected values to be strictly equal:\n\n6 !== 20\n",
+            "actual": 6,
+            "expected": 20
+          }
+        }
+      },
+      "candidate": {
+        "applicationCommit": "2979530ec0d974ae5d351839c678e8d49299f501",
+        "nativeMs": [424, 144, 56, 112, 56, 112],
+        "readinessMs": [
+          596.0999999940395, 22.5, 124.90000000596046, 10.799999982118607,
+          108.09999999403954, 10.5
+        ],
+        "completedRenderMs": [
+          600.4000000059605, 28.900000005960464, 127.7000000178814, 16,
+          110.40000000596046, 14.300000011920929
+        ],
+        "formalConsumer": {
+          "status": "not-qualified-short-diagnostic",
+          "reason": "Frozen V6 canonical consumer requires all20; this retains6/role and is not rerated.",
+          "retainedFailure": {
+            "message": "Expected values to be strictly equal:\n\n6 !== 20\n",
+            "actual": 6,
+            "expected": 20
+          }
+        }
+      }
+    },
+    "finding": "First ON/OFF native durations improve descriptively512/208 to424/144ms, but both warm OFF durations worsen104/96 to112/112ms. Warm ON native56/48 to56/56ms has no gain. Both cold candidate actions and both warm OFF actions exceed100ms. Six/role cannot qualify the unchanged20-sample policy."
+  },
+  "immutableEarlierFailures": {
+    "r3": {
+      "status": "failed-functional",
+      "rawSha256": "d11629f5d5f96f9959b169c3b07193d051ec08df7b25025a05a9d289f98441cc",
+      "transferSha256": "ccc80f28d605b24ad1d3fea24b17ab4d1df764b77beb737a64754674885a3a64",
+      "reason": "Unsettled ground retry during idle and cross-role restored geometry staging mismatch; no rerating."
+    },
+    "r4": {
+      "status": "failed-settlement-preparation",
+      "rawSha256": "380edd5276a479355488a2c67463232b3c4c07f125fbdc24632e3aac2309655b",
+      "transferSha256": "658cb8ecac4945c872845fc45182d19903e3320a47fabe0a01a4bc7937d38c06",
+      "reason": "Eight validation demands exhausted before first eligible completed frame; only1of2 confirmations at75s. Prospective R5 source correction does not rerate it."
+    }
+  },
+  "archive": {
+    "transfer": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\framebuffer-r5-and-comparison-transfer-20261021.json",
+      "bytes": 25729,
+      "sha256": "812bc0b405f1a9b0341318380fce3cc4fd920a443c306f982b37a8ec10148585"
+    },
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/framebuffer-ec0-2979530e-r5-functional-pass-short-rejected-20261021",
+    "files": 126,
+    "totalBytes": 5467772,
+    "manifestSha256": "ad4d28749469883e298021ecbc82c0141708ca912bfb81b96bde5aff4bd5b00a",
+    "independentlyVerifiedTwice": true,
+    "existingQaSourceReferencesVerifiedTwice": 39,
+    "priorBuildFilesVerifiedTwice": 32
+  },
+  "disposition": {
+    "adopted": false,
+    "acceptanceEligible": false,
+    "publicRuntimeStill": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+    "productionChanged": false,
+    "oldFailuresReclassified": false,
+    "formal20Started": false,
+    "finalAmpfingSoakStarted": false,
+    "primaryFormalNativeReadinessAndCompletedRenderFailuresRemainOpen": true
+  }
+}

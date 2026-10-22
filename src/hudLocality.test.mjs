@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from './i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The HUD summary's locality tag. The 2026-08-20 QA hunt caught the HUD calling
 // out landmarks on other continents — NEAR SACRE-COEUR (PARIS) 2470KM while
 // parked over Moscow — because the NEAR bound was 2,500 km. These pin the metro

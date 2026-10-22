@@ -1,0 +1,25 @@
+{
+  "schema": "gev-measurement-condition-note/v1",
+  "recordedDate": "2026-10-19",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "affectedCaptureBlock": "infrastructure-datacenters-b3c49b19-native155",
+  "hostActivity": [
+    {
+      "kind": "local-focused-node-tests",
+      "reportedTestDurationMs": 47715,
+      "exactStart": null,
+      "exactEnd": null,
+      "sampleOverlap": "Unresolved: the local tests ran while the datacenter GPU capture block was active; exact phase overlap was not recorded.",
+      "source": "Implementation agent reported the Node test summary duration. No extra browser was launched. A preceding dependency-missing test attempt failed before the passing test run."
+    },
+    {
+      "kind": "sparse-git-checkout-and-status-reads",
+      "exactStart": null,
+      "exactEnd": null,
+      "sampleOverlap": "Ordinary local file I/O occurred during hardware sampling; no additional GPU harness was launched."
+    }
+  ],
+  "interpretation": "The original measurements are preserved. They must not be described as collected on an otherwise idle host. The observed datacenter motion result does not establish a repeatable speedup. Startup remains failed and requires controlled attribution and confirmation; this note cannot convert a failure into a pass.",
+  "remainingTestPlacement": "Focused tests and image decoding run on VM105. Only one Windows GPU/browser job runs at a time.",
+  "acceptanceEligible": false
+}

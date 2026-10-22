@@ -1,0 +1,138 @@
+{
+  "schema": "gev-current190-interaction-heap-summary/v1",
+  "recordedAt": "2026-10-20T03:39:47.219Z",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "producerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "status": "failed",
+  "gate": {
+    "name": "interaction-replay-and-sampled-heap",
+    "status": "failed",
+    "controlCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+    "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+    "metrics": {
+      "localControl": {
+        "status": "failed",
+        "semantic": "trusted input event timestamp to matching application state and active layer output paired within one naturally rendered frame; input delivery delay is included",
+        "baseline": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 570.2000000029802,
+          "inputToRenderedFrameP95Ms": 704.2000000029802
+        },
+        "candidate": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 607.6000000089407,
+          "inputToRenderedFrameP95Ms": 625.3999999910593
+        },
+        "limitMs": 100,
+        "failures": [
+          "input-to-state p95 exceeds the limit",
+          "input-to-rendered-frame p95 exceeds the limit"
+        ]
+      },
+      "loadedReplaySeek": {
+        "status": "measured",
+        "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+        "baseline": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 138.59999999403954,
+          "inputToRenderedFrameP95Ms": 143.8999999910593
+        },
+        "candidate": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 85.1000000089407,
+          "inputToRenderedFrameP95Ms": 90.90000000596046
+        },
+        "limitMs": 250,
+        "failures": []
+      },
+      "sampledPeakHeap": {
+        "status": "measured",
+        "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+        "baselinePeakHeapBytes": 72995604,
+        "candidatePeakHeapBytes": 72584004,
+        "sampleCountByBuild": {
+          "baseline": 78,
+          "candidate": 81
+        },
+        "actualDurationMsByBuild": {
+          "baseline": 88223.4887,
+          "candidate": 87379.28180000003
+        },
+        "changePct": -0.5638695722005397,
+        "regressionOver10Pct": false,
+        "sourceSoakStatus": null,
+        "sourceSoakFailurePreserved": false,
+        "thresholdPct": 10
+      }
+    },
+    "reason": "localControl failed its existing frozen consumer gate"
+  },
+  "environment": "Physical Windows Intel UHD 620; Chrome 155.0.8059.84; native rendering; exact control 76cc760b and candidate 190c5ab6.",
+  "archive": {
+    "directory": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-metrics-190c5ab6-b843cac5-evidence",
+    "transferSha256": "465bb351d53864d8a18a56214319a06a6b13c9a193b735b9fba5b5a0ec48e68e",
+    "files": [
+      {
+        "name": "capture.json",
+        "bytes": 651742,
+        "sha256": "741650e2d7fb4bb6aeeab7f9cbe286444f2a56fd8cc672eabd17a360e58a03d8"
+      },
+      {
+        "name": "process.json",
+        "bytes": 3775,
+        "sha256": "ee411035e49ad4de70757c2b00666f7608347b8704b059e1e83be2f88971652b"
+      },
+      {
+        "name": "wrapper.mjs",
+        "bytes": 6618,
+        "sha256": "e9bc44f2384d0e8f08da3de48ae1b3af443974f7db87023bc66eb769ea5bca8e"
+      },
+      {
+        "name": "baseline.json",
+        "bytes": 174398,
+        "sha256": "9e8654cba43efb6cf3280e304f4e7613e22c3cd7d365675a0b8b0b8764c85470"
+      },
+      {
+        "name": "candidate.json",
+        "bytes": 174766,
+        "sha256": "bf45cd6c605fa11dedfe5a38d5c7b0419cfeb1ce3a09792ebcfc7baadfa54db8"
+      },
+      {
+        "name": "identity-envelope-ref.json",
+        "bytes": 2024,
+        "sha256": "65004269dfa1f4aa0fe7552ecaa3c8814eb1d3f877648a6d6d08cef5a3194855"
+      },
+      {
+        "name": "role-failures.json",
+        "bytes": 321,
+        "sha256": "dd79fcf3a66bc55af3c4a111219a5a67ac6c6194cd05bff9a7deb36a490ca656"
+      },
+      {
+        "name": "consumer-source-manifest.json",
+        "bytes": 17959,
+        "sha256": "04b0df2787370293d49b8061a65a5d26520364e7c056783d416a05ca2fee9eaa"
+      },
+      {
+        "name": "consumer-source-proof.json",
+        "bytes": 4122949,
+        "sha256": "0705deb0121913be5dbb79404657a8f11592352797e5b48459d5b3c2a0ca7db0"
+      },
+      {
+        "name": "archive-review.json",
+        "bytes": 2671,
+        "sha256": "babb18c38c0716ec3f085509c5cc9f381b7b20e2779b2a604403add8b6def621"
+      }
+    ]
+  },
+  "independentReview": {
+    "directory": "/opt/gods-eye-view-validation/s61-s70-20261018/current190-partial-review-20261020-r8",
+    "sha256": "0f601e469bb876c93e9cf9d20b526a546fab0a4ebcf15ef59ed42cb849bbf2c2",
+    "reviewerSha256": "7ed081fbbec6b4b5b84c32ae702bb4e9384b73bc1f14ca6b5a272461144b7d4f"
+  },
+  "limitations": [
+    "Successful operation and cleanup do not override the failed 100 ms local-control latency target.",
+    "The local-control measurement includes trusted pointerdown through layer readiness and a matching naturally completed frame. The actual click boundary and layer preparation phases were not separately timed.",
+    "Peak heap is sampled without forced GC across six mixed-use cycles; this does not replace the full retained-resource soak.",
+    "The identity-only weather source pair is not reused as startup acceptance evidence."
+  ]
+}

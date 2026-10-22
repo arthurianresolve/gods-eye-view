@@ -3,12 +3,37 @@ import assert from 'node:assert/strict';
 import {
   evaluateCandidateReadiness,
   formatPerformanceObjectiveNotes,
+  pendingPerformanceQualificationChecks,
   requiresPerformanceEvidence,
   readValidationManifest,
+  readValidationManifestWithNativeMaps,
 } from './qa-candidate.mjs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+
+test('native manifest reader preserves absent and v1 evidence and rejects a wrong candidate', async () => {
+  assert.equal(await readValidationManifestWithNativeMaps(''), null);
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-native-'));
+  const file = path.join(dir, 'manifest.json');
+  const commit = 'a'.repeat(40);
+  await writeFile(
+    file,
+    JSON.stringify({ schemaVersion: 1, candidateCommit: commit, checks: [] }),
+  );
+  assert.deepEqual(
+    await readValidationManifestWithNativeMaps(file, {
+      candidateCommit: commit,
+    }),
+    readValidationManifest(file, { candidateCommit: commit }),
+  );
+  await assert.rejects(
+    readValidationManifestWithNativeMaps(file, {
+      candidateCommit: 'b'.repeat(40),
+    }),
+    /candidate commit/i,
+  );
+});
 
 test('empty artifacts, wrong per-check commits and conflicting outcomes cannot pass', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-regressions-'));
@@ -78,6 +103,43 @@ test('candidate readiness distinguishes failed required gates from pending envir
       failureCount: 1,
       pendingCount: 1,
     },
+  );
+});
+
+test('performance candidates retain separate native latency and visual gates', () => {
+  const checks = pendingPerformanceQualificationChecks();
+  assert.deepEqual(
+    checks.map(({ id }) => id),
+    ['local-control-latency', 'visual-equivalence'],
+  );
+  assert.equal(evaluateCandidateReadiness(checks).releaseReady, false);
+  assert.equal(evaluateCandidateReadiness(checks).pendingCount, 2);
+});
+
+test('revision-bound external latency and visual evidence is accepted without changing v1 shape', async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-s69-'));
+  const manifestPath = path.join(dir, 'manifest.json');
+  const candidateCommit = 'a'.repeat(40);
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      schemaVersion: 1,
+      candidateCommit,
+      checks: pendingPerformanceQualificationChecks().map(({ id }) => ({
+        id,
+        candidateCommit,
+        status: 'passed',
+        environment: 'Windows Intel UHD 620',
+        timestamp: '2026-10-21T12:00:00Z',
+        artifacts: ['https://example.test/evidence'],
+      })),
+    }),
+  );
+  assert.deepEqual(
+    readValidationManifest(manifestPath, { candidateCommit }).checks.map(
+      ({ id }) => id,
+    ),
+    ['local-control-latency', 'visual-equivalence'],
   );
 });
 
@@ -214,7 +276,7 @@ test('publication verification stays separate from pre-release readiness', async
   );
 });
 
-test('v2 manifests automatically require computed performance gates; v1 remains compatible', async () => {
+test('performance checks in v1 and all v2 manifests require computed performance gates', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'gev-validation-v2-'));
   const manifestPath = path.join(dir, 'manifest.json');
   const candidate = 'a'.repeat(40);
@@ -225,6 +287,30 @@ test('v2 manifests automatically require computed performance gates; v1 remains 
   };
   await writeFile(manifestPath, JSON.stringify(v1));
   assert.equal(requiresPerformanceEvidence({}, manifestPath), false);
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      ...v1,
+      checks: [
+        {
+          id: 'visual-equivalence',
+          outcome: 'failed',
+          environment: 'Windows Chrome physical GPU',
+          timestamp: '2026-10-21T14:12:52Z',
+        },
+      ],
+    }),
+  );
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), true);
+  await writeFile(
+    manifestPath,
+    JSON.stringify({
+      ...v1,
+      checks: [{ id: 'local-control-latency' }],
+    }),
+  );
+  assert.equal(requiresPerformanceEvidence({}, manifestPath), true);
+  await writeFile(manifestPath, JSON.stringify(v1));
   assert.equal(
     requiresPerformanceEvidence({ GEV_REQUIRE_PERFORMANCE_EVIDENCE: '1' }),
     true,
@@ -245,7 +331,7 @@ test('v2 manifests automatically require computed performance gates; v1 remains 
   assert.equal(parsed.performanceEvidence.comparison.status, 'pending');
   assert.equal(
     parsed.performanceEvidence.comparison.acceptancePolicyId,
-    'gev-cesium-acceptance/2026-10-15',
+    'gev-cesium-acceptance/2026-10-18',
   );
   assert.deepEqual(
     formatPerformanceObjectiveNotes([

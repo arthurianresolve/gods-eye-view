@@ -258,6 +258,8 @@ export function readCctvLifecycleCheckpointInPage({
     cameras: cameras.slice(0, 16).map((camera) => ({
       id: String(camera?.id || '').slice(0, 100),
       active: Boolean(camera?.active),
+      decodeStatus: camera?.decodeStatus || null,
+      decodeLastSuccessAt: camera?.decodeLastSuccessAt || null,
     })),
     cameraCount: cameras.length,
     activeCameraId:

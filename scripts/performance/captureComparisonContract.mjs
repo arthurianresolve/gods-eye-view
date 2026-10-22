@@ -7,6 +7,7 @@ import {
 } from './infrastructureWorkloadContract.mjs';
 import {
   AUSTIN_OPERATING_FIXED_TIME,
+  AUSTIN_OPERATING_WORKLOAD_ID,
   AUSTIN_OPERATING_LAYER_COUNTS,
   AUSTIN_OPERATING_RENDERING_STATE,
   AUSTIN_OPERATING_REQUIRED_ALPR_TILES,
@@ -17,12 +18,72 @@ import {
 import { summarizeAustinNativePopulations } from './austinOperatingPopulationEvidence.mjs';
 import { validateReceiptOnlyWorkerAuditEnvelope } from './receiptOnlyWorkerAudit.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
+import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 import {
   MAP_STREAMING_WORKLOAD_ID,
   MAP_STREAMING_CAPTURE_SCHEMA,
 } from './mapStreamingWorkloadContract.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
+export const SETTLED_IDLE_ONLY_INELIGIBLE_REASON =
+  'settled-idle-only-evidence-is-not-full-paired-performance';
+const STARTUP_ONLY_FIXTURES = Object.freeze({
+  'infrastructure-datacenters': Object.freeze({
+    matrixRowId: 'infrastructure-datacenters',
+    workloadId: 'infrastructure-datacenters',
+    fixtureId: 'bundled-datacenters-static-v1',
+  }),
+  'infrastructure-dams': Object.freeze({
+    matrixRowId: 'infrastructure-dams',
+    workloadId: 'infrastructure-dams',
+    fixtureId: 'bundled-dams-static-v1',
+  }),
+  [AUSTIN_OPERATING_WORKLOAD_ID]: Object.freeze({
+    matrixRowId: 'operating-view',
+    workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
+    fixtureId: 'austin-operating-composed-v1',
+  }),
+  'dense-investigation': Object.freeze({
+    matrixRowId: 'dense-investigation',
+    workloadId: 'dense-investigation',
+    fixtureId: DENSE_FLIGHT_FIXTURE_ID,
+  }),
+});
+
+export function isSupportedStartupOnlyFixture(workloadId) {
+  return Object.hasOwn(STARTUP_ONLY_FIXTURES, workloadId);
+}
+
+export function resolveStartupOnlyFixtureIdentity(
+  workloadId,
+  {
+    infrastructureWorkload,
+    austinOperatingWorkload,
+    productionFlightFixture,
+  } = {},
+) {
+  const expected = STARTUP_ONLY_FIXTURES[workloadId];
+  assert.ok(expected, `Unsupported startup-only workload: ${workloadId}`);
+  const fixture =
+    workloadId === AUSTIN_OPERATING_WORKLOAD_ID
+      ? austinOperatingWorkload
+      : workloadId === 'dense-investigation'
+        ? productionFlightFixture
+        : infrastructureWorkload;
+  assert.ok(fixture, `The ${workloadId} startup fixture was not prepared.`);
+  if (workloadId !== 'dense-investigation')
+    assert.equal(fixture.workloadId, expected.workloadId);
+  assert.equal(fixture.id, expected.fixtureId);
+  assert.match(fixture.sha256 || '', SHA256);
+  return {
+    ...(expected.matrixRowId !== expected.workloadId
+      ? { matrixRowId: expected.matrixRowId }
+      : {}),
+    workloadId: fixture.workloadId ?? expected.workloadId,
+    id: fixture.id,
+    sha256: fixture.sha256,
+  };
+}
 const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
   '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
 const hashCanonicalIds = (ids) =>
@@ -219,6 +280,39 @@ export function createObservedDenseComparisonContract({
     'capture and environment populations differ',
   );
   for (const [index, sample] of captures.entries()) {
+    if (
+      environment.nativeSharpnessProfile ||
+      sample.settings?.before?.nativeSharpnessProfile
+    ) {
+      assert.ok(
+        sample.settings?.before?.nativeSharpnessProfile,
+        `capture ${index + 1} is missing its before sharpness profile`,
+      );
+      assert.ok(
+        sample.settings?.after?.nativeSharpnessProfile,
+        `capture ${index + 1} is missing its after sharpness profile`,
+      );
+      assertNativeSharpnessProfile(
+        {
+          environment: {
+            nativeSharpnessProfile:
+              environment.nativeSharpnessProfile ??
+              sample.settings.before.nativeSharpnessProfile,
+          },
+        },
+        `capture ${index + 1} environment`,
+      );
+      assert.deepEqual(
+        sample.settings?.before?.nativeSharpnessProfile,
+        sample.settings?.after?.nativeSharpnessProfile,
+        `capture ${index + 1} sharpness profile changed during measurement`,
+      );
+      assert.deepEqual(
+        sample.settings.before.nativeSharpnessProfile,
+        environment.nativeSharpnessProfile,
+        `capture ${index + 1} sharpness profile differs from report environment`,
+      );
+    }
     assert.deepEqual(
       enabledPopulations(sample.layers, `capture ${index + 1}`),
       populations,
@@ -354,6 +448,7 @@ export function createObservedInfrastructureComparisonContract({
   captures,
   scenarios,
   workload,
+  settledIdleOnly = false,
 } = {}) {
   assertInfrastructureFixtureIdentity(fixture, 'infrastructure fixture');
   assert.ok(
@@ -410,7 +505,17 @@ export function createObservedInfrastructureComparisonContract({
   );
   assert.ok(browserMatch, 'browser identity was not observed');
   assert.ok(Array.isArray(captures) && captures.length > 0);
-  assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
+  assert.equal(typeof settledIdleOnly, 'boolean');
+  if (settledIdleOnly) {
+    assert.equal(fixture.workloadId, 'infrastructure-cables');
+    assert.equal(workload?.warmupMs, 30_000);
+    assert.equal(workload?.durationPerSampleMs, 60_000);
+    assert.equal(workload?.runsPerScenario, 5);
+  }
+  assert.deepEqual(
+    scenarios,
+    settledIdleOnly ? ['idle'] : ['idle', 'scripted-motion'],
+  );
   assert.ok(
     Number.isSafeInteger(workload?.durationPerSampleMs) &&
       workload.durationPerSampleMs > 0,
@@ -573,6 +678,7 @@ export function createObservedInfrastructureComparisonContract({
   return {
     schema: 'gev-performance-comparison-contract/v1',
     workloadId: fixture.workloadId,
+    ...(settledIdleOnly ? { qualificationMode: 'settled-idle-only' } : {}),
     fixture: {
       id: fixture.id,
       sha256: fixture.sha256,
@@ -619,6 +725,7 @@ export function createObservedWeatherEffectsComparisonContract({
   captures,
   scenarios,
   workload,
+  balancedQualificationShard = false,
 } = {}) {
   assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
   assert.equal(fixture?.id, 'weather-effects-austin-phased-v2');
@@ -710,7 +817,7 @@ export function createObservedWeatherEffectsComparisonContract({
   assert.deepEqual(scenarios, ['idle', 'scripted-motion']);
   assert.equal(workload?.warmupMs, 30_000);
   assert.equal(workload?.durationPerSampleMs, 60_000);
-  assert.equal(workload?.runsPerScenario, 5);
+  assert.equal(workload?.runsPerScenario, balancedQualificationShard ? 1 : 5);
   assert.equal(captures?.length, scenarios.length * workload.runsPerScenario);
 
   const expectedPopulations = Object.entries(fixture.expectedLayerCounts)
@@ -963,6 +1070,9 @@ export function createObservedWeatherEffectsComparisonContract({
       weatherEffects: weatherVisual,
     },
     objectiveScenarios: [],
+    ...(balancedQualificationShard
+      ? { qualificationMode: 'balanced-five-pair-shards' }
+      : {}),
   };
 }
 
@@ -978,8 +1088,23 @@ function assertWeatherEffectsRuntimeState(
     state && typeof state === 'object',
     `${label}: runtime state is required`,
   );
+  assert.ok(
+    state.visualState && typeof state.visualState === 'object',
+    `${label}: weather visual state is required`,
+  );
+  // The application stores the filtered satellite mode as numeric 100 in its
+  // live layer parameters. The fixture's historical contract names that same
+  // visual mode "filtered". Canonicalize only this documented representation
+  // at the comparison boundary; retain the raw observation in the report.
+  const observedVisualState = {
+    ...state.visualState,
+    satelliteInfrared:
+      state.visualState.satelliteInfrared === 100
+        ? 'filtered'
+        : state.visualState.satelliteInfrared,
+  };
   assert.deepEqual(
-    state.visualState,
+    observedVisualState,
     visual,
     `${label}: weather settings differ`,
   );
@@ -1894,6 +2019,8 @@ export function getCaptureComparisonIneligibilityReasons({
   hardwareRequired = false,
 } = {}) {
   const reasons = [];
+  if (workload?.settledIdleOnly === true)
+    reasons.push(SETTLED_IDLE_ONLY_INELIGIBLE_REASON);
   if (!fixture) reasons.push('production-provider-fixture-not-used');
   if (fixture && !contract)
     reasons.push('observed-comparison-contract-incomplete');
@@ -1953,8 +2080,10 @@ export function getCaptureComparisonIneligibilityReasons({
   const austinOperatingFixture =
     fixture?.schema === 'gev-austin-operating-fixture/v1';
   const denseFixture = contract?.workloadId === 'dense-investigation';
-  const mapStreamingFixture =
-    fixture?.manifest?.schema === 'gev-map-streaming-fixture/v4';
+  const mapStreamingFixture = [
+    'gev-map-streaming-fixture/v4',
+    'gev-map-streaming-fixture/v5',
+  ].includes(fixture?.manifest?.schema);
   if (mapStreamingFixture) {
     if (workload?.mapStreamingCapture?.performanceAcceptanceEligible !== true)
       reasons.push('map-streaming-five-run-contract-is-incomplete');
@@ -2024,10 +2153,13 @@ export function getCaptureComparisonIneligibilityReasons({
     const receiptOnlyValid = validateReceiptOnlyWorkerAuditEnvelope({
       pageAssetAudit: receiptOnlyWorkerAuditEvidence?.pageAssetAudit,
       appCommit: source?.buildProvenance?.appCommit,
-      harnessCommit: source?.buildProvenance?.harnessCommit,
+      harnessCommit:
+        source?.buildProvenance?.captureProducerCommit ??
+        source?.buildProvenance?.harnessCommit,
       receiptSha256: source?.buildProvenance?.receiptSha256,
       expectedDocuments: receiptOnlyWorkerAuditEvidence?.expectedDocuments,
       expectedAssetPaths: receiptOnlyWorkerAuditEvidence?.expectedAssetPaths,
+      bundlePath: receiptOnlyWorkerAuditEvidence?.bundlePath,
       bundleSha256: receiptOnlyWorkerAuditEvidence?.bundleSha256,
       workerSourceSha256: receiptOnlyWorkerAuditEvidence?.workerSourceSha256,
       allowedModuleCount: receiptOnlyWorkerAuditEvidence?.allowedModuleCount,
@@ -2056,9 +2188,16 @@ export function getCaptureComparisonIneligibilityReasons({
   )
     reasons.push('foreground-continuity-is-incomplete');
   if (sharedDocumentFixture) {
+    const scopedIdle =
+      infrastructureFixture &&
+      fixture.workloadId === 'infrastructure-cables' &&
+      workload?.settledIdleOnly === true &&
+      contract?.qualificationMode === 'settled-idle-only' &&
+      JSON.stringify(workload?.scenarios) === '["idle"]';
     if (
-      !workload?.scenarios?.includes('idle') ||
-      !workload?.scenarios?.includes('scripted-motion')
+      !scopedIdle &&
+      (!workload?.scenarios?.includes('idle') ||
+        !workload?.scenarios?.includes('scripted-motion'))
     )
       reasons.push(
         infrastructureFixture

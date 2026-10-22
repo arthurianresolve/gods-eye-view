@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "phase": "pre-release",
+  "candidateCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+  "checks": [
+    {
+      "id": "visual-equivalence",
+      "candidateCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+      "status": "failed",
+      "environment": "Windows Chrome physical GPU; repeated-full-image-controls-v1; three baseline/candidate pairs",
+      "timestamp": "2026-10-21T14:12:52Z",
+      "artifacts": ["qualification-86abeb79-20261021.json"],
+      "notes": "All 24 PNGs were captured and archived with VM105 readback. The unchanged validator rejected baseline pair-1-baseline-still-settled for lack of an independently reproduced complete-image control."
+    }
+  ]
+}

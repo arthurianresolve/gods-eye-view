@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { APPLICATION_LAYER_METADATA } from '../app/constructCatalog.js';

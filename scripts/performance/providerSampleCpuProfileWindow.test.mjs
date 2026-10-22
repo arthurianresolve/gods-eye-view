@@ -53,6 +53,89 @@ test('profile target selection is exactly two idle samples and first motion', ()
   );
 });
 
+test('tracking profile selects only the first tracked sample', () => {
+  assert.deepEqual(
+    [
+      ['idle', 1],
+      ['scripted-motion', 1],
+      ['selected-aircraft-tracking', 1],
+      ['selected-aircraft-tracking', 2],
+    ].map(([scenario, run]) =>
+      isProviderSampleCpuProfileTarget(scenario, run, 'tracking'),
+    ),
+    [false, false, true, false],
+  );
+  assert.equal(
+    isProviderSampleCpuProfileTarget('selected-aircraft-tracking', 1),
+    false,
+  );
+  assert.equal(
+    isProviderSampleCpuProfileTarget('selected-aircraft-tracking', 1, 'other'),
+    false,
+  );
+});
+
+test('tracking profile has distinct artifact identity and closes the profiler', async () => {
+  const methods = [];
+  const page = {
+    async createCDPSession() {
+      return {
+        async send(method) {
+          methods.push(method);
+          return method === 'Profiler.stop' ? { profile: profile() } : {};
+        },
+        async detach() {
+          methods.push('detach');
+        },
+      };
+    },
+  };
+  const artifactDirectory = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-tracking-profile-'),
+  );
+  try {
+    const window = createProviderSampleCpuProfileWindow({
+      enabled: true,
+      mode: 'tracking',
+      profileRunner: runBoundedBoundaryProfile,
+      page,
+      artifactDirectory,
+      targetScenario: 'selected-aircraft-tracking',
+      targetRun: 1,
+      captureOrdinal: 3,
+      documentRole: 'provider-sample-4',
+      documentId: 'document-4',
+    });
+    await window.started;
+    const record = await window.stop('measurement-boundary-settled');
+    assert.equal(record.status, 'complete');
+    assert.equal(record.performanceAcceptanceEligible, false);
+    assert.deepEqual(methods.slice(-3), [
+      'Profiler.stop',
+      'Profiler.disable',
+      'detach',
+    ]);
+    const index = JSON.parse(
+      await readFile(
+        path.join(
+          artifactDirectory,
+          'provider-selected-aircraft-tracking-1-cpu-profile-ref.json',
+        ),
+        'utf8',
+      ),
+    );
+    assert.deepEqual(index.target, {
+      scenario: 'selected-aircraft-tracking',
+      run: 1,
+      captureOrdinal: 3,
+      documentRole: 'provider-sample-4',
+      documentId: 'document-4',
+    });
+  } finally {
+    await rm(artifactDirectory, { recursive: true, force: true });
+  }
+});
+
 test('profile record insertion is idempotent for synchronous runner callbacks', () => {
   const records = [];
   const initial = { captureOrdinal: 5, status: 'recording' };

@@ -1,0 +1,87 @@
+{
+  "schema": "gev-independent-qualification-metrics-review/v1",
+  "reviewedAt": "2026-10-19T21:47:00.474Z",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "correctnessControlCommit": "3141ffe3ebbaa162f4927827c2b473ecbc12cd22",
+  "captureProducerCommit": "1ef5973e10ea7a7fa16c6fa424b0340fdb71bb4a",
+  "consumerCommit": "1ef5973e10ea7a7fa16c6fa424b0340fdb71bb4a",
+  "captureStatus": "failed",
+  "captureFailure": "Effective settings changed during the measured workload\n+ actual - expected\n... Skipped lines\n\n  {\n    antialias: true,\n    bloom: false,\n    bloomIntensity: 0,\n    densityPct: 75,\n...\n    resolutionScale: 1,\n+   sharpen: false,\n-   sharpen: true,\n    sharpenIntensity: 49,\n    visual: {\n      bloomEnabled: false,\n      bloomIntensity: 0,\n      detectionAllocation: 'ELASTIC',\n      detectionDensityPct: 75,\n+     detectionFadePct: 16,\n-     detectionFadePct: 7,\n      detectionMode: 'DENSE',\n+     detectionOutsideOpacityPct: 5,\n-     detectionOutsideOpacityPct: 1,\n      mapStack: 'osm',\n      scopeEnabled: true,\n+     scopeFeatherPct: 35,\n+     sharpenEnabled: false,\n-     scopeFeatherPct: 11,\n-     sharpenEnabled: true,\n      sharpenIntensity: 49,\n      style: 'normal'\n    }\n  }\n; The expression evaluated to a falsy value:\n\n  assert.ok(Math.abs(pose.latitude - location.latitude) <= 1e-6)\n",
+  "processCode": 1,
+  "metrics": {
+    "schema": "gev-qualification-metrics/v1",
+    "status": "failed",
+    "acceptanceEligible": false,
+    "metrics": {
+      "coldStartup": {
+        "status": "failed",
+        "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+        "baselineMedianMs": 3737,
+        "candidateMedianMs": 4289,
+        "baselineInitialSettleMedianMs": 4671,
+        "candidateInitialSettleMedianMs": 5217,
+        "initialSettleChangePct": 11.689145793192036,
+        "initialSettleRegressionOver10Pct": true,
+        "baselineRunsMs": [
+          5870,
+          3737,
+          4116,
+          3203,
+          3282
+        ],
+        "candidateRunsMs": [
+          4289,
+          3700,
+          3885,
+          4372,
+          4441
+        ],
+        "changePct": 14.771206850414773,
+        "regressionOver10Pct": true,
+        "thresholdPct": 10
+      },
+      "localControl": {
+        "status": "failed",
+        "reason": "Interaction capture failed."
+      },
+      "loadedReplaySeek": {
+        "status": "failed",
+        "reason": "Interaction capture failed."
+      },
+      "sampledPeakHeap": {
+        "status": "failed",
+        "reason": "Effective settings changed during the measured workload\n+ actual - expected\n... Skipped lines\n\n  {\n    antialias: true,\n    bloom: false,\n    bloomIntensity: 0,\n    densityPct: 75,\n...\n    resolutionScale: 1,\n+   sharpen: false,\n-   sharpen: true,\n    sharpenIntensity: 49,\n    visual: {\n      bloomEnabled: false,\n      bloomIntensity: 0,\n      detectionAllocation: 'ELASTIC',\n      detectionDensityPct: 75,\n+     detectionFadePct: 16,\n-     detectionFadePct: 7,\n      detectionMode: 'DENSE',\n+     detectionOutsideOpacityPct: 5,\n-     detectionOutsideOpacityPct: 1,\n      mapStack: 'osm',\n      scopeEnabled: true,\n+     scopeFeatherPct: 35,\n+     sharpenEnabled: false,\n-     scopeFeatherPct: 11,\n-     sharpenEnabled: true,\n      sharpenIntensity: 49,\n      style: 'normal'\n    }\n  }\n; The expression evaluated to a falsy value:\n\n  assert.ok(Math.abs(pose.latitude - location.latitude) <= 1e-6)\n"
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "capture.json",
+      "bytes": 353436,
+      "sha256": "2d9e17639b9fdd88b9bad3db914e74ce488dbdc2e4762955a213a0cba391704a"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1608,
+      "sha256": "347f593794fad01e937746974f0cd12dfb0447cd9e1103b482ecfda122ed7073"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 3150,
+      "sha256": "494b828f1476cd0ac66c491a1f9cee7fcd4a06c4d24b71e50765eebd6159a541"
+    },
+    {
+      "name": "baseline.json",
+      "bytes": 370487,
+      "sha256": "57a4b51e76cd4d576e9a24374c4b7726815e8ed48a590119712aaa811a83aa5c"
+    },
+    {
+      "name": "candidate.json",
+      "bytes": 371130,
+      "sha256": "cb8d5a1c639bc103d2ac8378839be482e6d386315e42cef889c9b2579187d02d"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-metrics-b3c49b19-1ef5973e-evidence",
+  "scope": "Recorded-pose correctness control versus candidate: twenty local controls, twenty loaded replay seeks, and six sampled-heap cycles per build. This is separate from the original-baseline workload comparisons and final forced-GC soak. The source captures also expose startup observations; all original values and flags are retained.",
+  "productionChanged": false
+}

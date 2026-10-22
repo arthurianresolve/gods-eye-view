@@ -1,0 +1,112 @@
+{
+  "schema": "gev-formal-render-trace-independent-readback/v1",
+  "reviewedAt": "2026-10-20T13:04:51.212Z",
+  "status": "reviewed-diagnostic-only",
+  "acceptanceEligible": false,
+  "summary": {
+    "path": "docs/performance-evidence/s69-native-matrix-20261019/formal-render-phase-trace-76-a18c6a76-3fdbcf42-r3-analysis.json",
+    "sha256": "70ed4a4084d5baf8afd626c5a2c0b62b31729e971fb056dc0e4ac8f93acd1606",
+    "priorReviewedSha256": "ec235961d2edecc44760c163972b071be6cd2922bc12af4faff1fe0c05e657c6"
+  },
+  "inputs": {
+    "analysisSha256": "cd388d07f887fa9a3c657a075be4aa161f3657f6ff248bfcc9866849d2c2c085",
+    "sourceProofSha256": "32419eb2c31e4c8803cbdeec07469f496d30e46170c0fde0ec81e3c5ff8e4f18",
+    "findingsSha256": "cad0c39d5888cd5833f7a6193e742a581ed54bb28457334ad311abbbe6e79452",
+    "readerSha256": "f4fc4d9ff0307cbca721025bac7c45560f5ade2395f06925ca2798c3610bae21",
+    "sourceReaderSha256": "b90e4dcf99de83a6d38234b45b530ee2472aa1d8cb62d559c6a24b5c45ec09c8",
+    "archiveReceiptSha256": "29787c3e1366cc81268fcc63dfa5ab6a8d951e6bc8c1c29e05c65821c40da5fc",
+    "builtAssetSha256": "642c0f9ef1090fc4ad61bc6e5f34b2e30026011591ca05e7674af03046bc9dfe"
+  },
+  "checks": {
+    "allTwelveTimingRowsMatchRetainedReader": true,
+    "allThreeOffTaskAndStyleUnionsMatch": true,
+    "allThreeOnDecompositionsSumToReadinessObservationDelta": true,
+    "allPresentationMinusCommitArithmeticMatches": true,
+    "callbackNamesAndBuiltFragmentsMatch": true,
+    "smallEvidenceAndBuiltAssetHashesReadBack": true,
+    "frozenApplicationAndQaSourceAnchorsReadBack": true
+  },
+  "sourceBindings": [
+    {
+      "file": "src/ui/panelLayoutController.js",
+      "revision": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "sha256": "2fe3c086055130a3a892342afaa6cbbc39b89d04583e4a82a383a381f1520851",
+      "anchors": {
+        "leftScheduler": 425,
+        "leftCallback": 429,
+        "rightScheduler": 290,
+        "rightCallback": 294
+      }
+    },
+    {
+      "file": "src/ui/leftPanelRail.js",
+      "revision": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "sha256": "edf1f50d584875a78dfa1d7d5e9240d4d09e096abfd94360509f98e9401bb913",
+      "anchors": {
+        "naturalMeasurementMarker": 170,
+        "diagnosticDatasetWrites": 298
+      }
+    },
+    {
+      "file": "src/ui/layerPanel.js",
+      "revision": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "sha256": "3a95127e6b239aa2b36e02b4d41814626ebc2263f28c754bf01d11bb9f8e4095",
+      "anchors": {
+        "rowControlHiddenAssignment": 559
+      }
+    },
+    {
+      "file": "src/data/visibilityPaint.js",
+      "revision": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "sha256": "02698f6bf5d1689797a8af5a71fe32f89b67cfafae31514ee72fd97b8c0a2673",
+      "anchors": {
+        "rafCallback": 44,
+        "ownedTask": 52,
+        "rafRequest": 63
+      }
+    },
+    {
+      "file": "src/data/localGeojsonCore.js",
+      "revision": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "sha256": "acade51f14e093ecef959e9bf8d9f3065f1acdfacbd337f26ed21ada61fdd20e",
+      "anchors": {
+        "releaseRecords": 549,
+        "lodComputedBeforeGrounding": 1174,
+        "groundingWalk": 1183,
+        "preRenderRegistration": 1289
+      }
+    },
+    {
+      "file": "scripts/qa-qualification-metrics-capture.mjs",
+      "revision": "3fdbcf420c4bf5e4995503ef033b828221116698",
+      "sha256": "b0ea4718f060328d5ddfc11b4a0eb68cda7b87b01f7eb65199bfbb1c258fad7c",
+      "anchors": {
+        "readFrameState": 487,
+        "stateWitness": 929,
+        "earlyPostRenderReturn": 990,
+        "postRenderReread": 1009
+      }
+    }
+  ],
+  "correction": {
+    "field": "sourceAnchors.files[src/data/localGeojsonCore.js].groundingWalk",
+    "from": 1181,
+    "to": 1183,
+    "reason": "The frozen application record loop begins at 1183; 1181 is the preceding closing brace.",
+    "numericResultsChanged": false
+  },
+  "semanticReview": {
+    "readiness": "stateMs is the retained natural preRender readiness observation, not an exact logical-state transition or physical activation timestamp. The early postRender return prevents retrospective recovery of the preceding frame.",
+    "cpu": "The retained callback wall/CPU spans establish main-thread rail work. Nested task/function/style/layout categories are not summed.",
+    "presentation": "Commit and browser presentation metadata locate elapsed intervals; they do not identify a unique GPU, driver, shader, worker or depth-query cause.",
+    "scope": "Six actions per role with tracing and passive observers remain diagnostic. Historical formal failures and acceptance thresholds are unchanged."
+  },
+  "reviewLimits": {
+    "fullTraceRecomputed": false,
+    "browserRun": false,
+    "gpuRun": false,
+    "vmTestRun": false,
+    "rawProcessReparsed": false,
+    "acceptanceRerated": false
+  }
+}

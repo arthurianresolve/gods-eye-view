@@ -1,0 +1,369 @@
+{
+  "schema": "gev-late-readiness-qa-validation/v1",
+  "status": "passed",
+  "baseCommit": "5f055666a7e647ef8dac1eca48536d474a20e30e",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/late-readiness-5f055666-validation-20261020/source",
+  "inputs": [
+    {
+      "file": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 103262,
+      "sha256": "06c3e8cd75760420926da99ca2b6100cd3dea08f0b57946f95761cd104bf5468"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 72285,
+      "sha256": "4f46219e9ecabc22bc39fd933393fc125960d748d3268ed438e7e57c58e11ce7"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 158095,
+      "sha256": "72cbd896e4f485a1e7813f46071b39ec09d2ab7765795564389f978563d51c15"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.mjs",
+      "bytes": 51357,
+      "sha256": "45f6a24ccc56fca2e2288f214e4bbe7ea1c4eaef12dabb1fcbd772bc5fe914af"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.test.mjs",
+      "bytes": 63544,
+      "sha256": "8d007c2ef3d915d16ccd683b03ad4acf72ce98e1b99313109623bd95b2ccc0cf"
+    },
+    {
+      "file": "scripts/format-scope.json",
+      "bytes": 57683,
+      "sha256": "1c5a62662f3cc94df9fa08e6ab19b1bf15860e0f62a4aa4aeeec8dd933068b4c"
+    },
+    {
+      "file": "package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f"
+    }
+  ],
+  "docs": [
+    {
+      "file": "docs/CODE-BOUNDARIES.md",
+      "bytes": 44336,
+      "sha256": "98532776a5cf8a1e4e1fe1efe0d3a36ac04d0b6a3212cd6bd6205ef22cf41f74"
+    },
+    {
+      "file": "docs/APPLICATION.md",
+      "bytes": 11635,
+      "sha256": "d583dd48302f94457524a3be95b373269270a0bf19a109b51d36da74dd69dcf5"
+    },
+    {
+      "file": "docs/SOURCE-ADAPTERS.md",
+      "bytes": 2466,
+      "sha256": "c82a4e3296a494f597b27c400f07ea97036d453000441ab089a9cd97ffff4933"
+    },
+    {
+      "file": "docs/UPDATE-RECOVERY.md",
+      "bytes": 4539,
+      "sha256": "6fd221a6fed75e1f03df2bd18c1351faea4d04154fee11e22c0baa815e5acdaa"
+    },
+    {
+      "file": "docs/UPSTREAM-BUG-TRIAGE.md",
+      "bytes": 3699,
+      "sha256": "26daa5e067c20277335acd1a79560b8aacc9c35dc63db1ae58b042f538838e05"
+    },
+    {
+      "file": "docs/performance-evidence/webgl-delayed-start/README.md",
+      "bytes": 1179,
+      "sha256": "a1d84c9b1767d448847a12d1609bbe8d82f0fe5e7b225b17e6cc010d98ad3962"
+    }
+  ],
+  "dependencyRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/visibility-paint-raf-8c14b106-source/node_modules",
+  "bundle": {
+    "bytes": 52476,
+    "sha256": "dd65b810a218e71d2658135b07cdc0453f472f339c7d5b332b48b1edc13be5e1"
+  },
+  "resourcePreflight": {
+    "availableKiB": 1467916,
+    "swapFreeKiB": 1145496,
+    "diskFreeBytes": 29363101696,
+    "defaultChildMaxOldSpaceMiB": 512,
+    "packageChildMaxOldSpaceMiB": 1024
+  },
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "scripts/performance/interactionEventTiming.test.mjs",
+        "scripts/performance/qualificationMetrics.test.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1449352,
+        "swapFreeKiB": 1145496
+      },
+      "startedAt": "2026-10-20T14:02:54.159Z",
+      "completedAt": "2026-10-20T14:02:55.901Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 8766,
+      "sha256": "cfd372a3743278aa508e6c64f23b0486fc6eeee69d62f06e01c6eed67f77bf77",
+      "tests": 82,
+      "pass": 82,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "eraction observer rejects scenes without a preRender event boundary (0.147975ms)\n✔ interaction input rejects stale, wrong-target/type, untrusted, future and duplicate events (0.552455ms)\n✔ interaction input rejects duplicate and superseded-generation events (0.294187ms)\n✔ natural replay frame rejects changed source time and billboard, then accepts matching output (0.792368ms)\n✔ interaction remains pending without a natural completed frame (0.268798ms)\n✔ replay witness rejects source-only, offscreen and mismatched displayed aircraft (0.263889ms)\n✔ disposed replay frame observers cannot revive a sample (0.315338ms)\n✔ serialized interaction observer completes local and replay render witnesses without module closures (2.917735ms)\n✔ camera setup claims app navigation ownership and waits for two matching completed renders (1.162681ms)\n✔ camera setup fails closed when app navigation ownership is unavailable (0.599385ms)\n✔ sampled peak derives from matched raw timestamped heap series, not old soak summaries (0.525061ms)\n✔ heap consumer rejects absent or malformed series, duplicate/dropped samples, stale timing, wrong build and wrong environment (4.871832ms)\n✔ heap sides require equal planned work but permit unequal realized durations (0.67948ms)\n✔ sampled-heap source durations may differ, but both declared series must cover the six measured cycles (0.623131ms)\n✔ sampled peak regression fails independently of the preserved retention soak result (1.530751ms)\n✔ cold startup keeps app-ready and loading-hidden checks separate and fails either over-ten-percent regression (0.304237ms)\n✔ qualification replay fixture contract matches persisted correction rows and coverage (37.504292ms)\nℹ tests 82\nℹ suites 0\nℹ pass 82\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1682.970538\n"
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1335424,
+        "swapFreeKiB": 1145496
+      },
+      "startedAt": "2026-10-20T14:02:55.902Z",
+      "completedAt": "2026-10-20T14:03:19.835Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-capture-no-undef.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1414832,
+        "swapFreeKiB": 1146520
+      },
+      "startedAt": "2026-10-20T14:03:19.836Z",
+      "completedAt": "2026-10-20T14:03:22.512Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-import-directions.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1396048,
+        "swapFreeKiB": 1146520
+      },
+      "startedAt": "2026-10-20T14:03:22.512Z",
+      "completedAt": "2026-10-20T14:03:24.472Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node24",
+      "name": "packages",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-package-boundaries.mjs"
+      ],
+      "heapCapMiB": 1024,
+      "resourcePreflight": {
+        "availableKiB": 1316052,
+        "swapFreeKiB": 1146520
+      },
+      "startedAt": "2026-10-20T14:03:24.473Z",
+      "completedAt": "2026-10-20T14:03:47.755Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "odules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "scripts/performance/interactionEventTiming.test.mjs",
+        "scripts/performance/qualificationMetrics.test.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1431240,
+        "swapFreeKiB": 1125184
+      },
+      "startedAt": "2026-10-20T14:03:47.783Z",
+      "completedAt": "2026-10-20T14:03:49.559Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 8757,
+      "sha256": "0f7dfbfb958b9ae69aef8cef0382d5abfade6066167bf5d003abfbe3b6d0857c",
+      "tests": 82,
+      "pass": 82,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "interaction observer rejects scenes without a preRender event boundary (0.140741ms)\n✔ interaction input rejects stale, wrong-target/type, untrusted, future and duplicate events (0.587993ms)\n✔ interaction input rejects duplicate and superseded-generation events (0.290911ms)\n✔ natural replay frame rejects changed source time and billboard, then accepts matching output (0.816464ms)\n✔ interaction remains pending without a natural completed frame (0.267665ms)\n✔ replay witness rejects source-only, offscreen and mismatched displayed aircraft (0.256545ms)\n✔ disposed replay frame observers cannot revive a sample (0.333894ms)\n✔ serialized interaction observer completes local and replay render witnesses without module closures (3.07567ms)\n✔ camera setup claims app navigation ownership and waits for two matching completed renders (1.24518ms)\n✔ camera setup fails closed when app navigation ownership is unavailable (0.612571ms)\n✔ sampled peak derives from matched raw timestamped heap series, not old soak summaries (0.584328ms)\n✔ heap consumer rejects absent or malformed series, duplicate/dropped samples, stale timing, wrong build and wrong environment (4.973859ms)\n✔ heap sides require equal planned work but permit unequal realized durations (0.71625ms)\n✔ sampled-heap source durations may differ, but both declared series must cover the six measured cycles (0.665853ms)\n✔ sampled peak regression fails independently of the preserved retention soak result (0.443326ms)\n✔ cold startup keeps app-ready and loading-hidden checks separate and fails either over-ten-percent regression (0.36794ms)\n✔ qualification replay fixture contract matches persisted correction rows and coverage (61.298484ms)\nℹ tests 82\nℹ suites 0\nℹ pass 82\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1695.596624\n"
+    },
+    {
+      "label": "node26",
+      "name": "format",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1451796,
+        "swapFreeKiB": 1125440
+      },
+      "startedAt": "2026-10-20T14:03:49.562Z",
+      "completedAt": "2026-10-20T14:04:12.587Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/check-capture-no-undef.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1475084,
+        "swapFreeKiB": 1126976
+      },
+      "startedAt": "2026-10-20T14:04:12.590Z",
+      "completedAt": "2026-10-20T14:04:15.469Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node26",
+      "name": "imports",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/check-import-directions.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1498508,
+        "swapFreeKiB": 1126976
+      },
+      "startedAt": "2026-10-20T14:04:15.471Z",
+      "completedAt": "2026-10-20T14:04:17.426Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node26",
+      "name": "packages",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/check-package-boundaries.mjs"
+      ],
+      "heapCapMiB": 1024,
+      "resourcePreflight": {
+        "availableKiB": 1494128,
+        "swapFreeKiB": 1127488
+      },
+      "startedAt": "2026-10-20T14:04:17.427Z",
+      "completedAt": "2026-10-20T14:04:40.603Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "odules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    }
+  ],
+  "changedFiles": [],
+  "completedAt": "2026-10-20T14:04:41.220Z",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "dependenciesInstalled": false,
+  "productionChanged": false,
+  "scope": "Exact committed 5f055666 includes prospective readiness v7 and Event Timing v4. Node24/26 focused82 tests and static gates run sequentially, packages capped1024MiB only; no full suite, dependency install, app build, browser, GPU or production write. Existing package ownership check is write:false and emits no application build artifact. No hardware/performance credit."
+}

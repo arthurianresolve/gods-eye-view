@@ -1,0 +1,161 @@
+{
+  "schema": "gev-hosted-preflight-failure-review/v1",
+  "reviewedAt": "2026-10-20T01:34:48.212Z",
+  "status": "failed",
+  "workflowRun": 39352621361,
+  "job": 118400081525,
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39352621361/job/118400081525",
+  "pullRequestHeadCommit": "7ff9736a7a690a4ce240cdc6185d502782c8fd28",
+  "testedCommit": "dabb1c47cc64790f0f3aa313bd80d0d75ea89028",
+  "tree": "9715c17175506c700c72e1a8b1eeb2f5d1fea995",
+  "raw": {
+    "operationStatus": "failed",
+    "error": "Waiting failed: 30000ms exceeded",
+    "datacenterFixtureProtocol": "cdp-fetch-fulfilled-hash-count-v1",
+    "fullSoak": false,
+    "hardwareRenderingValidated": false,
+    "stability": {
+      "status": "pending",
+      "pending": ["Run failed before measurement."]
+    },
+    "datacenterFixtureReceipt": {
+      "schema": "gev-soak-datacenter-fixture/v2",
+      "fulfillmentProtocol": "cdp-fetch-fulfilled-hash-count-v1",
+      "status": "validated",
+      "requestCount": 1,
+      "preparedRequestCount": 1,
+      "fulfilledRequestCount": 1,
+      "applicationOrigin": "http://localhost:4174",
+      "assetOrigin": "http://localhost:4174",
+      "assetPath": "/src/data/local_data/datacenters/datacenters.geojsonl",
+      "responseStatus": 200,
+      "expectedBodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+      "expectedFeatureCount": 8,
+      "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+      "deliveredFeatureCount": 8,
+      "materializedFeatureCount": 8,
+      "disabledMaterializedFeatureCount": 0,
+      "disabledRenderableCount": 0,
+      "setupTiming": "unmeasured-before-interaction-samples",
+      "preloadEnabledObserved": true,
+      "preloadEnabledState": {
+        "enabled": true,
+        "computed": true,
+        "total": 8,
+        "active": 8,
+        "populationObserved": true,
+        "renderableObserved": true,
+        "renderedFrameObserved": true,
+        "observed": true,
+        "failureReason": null
+      },
+      "preloadCameraPose": {
+        "requested": {
+          "latitude": 40.7,
+          "longitude": -73.9,
+          "altitude": 1000
+        },
+        "observed": {
+          "latitude": 40.699999999999996,
+          "longitude": -73.9,
+          "altitude": 1000.0000000010535
+        },
+        "heading": 6.283185307179586,
+        "pitch": -1.5707963267948966,
+        "roll": 0,
+        "frameNumber": 49
+      },
+      "preloadFailureCameraPose": null,
+      "preloadRenderedFrameStart": 0,
+      "preloadRenderedFrameEnd": 3,
+      "preloadRenderWitness": {
+        "renderedFrames": 3,
+        "frameNumber": 50,
+        "enabled": true,
+        "computed": true,
+        "total": 8,
+        "active": 8
+      },
+      "preloadRenderedFrameObserved": true,
+      "preloadWitnessCollectionStopped": true,
+      "preloadDisabledObserved": true,
+      "failureReason": null,
+      "requests": [
+        {
+          "origin": "http://localhost:4174",
+          "pathname": "/src/data/local_data/datacenters/datacenters.geojsonl",
+          "prepared": true,
+          "fulfilled": true,
+          "responseStatus": 200,
+          "bodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5",
+          "deliveredFeatureCount": 8
+        }
+      ]
+    },
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "effectiveCloseDeadlineMs": 5000,
+        "postDisconnectExitTimeoutMs": 5000,
+        "postDisconnectExitWaitAttempted": false,
+        "closeStartHostMs": 60559.427484,
+        "closeSettledHostMs": 60676.869419,
+        "closeElapsedMs": 117.44193500000256,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 99.41181199999846
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    },
+    "candidateCommit": "dabb1c47cc64790f0f3aa313bd80d0d75ea89028",
+    "harnessCommit": "dabb1c47cc64790f0f3aa313bd80d0d75ea89028",
+    "sourceDirtyAtStart": false,
+    "harnessDirtyAtStart": false,
+    "sourceChangedDuringRun": false,
+    "harnessChangedDuringRun": false
+  },
+  "hardwareAcceptance": false,
+  "interpretation": "Failed hosted mixed-use gate. Failure-time diagnostics are preserved without classifying a root cause or changing acceptance thresholds.",
+  "files": [
+    {
+      "name": "job.log",
+      "bytes": 73692,
+      "sha256": "f58a0ba632c9dc6242c0dbb38abe80266a47a44121aff4bf3a6ff2c3482ef14d"
+    },
+    {
+      "name": "job.json",
+      "bytes": 4758,
+      "sha256": "024ee9efefb5af3f93c624c73534de44d079f97048880b314097b3eddc0fcacc"
+    },
+    {
+      "name": "run.json",
+      "bytes": 14198,
+      "sha256": "cf8dee14c4b5679ce23ff76d3435f170341d2868b7d8205ddf644cf04b14ba1f"
+    },
+    {
+      "name": "head-commit.json",
+      "bytes": 1285,
+      "sha256": "9ad5687c246438dd03f4120ad5a99e173ee412eb5f9301b74f4e46d58ae5774b"
+    },
+    {
+      "name": "tested-commit.json",
+      "bytes": 2767,
+      "sha256": "62c7f88fbfc7203ac6172069ed4fd4bb2ca41a2e82e69ad15a15757c60464368"
+    }
+  ]
+}

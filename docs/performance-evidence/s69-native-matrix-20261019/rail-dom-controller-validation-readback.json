@@ -1,0 +1,111 @@
+{
+  "schema": "gev-rail-dom-controller-validation-independent-readback/v1",
+  "status": "exact-receipt-source-and-five-logs-verified",
+  "verifiedAt": "2026-10-20T13:03:20.398Z",
+  "receipt": {
+    "local": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\rail-dom-controller-validation-20261020/validation.json",
+    "remote": "/opt/gods-eye-view-validation/s61-s70-20261018/rail-dom-controller-validation-20261020/validation.json",
+    "bytes": 10476,
+    "sha256": "3911c2923598e5ac110af47616f726700c1dd12b3d8235a495f4d7fe4bb7f869"
+  },
+  "baseCommit": "fb38992850a0e082e8c9147904f87846cc8e2520",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/rail-dom-controller-validation-20261020/source",
+  "sourceClean": true,
+  "inputs": [
+    {
+      "file": "src/ui/leftPanelRail.js",
+      "bytes": 13263,
+      "sha256": "75b03a726d124e5ef3f993ed2c961a2e9aaa7192aa76b3f6ff10d292ea2b24c4"
+    },
+    {
+      "file": "src/ui/rightPanelRail.js",
+      "bytes": 13969,
+      "sha256": "d6b521ca6cb0049a0ccf4f0b05aa00d1e4536b9034ddbdbd23bd42211712fa3e"
+    },
+    {
+      "file": "src/ui/layerPanel.js",
+      "bytes": 31647,
+      "sha256": "3cdc1bde982b0a42944e86ea6dc08aeddec8a7598ac63b7a1e52dec62f114b97"
+    },
+    {
+      "file": "src/ui/panelRails.test.mjs",
+      "bytes": 41186,
+      "sha256": "aae03754caabb57070892facbf78b1ebd673827594f40fd09a4516fa6054b6f2"
+    },
+    {
+      "file": "src/ui/layerPanel.test.mjs",
+      "bytes": 23996,
+      "sha256": "9d3d99de28cccffb607bc6bc7cbf0e90cde6a9573116459b6d0dc2a1e56ac569"
+    },
+    {
+      "file": "src/ui/panelLayoutController.js",
+      "bytes": 19821,
+      "sha256": "c394deb2c375176e2f6b351d9dab8f77e96ef064a05b7736c56be9c6fa7c2460"
+    },
+    {
+      "file": "src/ui/shellLifecycle.test.mjs",
+      "bytes": 19925,
+      "sha256": "0a7a5e9a62a2e0fd4ddfe64a5dea0a84ee04f67bda47031eacf7dd5edc2f1f3b"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "exitCode": 0,
+      "tests": 77,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0,
+      "log": "node24-focused.log",
+      "bytes": 7487,
+      "sha256": "203c3e833c8cf15848b70a73240739c79429cf57158818f7cc73987ecd98a5e7"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "exitCode": 0,
+      "tests": 77,
+      "pass": 77,
+      "fail": 0,
+      "skipped": 0,
+      "log": "node26-focused.log",
+      "bytes": 7670,
+      "sha256": "a78b0d1e9a24ddb2a3f2e5273676752e0f59109eef9e5ade78abeee65ebb2270"
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "exitCode": 0,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "exitCode": 0,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "exitCode": 0,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186"
+    }
+  ],
+  "formatFiles": 1827,
+  "captureNoUndefFiles": 107,
+  "imports": {
+    "modules": 1077,
+    "portableEntries": 82
+  },
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false,
+  "scope": "Exact committed source and existing behavior/static evidence only; no tests rerun during readback and no performance or hardware credit."
+}

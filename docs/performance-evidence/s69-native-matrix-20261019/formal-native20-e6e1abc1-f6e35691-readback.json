@@ -1,0 +1,79 @@
+{
+  "schema": "gev-formal-native-qualification-readback/v1",
+  "status": "all-raw-files-stream-verified",
+  "result": {
+    "file": "formal-native20-e6e1abc1-f6e35691-result.json",
+    "bytes": 10188,
+    "sha256": "2e61fff92f745f96a978da01f4e443822141b3958bf7216e67e8e24778dd03a1"
+  },
+  "localDirectory": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\qualification-metrics-e6e1abc1-f6e35691-native-window",
+  "vmDirectory": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-metrics-e6e1abc1-f6e35691-native-window-complete-20261020",
+  "transferredFiles": 15,
+  "transferredBytes": 2723889,
+  "checksumMethod": "Local streaming SHA256 before and after transfer; independent remote streaming SHA256 and exact regular-file inventory; fresh destination, no overwrite.",
+  "transferReceipt": {
+    "file": "qa-artifacts/formal-native20-e6e1abc1-f6e35691-transfer-20261020.json",
+    "bytes": 2643,
+    "sha256": "e282ba836b8c20eaa75d6bfbecc10bcb94951ea73e2ae4415037e94bea5f6a61"
+  },
+  "evidence": [
+    {
+      "file": "capture.json",
+      "bytes": 2597962,
+      "sha256": "a175cdf155077314ee664d55a5a80f7278701ba61dd393b980a60b6806b60183"
+    },
+    {
+      "file": "review.json",
+      "bytes": 3050,
+      "sha256": "ac96e322ce9ff445dff721cc38ce1c16ef23736dbd7161445e017b90249d0340"
+    },
+    {
+      "file": "review-provenance.json",
+      "bytes": 2516,
+      "sha256": "48c56679523ea0817c832fce1a915c4f77de4790d0c5fba974e30e758127b92e"
+    },
+    {
+      "file": "local-control-readback.json",
+      "bytes": 62682,
+      "sha256": "c229448d820130a6bc1945ce0b4ecaeb2d465bfef4a00b99db3fb6b573ec7e95"
+    },
+    {
+      "file": "build-identity-plan.json",
+      "bytes": 3423,
+      "sha256": "15e6aaf80ca52e14e6e3088d7af632e8970e5e056c8e9b8a7f6c2a177fa72e27"
+    },
+    {
+      "file": "launch-plan.json",
+      "bytes": 6481,
+      "sha256": "41418ad3b89912c564a8baa4cc0f987e0337c7d86512c6df75e65b6e08c13ebf"
+    },
+    {
+      "file": "process.json",
+      "bytes": 3330,
+      "sha256": "40d36c76ce4b42d2a3c966e980087c872c58aa93e5a2932f01a4d8cd8e9f8b49"
+    },
+    {
+      "file": "capture.log",
+      "bytes": 21123,
+      "sha256": "7330e993cf1ee46926d44b3b0130c42b8110e63f5f222bb99ed241aaf8f597d3"
+    },
+    {
+      "file": "run-conditions.json",
+      "bytes": 2259,
+      "sha256": "4b23f4a611e576111cdce3dfac3c2ea88bca6b0a9d469d04479343c8fd5ae306"
+    },
+    {
+      "file": "sealed-inventory.json",
+      "bytes": 2483,
+      "sha256": "5285e4ec9f12f810b93743c9567481970a62eb92a1e37bb3c506999de23c97cb"
+    }
+  ],
+  "sourceFreeze": {
+    "file": "qualification-build-identity-freeze-f6e35691-20261020.json",
+    "sha256": "932a91dc8a7188604979a43805ff35888d12b0e350b482d4690a30efa3bb4563"
+  },
+  "reviewInputs": "Complete buildIdentityEvidence parent envelope plus digest-bound interactionEvidence and sampledHeapEvidence; baseline/candidate performance captures omitted.",
+  "offlineImportFailureRetained": "Initial offline review omitted dependency resolver and failed before evaluation with ERR_MODULE_NOT_FOUND cesium. The corrected offline-only invocation used the existing resolver; no capture was repeated.",
+  "productionChanged": false,
+  "gpuLeaseReleased": true
+}

@@ -15,6 +15,7 @@ import { applicationServices } from './services/application.js';
  */
 
 import * as Cesium from 'cesium';
+import { greatCircleKm } from './geoDistance.js';
 import { forward as toMGRS } from 'mgrs';
 import { CITY_POIS } from './cityPois.js';
 import { composeLocalityTag } from './hudLocality.js';
@@ -211,6 +212,15 @@ export class IntelHUD {
     this._destroyed = false;
     this._lastSummarySignature = '';
     this._summaryRevision = 0;
+    this._onVisibilityChange = () => {
+      if (document.hidden) return;
+      const timestamp = document.getElementById('hud-timestamp');
+      this._setHudText(timestamp, this._formatUTC());
+      const dot = document.getElementById('hud-rec-dot');
+      if (dot)
+        dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
+      if (this._visible) this._updateCameraData();
+    };
     // One-shot guards so the very first summary lands immediately instead of
     // waiting for the 15s interval tick: B) swap the "Awaiting telemetry..."
     // placeholder for the deterministic line as soon as metrics exist, then
@@ -257,6 +267,7 @@ export class IntelHUD {
 
     this._buildDOM();
     this.viewer.camera.moveEnd.addEventListener(this._onCameraMoveEnd);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
     this._startTimers();
   }
 
@@ -343,13 +354,15 @@ export class IntelHUD {
   _startTimers() {
     // Timestamp — every second
     this._timestampInterval = setInterval(() => {
+      if (document.hidden) return;
       const el = document.getElementById('hud-timestamp');
-      if (el) el.textContent = this._formatUTC();
+      this._setHudText(el, this._formatUTC());
     }, 1000);
 
     // REC blink — every 800ms
     this._recBlinkInterval = setInterval(() => {
       this._recBlinkState = !this._recBlinkState;
+      if (document.hidden) return;
       const dot = document.getElementById('hud-rec-dot');
       if (dot)
         dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
@@ -381,6 +394,11 @@ export class IntelHUD {
     const mi = String(now.getUTCMinutes()).padStart(2, '0');
     const s = String(now.getUTCSeconds()).padStart(2, '0');
     return `${y}-${mo}-${d} ${h}:${mi}:${s}Z`;
+  }
+
+  /** Update a HUD node only when its visible value changed. */
+  _setHudText(element, value) {
+    if (element && element.textContent !== value) element.textContent = value;
   }
 
   /**
@@ -441,20 +459,23 @@ export class IntelHUD {
       mgrsLabel = formatted;
       const el = document.getElementById('hud-mgrs');
       // i18n-ignore: sensor codes
-      if (el) el.textContent = `MGRS: ${formatted}`;
+      this._setHudText(el, `MGRS: ${formatted}`);
     } catch {
       const el = document.getElementById('hud-mgrs');
       // i18n-ignore: sensor codes
-      if (el) el.textContent = 'MGRS: ---';
+      this._setHudText(el, 'MGRS: ---');
     }
 
     // Lat/Lon DMS
     const llEl = document.getElementById('hud-latlon');
-    if (llEl) llEl.textContent = `${latDMS} ${lonDMS}`;
+    this._setHudText(llEl, `${latDMS} ${lonDMS}`);
     const bottomEl = document.getElementById('hud-bottom-line');
     if (bottomEl) {
       // i18n-ignore: sensor codes
-      bottomEl.textContent = `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`;
+      this._setHudText(
+        bottomEl,
+        `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`,
+      );
     }
 
     // GSD (Ground Sample Distance): approximate resolution in meters per pixel
@@ -470,7 +491,10 @@ export class IntelHUD {
     const gsdEl = document.getElementById('hud-gsd');
     if (gsdEl)
       // i18n-ignore: sensor codes
-      gsdEl.textContent = `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`;
+      this._setHudText(
+        gsdEl,
+        `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`,
+      );
 
     // Altitude — reported as height above MEAN SEA LEVEL. `altM` is the raw
     // ellipsoidal camera height, which reads far below zero wherever the geoid
@@ -483,7 +507,10 @@ export class IntelHUD {
     const sunEl = this._estimateSunElevation(latDeg, lonDeg);
     if (altEl)
       // i18n-ignore: sensor codes
-      altEl.textContent = `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`;
+      this._setHudText(
+        altEl,
+        `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`,
+      );
 
     // Collection timestamp
     const collEl = document.getElementById('hud-coll');
@@ -493,7 +520,7 @@ export class IntelHUD {
       const m = String(now.getUTCMinutes()).padStart(2, '0');
       const s = String(now.getUTCSeconds()).padStart(2, '0');
       // i18n-ignore: sensor codes
-      collEl.textContent = `COLL: ${h}:${m}:${s}Z`;
+      this._setHudText(collEl, `COLL: ${h}:${m}:${s}Z`);
     }
 
     // Off-nadir angle (ONA): camera pitch of -90 deg is nadir (straight down),
@@ -502,7 +529,7 @@ export class IntelHUD {
     const ona = Math.max(0, 90 + pitchDeg);
     const onaEl = document.getElementById('hud-ona');
     // i18n-ignore: sensor codes
-    if (onaEl) onaEl.textContent = `ONA: ${ona.toFixed(1)}°`;
+    this._setHudText(onaEl, `ONA: ${ona.toFixed(1)}°`);
 
     // `altM` stays the raw ellipsoidal camera height the sensor model reads
     // (GSD/NIIRS, view band). `altMslM` is the ADDITIVE display datum — the
@@ -691,13 +718,7 @@ export class IntelHUD {
    * @returns {number} Distance in kilometers.
    */
   _haversineKm(lat1, lon1, lat2, lon2) {
-    const toRad = (deg) => Cesium.Math.toRadians(deg);
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return greatCircleKm({ lat: lat1, lon: lon1 }, { lat: lat2, lon: lon2 });
   }
 
   /**
@@ -898,7 +919,7 @@ export class IntelHUD {
       return;
     }
     const el = document.getElementById('hud-summary');
-    if (el) el.textContent = text;
+    this._setHudText(el, text);
   }
 
   async _summaryContext() {
@@ -1069,6 +1090,7 @@ export class IntelHUD {
     clearInterval(this._summaryInterval);
     clearInterval(this._summaryTypingInterval);
     this.viewer.camera.moveEnd.removeEventListener(this._onCameraMoveEnd);
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
     this._dataManagerUnsubscribe?.();
     this._summaryRequest?.abort();
   }

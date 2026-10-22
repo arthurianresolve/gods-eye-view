@@ -19,6 +19,7 @@ const POINT_REPRESENTATIONS = new Set(['entity', 'primitive-collection']);
 const POINT_PRIMITIVE_COUNT_MAX = 5_000;
 const POINT_PRIMITIVE_COUNT_UNIT = 'instances';
 const POINT_PRIMITIVE_COVERAGE = 'owned-import-point-collection';
+const RENDERER_CACHE = new WeakMap();
 
 function finite(value) {
   return Number.isFinite(value) ? value : null;
@@ -31,6 +32,30 @@ function clone(value) {
   } catch {
     return null;
   }
+}
+
+function percentile(values, fraction) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[
+    Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)
+  ];
+}
+
+function framePercentiles(samples) {
+  const values = samples
+    .filter(
+      (sample) =>
+        sample.name === 'frameInterval' &&
+        sample.metadata?.mayIncludeIntentionalIdle === false,
+    )
+    .map((sample) => sample.durationMs);
+  return {
+    eligibleFrameCount: values.length,
+    p50Ms: percentile(values, 0.5),
+    p95Ms: percentile(values, 0.95),
+    p99Ms: percentile(values, 0.99),
+  };
 }
 
 /** Bounded, local-only performance diagnostics for reproducible captures. */
@@ -71,6 +96,7 @@ export class PerformanceSnapshot {
     scene = {},
     timings = {},
   } = {}) {
+    const samples = this.samples.map((sample) => ({ ...sample }));
     return {
       schema: 'gev-performance-snapshot/v1',
       capturedAt: new Date().toISOString(),
@@ -80,8 +106,9 @@ export class PerformanceSnapshot {
       scene: clone(scene) || {},
       resources: clone(resources) || {},
       timings: clone(timings) || {},
+      framePercentiles: framePercentiles(samples),
       counters: Object.fromEntries(this.counters),
-      samples: this.samples.map((sample) => ({ ...sample })),
+      samples,
     };
   }
 }
@@ -158,6 +185,7 @@ export function createPerformanceMonitor({
   readOwnership = () => null,
   appCommit = null,
   harnessCommit = null,
+  observeLongTasks = false,
   now = () => globalThis.performance?.now?.() ?? Date.now(),
 } = {}) {
   let snapshot = null;
@@ -168,6 +196,13 @@ export function createPerformanceMonitor({
   let active = false;
   let destroyed = false;
   let removeListener = null;
+  let longTaskObserver = null;
+  let observerGeneration = 0;
+  let removeContextListeners = null;
+  let removeTileListener = null;
+  let removeVisibilityListener = null;
+  let tileLoadBacklog = null;
+  let longTaskStatus = observeLongTasks ? 'unavailable' : 'disabled';
   const onPostRender = () => {
     if (!active) return;
     const current = now();
@@ -187,6 +222,17 @@ export function createPerformanceMonitor({
     if (destroyed || active === nextEnabled) return;
     if (removeListener) removeListener();
     removeListener = null;
+    longTaskObserver?.disconnect();
+    longTaskObserver = null;
+    observerGeneration += 1;
+    removeContextListeners?.();
+    removeContextListeners = null;
+    removeTileListener?.();
+    removeTileListener = null;
+    removeVisibilityListener?.();
+    removeVisibilityListener = null;
+    longTaskStatus = observeLongTasks ? 'unavailable' : 'disabled';
+    tileLoadBacklog = null;
     active = nextEnabled;
     enabled = active;
     previousFrameAt = null;
@@ -196,12 +242,69 @@ export function createPerformanceMonitor({
     }
     if (!snapshot) snapshot = new PerformanceSnapshot({ now });
     scene = viewer?.scene;
+    invalidatePerformanceEnvironmentCache(scene?.context?._gl);
     if (scene?.postRender?.addEventListener) {
       const unsubscribe = scene.postRender.addEventListener(onPostRender);
       removeListener =
         typeof unsubscribe === 'function'
           ? unsubscribe
           : () => scene.postRender.removeEventListener?.(onPostRender);
+    }
+    const generation = observerGeneration;
+    if (
+      observeLongTasks &&
+      typeof PerformanceObserver === 'function' &&
+      PerformanceObserver.supportedEntryTypes?.includes('longtask')
+    ) {
+      try {
+        longTaskObserver = new PerformanceObserver((list) => {
+          if (!active || destroyed || generation !== observerGeneration) return;
+          for (const entry of list.getEntries())
+            snapshot.record('longTask', entry.duration, {
+              startTime: entry.startTime,
+            });
+        });
+        longTaskObserver.observe({ type: 'longtask', buffered: false });
+        longTaskStatus = 'observing';
+      } catch {
+        longTaskObserver?.disconnect();
+        longTaskObserver = null;
+      }
+    }
+    const progress = scene?.globe?.tileLoadProgressEvent;
+    if (progress?.addEventListener) {
+      const onProgress = (count) => {
+        if (
+          active &&
+          generation === observerGeneration &&
+          Number.isSafeInteger(count) &&
+          count >= 0
+        )
+          tileLoadBacklog = count;
+      };
+      removeTileListener =
+        progress.addEventListener(onProgress) ||
+        (() => progress.removeEventListener?.(onProgress));
+    }
+    const documentRef = globalThis.document;
+    if (documentRef?.addEventListener) {
+      const visibility = () => {
+        previousFrameAt = null;
+      };
+      documentRef.addEventListener('visibilitychange', visibility);
+      removeVisibilityListener = () =>
+        documentRef.removeEventListener('visibilitychange', visibility);
+    }
+    const canvas = scene?.canvas;
+    if (canvas?.addEventListener) {
+      const invalidate = () =>
+        invalidatePerformanceEnvironmentCache(scene?.context?._gl);
+      canvas.addEventListener('webglcontextlost', invalidate);
+      canvas.addEventListener('webglcontextrestored', invalidate);
+      removeContextListeners = () => {
+        canvas.removeEventListener('webglcontextlost', invalidate);
+        canvas.removeEventListener('webglcontextrestored', invalidate);
+      };
     }
   }
   if (enabled) setEnabled(true);
@@ -229,6 +332,12 @@ export function createPerformanceMonitor({
       retainedRenderedFrameCount: snapshot ? frameCount : null,
       resources: null,
       timings: null,
+      framePercentiles: {
+        eligibleFrameCount: null,
+        p50Ms: null,
+        p95Ms: null,
+        p99Ms: null,
+      },
       counters: snapshot ? Object.fromEntries(snapshot.counters) : {},
       samples: snapshot
         ? snapshot.samples.map((sample) => ({ ...sample }))
@@ -246,6 +355,7 @@ export function createPerformanceMonitor({
         appCommit,
         harnessCommit,
       });
+      const diagnostics = readDiagnostics();
       return {
         ...snapshot.snapshot({
           identity: environment,
@@ -259,10 +369,12 @@ export function createPerformanceMonitor({
               ? readResourceCounts({
                   viewer,
                   dataManager,
-                  diagnostics: readDiagnostics(),
+                  diagnostics,
                   ownership: readOwnership(),
                 })
               : {}),
+            tileLoadBacklog,
+            drawCalls: null,
             ...(clone(extra.resources) || {}),
           },
           timings: {
@@ -270,6 +382,7 @@ export function createPerformanceMonitor({
               ? {
                   gpuExecutionMs: null,
                   frameIntervalScope: 'completed-frame-wall-time',
+                  longTaskStatus,
                 }
               : {}),
             ...(enabled ? clone(readTimings()) || {} : {}),
@@ -278,11 +391,21 @@ export function createPerformanceMonitor({
         }),
         available: true,
         historyScope: 'since-first-enable',
+        renderDemand: {
+          mode: diagnostics?.mode ?? null,
+          holds: Array.isArray(diagnostics?.holds)
+            ? diagnostics.holds
+                .slice(0, MAX_RESOURCE_OWNERS)
+                .map((owner) => String(owner).slice(0, 64))
+            : null,
+        },
       };
     },
     destroy() {
       if (destroyed) return;
       setEnabled(false);
+      longTaskObserver?.disconnect();
+      longTaskObserver = null;
       destroyed = true;
     },
   };
@@ -298,16 +421,24 @@ export function readPerformanceEnvironment({
   const gl = viewer?.scene?.context?._gl || null;
   let renderer = null;
   let vendor = null;
-  try {
-    const extension = gl?.getExtension?.('WEBGL_debug_renderer_info');
-    renderer =
-      gl?.getParameter?.(extension?.UNMASKED_RENDERER_WEBGL || gl?.RENDERER) ||
-      null;
-    vendor =
-      gl?.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL || gl?.VENDOR) ||
-      null;
-  } catch {
-    // Renderer strings are optional and must never break the application.
+  if (gl) {
+    const cached = RENDERER_CACHE.get(gl);
+    if (cached) ({ renderer, vendor } = cached);
+    else {
+      try {
+        const extension = gl.getExtension?.('WEBGL_debug_renderer_info');
+        renderer =
+          gl.getParameter?.(
+            extension?.UNMASKED_RENDERER_WEBGL || gl.RENDERER,
+          ) || null;
+        vendor =
+          gl.getParameter?.(extension?.UNMASKED_VENDOR_WEBGL || gl.VENDOR) ||
+          null;
+      } catch {
+        // Renderer strings are optional and must never break the application.
+      }
+      RENDERER_CACHE.set(gl, { renderer, vendor });
+    }
   }
   const layers = dataManager?.getAll?.() || [];
   return {
@@ -331,4 +462,9 @@ export function readPerformanceEnvironment({
       count: finite(layer.stats?.count),
     })),
   };
+}
+
+/** Invalidate cached renderer identity after an explicit WebGL context restore. */
+export function invalidatePerformanceEnvironmentCache(gl) {
+  if (gl && typeof gl === 'object') RENDERER_CACHE.delete(gl);
 }

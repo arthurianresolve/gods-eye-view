@@ -1,0 +1,48 @@
+{
+  "schema": "gev-left-measurement-restoration-readback/v1",
+  "status": "all-files-verified",
+  "verifiedAt": "2026-10-20T12:12:20.306Z",
+  "scope": "Independent VM streaming SHA-256 readback of the unchanged isolated DOM evidence and parked rail experiment. No additional browser, test, build or application acceptance run.",
+  "review": {
+    "path": "docs/performance-evidence/s69-native-matrix-20261019/left-measurement-restoration-review.json",
+    "bytes": 8211,
+    "sha256": "db433ac095c579f52d9fe6da5efb4ff83317998e37b69d7e53081f6e876c4cd8"
+  },
+  "archive": {
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/left-restoration-and-parked-rail-20261020",
+    "files": 28,
+    "totalBytes": 498412,
+    "manifest": "transfer-manifest.json",
+    "manifestBytes": 8324,
+    "manifestSha256": "b0d8b1fabadab3eb25e0626e724cc7e538f5db66ad14ed2b33fa4bf8a67d0413"
+  },
+  "contents": {
+    "reproductionScripts": 3,
+    "reproductionJson": 3,
+    "reviewScript": 1,
+    "reviewJson": 1,
+    "pinnedStyles": 4,
+    "experimentPatch": 1,
+    "experimentReceipt": 1,
+    "experimentSourceSnapshots": 12,
+    "focusedTestLog": 1,
+    "archiveHelper": 1
+  },
+  "verification": {
+    "everyFileSizeAndSha256Matched": true,
+    "exactFileAndDirectoryInventoryMatched": true,
+    "localSourcesRehashedAfterTransfer": true,
+    "exclusiveFreshDestination": true,
+    "streamingBytes": 65536
+  },
+  "experiment": {
+    "disposition": "Parked, not applied; six original working-tree files were restored. No latency benefit claimed.",
+    "patchSha256": "33fcb07a7db8b51d4896639bd57c7cc52aa0ac2351fa820aa3376ed14d7d235b",
+    "receiptSha256": "cea27f8c9ec5ed7bf4706d91c3a15ffe2f7449ab18d9aaba4b6258070028f633"
+  },
+  "limitations": [
+    "Disabled scroll anchoring was an explicit diagnostic condition; current application source does not set it.",
+    "The DOM reproduction does not identify the cause of historical application timing failures.",
+    "The archived 68-test result is the already-completed local experiment test run; archival did not run tests."
+  ]
+}

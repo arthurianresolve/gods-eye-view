@@ -1,0 +1,65 @@
+{
+  "schema": "gev-native-visual-evidence/v1",
+  "status": "passed",
+  "scope": "Prospective repeated source-bound decoration controls on physical Windows Intel UHD 620; visual equivalence only",
+  "application": {
+    "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateRuntimeCommit": "33d3d72c4668d847af26606ca1fc3f53ffaa139c",
+    "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "visualHarnessCommit": "32be0e46440cab5cfb1404f1a42e122110530004",
+    "baselineBuildReceiptSha256": "489bfb7348d300d19fc108cb59ab1a8b799061562d769919c38601378fb1857a",
+    "candidateBuildReceiptSha256": "160004e835a490a02ab47f3a01c76906f3da5378f70151932d7e86b8305bcd2f"
+  },
+  "environment": {
+    "browser": "Chrome/155.0.8059.85",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "drawingBuffer": "2880x1800",
+    "execution": "headful Windows browser with foreground, clean-build served-byte, debugger-pause and fixture-interception proofs"
+  },
+  "prospectivePlan": {
+    "policy": "source-bound-decoration-quantization-v1",
+    "planSha256": "e4bdc3481c248875d92c9c271106b8f5a4ae00d2f02d0b38fdc7bde7e65c15e8",
+    "pointerStageTimeoutMs": 10000,
+    "decorationCalibrationSha256": "71a616958532389ee4d1ec32980ed007c07d32370fa13232e352702c6190ead6",
+    "pairs": 3,
+    "pngCount": 24,
+    "states": ["still-settled", "hud-visible", "hud-hidden", "hud-restored"],
+    "imageSelection": "all-six-images-all-unordered-pairs-no-fallback"
+  },
+  "validation": {
+    "resultSha256": "bd9cb80efabc4343f50d93a1a7935064d657c9d3717f484c3bb7ff660c7eb26a",
+    "pairReportSha256": [
+      "029041782b00d40fa7e1bdb70b39007c80011729e81c54caba2cdd5059a6a70a",
+      "960531d61026cb0a75a70e04cb5c2f08e2d5bd15ca31232a3f341c54fb23110b",
+      "741f3fb698fad280dfa9b7165efd528afcf422d7f9975699597fca004edddcfc"
+    ],
+    "comparisons": 60,
+    "changedPixelsOutsideCalibratedRegions": 0,
+    "maximumLogoRgbDelta": 1,
+    "maximumBadgeRgbDelta": 7,
+    "alphaAndProtectedInterior": "exact",
+    "browserAndInterceptionCleanup": "completed"
+  },
+  "rawEvidence": {
+    "relativeLocalDirectory": "work/gev-visual-evidence-86ab/repeated-33d3d72c-decoration",
+    "archiveFilename": "repeated-33d3d72c-decoration.tar.gz",
+    "archiveBytes": 38611303,
+    "archiveSha256": "fd9cc691b63161aeb631373b1228a82f4d5ec841d30f15324fbfb3edb9d1ff16",
+    "archiveFileEntries": 35,
+    "vm105IndependentReadback": {
+      "status": "passed",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-86abeb79/repeated-33d3d72c-decoration-20261021.tar.gz",
+      "verifierSha256": "bb61a44b9e784896a22210d60dfe1be35f695572070169d956da74663329b683",
+      "verified": [
+        "archive SHA-256",
+        "35 regular files and 24 PNGs",
+        "plan, validation and three pair-report SHA-256 values",
+        "60 comparisons with exact pixels outside decoration support"
+      ]
+    }
+  },
+  "limits": [
+    "The earlier repeated-full-image-controls-v1 batch remains failed and is not rewritten.",
+    "This result does not establish native local-control latency, workload performance, signed-package browser recovery, the final Ampfing soak or production deployment."
+  ]
+}

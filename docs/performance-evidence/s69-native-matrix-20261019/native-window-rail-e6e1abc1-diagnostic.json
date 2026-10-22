@@ -1,0 +1,421 @@
+{
+  "schema": "gev-native-window-rail-incremental-diagnostic/v1",
+  "status": "completed-diagnostic-only",
+  "acceptanceEligible": false,
+  "criteriaChanged": false,
+  "productionChanged": false,
+  "applicationRoles": {
+    "baseline": {
+      "applicationCommit": "c373d91b89a74d25e22ca87db925eee0d425b1ea",
+      "url": "http://127.0.0.1:4314"
+    },
+    "candidate": {
+      "applicationCommit": "e6e1abc10b154b5317101d6e1b9bb18779e469ce",
+      "url": "http://127.0.0.1:4315"
+    }
+  },
+  "producerCommit": "42fae51d5a3b7621a8b2cea07433fe8a8f834d02",
+  "driverCommit": "e26b0b54e8c77cc445c9de5317771c6ec491747e",
+  "protocol": {
+    "order": ["baseline", "candidate", "candidate", "baseline"],
+    "actionsPerDocument": [true, false, true, false],
+    "totalActions": 16,
+    "fixedDrainMs": 1000,
+    "attributionEnabled": true,
+    "geometryReadAfterDrain": true,
+    "outcomeBasedRetryAllowed": false
+  },
+  "source": {
+    "rawArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-rail-comparison-e6e1abc1-e26b0b54-complete-20261020",
+    "rawProcessSha256": "be42fea5cc553c1e547cd87bcdb9becf2c2cdd3604d0965b0624acd64f8126e4",
+    "planSha256": "59e0fdc2700e2cf49977274a0706282d237fc41369aba26ffdad08a311171301",
+    "wrapperSha256": "c3d8f6b86cf11697afe5e48074fc7ea29b6f19c6085a3857c28819457d027d38",
+    "reviewArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-rail-e6e1abc1-e26b0b54-review-20261020",
+    "reviewFile": "qa-artifacts/native-window-rail-e6e1abc1-e26b0b54-review-20261020.json",
+    "reviewSha256": "24a673e5310603e2fcdfa941e598c589ea73536d6e9adfd54b7b9c041b64eda1"
+  },
+  "environment": {
+    "nativeCanvasCheckpoints": 20,
+    "configuredPreparationCheckpoints": 4,
+    "fullyValidatedProofs": 24,
+    "viewport": {
+      "width": 1280,
+      "height": 537
+    },
+    "dpr": 2,
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "nativePreparation": [
+      {
+        "slot": 1,
+        "role": "baseline",
+        "attempts": 3,
+        "status": "passed",
+        "elapsedMs": 2169.7414000000003,
+        "attemptStatuses": ["incoherent", "coherent", "coherent"]
+      },
+      {
+        "slot": 2,
+        "role": "candidate",
+        "attempts": 3,
+        "status": "passed",
+        "elapsedMs": 2854.724900000001,
+        "attemptStatuses": ["incoherent", "coherent", "coherent"]
+      },
+      {
+        "slot": 3,
+        "role": "candidate",
+        "attempts": 3,
+        "status": "passed",
+        "elapsedMs": 2830.8517999999895,
+        "attemptStatuses": ["incoherent", "coherent", "coherent"]
+      },
+      {
+        "slot": 4,
+        "role": "baseline",
+        "attempts": 3,
+        "status": "passed",
+        "elapsedMs": 4356.614300000001,
+        "attemptStatuses": ["incoherent", "coherent", "coherent"]
+      }
+    ]
+  },
+  "geometry": {
+    "enabledSamples": 8,
+    "disabledSamples": 8,
+    "allEnabledEqual": true,
+    "allDisabledEqual": true,
+    "enabledSha256": "d79f44591a1d420b4b0a188ee420a35c33d210841112cf8836c1c4807a31ae0f",
+    "disabledSha256": "211902512b6943e7ea40a3821068ed399ffc10c5d40ea6855dced994edb92d2c",
+    "allEnabledQueryTuplesEqual": true,
+    "enabledDifferences": [],
+    "queryDifferences": []
+  },
+  "summary": {
+    "baseline": {
+      "samples": 8,
+      "eventTiming": {
+        "values": [56, 120, 48, 96, 72, 152, 48, 144],
+        "min": 48,
+        "median": 84,
+        "max": 152,
+        "mean": 92
+      },
+      "observedOver100Ms": 3,
+      "onFullRender": {
+        "values": [
+          358.59999999403954, 117.90000000596046, 378.09999999403954,
+          248.80000001192093
+        ],
+        "min": 117.90000000596046,
+        "median": 303.70000000298023,
+        "max": 378.09999999403954,
+        "mean": 275.8500000014901
+      },
+      "offFullRender": {
+        "values": [
+          19.299999997019768, 14.599999994039536, 24.80000001192093,
+          16.399999991059303
+        ],
+        "min": 14.599999994039536,
+        "median": 17.849999994039536,
+        "max": 24.80000001192093,
+        "mean": 18.774999998509884
+      },
+      "coldOnFullRender": [358.59999999403954, 378.09999999403954],
+      "warmOnFullRender": [117.90000000596046, 248.80000001192093],
+      "offForcedStyleAndLayout": {
+        "values": [15.200000000000001, 0, 18.099999999999998, 0],
+        "min": 0,
+        "median": 7.6000000000000005,
+        "max": 18.099999999999998,
+        "mean": 8.325
+      },
+      "onTotalQueryMs": {
+        "values": [
+          87.40000000596046, 38.49999998509884, 230.8999999910593,
+          62.79999998211861
+        ],
+        "min": 38.49999998509884,
+        "median": 75.09999999403954,
+        "max": 230.8999999910593,
+        "mean": 104.8999999910593
+      }
+    },
+    "candidate": {
+      "samples": 8,
+      "eventTiming": {
+        "values": [40, 96, 48, 112, 80, 128, 80, 128],
+        "min": 40,
+        "median": 88,
+        "max": 128,
+        "mean": 89
+      },
+      "observedOver100Ms": 3,
+      "onFullRender": {
+        "values": [
+          245.79999999701977, 136.79999999701977, 363.70000000298023,
+          434.90000000596046
+        ],
+        "min": 136.79999999701977,
+        "median": 304.75,
+        "max": 434.90000000596046,
+        "mean": 295.30000000074506
+      },
+      "offFullRender": {
+        "values": [
+          14.799999997019768, 16.599999994039536, 25.900000005960464,
+          16.700000002980232
+        ],
+        "min": 14.799999997019768,
+        "median": 16.649999998509884,
+        "max": 25.900000005960464,
+        "mean": 18.5
+      },
+      "coldOnFullRender": [245.79999999701977, 363.70000000298023],
+      "warmOnFullRender": [136.79999999701977, 434.90000000596046],
+      "offForcedStyleAndLayout": {
+        "values": [0, 0, 26.3, 17.4],
+        "min": 0,
+        "median": 8.7,
+        "max": 26.3,
+        "mean": 10.925
+      },
+      "onTotalQueryMs": {
+        "values": [
+          62.50000002980232, 40.20000000298023, 231.5, 110.59999997913837
+        ],
+        "min": 40.20000000298023,
+        "median": 86.55000000447035,
+        "max": 231.5,
+        "mean": 111.20000000298023
+      }
+    }
+  },
+  "all16Isolated": true,
+  "allFourOwnedBrowsersClosedNormally": true,
+  "samples": [
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 1,
+      "enabled": true,
+      "eventTimingMs": 56,
+      "acceptedIntentMs": 3.7999999970197678,
+      "fullStateMs": 200.3999999910593,
+      "fullRenderMs": 358.59999999403954,
+      "queryCount": 8,
+      "totalQueryMs": 87.40000000596046,
+      "observedIntersectingScriptForcedLayoutMs": 0.1
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 2,
+      "enabled": false,
+      "eventTimingMs": 120,
+      "acceptedIntentMs": 4.5999999940395355,
+      "fullStateMs": 16.200000002980232,
+      "fullRenderMs": 19.299999997019768,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 15.200000000000001
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 3,
+      "enabled": true,
+      "eventTimingMs": 48,
+      "acceptedIntentMs": 0.9000000059604645,
+      "fullStateMs": 108.29999999701977,
+      "fullRenderMs": 117.90000000596046,
+      "queryCount": 8,
+      "totalQueryMs": 38.49999998509884,
+      "observedIntersectingScriptForcedLayoutMs": 0.1
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 4,
+      "enabled": false,
+      "eventTimingMs": 96,
+      "acceptedIntentMs": 0.8999999910593033,
+      "fullStateMs": 12.899999991059303,
+      "fullRenderMs": 14.599999994039536,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 0
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 1,
+      "enabled": true,
+      "eventTimingMs": 40,
+      "acceptedIntentMs": 3.2999999970197678,
+      "fullStateMs": 169.29999999701977,
+      "fullRenderMs": 245.79999999701977,
+      "queryCount": 8,
+      "totalQueryMs": 62.50000002980232,
+      "observedIntersectingScriptForcedLayoutMs": 0
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 2,
+      "enabled": false,
+      "eventTimingMs": 96,
+      "acceptedIntentMs": 1.4000000059604645,
+      "fullStateMs": 12.299999997019768,
+      "fullRenderMs": 14.799999997019768,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 0
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 3,
+      "enabled": true,
+      "eventTimingMs": 48,
+      "acceptedIntentMs": 1.2000000029802322,
+      "fullStateMs": 123,
+      "fullRenderMs": 136.79999999701977,
+      "queryCount": 8,
+      "totalQueryMs": 40.20000000298023,
+      "observedIntersectingScriptForcedLayoutMs": 0.1
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 4,
+      "enabled": false,
+      "eventTimingMs": 112,
+      "acceptedIntentMs": 1.199999988079071,
+      "fullStateMs": 13.5,
+      "fullRenderMs": 16.599999994039536,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 0
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 1,
+      "enabled": true,
+      "eventTimingMs": 80,
+      "acceptedIntentMs": 5.5,
+      "fullStateMs": 328.70000000298023,
+      "fullRenderMs": 363.70000000298023,
+      "queryCount": 8,
+      "totalQueryMs": 231.5,
+      "observedIntersectingScriptForcedLayoutMs": 0.1
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 2,
+      "enabled": false,
+      "eventTimingMs": 128,
+      "acceptedIntentMs": 4,
+      "fullStateMs": 21.299999997019768,
+      "fullRenderMs": 25.900000005960464,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 26.3
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 3,
+      "enabled": true,
+      "eventTimingMs": 80,
+      "acceptedIntentMs": 2.2999999970197678,
+      "fullStateMs": 211.20000000298023,
+      "fullRenderMs": 434.90000000596046,
+      "queryCount": 8,
+      "totalQueryMs": 110.59999997913837,
+      "observedIntersectingScriptForcedLayoutMs": 0.1
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 4,
+      "enabled": false,
+      "eventTimingMs": 128,
+      "acceptedIntentMs": 2,
+      "fullStateMs": 13.100000008940697,
+      "fullRenderMs": 16.700000002980232,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 17.4
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 1,
+      "enabled": true,
+      "eventTimingMs": 72,
+      "acceptedIntentMs": 6.799999997019768,
+      "fullStateMs": 353,
+      "fullRenderMs": 378.09999999403954,
+      "queryCount": 8,
+      "totalQueryMs": 230.8999999910593,
+      "observedIntersectingScriptForcedLayoutMs": 0.3
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 2,
+      "enabled": false,
+      "eventTimingMs": 152,
+      "acceptedIntentMs": 4.700000002980232,
+      "fullStateMs": 19.700000002980232,
+      "fullRenderMs": 24.80000001192093,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 18.099999999999998
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 3,
+      "enabled": true,
+      "eventTimingMs": 48,
+      "acceptedIntentMs": 1.9000000059604645,
+      "fullStateMs": 152.40000000596046,
+      "fullRenderMs": 248.80000001192093,
+      "queryCount": 8,
+      "totalQueryMs": 62.79999998211861,
+      "observedIntersectingScriptForcedLayoutMs": 0.1
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 4,
+      "enabled": false,
+      "eventTimingMs": 144,
+      "acceptedIntentMs": 1.8999999910593033,
+      "fullStateMs": 13.5,
+      "fullRenderMs": 16.399999991059303,
+      "queryCount": 0,
+      "totalQueryMs": 0,
+      "observedIntersectingScriptForcedLayoutMs": 0
+    }
+  ],
+  "conclusion": "Mixed incremental diagnostic: both roles have three of eight browser Event Timing observations above100ms; all are OFF actions. Full-ready and observed forced-layout distributions vary. These observer-heavy eight samples per role do not establish a formal pass or a stable causal improvement; proceed to the unchanged lean formal20 protocol for the selected correctness-control/candidate roles.",
+  "historicalFailure": {
+    "path": "../gev-s61-evidence-19065997/native-window-rail-comparison-e6e1abc1-3360f672/process.json",
+    "scope": "Preserved preparation-only failure before navigation/input/samples. New helper corrects complete setup settlement, without resampling measured actions or changing criteria."
+  },
+  "limits": [
+    "Eight samples per role with attribution/geometry observers: this is diagnostic, not the lean formal20 cohort and not a performance gate.",
+    "Absolute browser Event Timing observations above100ms remain visible; no threshold or full-readiness criterion changed.",
+    "Long-animation-frame scripts are bounded observed overlapping callbacks, with possible omitted scripts; their full durations are not a complete causal decomposition of quantized Event Timing.",
+    "Exact public geometry/query equality applies only to this eight-feature near fixture, not full app visual/near/far/overlap quality.",
+    "All raw samples and failed earlier preparation remain retained; no outcome-based retry."
+  ]
+}

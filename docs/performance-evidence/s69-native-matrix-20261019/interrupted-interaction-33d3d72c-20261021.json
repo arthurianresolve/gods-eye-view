@@ -1,0 +1,43 @@
+{
+  "schema": "gev-interrupted-interaction-receipt/v1",
+  "rawSha256": "9f35c7f9e61208ff3f16e54492851c19e63ae0fb34385c61627391e6bd397531",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "candidateCommit": "33d3d72c4668d847af26606ca1fc3f53ffaa139c",
+  "diagnostic": {
+    "schema": "gev-interrupted-interaction-diagnostics/v1",
+    "status": "diagnostic",
+    "acceptanceEligible": false,
+    "sourceStatus": "failed",
+    "localControl": {
+      "baseline": {
+        "sampleCount": 20,
+        "clickToAcceptedIntentP95Ms": 1.5,
+        "clickToNextRenderingP95Ms": 160,
+        "clickToFullReadyStateP95Ms": 59.70000001788139,
+        "clickToFullRenderedReadinessP95Ms": 61.70000001788139
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "clickToAcceptedIntentP95Ms": 1.2999999821186066,
+        "clickToNextRenderingP95Ms": 144,
+        "clickToFullReadyStateP95Ms": 102.7999999821186,
+        "clickToFullRenderedReadinessP95Ms": 105.5
+      }
+    },
+    "candidateReplay": {
+      "sampleCount": 20,
+      "inputToStateP95Ms": 56.10000002384186,
+      "inputToRenderedFrameP95Ms": 70
+    },
+    "limits": {
+      "localControlP95Ms": 100,
+      "loadedReplaySeekP95Ms": 250,
+      "fullReadinessRegressionPct": 10
+    },
+    "failures": [
+      "candidate native next-rendering p95 exceeds 100 ms",
+      "clickToFullReadyStateP95Ms regression exceeds 10%",
+      "clickToFullRenderedReadinessP95Ms regression exceeds 10%"
+    ]
+  }
+}

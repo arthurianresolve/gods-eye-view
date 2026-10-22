@@ -93,17 +93,19 @@ test('infrastructure factory preserves identity and creates independent state wi
   });
 });
 
-test('infrastructure factory scopes the opt-in surface renderer to datacenters only', () => {
-  const layers = createInfrastructureLayers({
-    ...services(),
-    datacenterSurfaceRenderer: 'primitive-collections',
+for (const renderer of ['primitive-collections', 'stem-collection']) {
+  test(`infrastructure factory scopes the opt-in ${renderer} renderer to datacenters only`, () => {
+    const layers = createInfrastructureLayers({
+      ...services(),
+      datacenterSurfaceRenderer: renderer,
+    });
+    assert.deepEqual(
+      layers.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+      [renderer, 'entities'],
+    );
+    layers.forEach((layer) => layer.destroy());
   });
-  assert.deepEqual(
-    layers.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
-    ['primitive-collections', 'entities'],
-  );
-  layers.forEach((layer) => layer.destroy());
-});
+}
 
 test('dataset URLs still name the complete bundled sources', () => {
   for (const [file, count] of [

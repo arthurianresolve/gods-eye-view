@@ -84,15 +84,44 @@ try {
     const app = window.__godsEyeView;
     await app.styleManager.initialRestorePromise;
     await app.dataManager.setEnabled('local-datacenters', true);
-    const { getContextStore, selectEntityContext } =
-      await import('/src/data/contextStore.js');
-    const record = [...getContextStore().entities.values()].find(
-      (item) => item.layerId === 'local-datacenters',
+    const viteSourceEntry = [...document.querySelectorAll('script[src]')].some(
+      (script) => new URL(script.src).pathname.startsWith('/src/'),
     );
-    if (!record?.evidence)
-      throw new Error('Selected infrastructure has no evidence envelope');
-    window.__qaSelected = record;
-    selectEntityContext(record.entity);
+    if (viteSourceEntry) {
+      // The development build retains the stronger native Entity selection.
+      const { getContextStore, selectEntityContext } =
+        await import('/src/data/contextStore.js');
+      const record = [...getContextStore().entities.values()].find(
+        (item) => item.layerId === 'local-datacenters',
+      );
+      if (!record?.evidence)
+        throw new Error('Selected infrastructure has no evidence envelope');
+      window.__qaSelected = record;
+      selectEntityContext(record.entity);
+    } else {
+      // Production packages intentionally omit /src modules. Read the
+      // materialized layer's public analyst record, then exercise the same
+      // inspector selection event without adding a QA API to the product.
+      const record = app.dataManager.layers
+        .get('local-datacenters')
+        ?.module?.getAnalystRecords?.(16)
+        ?.find(
+          (item) => item.evidence?.entityRef?.layerKey === 'local-datacenters',
+        );
+      if (!record?.evidence)
+        throw new Error('Packaged infrastructure has no evidence envelope');
+      window.__qaSelected = record;
+      window.dispatchEvent(
+        new CustomEvent('gev:entity-selected', {
+          detail: {
+            id: record.evidence.entityRef.id,
+            layerId: 'local-datacenters',
+            label: record.name || record.id,
+            evidence: record.evidence,
+          },
+        }),
+      );
+    }
     document.querySelector('.evidence-panel-technical').open = true;
     window.addEventListener('gev:evidence-updated', (event) => {
       window.__qaEvidence = event.detail.evidence;

@@ -1,0 +1,82 @@
+{
+  "schema": "gev-visual-same-build-replicate-review/v1",
+  "status": "diagnostic-failed-pixel-validation",
+  "acceptanceEligible": false,
+  "applicationPair": {
+    "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841"
+  },
+  "producerCommits": [
+    "c133c2a05b6331c2c5af05bccab1cb242a41ecda",
+    "d4bdf390f347dc24f72cafcc2fc1ccc20ad9ac36"
+  ],
+  "hardware": "Windows Chrome 155.0.8059.85, ANGLE Direct3D 11 on Intel UHD Graphics 620",
+  "identicalInputsAcrossRuns": {
+    "stateAndBuildCombinations": 8,
+    "paint": true,
+    "settings": true,
+    "populations": true,
+    "camera": true,
+    "nativeProfile": true,
+    "timestamp": true
+  },
+  "sameBuildDecodedDifferencesAcrossRuns": [
+    {
+      "build": "baseline",
+      "state": "still-settled",
+      "changedPixels": 35,
+      "maximumChannelDelta": 1
+    },
+    {
+      "build": "baseline",
+      "state": "hud-visible",
+      "changedPixels": 43,
+      "maximumChannelDelta": 7
+    },
+    {
+      "build": "baseline",
+      "state": "hud-hidden",
+      "changedPixels": 0,
+      "maximumChannelDelta": 0
+    },
+    {
+      "build": "baseline",
+      "state": "hud-restored",
+      "changedPixels": 28,
+      "maximumChannelDelta": 7
+    },
+    {
+      "build": "candidate",
+      "state": "still-settled",
+      "changedPixels": 107,
+      "maximumChannelDelta": 1
+    },
+    {
+      "build": "candidate",
+      "state": "hud-visible",
+      "changedPixels": 25,
+      "maximumChannelDelta": 1
+    },
+    {
+      "build": "candidate",
+      "state": "hud-hidden",
+      "changedPixels": 43,
+      "maximumChannelDelta": 1
+    },
+    {
+      "build": "candidate",
+      "state": "hud-restored",
+      "changedPixels": 0,
+      "maximumChannelDelta": 0
+    }
+  ],
+  "rawEvidence": {
+    "replicateVm105Directory": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-190c5ab6-d4bdf390-replicate",
+    "replicateManifestSha256": "0287ab2eaccf7950c15d4fe9326aa6b79e74d43c3bb0f649d54443555bb2c409",
+    "replicateFullReportSha256": "fe4576ccbbc7fa4d83b00ed439c4b01fc57ea83bf780ef6961df73b5a5f3acbd",
+    "replicateFailureReportSha256": "f16fe50df25b7b07954f4845e0f402d6bd804787827e9447af089adae6bb1690",
+    "sameBuildInputReviewSha256": "3edd362e7773783bd33c3ae94a0f66ca81b6db3ab340679e125f8fc52b7e9d05",
+    "fileCountVerifiedOnVm": 16
+  },
+  "scope": "Two retrospectively compared runs establish real same-build decoded pixel variation under matching captured inputs. Both runs independently fail the current cross-build visual validator. These runs were not acquired under the prospective three-pair repeated-control plan; they cannot be reclassified as visual acceptance. They support using the existing prospective repeated-full-image-controls policy for a future qualified candidate, with every capture retained and negative controls intact."
+}

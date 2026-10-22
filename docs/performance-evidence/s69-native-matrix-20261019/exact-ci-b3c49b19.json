@@ -1,0 +1,104 @@
+{
+  "schema": "gev-exact-candidate-ci-review/v1",
+  "reviewedAt": "2026-10-19T16:42:07.306Z",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "status": "passed",
+  "checks": [
+    {
+      "kind": "standard",
+      "runId": 39282844432,
+      "headSha": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39282844432",
+      "event": "workflow_dispatch",
+      "passedJobs": [
+        "Node 24.14.0",
+        "Windows onboarding",
+        "Node 26.x",
+        "Install and update recovery (ubuntu-latest)",
+        "Street Level browser gate",
+        "Install and update recovery (macos-latest)",
+        "Install and update recovery (windows-latest)"
+      ],
+      "intentionallySkippedJobs": [
+        "Native WebGL probe (${{ matrix.os }})",
+        "Aircraft tracking regression",
+        "Free hosted Mac rendering diagnostic",
+        "Free hosted Mac accelerated retention diagnostic",
+        "Isolated terrain and picking lifecycle",
+        "Isolated mission render-demand correctness",
+        "60-minute rendered application soak",
+        "Isolated CCTV lifecycle",
+        "Baseline-compatible performance build smoke",
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "Isolated rendered mixed-use smoke",
+        "Isolated import and workspace lifecycle"
+      ],
+      "raw": "standard.json",
+      "rawSha256": "e932a5dc77b3aea76142480dc55b92636dae4a4f3f5edf22e2643132cc45fe88"
+    },
+    {
+      "kind": "tracking",
+      "runId": 39280015189,
+      "headSha": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280015189",
+      "event": "workflow_dispatch",
+      "passedJobs": [
+        "Aircraft tracking regression"
+      ],
+      "intentionallySkippedJobs": [
+        "Baseline-compatible performance build smoke",
+        "Street Level browser gate",
+        "Isolated mission render-demand correctness",
+        "Isolated rendered mixed-use smoke",
+        "Node ${{ matrix.node }}",
+        "Install and update recovery (${{ matrix.os }})",
+        "Free hosted Mac rendering diagnostic",
+        "60-minute rendered application soak",
+        "Windows onboarding",
+        "Native WebGL probe (${{ matrix.os }})",
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "Free hosted Mac accelerated retention diagnostic",
+        "Isolated import and workspace lifecycle",
+        "Isolated terrain and picking lifecycle",
+        "Isolated CCTV lifecycle"
+      ],
+      "raw": "tracking.json",
+      "rawSha256": "9d9d89a6ee0fbe2525df412fe14ba58d6a65ec715263868d084bdf83f5ed8949"
+    },
+    {
+      "kind": "release",
+      "runId": 39280010153,
+      "headSha": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39280010153",
+      "event": "workflow_dispatch",
+      "passedJobs": [
+        "Build and verify release artifact"
+      ],
+      "intentionallySkippedJobs": [],
+      "raw": "release.json",
+      "rawSha256": "32843993bdff63570cbe4233b74f3f08840bd99a6c9fb36b071cd4cf19886ea5"
+    }
+  ],
+  "files": [
+    {
+      "name": "standard.json",
+      "bytes": 24909,
+      "sha256": "e932a5dc77b3aea76142480dc55b92636dae4a4f3f5edf22e2643132cc45fe88"
+    },
+    {
+      "name": "tracking.json",
+      "bytes": 6645,
+      "sha256": "9d9d89a6ee0fbe2525df412fe14ba58d6a65ec715263868d084bdf83f5ed8949"
+    },
+    {
+      "name": "release.json",
+      "bytes": 4091,
+      "sha256": "32843993bdff63570cbe4233b74f3f08840bd99a6c9fb36b071cd4cf19886ea5"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/exact-ci-b3c49b19",
+  "scope": "Exact-commit standard CI, explicit tracking workflow, and candidate packaging. Optional diagnostic jobs are omitted by workflow selection; these passes do not replace native GPU, visual or soak acceptance."
+}

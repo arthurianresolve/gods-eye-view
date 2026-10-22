@@ -15,6 +15,11 @@ import {
   DENSITY_STOPS,
   migrateDetectionState,
 } from '../data/detectionPolicy.js';
+import {
+  encodeViewVisual,
+  normalizeViewVisual,
+  visualFromParams,
+} from './visual.js';
 
 const DETECTION_MODES = Object.freeze(['OFF', 'SPARSE', 'BALANCED', 'DENSE']);
 
@@ -365,6 +370,7 @@ export function createView({
   annotations = [],
   temporal = null,
   detection = null,
+  visual = null,
 } = {}) {
   if (!Number.isFinite(camera?.lat) || !Number.isFinite(camera?.lon))
     throw new TypeError('A view needs a camera lat and lon');
@@ -411,6 +417,7 @@ export function createView({
     ),
     temporal: temporalOf(temporal),
     ...(detection == null ? {} : { detection: detectionOf(detection) }),
+    ...(visual == null ? {} : { visual: normalizeViewVisual(visual, style) }),
   });
 }
 
@@ -427,6 +434,7 @@ export function viewToParams(view) {
   });
   if (view.style) params.set('style', STYLE_URL_NAMES[view.style]);
   if (view.map) params.set('map', view.map);
+  encodeViewVisual(params, view.visual, view.style);
   const detection = detectionOf(view.detection);
   if (detection) {
     params.set('dm', detection.mode);
@@ -504,6 +512,10 @@ export function viewFromParams(params) {
     },
     layers: state?.enabledLayerIds ?? [],
     style: STYLES_BY_URL_NAME[params.get('style')] ?? null,
+    visual: visualFromParams(
+      params,
+      STYLES_BY_URL_NAME[params.get('style')] ?? null,
+    ),
     map: VIEW_MAPS.includes(map) ? map : null,
     follow,
     annotations: annotationsFromParams(params),

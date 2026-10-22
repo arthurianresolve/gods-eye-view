@@ -37,6 +37,8 @@ export function projectPublicCaptureBuildProvenance(source) {
     receiptSha256: source.receiptSha256,
     appCommit: source.appCommit,
     harnessCommit: source.harnessCommit,
+    captureProducerCommit: source.captureProducerCommit,
+    buildHarnessCommit: source.buildHarnessCommit,
     buildRecipe: structuredClone(source.buildRecipe),
     before: structuredClone(source.before),
   };
@@ -53,6 +55,9 @@ export async function beginCaptureBuildProvenance({
   buildRoot,
   expectedAppCommit,
   expectedHarnessCommit,
+  buildHarnessRoot = harnessRoot,
+  expectedBuildHarnessCommit = expectedHarnessCommit,
+  captureProducerCommit = expectedHarnessCommit,
   expectedBuildProfile = null,
   baseUrl,
   captureUrl,
@@ -68,7 +73,12 @@ export async function beginCaptureBuildProvenance({
   assert.match(
     expectedHarnessCommit || '',
     SHA1,
-    'Expected full harness SHA is required',
+    'Expected full capture producer SHA is required',
+  );
+  assert.match(
+    expectedBuildHarnessCommit || '',
+    SHA1,
+    'Expected full build harness SHA is required',
   );
   assert.equal(receipt?.schema, 'gev-build-provenance/v1');
   assert.equal(
@@ -87,8 +97,18 @@ export async function beginCaptureBuildProvenance({
   );
   assert.equal(
     receipt.harness?.commit,
+    expectedBuildHarnessCommit,
+    'Receipt build harness SHA mismatch',
+  );
+  assert.equal(
+    captureProducerCommit,
     expectedHarnessCommit,
-    'Receipt harness SHA mismatch',
+    'Capture producer SHA mismatch',
+  );
+  assert.match(
+    captureProducerCommit || '',
+    SHA1,
+    'Capture producer SHA is malformed',
   );
   const expectedProfile = resolveMapFixtureBuildProfile(expectedBuildProfile);
   if (expectedProfile)
@@ -140,10 +160,10 @@ export async function beginCaptureBuildProvenance({
     verifyImpl({
       receipt,
       checkoutRoot,
-      harnessRoot,
+      harnessRoot: buildHarnessRoot,
       buildRoot,
       expectedAppCommit,
-      expectedHarnessCommit,
+      expectedHarnessCommit: expectedBuildHarnessCommit,
       expectedBuildProfile,
       baseUrl,
       fetchImpl,
@@ -159,6 +179,8 @@ export async function beginCaptureBuildProvenance({
       receiptSha256: receipt.receiptSha256,
       appCommit: receipt.source.commit,
       harnessCommit: receipt.harness.commit,
+      captureProducerCommit,
+      buildHarnessCommit: receipt.harness.commit,
       entryPaths,
       expectedAssetPaths: receipt.assets.map((asset) => asset.path),
       buildRecipe: structuredClone(receipt.buildRecipe),

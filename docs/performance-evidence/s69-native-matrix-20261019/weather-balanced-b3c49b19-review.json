@@ -1,0 +1,381 @@
+{
+  "schema": "gev-weather-balanced-independent-review/v2",
+  "reviewedAt": "2026-10-19T21:43:26.593Z",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "producerCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "producerEnvelopeStatus": "completed",
+  "processCode": 0,
+  "validation": {
+    "status": "comparable",
+    "environmentId": "windows-uhd620-native-chrome155-20261019",
+    "evidenceScope": "balanced-five-pair-full-weather-qualification",
+    "order": [
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate"
+    ],
+    "pairCount": 5,
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineRuns": [
+          4974.9000000059605,
+          753.5999999940395,
+          2518.7999999970198,
+          984,
+          886.4000000059605
+        ],
+        "candidateRuns": [
+          1703.2000000029802,
+          4056.2999999970198,
+          1604.9000000059605,
+          986.1000000089407,
+          2912.300000011921
+        ],
+        "baselineMedianP95Ms": 984,
+        "candidateMedianP95Ms": 1703.2000000029802,
+        "changePct": 73.08943089461182,
+        "regressionOver10Pct": true
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineRuns": [
+          305.1000000089407,
+          287.3999999910593,
+          240.70000000298023,
+          260.8999999910593,
+          239.79999999701977
+        ],
+        "candidateRuns": [
+          265.20000000298023,
+          322.20000000298023,
+          263.59999999403954,
+          224.69999998807907,
+          261.1000000089407
+        ],
+        "baselineMedianP95Ms": 260.8999999910593,
+        "candidateMedianP95Ms": 263.59999999403954,
+        "changePct": 1.0348792652636096,
+        "regressionOver10Pct": false
+      }
+    },
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "platform": "Win32",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (Intel)",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "hardwareEligible": true,
+      "nativeSharpnessProfile": {
+        "id": "native-sharpness-v1",
+        "useBrowserRecommendedResolution": false,
+        "resolutionScale": 1,
+        "maximumScreenSpaceError": 1,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2880,
+          "height": 1800
+        }
+      },
+      "hostEnvironment": {
+        "platform": "win32",
+        "architecture": "x64",
+        "osRelease": "10.0.19045",
+        "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+        "logicalCpus": 8,
+        "memoryBytes": 16907538432,
+        "hosted": false,
+        "runnerImage": null,
+        "runnerImageVersion": null
+      },
+      "graphics": {
+        "browserVersion": "Chrome/155.0.8059.84",
+        "featureStatus": {
+          "webgl": "enabled",
+          "webgl2": null,
+          "gpu_compositing": "enabled",
+          "opengl": "enabled_on"
+        },
+        "devices": [
+          {
+            "vendor": "",
+            "device": "Intel(R) UHD Graphics 620",
+            "driver": "30.0.101.1338"
+          },
+          {
+            "vendor": "",
+            "device": "Microsoft Basic Render Driver",
+            "driver": "10.0.19041.7802"
+          }
+        ]
+      }
+    },
+    "regressionsOver10Pct": [
+      "idle"
+    ]
+  },
+  "error": null,
+  "files": [
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "b9d5eb8bb949b288a41956d8b847a24c052032d827a3a36e31fe8abc1cf9e9a3"
+    },
+    {
+      "name": "build-receipt-control.json",
+      "bytes": 78806,
+      "sha256": "c92035a3ef08222015e5361061079ad0a87c3ae286ab1fb009c97b337f4cab0e"
+    },
+    {
+      "name": "qualification-envelope.json",
+      "bytes": 5277,
+      "sha256": "02a9b94a6f3a51a8589909061940ebdecf836481e80744fb6c427fd5d52e7a2d"
+    },
+    {
+      "name": "qualification-plan.json",
+      "bytes": 3262,
+      "sha256": "fcc682785f7d4d9109da3dcd600aad012c1a9c41a91303affd6b0502a3d70875"
+    },
+    {
+      "name": "sample-01-control.json",
+      "bytes": 174397,
+      "sha256": "60449a1475b6f56cbd478b53d2d7cf943fb989b987aab5da5f7cedad64fb4722"
+    },
+    {
+      "name": "sample-01-control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "14f67e110b4c8df71499b31558e7265d4dca99aefece4044ddccad58cec553eb"
+    },
+    {
+      "name": "sample-01-control.json.invocation.json",
+      "bytes": 2516,
+      "sha256": "18a12397af7dcdd2ee096ac32d2b84f8659163b4cb8cc2e725020ee7187ab2f9"
+    },
+    {
+      "name": "sample-01-control.json.log",
+      "bytes": 350,
+      "sha256": "12f9d285089bcdda4d21f7ee35d2ec3c5582ccb730b9ff9ee9e5046695110924"
+    },
+    {
+      "name": "sample-02-candidate.json",
+      "bytes": 174727,
+      "sha256": "52f2b92b1ad40bcf10a764b07b15c78169ea9592df38f66a3c977539125b07aa"
+    },
+    {
+      "name": "sample-02-candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "3c6cd43a75cf30ebac9e6db690d29e9c2d6d21adc8d3b131b65cafb5ffb32d8d"
+    },
+    {
+      "name": "sample-02-candidate.json.invocation.json",
+      "bytes": 2522,
+      "sha256": "e47fc51951f64cf80cc3929643bd0dd8c5fc499f768d9d202123eb4654402c83"
+    },
+    {
+      "name": "sample-02-candidate.json.log",
+      "bytes": 352,
+      "sha256": "2fdb5ade624bc30e81610aeb837c27110d178afd28db23681b72187c4b2b4807"
+    },
+    {
+      "name": "sample-03-candidate.json",
+      "bytes": 174661,
+      "sha256": "2ebe3aa97c47a91e4504a201e88a4c07948524983543737c69ff2582bca5c126"
+    },
+    {
+      "name": "sample-03-candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "7c10b656e1e1731a4b31f8dbed992112490822bd5b27ecca9996b39ca544625f"
+    },
+    {
+      "name": "sample-03-candidate.json.invocation.json",
+      "bytes": 2522,
+      "sha256": "80f51ac4a43bd1bc79f996299fad608305521950376df4396035221d3a883c0a"
+    },
+    {
+      "name": "sample-03-candidate.json.log",
+      "bytes": 352,
+      "sha256": "e8abf6f459b99888cd7f386d28eeb8d5505b9e1d9b4c27631b147f8f7e4e0d54"
+    },
+    {
+      "name": "sample-04-control.json",
+      "bytes": 174262,
+      "sha256": "61cc4e558182a8c2724e66ec10f2484a472c3b1f531c1d6696dc557d17012d75"
+    },
+    {
+      "name": "sample-04-control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "c6eb8b87cbe5dff9f11642c64968925957461d364948412619d014634a4b17ce"
+    },
+    {
+      "name": "sample-04-control.json.invocation.json",
+      "bytes": 2516,
+      "sha256": "4954616a00cc04dbb0b17e8dc0ddb22e6015a52ba89d8ae8cb43419cb42fcce1"
+    },
+    {
+      "name": "sample-04-control.json.log",
+      "bytes": 350,
+      "sha256": "4ecfeb79ce6e83a72e0c5dfa8c795c524beff4f4ca9a2999e4bec608d5cdd339"
+    },
+    {
+      "name": "sample-05-control.json",
+      "bytes": 174277,
+      "sha256": "eae00cb1f139b647b3937ecf5e2b9f44207c2a0f9fd07ad8a7e37079afbe06b4"
+    },
+    {
+      "name": "sample-05-control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "9f9a3146dd444b5f09df533cf3cba4c90f49408bd23dfaa3c787edbdb394c551"
+    },
+    {
+      "name": "sample-05-control.json.invocation.json",
+      "bytes": 2516,
+      "sha256": "3392a7bb2571953e6784815803ca4cfef4a5c01d552b828b12b148fd482c8f53"
+    },
+    {
+      "name": "sample-05-control.json.log",
+      "bytes": 350,
+      "sha256": "a90ac88cbd04cbecf2c328b74bca638914d076ef494949840fbcc5f606451d25"
+    },
+    {
+      "name": "sample-06-candidate.json",
+      "bytes": 174669,
+      "sha256": "9be5d7bd2ff615e58485304a650cbaa4ba429c1d91115423bbcf6deb8602ba79"
+    },
+    {
+      "name": "sample-06-candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "e40b4e1b585083a0bbb8a4da9131e12805744abc790c2d68f5c8d681dbb74566"
+    },
+    {
+      "name": "sample-06-candidate.json.invocation.json",
+      "bytes": 2522,
+      "sha256": "800d4a8fba52f61d36b6d89b7abebf360c0d865c8315aaa793eb11eee142a9ad"
+    },
+    {
+      "name": "sample-06-candidate.json.log",
+      "bytes": 352,
+      "sha256": "225132826a58ff218787be1f38db5c9698009d5a10042311ee5b5cbf65c32785"
+    },
+    {
+      "name": "sample-07-candidate.json",
+      "bytes": 174770,
+      "sha256": "0705e9ff6e2baebc597db2d2b9f78e40a0adc8a58d415c8ce4a2eb1a316c9cd1"
+    },
+    {
+      "name": "sample-07-candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "975ae6ba35b5071c14278be6d4f7acaf8098087aea3caa7ee1d55cd790129bce"
+    },
+    {
+      "name": "sample-07-candidate.json.invocation.json",
+      "bytes": 2522,
+      "sha256": "d1ec7b9703a4e8b76de2722e034173236bfd87dc7683035ab6bc86d24933fad4"
+    },
+    {
+      "name": "sample-07-candidate.json.log",
+      "bytes": 352,
+      "sha256": "70f8bdf7bcbc14899b38365cad0561b0eaf52ff3d15ccb29485faed29ab02fc1"
+    },
+    {
+      "name": "sample-08-control.json",
+      "bytes": 174278,
+      "sha256": "3e36dabcea8a41f642e07ca92437ccbb7e37aba1311eadd8550b244c254eccac"
+    },
+    {
+      "name": "sample-08-control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "3004b111799c2ff8f2f35f46b6c0a20ad8a86e00145e3fb994c8d46ccee6e28c"
+    },
+    {
+      "name": "sample-08-control.json.invocation.json",
+      "bytes": 2516,
+      "sha256": "4aa9494197ed085411341f9e9482c4d5bcf384196daf0d939c7af8dc4546cc5a"
+    },
+    {
+      "name": "sample-08-control.json.log",
+      "bytes": 350,
+      "sha256": "275447b2bf7d7fea6e0abb7261006c7e9f932bffb4b5ddf1f05b8f0c5f2dfeaf"
+    },
+    {
+      "name": "sample-09-control.json",
+      "bytes": 174323,
+      "sha256": "00df5f745b8efa7cb56040b3ee58a080327c266ef52fdc9cd5fe6e90e9d4c798"
+    },
+    {
+      "name": "sample-09-control.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "dde916fc63062b6f64695ba93116ddaaf127a0f48397d04e0eeca87453dc2463"
+    },
+    {
+      "name": "sample-09-control.json.invocation.json",
+      "bytes": 2516,
+      "sha256": "4f38189516be47eadfc12a7014bcbb483f2f94c04a2a1aed21a0b0c4af7cdf8e"
+    },
+    {
+      "name": "sample-09-control.json.log",
+      "bytes": 350,
+      "sha256": "a7d9fc97bdb3e87ae9c394ba1ab93b45c47eb558b090dd56bd2ab3cd490ccf11"
+    },
+    {
+      "name": "sample-10-candidate.json",
+      "bytes": 174651,
+      "sha256": "bc41f408bfb65565e79ccfa3a6ae49860ef794997de6bc48c6df72b24b0bcefe"
+    },
+    {
+      "name": "sample-10-candidate.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "ec0895c8b4765bde9ed9953c1d9f57da9739ba3e988ee8bbe831c26d9cd49727"
+    },
+    {
+      "name": "sample-10-candidate.json.invocation.json",
+      "bytes": 2522,
+      "sha256": "ac7188c0996ebc1427add33f350d59b8621ca677a6669001c361e5881c57a157"
+    },
+    {
+      "name": "sample-10-candidate.json.log",
+      "bytes": 352,
+      "sha256": "e4a3379cb8971e639bb2f38c76513d656b253d0fdb3cc9ca863613b66daa7189"
+    },
+    {
+      "name": "process.json",
+      "bytes": 910,
+      "sha256": "83a40b337cacbec3ecc6d9b0f75341eb0a546e5220d3e42a173598f8ea023c53"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 7800,
+      "sha256": "c9a60037b25831b8b39dcb6b398522441c4cdc8b165873e73097d089aa6221ef"
+    },
+    {
+      "name": "process-wrapper.mjs",
+      "bytes": 2654,
+      "sha256": "790624777444cab28f567db438bd00c822e852f50f9f5307a457fab1982f8784"
+    }
+  ],
+  "envelope": {
+    "path": "qualification-envelope.json",
+    "sha256": "02a9b94a6f3a51a8589909061940ebdecf836481e80744fb6c427fd5d52e7a2d"
+  },
+  "historicalFailures": "Original failed foreground attempt and earlier candidate results remain separate records. No failed producer envelope is relabeled or revalidated here.",
+  "scope": "Independent evaluation of the fresh predeclared ten-shard b3 weather attempt. The unchanged ten-percent gate applies; startup is also evaluated by the final consumer."
+}

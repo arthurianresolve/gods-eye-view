@@ -1,7 +1,65 @@
 /** Own rail measurement, layout scheduling and dock tray observation. */
-import { layoutLeftPanelRail, layoutRightPanelRail } from './panelRails.js';
-import { syncRadioPanelPlacement } from './radioPanelPlacement.js';
+import {
+  layoutLeftPanelRail,
+  layoutRightPanelRail,
+  layoutPanelRails,
+} from './panelRails.js';
+import {
+  isRadioPanelPlacementCurrent,
+  syncRadioPanelPlacement,
+} from './radioPanelPlacement.js';
 const COCKPIT_LAYOUT_SETTLE_MS = 240;
+
+function reportedRailBox(entry) {
+  const rect = entry?.contentRect;
+  const border = entry?.borderBoxSize;
+  const content = entry?.contentBoxSize;
+  if (
+    !rect ||
+    ![rect.x, rect.y, rect.width, rect.height].every(Number.isFinite) ||
+    rect.width <= 0 ||
+    rect.height <= 0 ||
+    border?.length !== 1 ||
+    content?.length !== 1 ||
+    content[0].inlineSize !== rect.width ||
+    content[0].blockSize !== rect.height ||
+    !Number.isFinite(border[0].inlineSize) ||
+    !Number.isFinite(border[0].blockSize) ||
+    border[0].inlineSize < rect.width ||
+    border[0].blockSize < rect.height
+  )
+    return null;
+  // This proof is limited to the current horizontal-writing Tactical layout.
+  // Use physical contentRect dimensions and reject other/fragmented box models.
+  return {
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height,
+    borderWidth: border[0].inlineSize,
+    borderHeight: border[0].blockSize,
+  };
+}
+
+function settledRailFonts() {
+  const fonts = document.fonts;
+  if (fonts?.status !== 'loaded' || !fonts[Symbol.iterator]) return null;
+  // display:swap can change intrinsic content without a DOM mutation. Compare
+  // face identity/status as well, including a load completed between reads.
+  // No ready/check call, font load, event listener or layout query is needed.
+  return { fonts, faces: [...fonts].map((face) => [face, face.status]) };
+}
+
+function sameRailFonts(before, after) {
+  return (
+    before.fonts === after.fonts &&
+    before.faces.length === after.faces.length &&
+    before.faces.every(
+      ([face, status], index) =>
+        face === after.faces[index][0] && status === after.faces[index][1],
+    )
+  );
+}
 /**
  * Fixed UI regions that can occupy the left accordion's vertical lane.
  * Rectangles are filtered at runtime for visibility and horizontal overlap,
@@ -83,6 +141,9 @@ export class PanelLayoutController {
     this._leftStackPreferredPanelId = null;
     this._leftStackReconsiderAutoCollapse = false;
     this._leftStackResizeObserver = null;
+    this._leftStackResizeBoxes = new WeakMap();
+    this._leftStackContentRevision = 0;
+    this._leftStackAllocationResponse = null;
     this._rightStackHudTransitionHandler = null;
     this._rightStackLayoutFrame = null;
     this._rightStackMutationObserver = null;
@@ -291,8 +352,9 @@ export class PanelLayoutController {
     if (this.destroyed) return;
     if (reconsiderAutoCollapse) this._rightStackReconsiderAutoCollapse = true;
     if (!this._rightPanelStack || this._rightStackLayoutFrame !== null) return;
-    this._rightStackLayoutFrame = requestAnimationFrame(() => {
-      if (this.destroyed) return;
+    const frame = requestAnimationFrame(() => {
+      if (this.destroyed || this._rightStackLayoutFrame !== frame) return;
+      if (this._tryPendingPanelPair()) return;
       this._rightStackLayoutFrame = null;
       if (this._rightStackReconsiderAutoCollapse) {
         this._rightStackReconsiderAutoCollapse = false;
@@ -305,12 +367,18 @@ export class PanelLayoutController {
       }
       this._syncRightPanelAdaptiveLayout();
     });
+    this._rightStackLayoutFrame = frame;
   }
 
   _syncRightPanelAdaptiveLayout() {
     if (this.destroyed) return;
     syncRadioPanelPlacement(document);
-    layoutRightPanelRail({
+    layoutRightPanelRail(this._rightPanelLayoutOptions());
+  }
+
+  _rightPanelLayoutOptions() {
+    if (this.destroyed) return { stack: null };
+    return {
       stack: this._rightPanelStack,
       obstacles: document.querySelectorAll(RIGHT_STACK_OBSTACLE_SELECTOR),
       windowRef: window,
@@ -321,7 +389,7 @@ export class PanelLayoutController {
       leftStack: this._leftPanelStack,
       displayPanel: this._ppToggles,
       readDisplayScrollTop: this.readDisplayScrollTop,
-    });
+    };
   }
 
   _initLeftPanelAdaptiveLayout() {
@@ -330,7 +398,41 @@ export class PanelLayoutController {
     if (!stack) return;
 
     if (typeof ResizeObserver !== 'undefined') {
-      this._leftStackResizeObserver = new ResizeObserver(() => {
+      let previousRootBox = null;
+      this._leftStackResizeObserver = new ResizeObserver((entries) => {
+        if (this.destroyed) return;
+        const allocationResponse = this._consumeLeftAllocationResponse(entries);
+        for (const entry of entries || []) {
+          const box = reportedRailBox(entry);
+          if (box) this._leftStackResizeBoxes.set(entry.target, box);
+          else this._leftStackResizeBoxes.delete(entry.target);
+        }
+        const entry = entries?.length === 1 ? entries[0] : null;
+        const rect = entry?.target === stack ? entry.contentRect : null;
+        const rootBox =
+          Number.isFinite(rect?.width) &&
+          rect.width > 0 &&
+          Number.isFinite(rect?.height) &&
+          rect.height > 0
+            ? { width: rect.width, height: rect.height }
+            : null;
+        // The left solver uses this root's horizontal extent, not its height.
+        // Its top/bottom transition can resize the root without changing any
+        // measurement input. Panels, inners and obstacles remain observed, and
+        // viewport/DOM/HUD invalidations still schedule their ordinary pass.
+        // Current CSS changes the root's x position only with viewport, HUD
+        // theme or cockpit changes, which independently invalidate layout.
+        // This is that layout contract, not equal width implying equal x.
+        // Use the reported physical CSS width, never logical inlineSize or a
+        // synchronous layout read. Initial, mixed and ambiguous deliveries
+        // retain the full pass and reset this narrow comparison.
+        const rootHeightOnly =
+          rootBox &&
+          previousRootBox &&
+          rootBox.width === previousRootBox.width &&
+          rootBox.height !== previousRootBox.height;
+        previousRootBox = rootBox;
+        if (rootHeightOnly || allocationResponse) return;
         this._scheduleLeftPanelLayout();
       });
       this._leftStackResizeObserver.observe(stack);
@@ -424,11 +526,16 @@ export class PanelLayoutController {
 
   _scheduleLeftPanelLayout({ reconsiderAutoCollapse = false } = {}) {
     if (this.destroyed) return;
+    this._leftStackContentRevision++;
+    this._leftStackAllocationResponse = null;
     if (reconsiderAutoCollapse) this._leftStackReconsiderAutoCollapse = true;
     if (!this._leftPanelStack || this._leftStackLayoutFrame !== null) return;
-    this._leftStackLayoutFrame = requestAnimationFrame(() => {
-      if (this.destroyed) return;
+    const frame = requestAnimationFrame(() => {
+      if (this.destroyed || this._leftStackLayoutFrame !== frame) return;
+      if (this._tryPendingPanelPair()) return;
       this._leftStackLayoutFrame = null;
+      const allocationBefore = this._readLeftAllocationState();
+      const revision = this._leftStackContentRevision;
       if (this._leftStackReconsiderAutoCollapse) {
         this._leftStackReconsiderAutoCollapse = false;
         for (const panel of this._leftPanelStack.querySelectorAll(
@@ -439,12 +546,192 @@ export class PanelLayoutController {
         }
       }
       this._syncLeftPanelAdaptiveLayout();
+      this._rememberLeftAllocationResponse(allocationBefore, revision);
     });
+    this._leftStackLayoutFrame = frame;
+  }
+
+  _tryPendingPanelPair() {
+    // Either rail may have been queued first. Consume only these two existing
+    // requests, before either measures stale left geometry independently.
+    // Disclosure reconsideration retains the ordinary callbacks. The current
+    // Tactical desktop widths are independent in layers.css/scenes.css; the
+    // paired transaction still reads final right geometry after left applies.
+    if (
+      this.destroyed ||
+      this._leftStackLayoutFrame === null ||
+      this._rightStackLayoutFrame === null ||
+      this._leftStackReconsiderAutoCollapse ||
+      this._rightStackReconsiderAutoCollapse ||
+      !window.matchMedia ||
+      window.matchMedia('(max-width: 720px)').matches ||
+      this.readHud().variant !== 'tactical' ||
+      !isRadioPanelPlacementCurrent(document)
+    )
+      return false;
+    cancelAnimationFrame(this._leftStackLayoutFrame);
+    cancelAnimationFrame(this._rightStackLayoutFrame);
+    this._leftStackLayoutFrame = null;
+    this._rightStackLayoutFrame = null;
+    try {
+      const allocationBefore = this._readLeftAllocationState();
+      const revision = this._leftStackContentRevision;
+      this._syncPairedPanelAdaptiveLayout();
+      this._rememberLeftAllocationResponse(allocationBefore, revision);
+    } catch (error) {
+      // A failed measurement must not lose the previously owned right request.
+      // Requests created during this pass retain their own handles/revisions.
+      this._scheduleRightPanelLayout();
+      throw error;
+    }
+    return true;
+  }
+
+  _readLeftAllocationState() {
+    const stack = this._leftPanelStack;
+    if (
+      !stack?.classList.contains('layout-focus') ||
+      stack.classList.contains('layout-tail') ||
+      this.readHud().variant !== 'tactical' ||
+      !window.matchMedia ||
+      window.matchMedia('(max-width: 720px)').matches
+    )
+      return null;
+    const fonts = settledRailFonts();
+    if (!fonts) return null;
+    const panels = [...stack.querySelectorAll(':scope > [data-panel-id]')];
+    const expanded = panels.filter(
+      (panel) => !panel.classList.contains('collapsed'),
+    );
+    const panel = expanded.length === 1 ? expanded[0] : null;
+    const inner =
+      panel &&
+      [...panel.children].find(
+        (child) => !child.classList.contains('panel-glow'),
+      );
+    const allocation = panel?.style.getPropertyValue(
+      '--left-panel-allocated-height',
+    );
+    if (
+      panel?.id !== 'data-panel' ||
+      panel.parentElement !== stack ||
+      !panel.classList.contains('active') ||
+      panel.classList.contains('panel-floating') ||
+      !inner?.classList.contains('data-panel-inner') ||
+      inner.parentElement !== panel ||
+      !/^\d+(?:\.\d+)?px$/.test(allocation) ||
+      Number.parseFloat(allocation) <= 0
+    )
+      return null;
+    return {
+      stack,
+      panel,
+      inner,
+      panels,
+      allocation,
+      fonts,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      // No computed style/layout reads. Explicit/DOM/HUD invalidations revoke
+      // the revision; these attributes also reject changed placement/overrides.
+      attributes: [stack, ...panels, inner].map((node) =>
+        ['class', 'style', 'hidden', 'aria-hidden'].map((name) =>
+          node.getAttribute(name),
+        ),
+      ),
+    };
+  }
+
+  _rememberLeftAllocationResponse(before, revision) {
+    if (!before || revision !== this._leftStackContentRevision) return;
+    const after = this._readLeftAllocationState();
+    if (
+      !after ||
+      before.panel !== after.panel ||
+      before.inner !== after.inner ||
+      !sameRailFonts(before.fonts, after.fonts) ||
+      before.allocation === after.allocation ||
+      ![after.stack, after.panel, after.inner].every((node) =>
+        this._leftStackResizeBoxes.has(node),
+      )
+    )
+      return;
+    this._leftStackAllocationResponse = { state: after, revision };
+  }
+
+  _consumeLeftAllocationResponse(entries) {
+    const proof = this._leftStackAllocationResponse;
+    // A solve can explain only its next ResizeObserver delivery. Do not turn
+    // allocation proportionality into a lasting exemption for content resize.
+    this._leftStackAllocationResponse = null;
+    if (!proof || proof.revision !== this._leftStackContentRevision)
+      return false;
+    const state = this._readLeftAllocationState();
+    const expected = proof.state;
+    if (
+      !state ||
+      state.panel !== expected.panel ||
+      state.inner !== expected.inner ||
+      state.width !== expected.width ||
+      state.height !== expected.height ||
+      state.allocation !== expected.allocation ||
+      !sameRailFonts(state.fonts, expected.fonts) ||
+      state.panels.length !== expected.panels.length ||
+      state.panels.some((panel, index) => panel !== expected.panels[index]) ||
+      JSON.stringify(state.attributes) !== JSON.stringify(expected.attributes)
+    )
+      return false;
+    const boxes = new Map();
+    for (const entry of entries || []) {
+      if (
+        ![state.stack, state.panel, state.inner].includes(entry.target) ||
+        boxes.has(entry.target)
+      )
+        return false;
+      const box = reportedRailBox(entry);
+      const previous = this._leftStackResizeBoxes.get(entry.target);
+      if (
+        !box ||
+        !previous ||
+        ['x', 'y', 'width', 'borderWidth'].some(
+          (key) => box[key] !== previous[key],
+        )
+      )
+        return false;
+      boxes.set(entry.target, box);
+    }
+    const panel = boxes.get(state.panel);
+    const inner = boxes.get(state.inner);
+    const root =
+      boxes.get(state.stack) || this._leftStackResizeBoxes.get(state.stack);
+    const oldPanel = this._leftStackResizeBoxes.get(state.panel);
+    const oldInner = this._leftStackResizeBoxes.get(state.inner);
+    // scenes.css: the sole expanded focus panel flexes to the root within its
+    // owned allocation; its inner has height:100%. layers.css fixes the inner
+    // border/padding. Any changed width/inset, intrinsic-only height, obstacle,
+    // unknown box or independent invalidation retains the original full pass.
+    return !!(
+      panel &&
+      inner &&
+      root &&
+      panel.height !== oldPanel.height &&
+      panel.height ===
+        Math.min(root.height, Number.parseFloat(state.allocation)) &&
+      panel.borderHeight === panel.height &&
+      inner.borderHeight === panel.height &&
+      inner.height - oldInner.height === panel.height - oldPanel.height &&
+      inner.borderHeight - inner.height ===
+        oldInner.borderHeight - oldInner.height
+    );
   }
 
   _syncLeftPanelAdaptiveLayout() {
     if (this.destroyed) return;
-    layoutLeftPanelRail({
+    layoutLeftPanelRail(this._leftPanelLayoutOptions());
+  }
+
+  _leftPanelLayoutOptions() {
+    return {
       stack: this._leftPanelStack,
       obstacles: document.querySelectorAll(LEFT_STACK_OBSTACLE_SELECTOR),
       windowRef: window,
@@ -454,6 +741,24 @@ export class PanelLayoutController {
       onRetry: () => this._scheduleLeftPanelLayout(),
       collapsedHeights: this._leftStackCollapsedHeights,
       onAligned: () => this._scheduleRightPanelLayout(),
+    };
+  }
+
+  _syncPairedPanelAdaptiveLayout() {
+    if (this.destroyed) return;
+    layoutPanelRails({
+      left: {
+        ...this._leftPanelLayoutOptions(),
+        // The right pass below already owns the alignment notification.
+        onAligned: undefined,
+      },
+      readRight: () => this._rightPanelLayoutOptions(),
+      syncRightPlacement: () => {
+        if (this.destroyed) return false;
+        const unchanged = isRadioPanelPlacementCurrent(document);
+        syncRadioPanelPlacement(document);
+        return unchanged;
+      },
     });
   }
   destroy() {
@@ -496,5 +801,7 @@ export class PanelLayoutController {
         this._leftStackCockpitModeHandler,
       );
     this._leftStackCockpitModeHandler = null;
+    this._leftStackAllocationResponse = null;
+    this._leftStackResizeBoxes = new WeakMap();
   }
 }

@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The global loading chip in the UI language: the status vocabulary, the ALPR
 // retry prefix and every mapped-site failure reason.
 import test from 'node:test';

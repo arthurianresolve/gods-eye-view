@@ -8,10 +8,14 @@ import {
   createObservedWeatherEffectsComparisonContract,
   getCaptureComparisonIneligibilityReasons,
   getCaptureReadinessReasons,
+  isSupportedStartupOnlyFixture,
+  resolveStartupOnlyFixtureIdentity,
+  SETTLED_IDLE_ONLY_INELIGIBLE_REASON,
 } from './captureComparisonContract.mjs';
 import { createProductionFlightFixture } from './productionFlightFixture.mjs';
 import { createWeatherEffectsWorkloadFixture } from './weatherEffectsWorkloadFixture.mjs';
 import { makeInfrastructureReport } from './pairedReportTestFixtures.mjs';
+import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 
 const fixture = createProductionFlightFixture({
   count: 2500,
@@ -288,14 +292,11 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
   const appCommit = 'a'.repeat(40);
   const harnessCommit = 'b'.repeat(40);
   const receiptSha256 = 'c'.repeat(64);
-  const expectedAssetPaths = [
-    'index.html',
-    'assets/app.js',
-    'cesium/Cesium.js',
-  ];
+  const bundlePath = `cesium/${'f'.repeat(64)}/Cesium.js`;
+  const expectedAssetPaths = ['index.html', 'assets/app.js', bundlePath];
   const embeddedWorkerContract = {
     schema: 'gev-cesium-embedded-worker-contract/v1',
-    bundlePath: 'cesium/Cesium.js',
+    bundlePath,
     bundleSha256: 'd'.repeat(64),
     workerSourceSha256: 'e'.repeat(64),
     allowedModuleCount: 12,
@@ -310,8 +311,8 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
     receiptSha256,
     baseUrl: 'http://127.0.0.1:4173/',
     expectedAssetPaths,
-    requestedAssetPaths: ['assets/app.js', 'cesium/Cesium.js'],
-    workerTargetUrls: ['http://127.0.0.1:4173/cesium/Cesium.js'],
+    requestedAssetPaths: ['assets/app.js', bundlePath],
+    workerTargetUrls: [`http://127.0.0.1:4173/${bundlePath}`],
     blobRequestUrls: [],
     embeddedWorkerContract,
   });
@@ -334,6 +335,7 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
     pageAssetAudit,
     expectedDocuments,
     expectedAssetPaths,
+    bundlePath,
     bundleSha256: embeddedWorkerContract.bundleSha256,
     workerSourceSha256: embeddedWorkerContract.workerSourceSha256,
     allowedModuleCount: embeddedWorkerContract.allowedModuleCount,
@@ -382,6 +384,49 @@ test('validated receipt-only evidence clears the historical dense and infrastruc
       false,
     );
   }
+});
+
+test('receipt-only readiness uses capture producer identity when builder differs', async () => {
+  const { validateReceiptOnlyWorkerAuditEnvelope } =
+    await import('./receiptOnlyWorkerAudit.mjs');
+  const producer = 'e'.repeat(40);
+  const builder = 'f'.repeat(40);
+  const base = {
+    schema: 'gev-receipt-only-worker-audit/v1',
+    status: 'all-document-receipt-paths-validated',
+    workerAuditMode: 'receipt-only',
+    appCommit: 'a'.repeat(40),
+    harnessCommit: producer,
+    receiptSha256: 'c'.repeat(64),
+    expectedDocuments: [],
+    expectedAssetPaths: [],
+    workerAuditDocuments: [],
+  };
+  assert.equal(
+    validateReceiptOnlyWorkerAuditEnvelope({
+      pageAssetAudit: base,
+      appCommit: base.appCommit,
+      harnessCommit: producer,
+      receiptSha256: base.receiptSha256,
+      expectedDocuments: [],
+      expectedAssetPaths: [],
+      bundlePath: 'cesium/x/Cesium.js',
+      bundleSha256: 'd'.repeat(64),
+      workerSourceSha256: 'e'.repeat(64),
+      allowedModuleCount: 1,
+    }),
+    false,
+  );
+  const source = {
+    buildProvenance: {
+      appCommit: base.appCommit,
+      harnessCommit: builder,
+      captureProducerCommit: producer,
+      receiptSha256: base.receiptSha256,
+    },
+  };
+  assert.equal(source.buildProvenance.harnessCommit, builder);
+  assert.equal(source.buildProvenance.captureProducerCommit, producer);
 });
 
 test('prewarm audit readiness names the unobservable late-creation limitation', () => {
@@ -663,6 +708,84 @@ test('infrastructure comparison exports observed workloads without dense objecti
   );
 });
 
+test('settled idle-only contract is explicit, cable-scoped and retains unrelated readiness failures', () => {
+  const report = makeInfrastructureReport(
+    'a'.repeat(40),
+    'infrastructure-cables',
+  );
+  report.workload.scenarios = ['idle'];
+  report.workload.settledIdleOnly = true;
+  report.captures = report.captures.filter(
+    (sample) => sample.scenario === 'idle',
+  );
+  const options = {
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+    workload: report.workload,
+    settledIdleOnly: true,
+  };
+  const contract = createObservedInfrastructureComparisonContract(options);
+  assert.equal(contract.qualificationMode, 'settled-idle-only');
+  assert.deepEqual(Object.keys(contract.routes), ['idle']);
+  assert.deepEqual(contract.objectiveScenarios, []);
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract({
+      ...options,
+      settledIdleOnly: false,
+    }),
+  );
+  for (const [field, value] of [
+    ['runsPerScenario', 1],
+    ['durationPerSampleMs', 10_000],
+    ['warmupMs', 0],
+  ])
+    assert.throws(() =>
+      createObservedInfrastructureComparisonContract({
+        ...options,
+        workload: { ...options.workload, [field]: value },
+      }),
+    );
+  const foreign = makeInfrastructureReport(
+    'a'.repeat(40),
+    'infrastructure-dams',
+  );
+  assert.throws(() =>
+    createObservedInfrastructureComparisonContract({
+      ...options,
+      fixture: foreign.workload.fixture,
+    }),
+  );
+  const readiness = getCaptureComparisonIneligibilityReasons({
+    ...options,
+    contract,
+    source: report.source,
+  });
+  assert.ok(readiness.includes(SETTLED_IDLE_ONLY_INELIGIBLE_REASON));
+  assert.ok(
+    readiness.includes(
+      'hardware-performance-acceptance-was-not-requested-or-verified',
+    ),
+  );
+  assert.ok(
+    !readiness.includes(
+      'required-infrastructure-objective-workloads-are-incomplete',
+    ),
+  );
+  const unmarked = getCaptureComparisonIneligibilityReasons({
+    ...options,
+    contract,
+    workload: { ...report.workload, settledIdleOnly: false },
+  });
+  assert.ok(
+    unmarked.includes(
+      'required-infrastructure-objective-workloads-are-incomplete',
+    ),
+  );
+});
+
 test('weather comparison contract binds phase source, settings, populations and display geometry', () => {
   const observed = makeWeatherEffectsObservation();
   const create = (overrides = {}) =>
@@ -688,6 +811,27 @@ test('weather comparison contract binds phase source, settings, populations and 
     contract.populations,
     observed.fixtureDelivery.populationsBefore,
   );
+  const numericInfrared = structuredClone(observed);
+  for (const sample of numericInfrared.captures) {
+    sample.weatherEffectsClock.weatherStateBefore.visualState.satelliteInfrared = 100;
+    sample.weatherEffectsClock.weatherStateAfter.visualState.satelliteInfrared = 100;
+  }
+  assert.doesNotThrow(() => create(numericInfrared));
+  assert.equal(
+    numericInfrared.captures[0].weatherEffectsClock.weatherStateBefore
+      .visualState.satelliteInfrared,
+    100,
+  );
+  for (const invalidInfrared of [0, 99, '100', null, undefined]) {
+    const invalid = structuredClone(observed);
+    for (const sample of invalid.captures) {
+      sample.weatherEffectsClock.weatherStateBefore.visualState.satelliteInfrared =
+        invalidInfrared;
+      sample.weatherEffectsClock.weatherStateAfter.visualState.satelliteInfrared =
+        invalidInfrared;
+    }
+    assert.throws(() => create(invalid));
+  }
   for (const mutate of [
     (value) => {
       value.fixture.mediaPreferences['prefers-reduced-motion'] = 'reduce';
@@ -908,5 +1052,77 @@ test('infrastructure contract rejects altered source populations and clock', () 
   assert.throws(
     () => createObservedInfrastructureComparisonContract(changedRoute),
     /route differs from the pinned camera\/scenario/,
+  );
+});
+
+test('startup-only shards accept datacenters, dams, Austin, or dense with their real row identity', () => {
+  assert.equal(
+    isSupportedStartupOnlyFixture('infrastructure-datacenters'),
+    true,
+  );
+  assert.equal(isSupportedStartupOnlyFixture('infrastructure-dams'), true);
+  assert.equal(
+    isSupportedStartupOnlyFixture(AUSTIN_OPERATING_WORKLOAD_ID),
+    true,
+  );
+  assert.equal(isSupportedStartupOnlyFixture('dense-investigation'), true);
+  assert.equal(isSupportedStartupOnlyFixture('infrastructure-cables'), false);
+  assert.deepEqual(
+    resolveStartupOnlyFixtureIdentity('infrastructure-datacenters', {
+      infrastructureWorkload: {
+        workloadId: 'infrastructure-datacenters',
+        id: 'bundled-datacenters-static-v1',
+        sha256: '9'.repeat(64),
+      },
+    }),
+    {
+      workloadId: 'infrastructure-datacenters',
+      id: 'bundled-datacenters-static-v1',
+      sha256: '9'.repeat(64),
+    },
+  );
+  assert.deepEqual(
+    resolveStartupOnlyFixtureIdentity('infrastructure-dams', {
+      infrastructureWorkload: {
+        workloadId: 'infrastructure-dams',
+        id: 'bundled-dams-static-v1',
+        sha256: 'a'.repeat(64),
+      },
+    }),
+    {
+      workloadId: 'infrastructure-dams',
+      id: 'bundled-dams-static-v1',
+      sha256: 'a'.repeat(64),
+    },
+  );
+  assert.deepEqual(
+    resolveStartupOnlyFixtureIdentity(AUSTIN_OPERATING_WORKLOAD_ID, {
+      austinOperatingWorkload: {
+        workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
+        id: 'austin-operating-composed-v1',
+        sha256: 'b'.repeat(64),
+      },
+    }),
+    {
+      matrixRowId: 'operating-view',
+      workloadId: AUSTIN_OPERATING_WORKLOAD_ID,
+      id: 'austin-operating-composed-v1',
+      sha256: 'b'.repeat(64),
+    },
+  );
+  assert.throws(
+    () => resolveStartupOnlyFixtureIdentity('infrastructure-cables'),
+    /Unsupported startup-only workload/,
+  );
+  assert.throws(
+    () =>
+      resolveStartupOnlyFixtureIdentity(AUSTIN_OPERATING_WORKLOAD_ID, {
+        austinOperatingWorkload: {
+          workloadId: 'infrastructure-dams',
+          id: 'bundled-dams-static-v1',
+          sha256: 'c'.repeat(64),
+        },
+      }),
+    /Expected values to be strictly equal/,
   );
 });

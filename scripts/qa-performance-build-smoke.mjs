@@ -48,6 +48,7 @@ import {
 } from './performance/productionFlightFixture.mjs';
 import {
   deriveCesiumEmbeddedWorkerContract,
+  resolveCesiumBundlePath,
   installCesiumWorkerBlobAudit,
   MAX_WORKER_TARGETS,
   restoreCesiumWorkerBlobAudit,
@@ -97,6 +98,17 @@ export const MAX_CAPTURE_CLI_REPORT_ARTIFACT_BYTES = 8 * 1024 * 1024;
 const ROOT = await realpath(
   path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'),
 );
+export async function readReceiptedCesiumWorkerContract(build) {
+  const bundlePath = resolveCesiumBundlePath(build.receipt.assets);
+  const bundleBytes = await readFile(
+    path.join(build.buildRoot, ...bundlePath.split('/')),
+  );
+  return deriveCesiumEmbeddedWorkerContract({
+    bundlePath,
+    bundleBytes,
+    assets: build.receipt.assets,
+  });
+}
 const DEFAULT_BUDGET_MS = 12 * 60 * 1000;
 const BUILD_COMMAND_TIMEOUT_MS = 150 * 1000;
 // The dense integration capture runs six independent browser samples. On the
@@ -143,7 +155,22 @@ export function smokeProviderPreparationMode(providerFixture) {
     : 'dense-provider-fixture';
 }
 
-export function smokeCaptureSchedule(providerFixture) {
+export function smokeCaptureSchedule(
+  providerFixture,
+  trackingCpuProfile = false,
+) {
+  if (trackingCpuProfile) {
+    if (providerFixture !== 'dense-investigation')
+      throw new TypeError(
+        'Tracking CPU profile requires the dense investigation fixture.',
+      );
+    return {
+      runs: 1,
+      warmupMs: 1000,
+      seconds: 1,
+      weatherPhaseDiagnostic: false,
+    };
+  }
   return providerFixture === WEATHER_EFFECTS_WORKLOAD_ID
     ? {
         runs: 1,
@@ -566,7 +593,7 @@ export async function runNativeMapJourneyForSmoke({
 }) {
   assertSha(revision, 'Map smoke revision');
   assert.ok(fixture && typeof fixture === 'object');
-  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v4');
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v5');
   assert.match(fixture.manifestSha256 || '', /^[a-f0-9]{64}$/);
   assert.equal(
     typeof mapStreamingCaptureModule?.runNativeMapStreamingJourney,
@@ -1744,17 +1771,26 @@ const OPTION_KEYS = new Map([
   ['--provider-fixture', 'providerFixture'],
   ['--capture-scene-frame-diagnostics', 'sceneFrameDiagnostics'],
   ['--capture-first-motion-cpu-profile', 'firstMotionCpuProfile'],
+  ['--capture-tracking-cpu-profile', 'trackingCpuProfile'],
   ['--capture-depth-pick-attribution', 'depthPickAttribution'],
   ['--capture-shader-program-attribution', 'shaderProgramAttribution'],
   ['--capture-renderer-backend', 'captureRendererBackend'],
   ['--capture-delay-negative-control', 'captureDelayNegativeControl'],
 ]);
 
-const PROVIDER_CPU_PROFILE_TARGETS = Object.freeze([
+const FIRST_MOTION_CPU_PROFILE_TARGETS = Object.freeze([
   { scenario: 'idle', run: 1 },
   { scenario: 'idle', run: 2 },
   { scenario: 'scripted-motion', run: 1 },
 ]);
+const TRACKING_CPU_PROFILE_TARGETS = Object.freeze([
+  { scenario: 'selected-aircraft-tracking', run: 1 },
+]);
+function providerCpuProfileTargets(trackingCpuProfile = false) {
+  return trackingCpuProfile
+    ? TRACKING_CPU_PROFILE_TARGETS
+    : FIRST_MOTION_CPU_PROFILE_TARGETS;
+}
 const WEATHER_EFFECTS_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
 const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
   '5ba7e41ab29a1b9eeb6c773059f872bcd9f12879f358c4e7aaccb4a152bbac9a';
@@ -1762,7 +1798,7 @@ const LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256 =
 function providerCpuProfileKey(target) {
   return target.scenario === 'idle'
     ? `provider-idle-${target.run}`
-    : `provider-scripted-motion-${target.run}`;
+    : `provider-${target.scenario}-${target.run}`;
 }
 
 function sameProviderCpuProfileTarget(left, right) {
@@ -1845,10 +1881,14 @@ function validateProviderCpuProfileWindow(window, target, sample) {
   );
 }
 
-export async function readProviderCpuProfileIndexSet(directory) {
+export async function readProviderCpuProfileIndexSet(
+  directory,
+  trackingCpuProfile = false,
+) {
   const profiles = [];
   let invalidIndexCount = 0;
-  for (const target of PROVIDER_CPU_PROFILE_TARGETS) {
+  const targets = providerCpuProfileTargets(trackingCpuProfile);
+  for (const target of targets) {
     const key = providerCpuProfileKey(target);
     const indexPath = path.join(directory, `${key}-cpu-profile-ref.json`);
     let bytes;
@@ -1913,10 +1953,9 @@ export async function readProviderCpuProfileIndexSet(directory) {
   return {
     schema: 'gev-provider-sample-cpu-profile-index-set/v1',
     performanceAcceptanceEligible: false,
-    expectedTargets: PROVIDER_CPU_PROFILE_TARGETS,
+    expectedTargets: targets,
     status:
-      profiles.length === PROVIDER_CPU_PROFILE_TARGETS.length &&
-      invalidIndexCount === 0
+      profiles.length === targets.length && invalidIndexCount === 0
         ? 'all-targets-recorded'
         : 'partial',
     invalidIndexCount,
@@ -1966,6 +2005,11 @@ export function parseSmokeArguments(argv) {
       throw new TypeError(
         'First-motion CPU profile must be enabled or disabled.',
       );
+    if (
+      flag === '--capture-tracking-cpu-profile' &&
+      !['enabled', 'disabled'].includes(value)
+    )
+      throw new TypeError('Tracking CPU profile must be enabled or disabled.');
     if (
       flag === '--capture-depth-pick-attribution' &&
       !['enabled', 'disabled'].includes(value)
@@ -2042,6 +2086,8 @@ export function parseSmokeArguments(argv) {
     output.sceneFrameDiagnostics = output.sceneFrameDiagnostics === 'enabled';
   if (output.firstMotionCpuProfile)
     output.firstMotionCpuProfile = output.firstMotionCpuProfile === 'enabled';
+  if (output.trackingCpuProfile)
+    output.trackingCpuProfile = output.trackingCpuProfile === 'enabled';
   if (output.depthPickAttribution)
     output.depthPickAttribution = output.depthPickAttribution === 'enabled';
   if (output.shaderProgramAttribution)
@@ -2058,6 +2104,15 @@ export function parseSmokeArguments(argv) {
     throw new TypeError(
       'First-motion CPU profiling requires the dense investigation fixture.',
     );
+  if (
+    output.trackingCpuProfile &&
+    output.providerFixture !== 'dense-investigation'
+  )
+    throw new TypeError(
+      'Tracking CPU profiling requires the dense investigation fixture.',
+    );
+  if (output.trackingCpuProfile && output.firstMotionCpuProfile)
+    throw new TypeError('CPU profile modes cannot be combined.');
   return output;
 }
 
@@ -2691,15 +2746,17 @@ export function validateCaptureCliReport(report, expected) {
   const workerAuditMode = expected.workerAuditMode || 'diagnostic';
   assert.equal(report.workerAuditMode, workerAuditMode);
   assert.equal(report.comparisonEligible, false);
-  if (expected.firstMotionCpuProfile) {
+  if (expected.firstMotionCpuProfile || expected.trackingCpuProfile) {
     const profileEvidence = report.providerSampleCpuProfiles;
-    const targets = PROVIDER_CPU_PROFILE_TARGETS;
+    const targets = providerCpuProfileTargets(expected.trackingCpuProfile);
     assert.equal(profileEvidence?.enabled, true);
     assert.deepEqual(profileEvidence?.targets, targets);
     assert.equal(profileEvidence?.performanceAcceptanceEligible, false);
     assert.equal(
       profileEvidence?.scope,
-      'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
+      expected.trackingCpuProfile
+        ? 'first selected-aircraft-tracking sample from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing'
+        : 'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing',
     );
     assert.ok(['complete', 'incomplete'].includes(profileEvidence?.status));
     assert.equal(profileEvidence?.profiles?.length, targets.length);
@@ -2967,7 +3024,11 @@ export function validateCaptureCliReport(report, expected) {
   } else {
     assert.equal(report.sceneFrameDiagnostics, undefined);
   }
-  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 6 });
+  const runsPerScenario = expected.trackingCpuProfile ? 1 : 2;
+  assert.deepEqual(report.integrity, {
+    status: 'passed',
+    sampleCount: 3 * runsPerScenario,
+  });
   assert.equal(report.source?.appCommit, expected.appSha);
   assert.equal(report.source?.harnessCommit, expected.harnessSha);
   assert.equal(
@@ -3015,11 +3076,11 @@ export function validateCaptureCliReport(report, expected) {
         workerAudit.status,
         'receipt-derived-worker-blobs-validated',
       );
-    assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6);
+    assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 3 * runsPerScenario);
   }
   assert.equal(report.workload?.warmupMs, 1000);
   assert.equal(report.workload?.durationPerSampleMs, 1000);
-  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.runsPerScenario, runsPerScenario);
   assert.equal(report.workload?.startupRuns, 1);
   assert.equal(report.environment?.startup?.runCount, 1);
   assert.equal(
@@ -3223,7 +3284,7 @@ export function validateCaptureCliReport(report, expected) {
     observedReadinessReasons.push(
       'scene-frame-attribution-instrumentation-is-enabled',
     );
-  if (expected.firstMotionCpuProfile)
+  if (expected.firstMotionCpuProfile || expected.trackingCpuProfile)
     observedReadinessReasons.push(
       'provider-sample-cpu-profile-instrumentation-is-enabled',
     );
@@ -3254,7 +3315,7 @@ export function validateCaptureCliReport(report, expected) {
     assert.ok(report.environment?.renderer);
   else assert.match(report.environment?.renderer || '', /swiftshader/i);
   assert.equal(report.environment?.hardwareEligible, false);
-  assert.equal(report.captures?.length, 6);
+  assert.equal(report.captures?.length, 3 * runsPerScenario);
   assert.equal(report.fixtureDelivery?.status, 'observed');
   assert.equal(report.fixtureDelivery?.fixtureSha256, expected.fixtureSha256);
   assert.equal(report.fixtureDelivery?.observedFlightsCount, 2500);
@@ -3263,8 +3324,11 @@ export function validateCaptureCliReport(report, expected) {
     const samples = report.captures.filter(
       (sample) => sample.scenario === scenario,
     );
-    assert.equal(samples.length, 2, `Expected two ${scenario} captures.`);
-    assert.deepEqual(samples.map((sample) => sample.run).sort(), [1, 2]);
+    assert.equal(samples.length, runsPerScenario);
+    assert.deepEqual(
+      samples.map((sample) => sample.run).sort(),
+      Array.from({ length: runsPerScenario }, (_, index) => index + 1),
+    );
     for (const sample of samples) {
       assertProviderFixtureCaptureClock(sample.fixtureClock, {
         fixedTime: expected.fixedTime || report.fixtureDelivery.fixedTime,
@@ -5519,6 +5583,7 @@ export function buildCaptureCliValidationExpectations({
   workerAuditMode,
   sceneFrameDiagnostics,
   firstMotionCpuProfile,
+  trackingCpuProfile = false,
   depthPickAttribution,
   shaderProgramAttribution,
   captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
@@ -5568,6 +5633,7 @@ export function buildCaptureCliValidationExpectations({
     ...(receiptOnlyWorkerContract ? { receiptOnlyWorkerContract } : {}),
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
+    ...(trackingCpuProfile ? { trackingCpuProfile: true } : {}),
     depthPickAttribution,
     ...(typeof shaderProgramAttribution === 'boolean'
       ? { shaderProgramAttribution }
@@ -5589,6 +5655,7 @@ async function runCandidateCaptureCli({
   captureRendererBackend = DEFAULT_CAPTURE_RENDERER_BACKEND,
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
+  trackingCpuProfile = false,
   depthPickAttribution = false,
   shaderProgramAttribution = false,
   captureDelayNegativeControl = false,
@@ -5614,13 +5681,7 @@ async function runCandidateCaptureCli({
   const expectedReceiptOnlyWorkerContract =
     workerAuditMode === 'receipt-only'
       ? {
-          ...deriveCesiumEmbeddedWorkerContract({
-            bundlePath: 'cesium/Cesium.js',
-            bundleBytes: await readFile(
-              path.join(build.buildRoot, 'cesium', 'Cesium.js'),
-            ),
-            assets: build.receipt.assets,
-          }),
+          ...(await readReceiptedCesiumWorkerContract(build)),
           assetPaths: build.receipt.assets.map((asset) => asset.path),
         }
       : null;
@@ -5629,7 +5690,10 @@ async function runCandidateCaptureCli({
     'scripts',
     'capture-scene-performance.mjs',
   );
-  const captureSchedule = smokeCaptureSchedule(providerFixture);
+  const captureSchedule = smokeCaptureSchedule(
+    providerFixture,
+    trackingCpuProfile,
+  );
   const args = [
     scriptPath,
     '--url',
@@ -5689,11 +5753,13 @@ async function runCandidateCaptureCli({
   if (sceneFrameDiagnostics) args.push('--scene-frame-diagnostics');
   if (depthPickAttribution) args.push('--depth-pick-attribution');
   if (shaderProgramAttribution) args.push('--shader-program-attribution');
-  if (firstMotionCpuProfile) {
+  if (firstMotionCpuProfile || trackingCpuProfile) {
     if (typeof profileArtifactDirectory !== 'string')
       throw new TypeError('CPU profile artifact directory is required.');
     args.push(
-      '--first-motion-cpu-profile',
+      trackingCpuProfile
+        ? '--tracking-cpu-profile'
+        : '--first-motion-cpu-profile',
       '--cpu-profile-artifact-directory',
       profileArtifactDirectory,
     );
@@ -5742,7 +5808,9 @@ async function runCandidateCaptureCli({
         captureRendererBackend,
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
+        trackingCpuProfile,
         depthPickAttribution,
+        runsPerScenario: captureSchedule.runs,
         shaderProgramAttribution,
         receiptOnlyWorkerContract: expectedReceiptOnlyWorkerContract,
         mapStreamingFixture:
@@ -5770,15 +5838,16 @@ async function runCandidateCaptureCli({
         captures: captureReport.captures,
       });
     }
-    if (firstMotionCpuProfile) {
+    if (firstMotionCpuProfile || trackingCpuProfile) {
       const evidence = captureReport.providerSampleCpuProfiles;
+      const targets = providerCpuProfileTargets(trackingCpuProfile);
       for (
         let indexPosition = 0;
         indexPosition < evidence.profiles.length;
         indexPosition += 1
       ) {
         const window = evidence.profiles[indexPosition];
-        const target = PROVIDER_CPU_PROFILE_TARGETS[indexPosition];
+        const target = targets[indexPosition];
         const key = providerCpuProfileKey(target);
         const indexPath = path.join(
           profileArtifactDirectory,
@@ -5852,10 +5921,10 @@ async function runCandidateCaptureCli({
     const captureCliFailure = compactCaptureCliFailure(captureReport) || {
       diagnostics: error.childDiagnostics || null,
     };
-    if (firstMotionCpuProfile) {
+    if (firstMotionCpuProfile || trackingCpuProfile) {
       const directory = profileArtifactDirectory || `${reportPath}.cpu-profile`;
       captureCliFailure.cpuProfileArtifacts =
-        await readProviderCpuProfileIndexSet(directory);
+        await readProviderCpuProfileIndexSet(directory, trackingCpuProfile);
     }
     if (captureCliReportArtifact)
       captureCliFailure.captureCliReportArtifact = captureCliReportArtifact;
@@ -5890,6 +5959,7 @@ async function runRevision({
   providerFixture,
   sceneFrameDiagnostics = false,
   firstMotionCpuProfile = false,
+  trackingCpuProfile = false,
   depthPickAttribution = false,
   shaderProgramAttribution = false,
   captureDelayNegativeControl = false,
@@ -5918,20 +5988,7 @@ async function runRevision({
           ? MAP_FIXTURE_BUILD_PROFILE_ID
           : null,
     });
-    const bundlePath = 'cesium/Cesium.js';
-    const bundleAsset = build.receipt.assets.find(
-      (asset) => asset.path === bundlePath,
-    );
-    if (!bundleAsset)
-      throw new Error('Build receipt is missing the Cesium bundle.');
-    const bundleBytes = await readFile(
-      path.join(build.buildRoot, ...bundlePath.split('/')),
-    );
-    workerContract = deriveCesiumEmbeddedWorkerContract({
-      bundlePath,
-      bundleBytes,
-      assets: build.receipt.assets,
-    });
+    workerContract = await readReceiptedCesiumWorkerContract(build);
   } catch (error) {
     error.smokeDiagnostics = {
       phase: 'clean-source-build',
@@ -6553,6 +6610,7 @@ async function runRevision({
         captureRendererBackend,
         sceneFrameDiagnostics,
         firstMotionCpuProfile,
+        trackingCpuProfile,
         depthPickAttribution,
         shaderProgramAttribution,
         captureDelayNegativeControl:
@@ -6890,6 +6948,7 @@ async function main() {
     providerFixture = 'dense-investigation',
     sceneFrameDiagnostics = false,
     firstMotionCpuProfile = false,
+    trackingCpuProfile = false,
     depthPickAttribution = false,
     shaderProgramAttribution = false,
     captureDelayNegativeControl = false,
@@ -6960,10 +7019,11 @@ async function main() {
     performanceAcceptanceEligible: false,
     sceneFrameDiagnostics,
     firstMotionCpuProfile,
+    trackingCpuProfile,
     depthPickAttribution,
     shaderProgramAttribution,
     captureDelayNegativeControl,
-    ...(firstMotionCpuProfile
+    ...(firstMotionCpuProfile || trackingCpuProfile
       ? {
           cpuProfileArtifactDirectory: path.basename(
             `${outputPath}.cpu-profile`,
@@ -7061,13 +7121,15 @@ async function main() {
           browserGraphics,
           sceneFrameDiagnostics,
           firstMotionCpuProfile,
+          trackingCpuProfile,
           depthPickAttribution,
           shaderProgramAttribution,
           captureDelayNegativeControl: captureDelayNegativeControl,
           captureCliReportArtifactPath: `${outputPath}.capture-cli-report-${label}.json`,
-          profileArtifactDirectory: firstMotionCpuProfile
-            ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
-            : null,
+          profileArtifactDirectory:
+            firstMotionCpuProfile || trackingCpuProfile
+              ? path.join(`${outputPath}.cpu-profile`, `candidate-${startedAt}`)
+              : null,
           providerFixture,
           infrastructureCaptureFixture,
           weatherEffectsCaptureFixture,

@@ -10,7 +10,11 @@ import {
 import os from 'node:os';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { stageRelease, verifyReleaseDirectory } from './stage-release.mjs';
+import {
+  collectProductionRuntimeFiles,
+  stageRelease,
+  verifyReleaseDirectory,
+} from './stage-release.mjs';
 import {
   exportWorkspaceBundle,
   parseWorkspaceBundle,
@@ -131,6 +135,19 @@ export async function runInstallRecoveryFixture({
     const target = path.join(source, file);
     await mkdir(path.dirname(target), { recursive: true });
     await copyFile(path.join(repo, file), target);
+  }
+  // Keep the fixture's copied package contract complete when it declares the
+  // production host. Missing runtime files must remain a staging failure.
+  const pkg = JSON.parse(
+    await readFile(path.join(source, 'package.json'), 'utf8'),
+  );
+  for (const { absolute, relative } of await collectProductionRuntimeFiles(
+    repo,
+    pkg,
+  )) {
+    const target = path.join(source, relative);
+    await mkdir(path.dirname(target), { recursive: true });
+    await copyFile(absolute, target);
   }
   await writeFile(
     path.join(source, 'dist', 'index.html'),

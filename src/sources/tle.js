@@ -61,3 +61,8 @@ export function tleCatalogNumber(line1) {
     line.startsWith('1 ') ? line.slice(2, 7) : line,
   );
 }
+
+/** NORAD catalog number from a satellite.js record, or NaN when invalid. */
+export function noradIdFromSatnum(satnum) {
+  return decodeTleCatalogNumber(satnum) ?? Number.NaN;
+}

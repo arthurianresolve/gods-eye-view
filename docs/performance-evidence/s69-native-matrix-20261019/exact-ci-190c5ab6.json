@@ -1,0 +1,209 @@
+{
+  "schema": "gev-exact-candidate-ci-review/v2",
+  "reviewedAt": "2026-10-20T02:04:44.548Z",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "status": "passed",
+  "repository": "arthurianresolve/gods-eye-view",
+  "checks": [
+    {
+      "kind": "standard",
+      "runId": 39332100464,
+      "headSha": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "status": "passed",
+      "event": "pull_request",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39332100464",
+      "raw": "standard.json",
+      "rawSha256": "7d7add5a6402cb3331de462b09518f76a58a6d2c24b7157642cf2f2cd574856e",
+      "passedJobs": [
+        "Street Level browser gate",
+        "Install and update recovery (macos-latest)",
+        "Install and update recovery (windows-latest)",
+        "Windows onboarding",
+        "Node 24.14.0",
+        "Install and update recovery (ubuntu-latest)",
+        "Node 26.x"
+      ],
+      "intentionallySkippedJobs": [
+        "Free hosted Mac accelerated retention diagnostic",
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "Isolated mission render-demand correctness",
+        "Aircraft tracking regression",
+        "Isolated rendered mixed-use smoke",
+        "Baseline-compatible performance build smoke",
+        "Native WebGL probe (${{ matrix.os }})",
+        "Isolated import and workspace lifecycle",
+        "Isolated CCTV lifecycle",
+        "60-minute rendered application soak",
+        "Isolated terrain and picking lifecycle",
+        "Free hosted Mac rendering diagnostic"
+      ],
+      "testedSource": {
+        "kind": "pull-request-merge-with-identical-tree",
+        "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+        "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "tree": "c064e2427e24bf7e017279f610ce715781cca13d",
+        "mergeObject": "tested-merge-object.json",
+        "candidateObject": "candidate-object.json",
+        "observations": [
+          {
+            "job": "Node 24.14.0",
+            "jobId": 118332546835,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546835.log",
+            "logSha256": "e31acffc605919023488d74dc05ba4d82d9183d65e696e31206709d6f10e4b7a"
+          },
+          {
+            "job": "Node 26.x",
+            "jobId": 118332546875,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546875.log",
+            "logSha256": "9ae49341f9c909b4b9ddad363219080faa9687c9076b63875b70c0687761fd71"
+          },
+          {
+            "job": "Windows onboarding",
+            "jobId": 118332546834,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546834.log",
+            "logSha256": "555442167164a8954b7f594d800781e7ff8247f007f6226704233a7f149cd742"
+          },
+          {
+            "job": "Street Level browser gate",
+            "jobId": 118332546493,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546493.log",
+            "logSha256": "60e2adb150cbbf7358384e368ce641426339bfc28b314a353886bdd82bf50546"
+          },
+          {
+            "job": "Install and update recovery (ubuntu-latest)",
+            "jobId": 118332546845,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546845.log",
+            "logSha256": "07a0e724e3743c304100eb6c3effa5e548e75e9be7d1c674f053a0d9d22f8e7b"
+          },
+          {
+            "job": "Install and update recovery (macos-latest)",
+            "jobId": 118332546747,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546747.log",
+            "logSha256": "a69ec1009104199095dee1fde4cbc675a545d799650ec8d6905937da41d4236a"
+          },
+          {
+            "job": "Install and update recovery (windows-latest)",
+            "jobId": 118332546828,
+            "testedCommit": "596a5d32466f5d2251757a4eb55b86f4061e884e",
+            "log": "standard-checkout-118332546828.log",
+            "logSha256": "edc3d1687fb553f4aa9883797b2e40a04fc85daf1b842047651298036b04ea9e"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "tracking",
+      "runId": 39356217330,
+      "headSha": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "status": "passed",
+      "event": "workflow_dispatch",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39356217330",
+      "raw": "tracking.json",
+      "rawSha256": "12e7b7d4f40426a0b286cdeb1bedd2c75ce545f5467beee75bc244fe3a9a0a6d",
+      "passedJobs": [
+        "Aircraft tracking regression"
+      ],
+      "intentionallySkippedJobs": [
+        "Native WebGL probe (${{ matrix.os }})",
+        "Isolated terrain and picking lifecycle",
+        "Isolated mission render-demand correctness",
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "Node ${{ matrix.node }}",
+        "Windows onboarding",
+        "Free hosted Mac accelerated retention diagnostic",
+        "Isolated CCTV lifecycle",
+        "Isolated import and workspace lifecycle",
+        "60-minute rendered application soak",
+        "Free hosted Mac rendering diagnostic",
+        "Baseline-compatible performance build smoke",
+        "Install and update recovery (${{ matrix.os }})",
+        "Isolated rendered mixed-use smoke",
+        "Street Level browser gate"
+      ]
+    },
+    {
+      "kind": "release",
+      "runId": 39332092277,
+      "headSha": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "status": "passed",
+      "event": "workflow_dispatch",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39332092277",
+      "raw": "release.json",
+      "rawSha256": "d3e88c0df7f4bfdc90344cfbfb96dc686a38e2122b5fe19df96ca23ebe22c74f",
+      "passedJobs": [
+        "Build and verify release artifact"
+      ],
+      "intentionallySkippedJobs": []
+    }
+  ],
+  "files": [
+    {
+      "name": "standard.json",
+      "bytes": 24904,
+      "sha256": "7d7add5a6402cb3331de462b09518f76a58a6d2c24b7157642cf2f2cd574856e"
+    },
+    {
+      "name": "standard-checkout-118332546835.log",
+      "bytes": 1683334,
+      "sha256": "e31acffc605919023488d74dc05ba4d82d9183d65e696e31206709d6f10e4b7a"
+    },
+    {
+      "name": "standard-checkout-118332546875.log",
+      "bytes": 1646661,
+      "sha256": "9ae49341f9c909b4b9ddad363219080faa9687c9076b63875b70c0687761fd71"
+    },
+    {
+      "name": "standard-checkout-118332546834.log",
+      "bytes": 71856,
+      "sha256": "555442167164a8954b7f594d800781e7ff8247f007f6226704233a7f149cd742"
+    },
+    {
+      "name": "standard-checkout-118332546493.log",
+      "bytes": 213944,
+      "sha256": "60e2adb150cbbf7358384e368ce641426339bfc28b314a353886bdd82bf50546"
+    },
+    {
+      "name": "standard-checkout-118332546845.log",
+      "bytes": 170372,
+      "sha256": "07a0e724e3743c304100eb6c3effa5e548e75e9be7d1c674f053a0d9d22f8e7b"
+    },
+    {
+      "name": "standard-checkout-118332546747.log",
+      "bytes": 179231,
+      "sha256": "a69ec1009104199095dee1fde4cbc675a545d799650ec8d6905937da41d4236a"
+    },
+    {
+      "name": "standard-checkout-118332546828.log",
+      "bytes": 228840,
+      "sha256": "edc3d1687fb553f4aa9883797b2e40a04fc85daf1b842047651298036b04ea9e"
+    },
+    {
+      "name": "tested-merge-object.json",
+      "bytes": 2767,
+      "sha256": "aca5a87db80d12eb008ca24839e49fa92d1e964441eec4b72664c421a47560ad"
+    },
+    {
+      "name": "candidate-object.json",
+      "bytes": 1276,
+      "sha256": "c28dc56a993afeaf0210875568a2d1d0ffd06e780a4f1faa83ed31fc87e1accb"
+    },
+    {
+      "name": "tracking.json",
+      "bytes": 6645,
+      "sha256": "12e7b7d4f40426a0b286cdeb1bedd2c75ce545f5467beee75bc244fe3a9a0a6d"
+    },
+    {
+      "name": "release.json",
+      "bytes": 4091,
+      "sha256": "d3e88c0df7f4bfdc90344cfbfb96dc686a38e2122b5fe19df96ca23ebe22c74f"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/exact-ci-190c5ab6",
+  "scope": "Exact-candidate source-tree standard CI, explicit exact-commit tracking workflow, and exact-commit candidate packaging. The PR merge and candidate have identical trees, with every required standard job checkout verified. Optional workflow-selected jobs remain skipped. This does not replace native GPU, visual, startup, or retained-resource qualification."
+}

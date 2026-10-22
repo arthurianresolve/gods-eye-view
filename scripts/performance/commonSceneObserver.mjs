@@ -116,6 +116,35 @@ export function observeCommonScene({
     map: view?.map ?? visualState.map ?? null,
     visualState,
   };
+  const nativeSharpnessProfile =
+    viewer.__gevNativeSharpnessProfile === 'native-sharpness-v1'
+      ? {
+          id: viewer.__gevNativeSharpnessProfile,
+          useBrowserRecommendedResolution:
+            viewer.useBrowserRecommendedResolution,
+          resolutionScale: viewer.resolutionScale,
+          maximumScreenSpaceError: viewer.scene?.globe?.maximumScreenSpaceError,
+          viewport: {
+            width: canvas.clientWidth || windowObject.innerWidth,
+            height: canvas.clientHeight || windowObject.innerHeight,
+            dpr: windowObject.devicePixelRatio,
+          },
+          drawingBuffer: { width: canvas.width, height: canvas.height },
+        }
+      : null;
+  if (nativeSharpnessProfile) {
+    if (
+      nativeSharpnessProfile.useBrowserRecommendedResolution !== false ||
+      nativeSharpnessProfile.resolutionScale !== 1 ||
+      nativeSharpnessProfile.maximumScreenSpaceError !== 1 ||
+      !Number.isInteger(nativeSharpnessProfile.viewport.width) ||
+      !Number.isInteger(nativeSharpnessProfile.viewport.height) ||
+      !Number.isFinite(nativeSharpnessProfile.viewport.dpr)
+    )
+      fail('declared native sharpness profile');
+  }
+  if (nativeSharpnessProfile)
+    settings.nativeSharpnessProfile = nativeSharpnessProfile;
   for (const key of ['resolutionScale', 'msaaSamples'])
     if (!Number.isFinite(settings[key])) fail(`effective ${key}`);
   for (const key of ['antialias', 'fxaa'])
@@ -158,6 +187,7 @@ export function observeCommonScene({
         dpr: windowObject.devicePixelRatio,
       },
       drawingBuffer: { width: canvas.width, height: canvas.height },
+      ...(nativeSharpnessProfile ? { nativeSharpnessProfile } : {}),
       focused: windowObject.document.hasFocus(),
       visible: !windowObject.document.hidden,
       layers,

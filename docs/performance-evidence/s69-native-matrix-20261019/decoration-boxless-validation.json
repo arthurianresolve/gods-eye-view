@@ -1,0 +1,150 @@
+{
+  "schema": "gev-visual-readiness-validation/v1",
+  "baseCommit": "ad36a1f9647fea9bf28c0cd30c3fb259966cca02",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/decoration-boxless-validation-20261020/source",
+  "status": "passed",
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused-visual-readiness",
+      "code": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-focused-visual-readiness.log",
+      "sha256": "fed352778e0ade56dccfc23ed7ef0d504f9ad862b03e68bcbbdee8b0407fb0b3",
+      "tail": "7609ms)\n✔ serialized activation uses the production selection after surface readiness (0.731239ms)\n✔ ready surface does not hide enable, selection, or visual setting failures (1.47326ms)\n✔ visual state page callback serializes without Node or outer bindings (0.817156ms)\n✔ serialized snapshot phase reads actual edge pixels at native DPR (6.6648ms)\n✔ hidden REC eligibility avoids GPU readback without inventing a phase (0.708286ms)\n✔ every cheap mandatory guard failure avoids GPU readback without changing eligibility (4.65742ms)\n✔ only a fully released never-paused guard deadline with no screenshot is readiness unavailable (0.501207ms)\n✔ actual producer catch consumes the existing attempt bound without resetting PNG count (1.06295ms)\n✔ actual producer fatal eligibility catch retains boxless geometry and never retries it (0.831674ms)\n✔ pause readiness diagnostics keep page timing and frame evidence bounded (0.570429ms)\n✔ snapshot phase stays unavailable for absent strokes or contradictory edges (2.606965ms)\n✔ visual readiness waits for two stable post-render and layout samples (1.685158ms)\n✔ visual readiness remains ineligible when scroll geometry never settles (1.440798ms)\n✔ visual readiness waits until the gaze transform reaches its target (0.865278ms)\n✔ visual readiness rejects a reset pointer until it is freshly positioned (0.711873ms)\n✔ visual readiness cleans listeners and timers if requesting a render throws (0.548016ms)\n✔ visual readiness cancels a layout frame when its bounded wait expires (13.138091ms)\n✔ visual readiness clears its layout timer if animation frame scheduling throws (0.642359ms)\n✔ visual readiness requires advancing scene frame numbers (0.894604ms)\nℹ tests 36\nℹ suites 0\nℹ pass 36\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2091.790675\n"
+    },
+    {
+      "label": "node24",
+      "name": "full-format",
+      "code": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-full-format.log",
+      "sha256": "441cfe4557b5e63737b10f0d94b5822ddcb688f1281304f3e5f5ee3af45d3fee",
+      "tail": "Checked 1825 source files.\n"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "code": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-capture-no-undef.log",
+      "sha256": "44e1e191f88ea254213d5f8db17124041c90ebbce3a8881c346c385236560c87",
+      "tail": "Capture harness no-undef: 105 files passed.\n"
+    },
+    {
+      "label": "node26",
+      "name": "focused-visual-readiness",
+      "code": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-focused-visual-readiness.log",
+      "sha256": "826ea4d56fd007d7cf7e697c9c0de7835072a521607f3a4995900d1d96e14371",
+      "tail": "8ms)\n✔ serialized activation uses the production selection after surface readiness (0.714467ms)\n✔ ready surface does not hide enable, selection, or visual setting failures (1.502657ms)\n✔ visual state page callback serializes without Node or outer bindings (4.506098ms)\n✔ serialized snapshot phase reads actual edge pixels at native DPR (6.981691ms)\n✔ hidden REC eligibility avoids GPU readback without inventing a phase (0.699118ms)\n✔ every cheap mandatory guard failure avoids GPU readback without changing eligibility (4.627853ms)\n✔ only a fully released never-paused guard deadline with no screenshot is readiness unavailable (0.533819ms)\n✔ actual producer catch consumes the existing attempt bound without resetting PNG count (0.952196ms)\n✔ actual producer fatal eligibility catch retains boxless geometry and never retries it (0.852203ms)\n✔ pause readiness diagnostics keep page timing and frame evidence bounded (1.191868ms)\n✔ snapshot phase stays unavailable for absent strokes or contradictory edges (2.569634ms)\n✔ visual readiness waits for two stable post-render and layout samples (1.771585ms)\n✔ visual readiness remains ineligible when scroll geometry never settles (0.856421ms)\n✔ visual readiness waits until the gaze transform reaches its target (0.890397ms)\n✔ visual readiness rejects a reset pointer until it is freshly positioned (0.798829ms)\n✔ visual readiness cleans listeners and timers if requesting a render throws (0.608534ms)\n✔ visual readiness cancels a layout frame when its bounded wait expires (8.144403ms)\n✔ visual readiness clears its layout timer if animation frame scheduling throws (0.74183ms)\n✔ visual readiness requires advancing scene frame numbers (0.700841ms)\nℹ tests 36\nℹ suites 0\nℹ pass 36\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2266.002903\n"
+    },
+    {
+      "label": "node26",
+      "name": "full-format",
+      "code": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-full-format.log",
+      "sha256": "441cfe4557b5e63737b10f0d94b5822ddcb688f1281304f3e5f5ee3af45d3fee",
+      "tail": "Checked 1825 source files.\n"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "code": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-capture-no-undef.log",
+      "sha256": "44e1e191f88ea254213d5f8db17124041c90ebbce3a8881c346c385236560c87",
+      "tail": "Capture harness no-undef: 105 files passed.\n"
+    }
+  ],
+  "files": [
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "bytes": 31017,
+      "sha256": "c8ab81f8f81f2684cf69c9ae4257635ebfd96e4608c84ddd9add02e93b9cd831"
+    },
+    {
+      "name": "scripts/performance/decorationCaptureProof.mjs",
+      "bytes": 13036,
+      "sha256": "92102a58e73bdb4eec132d13cf626359a94ca3f131837bb373d59ea86816438a"
+    },
+    {
+      "name": "scripts/performance/decorationCaptureProof.test.mjs",
+      "bytes": 8431,
+      "sha256": "da1951cc44785aa666441bb82f5798e13beeb18d779936ecb1343969a88e98a1"
+    },
+    {
+      "name": "scripts/performance/decorationQuantization.mjs",
+      "bytes": 18784,
+      "sha256": "c7a19cee15d59acfc31abc0130cedf744ec5d54b6bcad5494010b509f7e7034f"
+    },
+    {
+      "name": "scripts/performance/decorationQuantization.test.mjs",
+      "bytes": 15610,
+      "sha256": "8211bfa8ed68ddea8cb5449f9e2039986684dace1110a20f6975f786d2417261"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.mjs",
+      "bytes": 28273,
+      "sha256": "63e7963229ad7abd1095411964a7d212e8dcd3c399546cad88fab02336ca1323"
+    },
+    {
+      "name": "scripts/performance/repeatedVisualQualification.mjs",
+      "bytes": 11641,
+      "sha256": "8e2266f7c32e8dacd6ec8130bd3f1632344d6d960919d5a03c361b87b6c98ef3"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.mjs",
+      "bytes": 50796,
+      "sha256": "5528b867a802163adca7837a9b8721b6ad1b78a87af5fc5cbe8be4e8dcac6a04"
+    },
+    {
+      "name": "scripts/performance/runRepeatedVisualQualification.mjs",
+      "bytes": 3697,
+      "sha256": "043a88154efb5f399fbf4d8f8b4789244133f96eb708cb2639f039eb5e821c78"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "bytes": 6767,
+      "sha256": "ac1e4123cfbcaa96e3a7c1a76168a81e30541b7ad50ae97ab2d9b3df4a519189"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "bytes": 13301,
+      "sha256": "f51c77ecd70ef714b59015ddc04741d1d116b0f7f5b3a7d6610596e46b75d77d"
+    },
+    {
+      "name": "scripts/format-scope.json",
+      "bytes": 57566,
+      "sha256": "f81c9ad003433333da5582987cf1d28d91244acbb0935db26d7a95b8394574ed"
+    },
+    {
+      "name": "docs/performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/calibration.json",
+      "bytes": 14998,
+      "sha256": "71a616958532389ee4d1ec32980ed007c07d32370fa13232e352702c6190ead6"
+    },
+    {
+      "name": "docs/performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/header-reference.json",
+      "bytes": 32883,
+      "sha256": "f19ddbc58374693e711ec38ae2f476ce3f4377344489320c3b1088003a9114f0"
+    },
+    {
+      "name": "docs/performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/policy.md",
+      "bytes": 5734,
+      "sha256": "0711caaee1e3ec6e15e153cff93c6fe2f3c0663eb1cd94143e1744f4d05f7439"
+    }
+  ],
+  "browserOrGpuExecuted": false,
+  "nativeSharpExecuted": false,
+  "productionChanged": false,
+  "dependencyInstallExecuted": false,
+  "completedAt": "2026-10-20T11:17:43.977Z"
+}

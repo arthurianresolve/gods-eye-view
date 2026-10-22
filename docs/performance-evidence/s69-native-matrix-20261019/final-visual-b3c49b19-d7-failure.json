@@ -1,0 +1,687 @@
+{
+  "schema": "gev-visual-pixel-failure-diagnosis/v1",
+  "reviewedAt": "2026-10-19T17:00:37.970Z",
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "b3c49b19fea88ca82d801f7a86c62a9f827da874"
+  },
+  "producerCommit": "d7bb1b97adb7586286962a9193cc124521461540",
+  "processCode": 1,
+  "files": [
+    {
+      "name": "baseline-observations.json",
+      "bytes": 174087,
+      "sha256": "8b706f6d7959af2d6e9dfeadc03b95905f963e19e146c0ceb7b3b6a8135a98b1"
+    },
+    {
+      "name": "candidate-observations.json",
+      "bytes": 221457,
+      "sha256": "02c138bc7a00860112c32c748b662fb3fc4055dd45a0a0611ee80f7c8abec0e8"
+    },
+    {
+      "name": "final-visual-qualification-partial.json",
+      "bytes": 421800,
+      "sha256": "5c159b018f60af70bf9cf6f9dc9a0ab074ab210a0daf40734391689bf702e7eb"
+    },
+    {
+      "name": "final-visual-qualification.json",
+      "bytes": 386977,
+      "sha256": "6f6cef87c81ac13ea1f50eb0c8fc251c314781bece94463856b175beb45729dc"
+    },
+    {
+      "name": "hud-hidden-baseline-attempt-1.png",
+      "bytes": 1431017,
+      "sha256": "4fc116254968c6a969bd7127fff3860669e9b1007836d7ef70566f52d3d2b329"
+    },
+    {
+      "name": "hud-hidden-candidate-attempt-1.png",
+      "bytes": 1431065,
+      "sha256": "72c98ab7a6cd8d93cac7a5cadfd52de11fceb5c184815e80436e81bb87168055"
+    },
+    {
+      "name": "hud-restored-baseline-attempt-1.png",
+      "bytes": 1522386,
+      "sha256": "1185b0263cea6974efc636bf16b768353eaf0ce20e99758dbeb47d1685c2c653"
+    },
+    {
+      "name": "hud-restored-candidate-attempt-1.png",
+      "bytes": 1522401,
+      "sha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a"
+    },
+    {
+      "name": "hud-visible-baseline-attempt-1.png",
+      "bytes": 1522357,
+      "sha256": "cffda540d452d8520627d5c8b29bbf686245f23e220fc144b2c90101058aafac"
+    },
+    {
+      "name": "hud-visible-candidate-attempt-1.png",
+      "bytes": 1522401,
+      "sha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a"
+    },
+    {
+      "name": "still-settled-baseline-attempt-1.png",
+      "bytes": 1522401,
+      "sha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a"
+    },
+    {
+      "name": "still-settled-candidate-attempt-1.png",
+      "bytes": 1522401,
+      "sha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2020,
+      "sha256": "de0c723aa1040d2b5b4c778abef4fc77b92f0d14f71a2f07a4170d7c9e92997c"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 2926,
+      "sha256": "4a3f9d83faf4b0df134c42df12ff1fdb8c7f23952922f8d6549a480377b0120f"
+    }
+  ],
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-b3c49b19-d7bb1b97",
+  "pixels": {
+    "schema": "gev-portable-png-pair-review/v1",
+    "status": "failed",
+    "acceptanceEligible": false,
+    "decoder": {
+      "name": "pngjs",
+      "version": "7.0.0",
+      "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+      "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+    },
+    "policySha256": "bdce8d73a7badaa8ed60d6eaf1fb317fc10aee157f139779394cf7c09825ec77",
+    "states": 4,
+    "images": [
+      {
+        "state": "still-settled",
+        "role": "baseline",
+        "path": "still-settled-baseline-attempt-1.png",
+        "pngSha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a",
+        "rgbaSha256": "85551c4657f32430e6da2be7ba400ce4951241c086ebd6aad549291a298bc619",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "still-settled",
+        "role": "candidate",
+        "path": "still-settled-candidate-attempt-1.png",
+        "pngSha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a",
+        "rgbaSha256": "85551c4657f32430e6da2be7ba400ce4951241c086ebd6aad549291a298bc619",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-visible",
+        "role": "baseline",
+        "path": "hud-visible-baseline-attempt-1.png",
+        "pngSha256": "cffda540d452d8520627d5c8b29bbf686245f23e220fc144b2c90101058aafac",
+        "rgbaSha256": "018fe078038c7f49c6d29903c18a3b13a573c3b89892cce2f47a587f55511631",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-visible",
+        "role": "candidate",
+        "path": "hud-visible-candidate-attempt-1.png",
+        "pngSha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a",
+        "rgbaSha256": "85551c4657f32430e6da2be7ba400ce4951241c086ebd6aad549291a298bc619",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-hidden",
+        "role": "baseline",
+        "path": "hud-hidden-baseline-attempt-1.png",
+        "pngSha256": "4fc116254968c6a969bd7127fff3860669e9b1007836d7ef70566f52d3d2b329",
+        "rgbaSha256": "4f897020fd7539be769e243cce4c6bf81147cf2da3468efdc2113ecdea56a01a",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-hidden",
+        "role": "candidate",
+        "path": "hud-hidden-candidate-attempt-1.png",
+        "pngSha256": "72c98ab7a6cd8d93cac7a5cadfd52de11fceb5c184815e80436e81bb87168055",
+        "rgbaSha256": "6189f50f58c34f989e3c063ea0ad16355a83d2f32cce9d7f6d18e1c74812ce60",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-restored",
+        "role": "baseline",
+        "path": "hud-restored-baseline-attempt-1.png",
+        "pngSha256": "1185b0263cea6974efc636bf16b768353eaf0ce20e99758dbeb47d1685c2c653",
+        "rgbaSha256": "6a1590db6f7aec5990110b8b6cfc726ba924305a54d411efde30e66ec9e49aca",
+        "width": 2880,
+        "height": 1800
+      },
+      {
+        "state": "hud-restored",
+        "role": "candidate",
+        "path": "hud-restored-candidate-attempt-1.png",
+        "pngSha256": "fa6c09b0bee08828d6ede895d01c10c1044f73fbe165db38cf0200ce1ae4f80a",
+        "rgbaSha256": "85551c4657f32430e6da2be7ba400ce4951241c086ebd6aad549291a298bc619",
+        "width": 2880,
+        "height": 1800
+      }
+    ],
+    "comparisons": [
+      {
+        "state": "still-settled",
+        "differentPixels": 0,
+        "maximumChannelDelta": 0,
+        "alphaDifferences": 0
+      },
+      {
+        "state": "hud-visible",
+        "differentPixels": 8,
+        "maximumChannelDelta": 7,
+        "alphaDifferences": 0
+      },
+      {
+        "state": "hud-hidden",
+        "differentPixels": 6315,
+        "maximumChannelDelta": 240,
+        "alphaDifferences": 0
+      },
+      {
+        "state": "hud-restored",
+        "differentPixels": 1164,
+        "maximumChannelDelta": 104,
+        "alphaDifferences": 0
+      }
+    ],
+    "rasterVariance": null,
+    "failures": [
+      "hud-visible decoded rendered pixels changed",
+      "hud-hidden decoded rendered pixels changed",
+      "hud-restored decoded rendered pixels changed",
+      "Visible controls differ across builds"
+    ],
+    "scope": "Independent decoding and unchanged pixel-policy evaluation only. Native Windows full qualification validates build, camera, phase, settings, source, foreground and cleanup separately. Original PNG bytes are read without modification."
+  },
+  "differences": [
+    {
+      "state": "still-settled",
+      "count": 0,
+      "bounds": null,
+      "maxDelta": 0,
+      "sample": []
+    },
+    {
+      "state": "hud-visible",
+      "count": 8,
+      "bounds": {
+        "minX": 2149,
+        "minY": 1005,
+        "maxX": 2372,
+        "maxY": 1007
+      },
+      "maxDelta": 7,
+      "sample": [
+        {
+          "x": 2150,
+          "y": 1005,
+          "baseline": [7, 56, 108, 255],
+          "candidate": [7, 61, 112, 255]
+        },
+        {
+          "x": 2371,
+          "y": 1005,
+          "baseline": [7, 58, 92, 255],
+          "candidate": [7, 65, 98, 255]
+        },
+        {
+          "x": 2149,
+          "y": 1006,
+          "baseline": [6, 79, 129, 255],
+          "candidate": [6, 83, 134, 255]
+        },
+        {
+          "x": 2150,
+          "y": 1006,
+          "baseline": [8, 27, 81, 255],
+          "candidate": [8, 31, 83, 255]
+        },
+        {
+          "x": 2371,
+          "y": 1006,
+          "baseline": [8, 29, 62, 255],
+          "candidate": [8, 34, 66, 255]
+        },
+        {
+          "x": 2372,
+          "y": 1006,
+          "baseline": [6, 81, 117, 255],
+          "candidate": [6, 85, 121, 255]
+        },
+        {
+          "x": 2149,
+          "y": 1007,
+          "baseline": [7, 53, 105, 255],
+          "candidate": [7, 55, 107, 255]
+        },
+        {
+          "x": 2372,
+          "y": 1007,
+          "baseline": [7, 56, 90, 255],
+          "candidate": [7, 58, 92, 255]
+        }
+      ]
+    },
+    {
+      "state": "hud-hidden",
+      "count": 6315,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 2372,
+        "maxY": 942
+      },
+      "maxDelta": 240,
+      "sample": [
+        {
+          "x": 77,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 78,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 79,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 80,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 81,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 82,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 83,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 84,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 85,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 86,
+          "y": 0,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 76,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 77,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 78,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 79,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 80,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 81,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 82,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 83,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 84,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 85,
+          "y": 1,
+          "baseline": [5, 7, 11, 255],
+          "candidate": [5, 7, 10, 255]
+        },
+        {
+          "x": 75,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 76,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 77,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 78,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 79,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 80,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 81,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 82,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 83,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 84,
+          "y": 2,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 74,
+          "y": 3,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        },
+        {
+          "x": 75,
+          "y": 3,
+          "baseline": [5, 6, 10, 255],
+          "candidate": [5, 6, 9, 255]
+        }
+      ]
+    },
+    {
+      "state": "hud-restored",
+      "count": 1164,
+      "bounds": {
+        "minX": 62,
+        "minY": 43,
+        "maxX": 181,
+        "maxY": 198
+      },
+      "maxDelta": 104,
+      "sample": [
+        {
+          "x": 93,
+          "y": 43,
+          "baseline": [5, 16, 19, 255],
+          "candidate": [5, 16, 20, 255]
+        },
+        {
+          "x": 88,
+          "y": 44,
+          "baseline": [5, 15, 19, 255],
+          "candidate": [5, 16, 19, 255]
+        },
+        {
+          "x": 91,
+          "y": 44,
+          "baseline": [5, 16, 19, 255],
+          "candidate": [5, 16, 20, 255]
+        },
+        {
+          "x": 92,
+          "y": 44,
+          "baseline": [5, 16, 20, 255],
+          "candidate": [5, 17, 20, 255]
+        },
+        {
+          "x": 89,
+          "y": 45,
+          "baseline": [5, 16, 19, 255],
+          "candidate": [5, 16, 20, 255]
+        },
+        {
+          "x": 90,
+          "y": 45,
+          "baseline": [5, 16, 20, 255],
+          "candidate": [5, 17, 20, 255]
+        },
+        {
+          "x": 94,
+          "y": 45,
+          "baseline": [5, 17, 21, 255],
+          "candidate": [5, 18, 21, 255]
+        },
+        {
+          "x": 87,
+          "y": 46,
+          "baseline": [5, 16, 19, 255],
+          "candidate": [5, 16, 20, 255]
+        },
+        {
+          "x": 88,
+          "y": 46,
+          "baseline": [5, 16, 20, 255],
+          "candidate": [5, 17, 20, 255]
+        },
+        {
+          "x": 90,
+          "y": 46,
+          "baseline": [5, 17, 20, 255],
+          "candidate": [5, 17, 21, 255]
+        },
+        {
+          "x": 91,
+          "y": 46,
+          "baseline": [5, 17, 20, 255],
+          "candidate": [5, 17, 21, 255]
+        },
+        {
+          "x": 92,
+          "y": 46,
+          "baseline": [5, 17, 21, 255],
+          "candidate": [5, 18, 21, 255]
+        },
+        {
+          "x": 94,
+          "y": 46,
+          "baseline": [5, 18, 21, 255],
+          "candidate": [5, 18, 22, 255]
+        },
+        {
+          "x": 89,
+          "y": 47,
+          "baseline": [5, 17, 20, 255],
+          "candidate": [5, 17, 21, 255]
+        },
+        {
+          "x": 90,
+          "y": 47,
+          "baseline": [5, 17, 21, 255],
+          "candidate": [5, 18, 21, 255]
+        },
+        {
+          "x": 92,
+          "y": 47,
+          "baseline": [5, 18, 21, 255],
+          "candidate": [5, 18, 22, 255]
+        },
+        {
+          "x": 87,
+          "y": 48,
+          "baseline": [5, 18, 21, 255],
+          "candidate": [5, 18, 22, 255]
+        },
+        {
+          "x": 88,
+          "y": 48,
+          "baseline": [5, 18, 22, 255],
+          "candidate": [5, 19, 22, 255]
+        },
+        {
+          "x": 91,
+          "y": 48,
+          "baseline": [5, 19, 22, 255],
+          "candidate": [5, 20, 22, 255]
+        },
+        {
+          "x": 93,
+          "y": 48,
+          "baseline": [5, 20, 22, 255],
+          "candidate": [5, 20, 23, 255]
+        },
+        {
+          "x": 86,
+          "y": 49,
+          "baseline": [5, 18, 22, 255],
+          "candidate": [5, 19, 22, 255]
+        },
+        {
+          "x": 89,
+          "y": 49,
+          "baseline": [5, 19, 22, 255],
+          "candidate": [5, 20, 22, 255]
+        },
+        {
+          "x": 91,
+          "y": 49,
+          "baseline": [5, 20, 22, 255],
+          "candidate": [5, 20, 23, 255]
+        },
+        {
+          "x": 92,
+          "y": 49,
+          "baseline": [5, 20, 23, 255],
+          "candidate": [5, 21, 23, 255]
+        },
+        {
+          "x": 94,
+          "y": 49,
+          "baseline": [5, 21, 23, 255],
+          "candidate": [5, 21, 24, 255]
+        },
+        {
+          "x": 89,
+          "y": 50,
+          "baseline": [5, 19, 22, 255],
+          "candidate": [5, 19, 23, 255]
+        },
+        {
+          "x": 90,
+          "y": 50,
+          "baseline": [5, 19, 23, 255],
+          "candidate": [5, 20, 23, 255]
+        },
+        {
+          "x": 93,
+          "y": 50,
+          "baseline": [5, 20, 23, 255],
+          "candidate": [5, 21, 23, 255]
+        },
+        {
+          "x": 86,
+          "y": 51,
+          "baseline": [5, 18, 22, 255],
+          "candidate": [5, 19, 22, 255]
+        },
+        {
+          "x": 91,
+          "y": 51,
+          "baseline": [5, 20, 23, 255],
+          "candidate": [5, 21, 23, 255]
+        },
+        {
+          "x": 87,
+          "y": 52,
+          "baseline": [5, 19, 23, 255],
+          "candidate": [5, 20, 23, 255]
+        },
+        {
+          "x": 105,
+          "y": 68,
+          "baseline": [20, 67, 84, 255],
+          "candidate": [20, 68, 84, 255]
+        }
+      ]
+    }
+  ],
+  "status": "failed",
+  "acceptanceEligible": false,
+  "productionChanged": false
+}

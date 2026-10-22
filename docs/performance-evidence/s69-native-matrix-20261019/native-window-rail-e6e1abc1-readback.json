@@ -1,0 +1,60 @@
+{
+  "schema": "gev-native-window-rail-readback/v1",
+  "status": "all-raw-files-stream-verified",
+  "source": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\native-window-rail-comparison-e6e1abc1-e26b0b54",
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-rail-comparison-e6e1abc1-e26b0b54-complete-20261020",
+  "files": [
+    {
+      "name": "plan.json",
+      "bytes": 9793,
+      "sha256": "59e0fdc2700e2cf49977274a0706282d237fc41369aba26ffdad08a311171301"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1652362,
+      "sha256": "be42fea5cc553c1e547cd87bcdb9becf2c2cdd3604d0965b0624acd64f8126e4"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 27332,
+      "sha256": "c3d8f6b86cf11697afe5e48074fc7ea29b6f19c6085a3857c28819457d027d38"
+    },
+    {
+      "name": "attribution.mjs",
+      "bytes": 9458,
+      "sha256": "427a62d2c7ccd623f661b58e84e2c2122b037f519460921c399628f114529172"
+    },
+    {
+      "name": "event-timing.mjs",
+      "bytes": 2554,
+      "sha256": "71ccff8c4c67c21e9f8f913a3365866cbb83d006d29dd73a6649b17da60bce03"
+    },
+    {
+      "name": "action-isolation.mjs",
+      "bytes": 17934,
+      "sha256": "943ce81f1847e8d79bdb215b0ab566ec1c306b03ab16791496ad6894422441da"
+    }
+  ],
+  "totalBytes": 1719433,
+  "transferMethod": "Sequential SCP streaming; local pre/post transfer streaming SHA-256 and independent remote streaming SHA-256, exact file set and byte counts.",
+  "diagnostic": {
+    "path": "docs/performance-evidence/s69-native-matrix-20261019/native-window-rail-e6e1abc1-diagnostic.json",
+    "sha256": "4fb0c27bad1009a0f1fdb006067d502b5303e4075f1ff4d515396658107d1b6c"
+  },
+  "fullReview": {
+    "local": "qa-artifacts/native-window-rail-e6e1abc1-e26b0b54-review-20261020.json",
+    "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-rail-e6e1abc1-e26b0b54-review-20261020",
+    "bytes": 60616,
+    "sha256": "24a673e5310603e2fcdfa941e598c589ea73536d6e9adfd54b7b9c041b64eda1"
+  },
+  "analysisScript": {
+    "local": "qa-artifacts/review-native-window-rail-e6e1abc1-e26b0b54-20261020.mjs",
+    "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-rail-e6e1abc1-e26b0b54-review-20261020",
+    "bytes": 9853,
+    "sha256": "d7cc460cd5ae4d2ee733243d5d826bbf840ba9e85865e4c437554a64b78399da"
+  },
+  "reportAndScriptRemoteSha256Checked": true,
+  "acceptanceEligible": false,
+  "productionChanged": false,
+  "scope": "This readback verifies retained bytes and the pure diagnostic review. It is not a formal20 performance qualification or full app visual acceptance."
+}

@@ -1,0 +1,240 @@
+{
+  "schema": "gev-final-visual-failure-review/v1",
+  "reviewedAt": "2026-10-19T23:57:32.152Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "producerCommit": "97c82fca8bf8f224513c0cbca2baff8d5e1807ef",
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "stage": "baseline-capture",
+  "error": {
+    "name": "Error",
+    "message": "Debugger pause deadline exceeded.",
+    "pauseDiagnostics": {
+      "guardChecks": 11,
+      "guardSamples": [
+        {
+          "check": 1,
+          "elapsedMs": 1379.0504,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 2,
+          "elapsedMs": 1589.9807,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 3,
+          "elapsedMs": 1945.9756999999954,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": false,
+            "summaryPresent": false,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 4,
+          "elapsedMs": 2301.385699999999,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 5,
+          "elapsedMs": 2724.8588999999993,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 6,
+          "elapsedMs": 3200.1417,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 7,
+          "elapsedMs": 3608.242999999995,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 8,
+          "elapsedMs": 4133.678899999999,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 9,
+          "elapsedMs": 4530.2293999999965,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 10,
+          "elapsedMs": 4888.757599999997,
+          "detail": {
+            "phase": 0,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": false,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        }
+      ],
+      "guardSamplesOmitted": 0,
+      "pauseTimeoutMs": 5000,
+      "pauseObserved": false
+    },
+    "pauseCleanup": {
+      "resumed": false,
+      "disabled": true,
+      "detached": true
+    }
+  },
+  "imagesCaptured": 0,
+  "normalBrowserClosure": true,
+  "interceptionDrainAndRelease": true,
+  "returnedGuardChecks": 10,
+  "pendingGuardCheckAtDeadline": 1,
+  "phaseCounts": {
+    "zero": 1,
+    "two": 9
+  },
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-190c5ab6-97c82fca",
+  "files": [
+    {
+      "name": "final-visual-baseline-partial.json",
+      "bytes": 16631,
+      "sha256": "0087cc66c1a60bc2434ef094e6d952e95b0f911bbd21dff0b9d4435781364be0"
+    },
+    {
+      "name": "final-visual-qualification-partial.json",
+      "bytes": 17355,
+      "sha256": "e8694a530a5ef4223599f1a216ddb19f2e02a7bf28300dd442e9667835d0bc84"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2017,
+      "sha256": "4095d4299496ddfc20bc8e2ddcf0e6b2f1cf70c6b184d92f0a16078bdb4941c4"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 2911,
+      "sha256": "523e48145df347deea97845aa942937a1d28cd1978fa70d50d6e9aba8f6f5807"
+    }
+  ],
+  "scope": "Complete failed attempt preserved before any screenshot. Nine returned checks observed phase 2; the tenth observed phase 0 while REC and summary were unsettled. Eleven guard calls were started within the five-second deadline. This is a capture-readiness failure, not evidence of baseline/candidate pixel equivalence. No retries, masks, thresholds or source settings were changed by this review."
+}

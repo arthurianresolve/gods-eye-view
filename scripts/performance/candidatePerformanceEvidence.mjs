@@ -1,11 +1,18 @@
 import { createHash } from 'node:crypto';
+import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import {
+  validatePairedPerformanceReports,
+  validatePairedMapPerformanceReports,
+} from './pairedReport.mjs';
 import { evaluateSoakStability, FULL_SOAK_MS } from './soakStability.mjs';
 import { AUSTIN_OPERATING_WORKLOAD_ID } from './austinOperatingWorkloadContract.mjs';
 import { INFRASTRUCTURE_WORKLOAD_IDS } from './infrastructureWorkloadContract.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
+import { validateIdleCadenceDisposition } from './idleCadenceDisposition.mjs';
+import { validateWeatherBalancedEnvelopeArtifact } from './weatherBalancedQualification.mjs';
+import { validateWeatherIdleCadenceDisposition } from './weatherIdleCadenceDisposition.mjs';
 
 export const REQUIRED_PERFORMANCE_WORKLOADS = Object.freeze([
   'operating-view',
@@ -27,7 +34,7 @@ export const PERFORMANCE_WORKLOAD_VALIDATION_MODES = Object.freeze({
 });
 
 export const PERFORMANCE_ACCEPTANCE_POLICY_ID =
-  'gev-cesium-acceptance/2026-10-15';
+  'gev-cesium-acceptance/2026-10-18';
 
 export function canonicalPerformanceWorkloadId(id) {
   if (id === AUSTIN_OPERATING_WORKLOAD_ID) return 'operating-view';
@@ -68,7 +75,7 @@ function readBoundArtifact(manifestPath, reference, label) {
   } catch (error) {
     throw new TypeError(`${label} is not valid JSON: ${error.message}`);
   }
-  return { value, digest: actualHash, path: relativePath };
+  return { value, bytes, digest: actualHash, path: relativePath };
 }
 
 export function classifyRecordedRenderer(report) {
@@ -192,7 +199,12 @@ function recordedEnvironmentIdentity(report) {
   });
 }
 
-function comparisonRows(evidence, manifestPath, candidateCommit) {
+function comparisonRows(
+  evidence,
+  manifestPath,
+  candidateCommit,
+  mapReviews = new Map(),
+) {
   if (
     evidence != null &&
     (typeof evidence !== 'object' || Array.isArray(evidence))
@@ -214,6 +226,132 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
       throw new TypeError(
         `${environmentId}: baselineCommit must be a full SHA.`,
       );
+    if (row?.weatherBalancedQualification != null) {
+      assert.equal(row.id, 'weather-balanced-qualification');
+      assert.equal(row.workloadId, 'weather-effects');
+      const key = `${environmentId}\0weather-effects`;
+      if (seen.has(key))
+        throw new Error(
+          `Duplicate comparison role: ${environmentId}/weather-effects.`,
+        );
+      seen.add(key);
+      const artifact = readBoundArtifact(
+        manifestPath,
+        row.weatherBalancedQualification,
+        `${environmentId} balanced weather qualification`,
+      );
+      let result = null;
+      let error = null;
+      let renderer = null;
+      let environmentIdentity = null;
+      let representative = null;
+      let regressionDisposition = null;
+      let dispositionError = null;
+      try {
+        const review = validateWeatherBalancedEnvelopeArtifact(artifact.value, {
+          root: path.dirname(
+            path.resolve(path.dirname(manifestPath), artifact.path),
+          ),
+        });
+        assert.equal(
+          review.environmentId,
+          environmentId,
+          `${environmentId}: qualification environment identity differs`,
+        );
+        assert.equal(
+          review.controlReport.source.appCommit,
+          row.baselineCommit,
+          `${environmentId}: wrong control application build`,
+        );
+        assert.equal(
+          review.candidateReport.source.appCommit,
+          candidateCommit,
+          `${environmentId}: wrong candidate application build`,
+        );
+        renderer = requireEnvironmentMatch(
+          review.controlReport,
+          review.candidateReport,
+          environmentId,
+        );
+        representative = review.candidateReport;
+        environmentIdentity = recordedEnvironmentIdentity(representative);
+        const priorIdentity = identitiesByEnvironment.get(environmentId);
+        if (priorIdentity != null && priorIdentity !== environmentIdentity)
+          throw new Error(
+            `${environmentId}: recorded host/GPU identity changed across workloads.`,
+          );
+        identitiesByEnvironment.set(environmentId, environmentIdentity);
+        const publicReview = { ...review };
+        delete publicReview.controlReport;
+        delete publicReview.candidateReport;
+        result = publicReview;
+        if (row.weatherIdleCadenceDisposition != null) {
+          try {
+            const dispositionArtifact = readBoundArtifact(
+              manifestPath,
+              row.weatherIdleCadenceDisposition,
+              `${environmentId} weather idle cadence disposition`,
+            );
+            const disposition = dispositionArtifact.value;
+            const controlDiagnostic = readBoundArtifact(
+              manifestPath,
+              disposition.controlDiagnostic,
+              `${environmentId} control weather idle diagnostic`,
+            );
+            const candidateDiagnostic = readBoundArtifact(
+              manifestPath,
+              disposition.candidateDiagnostic,
+              `${environmentId} candidate weather idle diagnostic`,
+            );
+            const validatedDisposition = validateWeatherIdleCadenceDisposition({
+              disposition,
+              baselineDiagnostic: controlDiagnostic,
+              candidateDiagnostic,
+              balancedReview: review,
+            });
+            regressionDisposition = {
+              ...validatedDisposition,
+              artifact: {
+                path: dispositionArtifact.path,
+                sha256: dispositionArtifact.digest,
+              },
+              controlDiagnostic: {
+                path: controlDiagnostic.path,
+                sha256: controlDiagnostic.digest,
+              },
+              candidateDiagnostic: {
+                path: candidateDiagnostic.path,
+                sha256: candidateDiagnostic.digest,
+              },
+            };
+          } catch (caught) {
+            dispositionError = String(caught?.message || caught).slice(0, 500);
+          }
+        }
+      } catch (caught) {
+        error = String(caught?.message || caught).slice(0, 500);
+      }
+      return {
+        environmentId,
+        workloadId: 'weather-effects',
+        baselineCommit: row.baselineCommit,
+        candidateCommit,
+        platform: representative?.environment?.platform || null,
+        hostPlatform:
+          (representative?.hostEnvironment || representative?.environment)
+            ?.platform || null,
+        qualificationArtifact: {
+          path: artifact.path,
+          sha256: artifact.digest,
+        },
+        renderer,
+        environmentIdentity,
+        validation: result,
+        regressionDisposition,
+        dispositionError,
+        error,
+      };
+    }
     const baselineArtifact = readBoundArtifact(
       manifestPath,
       row.baseline,
@@ -240,6 +378,8 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
     let error = null;
     let renderer = null;
     let environmentIdentity = null;
+    let regressionDisposition = null;
+    let dispositionError = null;
     try {
       renderer = requireEnvironmentMatch(
         baselineArtifact.value,
@@ -255,14 +395,60 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
           `${environmentId}: recorded host/GPU identity changed across workloads.`,
         );
       identitiesByEnvironment.set(environmentId, environmentIdentity);
-      result = validatePairedPerformanceReports({
-        baseline: baselineArtifact.value,
-        candidate: candidateArtifact.value,
-        expectedAppCommits: {
-          baseline: row.baselineCommit,
-          candidate: candidateCommit,
-        },
-      });
+      const reviewedMap = mapReviews.get(
+        JSON.stringify([
+          baselineArtifact.digest,
+          candidateArtifact.digest,
+          row.baselineCommit,
+          candidateCommit,
+        ]),
+      );
+      if (reviewedMap?.error) throw reviewedMap.error;
+      result =
+        reviewedMap?.result ??
+        validatePairedPerformanceReports({
+          baseline: baselineArtifact.value,
+          candidate: candidateArtifact.value,
+          expectedAppCommits: {
+            baseline: row.baselineCommit,
+            candidate: candidateCommit,
+          },
+        });
+      if (row.idleCadenceDisposition != null) {
+        const dispositionArtifact = readBoundArtifact(
+          manifestPath,
+          row.idleCadenceDisposition,
+          `${environmentId} idle cadence disposition`,
+        );
+        const diagnosticArtifact = readBoundArtifact(
+          manifestPath,
+          dispositionArtifact.value.diagnostic,
+          `${environmentId} idle cadence diagnostic`,
+        );
+        const reviewed = validateIdleCadenceDisposition({
+          disposition: dispositionArtifact.value,
+          diagnostic: diagnosticArtifact,
+          baseline: baselineArtifact,
+          candidate: candidateArtifact,
+        });
+        regressionDisposition = {
+          ...reviewed,
+          artifact: {
+            path: dispositionArtifact.path,
+            sha256: dispositionArtifact.digest,
+          },
+          diagnostic: {
+            path: diagnosticArtifact.path,
+            sha256: diagnosticArtifact.digest,
+          },
+        };
+      }
+      if (
+        workloadId === 'weather-effects' &&
+        row.weatherIdleCadenceDisposition != null
+      )
+        dispositionError =
+          'weather idle cadence disposition requires a validated balanced weather qualification row.';
     } catch (caught) {
       error = String(caught?.message || caught).slice(0, 500);
     }
@@ -288,6 +474,8 @@ function comparisonRows(evidence, manifestPath, candidateCommit) {
       renderer,
       environmentIdentity,
       validation: result || null,
+      regressionDisposition,
+      dispositionError,
       error,
     };
   });
@@ -643,6 +831,10 @@ function comparisonOutcome(rows) {
       failures.push(`${row.environmentId}/${row.workloadId}: ${row.error}`);
       continue;
     }
+    if (row.dispositionError)
+      failures.push(
+        `${row.environmentId}/${row.workloadId}: ${row.dispositionError}`,
+      );
     const validation = row.validation;
     if (!validation || validation.status !== 'comparable') {
       failures.push(
@@ -658,9 +850,15 @@ function comparisonOutcome(rows) {
     ) {
       continue;
     }
-    if (validation.regressionsOver10Pct.length)
+    // Preserve every raw regression. A verified, hash-bound investigation can
+    // resolve only its named metric; motion and other failures remain gates.
+    const unresolved = validation.regressionsOver10Pct.filter(
+      (scenario) =>
+        !row.regressionDisposition?.resolvedScenarios.includes(scenario),
+    );
+    if (unresolved.length)
       failures.push(
-        `${row.environmentId}/${row.workloadId}: regression over 10% in ${validation.regressionsOver10Pct.join(', ')}.`,
+        `${row.environmentId}/${row.workloadId}: regression over 10% in ${unresolved.join(', ')}.`,
       );
   }
   for (const objective of performanceObjectives) {
@@ -706,6 +904,8 @@ function comparisonOutcome(rows) {
             ? 'measured'
             : 'failed',
       renderer: row.renderer,
+      regressionDisposition: row.regressionDisposition,
+      dispositionError: row.dispositionError || null,
       reason:
         row.error ||
         (row.environmentId !== primaryEnvironmentId ||
@@ -772,5 +972,66 @@ export function evaluateManifestPerformanceEvidence(
     retention,
     comparison: comparisonOutcome(comparisons),
     retentionOutcome: retentionOutcome(retention),
+  };
+}
+
+/** Revalidate native map artifacts against the local pinned corpus for CLI use. */
+export async function evaluateManifestPerformanceEvidenceWithNativeMaps(
+  evidence,
+  options,
+) {
+  // Preserve existing synchronous validation and malformed-manifest behavior.
+  const initial = evaluateManifestPerformanceEvidence(evidence, options);
+  const mapReviews = new Map();
+  for (const row of evidence?.comparisons ?? []) {
+    if (row.weatherBalancedQualification != null) continue;
+    const baseline = readBoundArtifact(
+      options.manifestPath,
+      row.baseline,
+      'native map baseline',
+    );
+    if (
+      baseline.value?.comparisonContract?.workloadId !==
+      'austin-map-streaming-v1'
+    )
+      continue;
+    const candidate = readBoundArtifact(
+      options.manifestPath,
+      row.candidate,
+      'native map candidate',
+    );
+    const key = JSON.stringify([
+      baseline.digest,
+      candidate.digest,
+      row.baselineCommit,
+      options.candidateCommit,
+    ]);
+    try {
+      const result = await validatePairedMapPerformanceReports({
+        baseline: baseline.value,
+        candidate: candidate.value,
+        expectedAppCommits: {
+          baseline: row.baselineCommit,
+          candidate: options.candidateCommit,
+        },
+      });
+      mapReviews.set(key, { result });
+    } catch (error) {
+      mapReviews.set(key, { error });
+    }
+  }
+  if (!mapReviews.size) return initial;
+  // Reload each hash-bound artifact before using its reviewed result. All other
+  // environment, retention, workload and regression checks run unchanged.
+  const comparisons = comparisonRows(
+    evidence,
+    options.manifestPath,
+    options.candidateCommit,
+    mapReviews,
+  );
+  return {
+    ...initial,
+    comparisons,
+    comparison: comparisonOutcome(comparisons),
   };
 }

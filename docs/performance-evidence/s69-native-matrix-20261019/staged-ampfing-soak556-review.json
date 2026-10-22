@@ -1,0 +1,427 @@
+{
+  "schema": "gev-staged-ampfing-independent-review/v1",
+  "reviewedAt": "2026-10-19T08:10:15.223Z",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-final-ampfing-soak-20261019T070207829Z",
+  "files": [
+    {
+      "name": "staged-final-ampfing-soak-20261019T070207829Z.json",
+      "bytes": 241998,
+      "sha256": "4a56108a6f38a121f8b38bd462a103126d874ccb112674e2afccbd4968738a9c"
+    },
+    {
+      "name": "run-staged-ampfing-soak556.mjs",
+      "bytes": 10391,
+      "sha256": "85d9903975525ea6f59f8223d8fbb0702caa13c34b645b2d7e638b3b6afc4b30"
+    },
+    {
+      "name": "staged-final-ampfing-recording-20261019T070207829Z.json",
+      "bytes": 3686,
+      "sha256": "0b4bbf193deb7486d2d9348864c19113f204a53f6bb2cf1b9292708f1c1b6504"
+    }
+  ],
+  "consumerCommit": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+  "captureProducerCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "applicationCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "status": "failed",
+  "extraErrors": [],
+  "retention": {
+    "status": "failed",
+    "failures": [
+      "windows-uhd620-chrome155-native-ampfing: Retained heap exceeded 5% growth over the final 30-minute window."
+    ],
+    "pending": [],
+    "environments": [
+      {
+        "environmentId": "windows-uhd620-chrome155-native-ampfing",
+        "status": "failed",
+        "primaryEligible": true,
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "artifact": {
+          "path": "staged-final-ampfing-soak-20261019T070207829Z.json",
+          "sha256": "4a56108a6f38a121f8b38bd462a103126d874ccb112674e2afccbd4968738a9c"
+        },
+        "stability": {
+          "status": "failed",
+          "failures": [
+            "Retained heap exceeded 5% growth over the final 30-minute window."
+          ],
+          "pending": [],
+          "heapGrowthRatio": 0.06316633701356901
+        },
+        "errors": [
+          "Retained heap exceeded 5% growth over the final 30-minute window."
+        ],
+        "pending": [],
+        "reason": null
+      }
+    ]
+  },
+  "remainingComparisons": {
+    "acceptancePolicyId": "gev-cesium-acceptance/2026-10-18",
+    "status": "pending",
+    "failures": [],
+    "pending": [
+      "No verified physical Windows comparison environment is recorded.",
+      "The dense-motion 20% performance objective is unassessed; its required measurement is missing.",
+      "The selected-aircraft-tracking 20% performance objective is unassessed; its required measurement is missing.",
+      "Required comparison workloads missing: operating-view, dense-investigation, selected-aircraft-tracking, infrastructure, weather-effects, map-streaming.",
+      "Infrastructure comparison variants missing: infrastructure-datacenters, infrastructure-dams, infrastructure-cables, infrastructure.",
+      "No raw paired comparison reports were supplied."
+    ],
+    "performanceObjectives": [
+      {
+        "id": "dense-motion",
+        "scenario": "scripted-motion",
+        "targetImprovementPct": 20,
+        "actualImprovementPct": null,
+        "status": "unassessed"
+      },
+      {
+        "id": "selected-aircraft-tracking",
+        "scenario": "selected-aircraft-tracking",
+        "targetImprovementPct": 20,
+        "actualImprovementPct": null,
+        "status": "unassessed"
+      }
+    ],
+    "missingWorkloads": [
+      "operating-view",
+      "dense-investigation",
+      "selected-aircraft-tracking",
+      "infrastructure",
+      "weather-effects",
+      "map-streaming"
+    ],
+    "workloadIds": [],
+    "workloadValidationModes": {
+      "operating-view": "five-pair-timed",
+      "dense-investigation": "five-pair-timed",
+      "selected-aircraft-tracking": "five-pair-timed",
+      "infrastructure": "five-pair-timed-all-four-variants",
+      "weather-effects": "five-pair-timed",
+      "lifecycle-stress": "full-soak-retention",
+      "map-streaming": "five-pair-timed-contract-required"
+    },
+    "infrastructureVariantCoverage": {
+      "requiredVariants": [
+        "infrastructure-datacenters",
+        "infrastructure-dams",
+        "infrastructure-cables",
+        "infrastructure"
+      ],
+      "observedVariants": [],
+      "missingVariants": [
+        "infrastructure-datacenters",
+        "infrastructure-dams",
+        "infrastructure-cables",
+        "infrastructure"
+      ]
+    },
+    "environments": []
+  },
+  "location": {
+    "latitude": 48.2582,
+    "longitude": 12.421,
+    "altitude": 731
+  },
+  "nativeResolution": {
+    "observedDpr": 2,
+    "initial": {
+      "devicePixelRatio": 2,
+      "canvas": {
+        "clientWidth": 1440,
+        "clientHeight": 1000,
+        "width": 2880,
+        "height": 2000
+      },
+      "sceneDrawingBuffer": {
+        "width": 2880,
+        "height": 2000
+      },
+      "resolutionScale": 1,
+      "useBrowserRecommendedResolution": false,
+      "maximumScreenSpaceError": 1
+    }
+  },
+  "environment": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+    "logicalCpus": 8,
+    "memoryBytes": 16907538432,
+    "hosted": false,
+    "runnerImage": null,
+    "runnerImageVersion": null
+  },
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "browserVersion": "Chrome/155.0.8059.84",
+  "operations": {
+    "durationMs": 3611609,
+    "fullSoak": true,
+    "iterations": 171,
+    "sourceToggles": 1368,
+    "replaySeeks": 171,
+    "imports": 171,
+    "workspaceReloads": 342,
+    "archiveFailures": 171,
+    "cameraRecoveries": 171,
+    "peakHeapBytes": 503734004
+  },
+  "checkpoints": [
+    {
+      "elapsedMs": 0,
+      "heapBytes": 252742160,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6346,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 321009,
+      "heapBytes": 263907856,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6428,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 627528,
+      "heapBytes": 266129600,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6486,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 932215,
+      "heapBytes": 268379936,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6557,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 1245345,
+      "heapBytes": 270767928,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6641,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 1552189,
+      "heapBytes": 273356044,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6722,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 1866606,
+      "heapBytes": 276089072,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6805,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 2180524,
+      "heapBytes": 278624700,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6894,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 2499837,
+      "heapBytes": 281174524,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 6966,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 2810033,
+      "heapBytes": 283716372,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 7037,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 3119094,
+      "heapBytes": 286344852,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 7115,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 3421701,
+      "heapBytes": 289044392,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 7206,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    },
+    {
+      "elapsedMs": 3611609,
+      "heapBytes": 290622944,
+      "listeners": 668,
+      "documents": 9,
+      "nodes": 7254,
+      "pendingWorkers": 0,
+      "resourcesMatchWarmupExcludingCumulativeCounters": true,
+      "garbageCollection": {
+        "status": "completed",
+        "method": "HeapProfiler.collectGarbage"
+      }
+    }
+  ],
+  "foreground": {
+    "start": {
+      "startedAt": 9958.5,
+      "blurCount": 0,
+      "hiddenCount": 0,
+      "focusedAtStart": true,
+      "visibleAtStart": true,
+      "elapsedMs": 0.30000000074505806,
+      "focused": true,
+      "visible": true
+    },
+    "end": {
+      "startedAt": 9958.5,
+      "blurCount": 0,
+      "hiddenCount": 0,
+      "focusedAtStart": true,
+      "visibleAtStart": true,
+      "elapsedMs": 3663629.6999999993,
+      "focused": true,
+      "visible": true
+    },
+    "activationChecks": 175
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 3682023.2707,
+      "closeSettledHostMs": 3683420.3313,
+      "closeElapsedMs": 1397.060599999968,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1055.1459000003524
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "productionChanged": false,
+  "scope": "Physical Windows native-GPU stability against the private VM105 signed package. Weather motion regression and the incomplete exact-candidate matrix remain release blockers. This retention-only manifest does not approve deployment.",
+  "wrapperAggregateStatus": "failed",
+  "foregroundStatus": "passed",
+  "cleanupStatus": "passed",
+  "stability": {
+    "status": "failed",
+    "failures": [
+      "Retained heap exceeded 5% growth over the final 30-minute window."
+    ],
+    "pending": [],
+    "heapGrowthRatio": 0.06316633701356901
+  },
+  "correction": {
+    "priorReview": {
+      "path": "independent-review.json",
+      "sha256": "f71e0faef303d6e8df86b371f4a5261221a524ed29ad9a7ecb71b4551c007457"
+    },
+    "reason": "The wrapper status combines operation, stability, foreground and cleanup outcomes. Its aggregate failure came from retention, so it must not also be described as a foreground/process failure. The raw soak and failed retention outcome remain unchanged."
+  }
+}

@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { greatCircleKm } from '../../geoDistance.js';
 import { staticFrameRefreshMs } from '../../data/cctvLod.js';
 import { frameFetchDue, cardFetchPolicy } from '../../data/cctvCards.js';
 import { DEFAULT_CAMERA_CALIBRATION } from './policy.js';
@@ -309,12 +310,7 @@ export function createModel({ state: layerState, services, parts, source }) {
    */
 
   function haversineKm(lat1, lon1, lat2, lon2) {
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return greatCircleKm({ lat: lat1, lon: lon1 }, { lat: lat2, lon: lon2 });
   }
 
   /**
@@ -481,8 +477,13 @@ export function createModel({ state: layerState, services, parts, source }) {
 
   function projectionLoopIsNeeded() {
     if (!layerState._enabled || !layerState._viewer) return false;
-    if (layerState._showProjection && parts.selection.getActiveRecord())
-      return true;
+    if (layerState._showProjection) {
+      const active = parts.selection.getActiveRecord();
+      if (active) {
+        const runtime = active.projection;
+        if (runtime?.video && !runtime.disposed) return true;
+      }
+    }
     return focusPassIsNeeded(
       getFocusTarget(),
       layerState._activeFocusStyleCount,

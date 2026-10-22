@@ -1,0 +1,832 @@
+{
+  "schema": "gev-native-window-c373d91b-independent-diagnostic-review/v1",
+  "status": "completed-diagnostic-only",
+  "acceptanceEligible": false,
+  "criteriaChanged": false,
+  "productionChanged": false,
+  "rawCompletedAt": "2026-10-20T10:36:43.629Z",
+  "source": {
+    "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-diagnostic-c373d91b-3360f672-complete-20261020",
+    "files": [
+      {
+        "name": "plan.json",
+        "bytes": 6217,
+        "sha256": "a6ac2ae06a45056fb4d3cf94662db2bce314bb9b35a1e25cf6f4f212aeaa3942"
+      },
+      {
+        "name": "process.json",
+        "bytes": 1653477,
+        "sha256": "508c803bc1e5b957afb3d2d4a6f8613edee5d6ac401f5deed744675e7bfe6326"
+      },
+      {
+        "name": "wrapper.mjs",
+        "bytes": 22480,
+        "sha256": "942015e1786371b5cebdb23cd30f22efa0263412a578b87ea2681fde837006fe"
+      },
+      {
+        "name": "attribution.mjs",
+        "bytes": 9458,
+        "sha256": "427a62d2c7ccd623f661b58e84e2c2122b037f519460921c399628f114529172"
+      },
+      {
+        "name": "event-timing.mjs",
+        "bytes": 2554,
+        "sha256": "71ccff8c4c67c21e9f8f913a3365866cbb83d006d29dd73a6649b17da60bce03"
+      },
+      {
+        "name": "action-isolation.mjs",
+        "bytes": 17934,
+        "sha256": "943ce81f1847e8d79bdb215b0ab566ec1c306b03ab16791496ad6894422441da"
+      }
+    ],
+    "producerCommit": "42fae51d5a3b7621a8b2cea07433fe8a8f834d02",
+    "driverCommit": "3360f6720a7ca09cc823123edb3a40706b043c30",
+    "applicationRoles": {
+      "baseline": {
+        "applicationCommit": "8c14b106eb064f63eab193c1af06bb8b7480cb55",
+        "url": "http://127.0.0.1:4312"
+      },
+      "candidate": {
+        "applicationCommit": "c373d91b89a74d25e22ca87db925eee0d425b1ea",
+        "url": "http://127.0.0.1:4314"
+      }
+    },
+    "sourceHashes": {
+      "scripts/qa-qualification-metrics-capture.mjs": "6bfb73155d31b8d8690729d089e8197bd12766509e243925d3cac44c274d8c0b",
+      "scripts/qa-rendered-soak-driver.mjs": "7c6c27c788d03d0ce565652b9168bb96aaf965bd619fdc2f98cf71b5f6c71778",
+      "scripts/performance/qualificationMetrics.mjs": "0923d490e61e46edff66c9a8f5c309ddf6c56ac767522e21fa1486920135bef3"
+    },
+    "driverSourceHashes": {
+      "scripts/qa-rendered-soak-driver.mjs": "f0e79219bccc7c5b7a248b18399bd717a94f9f358a5bfdade10eae865e42eacf",
+      "scripts/qa-application-fixtures.mjs": "d1e5c761a0d9b1615f5489f05351e4c895c10d5c7e8c1c715eaf005dc7033858",
+      "scripts/performance/nativeWindowViewport.mjs": "f2bff4cdc5aa4cd9ecaa57edda1687d68e2f4f15a8ff924655e7e287b3fbfdd2",
+      "scripts/performance/rendererEvidence.mjs": "beb229cba51f732e92fab7a9a805789821d774bf740fc47a6550060f57984f64"
+    }
+  },
+  "environment": {
+    "verifiedNativeCheckpoints": 20,
+    "crossRoleAndCheckpointGeometry": "exactly matched after complete validation",
+    "browser": "Chrome/155.0.8059.84",
+    "renderer": {
+      "vendor": "Google Inc. (Intel)",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+    },
+    "viewport": {
+      "width": 1280,
+      "height": 537
+    },
+    "dpr": 2,
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "monitor": {
+      "displayMode": {
+        "positionY": 0,
+        "orientation": 0,
+        "width": 2560,
+        "positionX": 0,
+        "height": 1440,
+        "refreshHz": 60,
+        "bitsPerPixel": 32,
+        "adapter": "Intel(R) UHD Graphics 620"
+      },
+      "bounds": {
+        "left": 0,
+        "bottom": 1440,
+        "top": 0,
+        "right": 2560,
+        "height": 1440,
+        "width": 2560
+      },
+      "device": "\\\\.\\DISPLAY5",
+      "workArea": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      }
+    },
+    "clientRect": {
+      "left": 0,
+      "bottom": 1360,
+      "top": 0,
+      "right": 2560,
+      "height": 1360,
+      "width": 2560
+    },
+    "visibleFrameRect": {
+      "left": 0,
+      "bottom": 1360,
+      "top": 0,
+      "right": 2560,
+      "height": 1360,
+      "width": 2560
+    },
+    "cdpBoundsMapping": "native-DIPs:windowRect",
+    "metricsEmulation": "cleared-before-navigation",
+    "puppeteerViewport": null,
+    "pageZoom": 1,
+    "visualScale": 1,
+    "matchedMeasurementState": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "platform": "Win32",
+      "viewport": {
+        "width": 1280,
+        "height": 537,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2560,
+        "height": 1074
+      },
+      "nativeSharpnessProfile": {
+        "id": "native-sharpness-v1",
+        "useBrowserRecommendedResolution": false,
+        "resolutionScale": 1,
+        "maximumScreenSpaceError": 1,
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      },
+      "settings": {
+        "qualityMode": "manual",
+        "densityPct": 75,
+        "detectionMode": "DENSE",
+        "resolutionScale": 1,
+        "antialias": true,
+        "msaaSamples": 4,
+        "fxaa": false,
+        "bloom": false,
+        "bloomIntensity": 0,
+        "sharpen": false,
+        "sharpenIntensity": 49,
+        "visual": {
+          "style": "normal",
+          "bloomEnabled": false,
+          "bloomIntensity": 0,
+          "sharpenEnabled": false,
+          "sharpenIntensity": 49,
+          "detectionMode": "DENSE",
+          "detectionDensityPct": 75,
+          "detectionAllocation": "ELASTIC",
+          "detectionFadePct": 7,
+          "detectionOutsideOpacityPct": 1,
+          "scopeEnabled": true,
+          "scopeFeatherPct": 11,
+          "mapStack": "osm"
+        }
+      }
+    }
+  },
+  "geometry": {
+    "enabledSamples": 8,
+    "disabledSamples": 8,
+    "allEnabledEqual": true,
+    "allDisabledEqual": true,
+    "enabledSha256": "d79f44591a1d420b4b0a188ee420a35c33d210841112cf8836c1c4807a31ae0f",
+    "disabledSha256": "211902512b6943e7ea40a3821068ed399ffc10c5d40ea6855dced994edb92d2c",
+    "orderedQueryCountPerEnable": 8,
+    "allEnabledQueryTuplesEqual": true,
+    "orderedQueryTupleSha256": "69d5fffcccb0d9effb9869aa582629ceeea4b5e088fa4275a017dfa18105697c",
+    "fixtureBodySha256": "8556d37f8809bc6c4a3f6807b21422c974cb795e617e48884b5518be4085a8b5"
+  },
+  "summary": {
+    "baseline": {
+      "samples": 8,
+      "nativeEventTimingMs": [
+        40,
+        96,
+        48,
+        112,
+        64,
+        112,
+        48,
+        96
+      ],
+      "observedOver100Ms": 2,
+      "acceptedIntentAllBelow100Ms": true,
+      "firstMeasuredOnFullReadyMs": [
+        122.3999999910593,
+        311.79999999701977
+      ],
+      "laterOnFullReadyMs": [
+        176.29999999701977,
+        119.40000000596046
+      ],
+      "firstOffFullReadyMs": [
+        14.700000002980232,
+        20.900000005960464
+      ],
+      "laterOffFullReadyMs": [
+        14.899999991059303,
+        15.099999994039536
+      ]
+    },
+    "candidate": {
+      "samples": 8,
+      "nativeEventTimingMs": [
+        40,
+        128,
+        48,
+        96,
+        56,
+        144,
+        48,
+        128
+      ],
+      "observedOver100Ms": 3,
+      "acceptedIntentAllBelow100Ms": true,
+      "firstMeasuredOnFullReadyMs": [
+        357.5,
+        426.59999999403954
+      ],
+      "laterOnFullReadyMs": [
+        124.79999999701977,
+        144.79999999701977
+      ],
+      "firstOffFullReadyMs": [
+        27.80000001192093,
+        16.100000008940697
+      ],
+      "laterOffFullReadyMs": [
+        14.700000002980232,
+        14.700000002980232
+      ]
+    }
+  },
+  "slots": [
+    {
+      "slot": 1,
+      "role": "baseline",
+      "status": "completed",
+      "isolation": "isolated",
+      "isolatedActions": 4,
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "closeElapsedMs": 713.045100000003
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "status": "completed",
+      "isolation": "isolated",
+      "isolatedActions": 4,
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "closeElapsedMs": 679.9028000000035
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "status": "completed",
+      "isolation": "isolated",
+      "isolatedActions": 4,
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "closeElapsedMs": 589.0473000000056
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "status": "completed",
+      "isolation": "isolated",
+      "isolatedActions": 4,
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "closeElapsedMs": 630.1189999999915
+    }
+  ],
+  "samples": [
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 1,
+      "phase": "first-measured-ON",
+      "enabled": true,
+      "clickAtMs": 11075.60000000894,
+      "interactionId": 4253,
+      "acceptedIntentMs": 3.2999999970197678,
+      "transitionMs": 4.5,
+      "firstRafCallbackMs": 10.299999997019768,
+      "secondRafCallbackMs": 88.5,
+      "fullStateMs": 103.79999999701977,
+      "fullReadyMs": 122.3999999910593,
+      "nativeEventTimingDurationMs": 40,
+      "inputDelayMs": 2.7999999970197678,
+      "processingMs": 1.9000000059604645,
+      "postProcessingToQuantizedEndpointMs": 35.29999999701977,
+      "queryCount": 8,
+      "firstQueryMs": 33.8999999910593,
+      "lastQueryCompletionMs": 85.29999999701977,
+      "queryDurationSumMs": 50.10000002384186,
+      "firstPreRenderMs": 33.20000000298023,
+      "firstPostRenderMs": 88,
+      "partialWrappedMethodElapsedMs": 2.4000000059604645,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 2,
+      "phase": "first-OFF",
+      "enabled": false,
+      "clickAtMs": 12272,
+      "interactionId": 4260,
+      "acceptedIntentMs": 1.300000011920929,
+      "transitionMs": 2.6000000089406967,
+      "firstRafCallbackMs": 14.900000005960464,
+      "secondRafCallbackMs": 68.30000001192093,
+      "fullStateMs": 13,
+      "fullReadyMs": 14.700000002980232,
+      "nativeEventTimingDurationMs": 96,
+      "inputDelayMs": 1.1000000089406967,
+      "processingMs": 4,
+      "postProcessingToQuantizedEndpointMs": 90.8999999910593,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 13,
+      "firstPostRenderMs": 14.700000002980232,
+      "partialWrappedMethodElapsedMs": 2.2999999970197678,
+      "overlappingApplicationScripts": [
+        {
+          "startAfterClickMs": 69.6000000089407,
+          "durationMs": 10.399999991059303,
+          "forcedStyleAndLayoutMs": 5.8,
+          "asset": "index-BKvu53fJ.js",
+          "sourceCharPosition": 2167080,
+          "invoker": "FrameRequestCallback"
+        }
+      ]
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 3,
+      "phase": "later-ON",
+      "enabled": true,
+      "clickAtMs": 13387.800000011921,
+      "interactionId": 4267,
+      "acceptedIntentMs": 1,
+      "transitionMs": 2.199999988079071,
+      "firstRafCallbackMs": 13.699999988079071,
+      "secondRafCallbackMs": 89.09999999403954,
+      "fullStateMs": 105,
+      "fullReadyMs": 176.29999999701977,
+      "nativeEventTimingDurationMs": 48,
+      "inputDelayMs": 0.699999988079071,
+      "processingMs": 1.7000000029802322,
+      "postProcessingToQuantizedEndpointMs": 45.6000000089407,
+      "queryCount": 8,
+      "firstQueryMs": 37.3999999910593,
+      "lastQueryCompletionMs": 85.59999999403954,
+      "queryDurationSumMs": 47.3999999910593,
+      "firstPreRenderMs": 37.099999994039536,
+      "firstPostRenderMs": 88.69999998807907,
+      "partialWrappedMethodElapsedMs": 1.9000000059604645,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 1,
+      "role": "baseline",
+      "action": 4,
+      "phase": "later-OFF",
+      "enabled": false,
+      "clickAtMs": 14654.300000011921,
+      "interactionId": 4274,
+      "acceptedIntentMs": 1.2999999970197678,
+      "transitionMs": 2.3999999910593033,
+      "firstRafCallbackMs": 15.099999994039536,
+      "secondRafCallbackMs": 67.29999999701977,
+      "fullStateMs": 13.399999991059303,
+      "fullReadyMs": 14.899999991059303,
+      "nativeEventTimingDurationMs": 112,
+      "inputDelayMs": 1.199999988079071,
+      "processingMs": 3.4000000059604645,
+      "postProcessingToQuantizedEndpointMs": 107.40000000596046,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 13.5,
+      "firstPostRenderMs": 14.899999991059303,
+      "partialWrappedMethodElapsedMs": 1.9000000059604645,
+      "overlappingApplicationScripts": [
+        {
+          "startAfterClickMs": 68.5,
+          "durationMs": 12.699999988079071,
+          "forcedStyleAndLayoutMs": 7.7,
+          "asset": "index-BKvu53fJ.js",
+          "sourceCharPosition": 2167080,
+          "invoker": "FrameRequestCallback"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 1,
+      "phase": "first-measured-ON",
+      "enabled": true,
+      "clickAtMs": 12907.10000000894,
+      "interactionId": 7641,
+      "acceptedIntentMs": 3.5,
+      "transitionMs": 4.899999991059303,
+      "firstRafCallbackMs": 10.299999997019768,
+      "secondRafCallbackMs": 27.200000002980232,
+      "fullStateMs": 229.20000000298023,
+      "fullReadyMs": 357.5,
+      "nativeEventTimingDurationMs": 40,
+      "inputDelayMs": 3,
+      "processingMs": 2.2000000029802322,
+      "postProcessingToQuantizedEndpointMs": 34.79999999701977,
+      "queryCount": 8,
+      "firstQueryMs": 57.79999999701977,
+      "lastQueryCompletionMs": 140.20000000298023,
+      "queryDurationSumMs": 81.09999996423721,
+      "firstPreRenderMs": 57.20000000298023,
+      "firstPostRenderMs": 146.79999999701977,
+      "partialWrappedMethodElapsedMs": 1.5999999791383743,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 2,
+      "phase": "first-OFF",
+      "enabled": false,
+      "clickAtMs": 14406.5,
+      "interactionId": 7648,
+      "acceptedIntentMs": 7.300000011920929,
+      "transitionMs": 9.5,
+      "firstRafCallbackMs": 29.400000005960464,
+      "secondRafCallbackMs": 73.6000000089407,
+      "fullStateMs": 21.900000005960464,
+      "fullReadyMs": 27.80000001192093,
+      "nativeEventTimingDurationMs": 128,
+      "inputDelayMs": 6.700000002980232,
+      "processingMs": 10.700000002980232,
+      "postProcessingToQuantizedEndpointMs": 110.59999999403954,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 22.30000001192093,
+      "firstPostRenderMs": 28.100000008940697,
+      "partialWrappedMethodElapsedMs": 6.600000008940697,
+      "overlappingApplicationScripts": [
+        {
+          "startAfterClickMs": 7,
+          "durationMs": 10.300000011920929,
+          "forcedStyleAndLayoutMs": 0,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 2588577,
+          "invoker": "BUTTON.onclick"
+        },
+        {
+          "startAfterClickMs": 33.30000001192093,
+          "durationMs": 12.399999991059303,
+          "forcedStyleAndLayoutMs": 9.8,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 2168530,
+          "invoker": "FrameRequestCallback"
+        },
+        {
+          "startAfterClickMs": 45.70000000298023,
+          "durationMs": 12.799999997019768,
+          "forcedStyleAndLayoutMs": 10,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 2165578,
+          "invoker": "FrameRequestCallback"
+        }
+      ]
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 3,
+      "phase": "later-ON",
+      "enabled": true,
+      "clickAtMs": 15552.800000011921,
+      "interactionId": 7655,
+      "acceptedIntentMs": 1.0999999940395355,
+      "transitionMs": 2.0999999940395355,
+      "firstRafCallbackMs": 13.599999994039536,
+      "secondRafCallbackMs": 30.5,
+      "fullStateMs": 105.59999999403954,
+      "fullReadyMs": 124.79999999701977,
+      "nativeEventTimingDurationMs": 48,
+      "inputDelayMs": 0.8999999910593033,
+      "processingMs": 1.4000000059604645,
+      "postProcessingToQuantizedEndpointMs": 45.70000000298023,
+      "queryCount": 8,
+      "firstQueryMs": 50.69999998807907,
+      "lastQueryCompletionMs": 86.69999998807907,
+      "queryDurationSumMs": 35,
+      "firstPreRenderMs": 50.69999998807907,
+      "firstPostRenderMs": 88.8999999910593,
+      "partialWrappedMethodElapsedMs": 0.7999999970197678,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 2,
+      "role": "candidate",
+      "action": 4,
+      "phase": "later-OFF",
+      "enabled": false,
+      "clickAtMs": 16752.70000000298,
+      "interactionId": 7662,
+      "acceptedIntentMs": 0.9000000059604645,
+      "transitionMs": 1.7000000029802322,
+      "firstRafCallbackMs": 14.900000005960464,
+      "secondRafCallbackMs": 65.20000000298023,
+      "fullStateMs": 13.200000002980232,
+      "fullReadyMs": 14.700000002980232,
+      "nativeEventTimingDurationMs": 96,
+      "inputDelayMs": 0.7000000029802322,
+      "processingMs": 2.7999999970197678,
+      "postProcessingToQuantizedEndpointMs": 92.5,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 13.400000005960464,
+      "firstPostRenderMs": 14.700000002980232,
+      "partialWrappedMethodElapsedMs": 2.0999999940395355,
+      "overlappingApplicationScripts": [
+        {
+          "startAfterClickMs": 66.29999999701977,
+          "durationMs": 12.700000002980232,
+          "forcedStyleAndLayoutMs": 10.6,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 2168530,
+          "invoker": "FrameRequestCallback"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 1,
+      "phase": "first-measured-ON",
+      "enabled": true,
+      "clickAtMs": 11909.5,
+      "interactionId": 1758,
+      "acceptedIntentMs": 4.299999997019768,
+      "transitionMs": 5.700000002980232,
+      "firstRafCallbackMs": 10.799999997019768,
+      "secondRafCallbackMs": 29,
+      "fullStateMs": 292.40000000596046,
+      "fullReadyMs": 426.59999999403954,
+      "nativeEventTimingDurationMs": 56,
+      "inputDelayMs": 3.5,
+      "processingMs": 2.5999999940395355,
+      "postProcessingToQuantizedEndpointMs": 49.900000005960464,
+      "queryCount": 8,
+      "firstQueryMs": 63.599999994039536,
+      "lastQueryCompletionMs": 242.09999999403954,
+      "queryDurationSumMs": 177.00000002980232,
+      "firstPreRenderMs": 63.099999994039536,
+      "firstPostRenderMs": 250,
+      "partialWrappedMethodElapsedMs": 2.300000011920929,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 2,
+      "phase": "first-OFF",
+      "enabled": false,
+      "clickAtMs": 13425.79999999702,
+      "interactionId": 1765,
+      "acceptedIntentMs": 1.6000000089406967,
+      "transitionMs": 3,
+      "firstRafCallbackMs": 16.299999997019768,
+      "secondRafCallbackMs": 50,
+      "fullStateMs": 13.299999997019768,
+      "fullReadyMs": 16.100000008940697,
+      "nativeEventTimingDurationMs": 144,
+      "inputDelayMs": 1.2000000029802322,
+      "processingMs": 7,
+      "postProcessingToQuantizedEndpointMs": 135.79999999701977,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 13.400000005960464,
+      "firstPostRenderMs": 16.100000008940697,
+      "partialWrappedMethodElapsedMs": 2.4000000059604645,
+      "overlappingApplicationScripts": [
+        {
+          "startAfterClickMs": 112.29999999701977,
+          "durationMs": 5.5,
+          "forcedStyleAndLayoutMs": 0,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 1907313,
+          "invoker": "IDBTransaction.oncomplete"
+        },
+        {
+          "startAfterClickMs": 140.29999999701977,
+          "durationMs": 18.400000005960464,
+          "forcedStyleAndLayoutMs": 13.2,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 2168530,
+          "invoker": "FrameRequestCallback"
+        }
+      ]
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 3,
+      "phase": "later-ON",
+      "enabled": true,
+      "clickAtMs": 14571.70000000298,
+      "interactionId": 1772,
+      "acceptedIntentMs": 1.2000000029802322,
+      "transitionMs": 2.2000000029802322,
+      "firstRafCallbackMs": 14,
+      "secondRafCallbackMs": 31.200000002980232,
+      "fullStateMs": 126.79999999701977,
+      "fullReadyMs": 144.79999999701977,
+      "nativeEventTimingDurationMs": 48,
+      "inputDelayMs": 1,
+      "processingMs": 1.3999999910593033,
+      "postProcessingToQuantizedEndpointMs": 45.6000000089407,
+      "queryCount": 8,
+      "firstQueryMs": 52,
+      "lastQueryCompletionMs": 98.70000000298023,
+      "queryDurationSumMs": 45.50000002980232,
+      "firstPreRenderMs": 52,
+      "firstPostRenderMs": 102,
+      "partialWrappedMethodElapsedMs": 0.5999999791383743,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 3,
+      "role": "candidate",
+      "action": 4,
+      "phase": "later-OFF",
+      "enabled": false,
+      "clickAtMs": 15805.59999999404,
+      "interactionId": 1779,
+      "acceptedIntentMs": 1,
+      "transitionMs": 2.1000000089406967,
+      "firstRafCallbackMs": 14.900000005960464,
+      "secondRafCallbackMs": 42.80000001192093,
+      "fullStateMs": 12.900000005960464,
+      "fullReadyMs": 14.700000002980232,
+      "nativeEventTimingDurationMs": 128,
+      "inputDelayMs": 0.9000000059604645,
+      "processingMs": 3.4000000059604645,
+      "postProcessingToQuantizedEndpointMs": 123.69999998807907,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 13,
+      "firstPostRenderMs": 14.700000002980232,
+      "partialWrappedMethodElapsedMs": 1.7999999970197678,
+      "overlappingApplicationScripts": [
+        {
+          "startAfterClickMs": 43.400000005960464,
+          "durationMs": 40.5,
+          "forcedStyleAndLayoutMs": 32.4,
+          "asset": "index-1bpfLgmF.js",
+          "sourceCharPosition": 2168530,
+          "invoker": "FrameRequestCallback"
+        }
+      ]
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 1,
+      "phase": "first-measured-ON",
+      "enabled": true,
+      "clickAtMs": 12560.59999999404,
+      "interactionId": 3694,
+      "acceptedIntentMs": 3.9000000059604645,
+      "transitionMs": 5.799999997019768,
+      "firstRafCallbackMs": 11.799999997019768,
+      "secondRafCallbackMs": 135.90000000596046,
+      "fullStateMs": 196.29999999701977,
+      "fullReadyMs": 311.79999999701977,
+      "nativeEventTimingDurationMs": 64,
+      "inputDelayMs": 3.2999999970197678,
+      "processingMs": 2.9000000059604645,
+      "postProcessingToQuantizedEndpointMs": 57.79999999701977,
+      "queryCount": 8,
+      "firstQueryMs": 43.70000000298023,
+      "lastQueryCompletionMs": 128.40000000596046,
+      "queryDurationSumMs": 83.00000002980232,
+      "firstPreRenderMs": 43.099999994039536,
+      "firstPostRenderMs": 134.5,
+      "partialWrappedMethodElapsedMs": 5.200000002980232,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 2,
+      "phase": "first-OFF",
+      "enabled": false,
+      "clickAtMs": 13978.89999999106,
+      "interactionId": 3701,
+      "acceptedIntentMs": 1.7000000029802322,
+      "transitionMs": 3.7999999970197678,
+      "firstRafCallbackMs": 21.100000008940697,
+      "secondRafCallbackMs": 49.1000000089407,
+      "fullStateMs": 15.299999997019768,
+      "fullReadyMs": 20.900000005960464,
+      "nativeEventTimingDurationMs": 112,
+      "inputDelayMs": 1.4000000059604645,
+      "processingMs": 7.0999999940395355,
+      "postProcessingToQuantizedEndpointMs": 103.5,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 15.5,
+      "firstPostRenderMs": 20.900000005960464,
+      "partialWrappedMethodElapsedMs": 2.2999999821186066,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 3,
+      "phase": "later-ON",
+      "enabled": true,
+      "clickAtMs": 15141.09999999404,
+      "interactionId": 3708,
+      "acceptedIntentMs": 1.2000000029802322,
+      "transitionMs": 2.5999999940395355,
+      "firstRafCallbackMs": 13.400000005960464,
+      "secondRafCallbackMs": 94.40000000596046,
+      "fullStateMs": 110.79999999701977,
+      "fullReadyMs": 119.40000000596046,
+      "nativeEventTimingDurationMs": 48,
+      "inputDelayMs": 1,
+      "processingMs": 1.7999999970197678,
+      "postProcessingToQuantizedEndpointMs": 45.20000000298023,
+      "queryCount": 8,
+      "firstQueryMs": 35.79999999701977,
+      "lastQueryCompletionMs": 91.40000000596046,
+      "queryDurationSumMs": 54.700000032782555,
+      "firstPreRenderMs": 35.70000000298023,
+      "firstPostRenderMs": 94,
+      "partialWrappedMethodElapsedMs": 1.899999961256981,
+      "overlappingApplicationScripts": []
+    },
+    {
+      "slot": 4,
+      "role": "baseline",
+      "action": 4,
+      "phase": "later-OFF",
+      "enabled": false,
+      "clickAtMs": 16357.79999999702,
+      "interactionId": 3715,
+      "acceptedIntentMs": 1,
+      "transitionMs": 2.5,
+      "firstRafCallbackMs": 15.299999997019768,
+      "secondRafCallbackMs": 41.29999999701977,
+      "fullStateMs": 13.200000002980232,
+      "fullReadyMs": 15.099999994039536,
+      "nativeEventTimingDurationMs": 96,
+      "inputDelayMs": 0.8999999910593033,
+      "processingMs": 4.200000002980232,
+      "postProcessingToQuantizedEndpointMs": 90.90000000596046,
+      "queryCount": 0,
+      "firstQueryMs": null,
+      "lastQueryCompletionMs": null,
+      "queryDurationSumMs": 0,
+      "firstPreRenderMs": 13.299999997019768,
+      "firstPostRenderMs": 15.099999994039536,
+      "partialWrappedMethodElapsedMs": 2.7999999970197678,
+      "overlappingApplicationScripts": []
+    }
+  ],
+  "interpretation": [
+    "All sixteen exact native click entries and finalized one-second drains are isolated; no entry/attribution buffer loss, forced browser termination, or missing Event Timing entry was observed.",
+    "The actual client fits the independently observed2560x1440@60Hz physical mode at native DPR2, with2560x1074 canvas, page/pinch zoom1, resolutionScale1 and maximumScreenSpaceError1. Rendering settings and source populations match across roles. This is a distinct visible-window workload, not a replacement for fixed1440x1000 stress failures.",
+    "Candidate observed Event Timing exceeds100ms on3of8 actions; baseline2of8. All candidate accepted-intent observations are below100ms. Eight samples per build are not the formal twenty-sample cohort; no acceptance or percentile conclusion follows.",
+    "Candidate first OFF full-ready observations are27.8/16.1ms, later OFF14.7/14.7ms, but browser next-rendering durations remain128/144 and96/128ms. OFF postprocessing-to-quantized-endpoint intervals dominate input delay and handler processing. Fast DOM/scene readiness and RAF callbacks do not establish presentation.",
+    "Candidate first measured ON full-ready357.5/426.6ms versus baseline122.4/311.8ms; later ON124.8/144.8ms versus176.3/119.4ms. Candidate first-query starts57.8/63.6ms versus33.9/43.7ms; their query sums81.1/177.0ms versus50.1/83.0ms. First measured ON denotes order within this fixture-loaded browser, not a proven empty-cache run. A general readiness improvement is not established.",
+    "Application panel RAF work remains inside some OFF browser Event Timing intervals. Candidate slot3 action4 left-panel callback at+43.4ms lasts40.5ms, including32.4ms forced style/layout, before the128ms quantized endpoint. This contributes main-thread work but does not uniquely explain the remaining time or prove a GPU/driver/viewport cause.",
+    "partialWrappedMethodElapsedMs measures only retained wrapped method intervals, includes original observer work and excludes other callbacks, state snapshots, dispatch, serialization, tracing and nonlinear rendering effects. It is not isolated net instrumentation overhead and must not be subtracted from Event Timing.",
+    "All eight enabled public-native-geometry snapshots and ordered surface-query tuples match exactly across revisions; all disabled snapshots match exactly. This proves this flat eight-feature fixture only, not complete visual, near/far, streaming, duplicate-source or overlapping-geometry quality.",
+    "The visible-window diagnostic still contains failures. Historical oversized-viewport and preparation failures remain immutable. No physical display timestamp, compositor/GPU root cause, or performance acceptance is claimed."
+  ]
+}

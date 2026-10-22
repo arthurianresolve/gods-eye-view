@@ -54,11 +54,15 @@
       "src/workspaces/portable.js",
       "src/storage/codec.js",
       "src/view/index.js",
+      "src/view/styleParams.js",
+      "src/view/visual.js",
+      "src/bloom.js",
       "src/data/layerState.js",
       "src/data/idSwitches.js",
       "src/data/layerStateTokenReservations.json",
       "src/evidence/evidence.js",
-      "src/data/detectionPolicy.js"
+      "src/data/detectionPolicy.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -117,12 +121,19 @@
   },
   "vite-build": {
     "runtime": "node",
-    "exports": ["./build/vite", "./build/html"],
+    "exports": [
+      "./build/vite",
+      "./build/html",
+      "./build/assets",
+      "./build/security-headers"
+    ],
     "modules": [
       "build/vite.js",
+      "build/assetDistribution.js",
       "build/cesium-dependencies.js",
       "build/application-html.js",
       "build/allowedHosts.js",
+      "build/securityHeaders.js",
       "build/embed-framing.js",
       "build/panel.js"
     ],
@@ -404,7 +415,8 @@
       "src/data/local_data/natural_earth/regions.json",
       "src/data/naturalEarthRegions.js",
       "src/data/bundledJson.js",
-      "src/data/retryableLoad.js"
+      "src/data/retryableLoad.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -479,7 +491,8 @@
       "src/data/local_data/natural_earth/marine.json",
       "src/sources/httpBody.js",
       "src/i18n/marker.js",
-      "src/sources/nominatim.js"
+      "src/sources/nominatim.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -640,7 +653,8 @@
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -741,6 +755,8 @@
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
       "src/view/index.js",
+      "src/view/styleParams.js",
+      "src/view/visual.js",
       "src/data/militaryAwarenessEngine.js",
       "src/data/installationNames.js",
       "src/data/scenePick.js",
@@ -1056,7 +1072,8 @@
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
       "src/i18n/locales/ru.json",
-      "src/ui/unitLabels.js"
+      "src/ui/unitLabels.js",
+      "src/geoDistance.js"
     ],
     "external": ["cesium"]
   },
@@ -1131,7 +1148,8 @@
       "src/data/trackingClickGesture.js",
       "src/layers/aircraft/classification.js",
       "src/layers/aircraft/index.js",
-      "src/data/inputOwnership.js"
+      "src/data/inputOwnership.js",
+      "src/geoDistance.js"
     ],
     "external": ["cesium"]
   },
@@ -1426,7 +1444,8 @@
       "src/i18n/index.js",
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
-      "src/i18n/locales/ru.json"
+      "src/i18n/locales/ru.json",
+      "src/geoDistance.js"
     ],
     "external": ["cesium", "pbf", "@mapbox/vector-tile"]
   },
@@ -1453,7 +1472,8 @@
       "src/i18n/index.js",
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
-      "src/i18n/locales/ru.json"
+      "src/i18n/locales/ru.json",
+      "src/geoDistance.js"
     ],
     "external": ["cesium"]
   },
@@ -1502,7 +1522,8 @@
       "src/i18n/index.js",
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
-      "src/i18n/locales/ru.json"
+      "src/i18n/locales/ru.json",
+      "src/geoDistance.js"
     ],
     "external": ["hls.js", "cesium"]
   },
@@ -1676,7 +1697,8 @@
       "src/data/retryableLoad.js",
       "src/data/local_data/neighborhoods/san-francisco.json",
       "src/data/local_data/natural_earth/regions.json",
-      "src/data/local_data/natural_earth/marine.json"
+      "src/data/local_data/natural_earth/marine.json",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -1975,6 +1997,7 @@
       "src/data/layerStateCoordinator.js",
       "src/data/layerStateTokenReservations.json",
       "src/data/lifecycle.js",
+      "src/data/visibilityPaint.js",
       "src/data/localGeojson.js",
       "src/data/localGeojsonCore.js",
       "src/data/localGeojsonLod.js",
@@ -2671,6 +2694,8 @@
       "src/tools/functions.js",
       "src/voice/actionSchemas.js",
       "src/view/index.js",
+      "src/view/styleParams.js",
+      "src/view/visual.js",
       "src/app/embed.js",
       "src/ui/investigationTimeline.js",
       "src/ui/investigationTimelineController.js",
@@ -2694,7 +2719,8 @@
       "src/layers/airQuality/index.js",
       "src/layers/airQuality/model.js",
       "src/layers/airQuality/source.js",
-      "src/ui/statusText.js"
+      "src/ui/statusText.js",
+      "src/geoDistance.js"
     ],
     "external": [
       "hls.js",
@@ -3296,7 +3322,8 @@
       "src/layers/airQuality/model.js",
       "src/layers/airQuality/source.js",
       "src/ui/statusText.js",
-      "src/ui/layerNames.js"
+      "src/ui/layerNames.js",
+      "src/geoDistance.js"
     ],
     "external": [
       "hls.js",
@@ -3365,7 +3392,8 @@
       "src/sources/featureSource.js",
       "src/sources/capability.js",
       "src/data/cameraArrival.js",
-      "src/data/cameraFraming.js"
+      "src/data/cameraFraming.js",
+      "src/geoDistance.js"
     ],
     "external": [
       "cesium",
@@ -3380,6 +3408,7 @@
     "exports": ["./data/lifecycle"],
     "modules": [
       "src/data/lifecycle.js",
+      "src/data/visibilityPaint.js",
       "src/data/cameraArrival.js",
       "src/performance/cpuTimings.js"
     ],
@@ -3412,6 +3441,9 @@
       "src/navigationPolicy.js",
       "src/ui/shareRestoration.js",
       "src/view/index.js",
+      "src/view/styleParams.js",
+      "src/view/visual.js",
+      "src/bloom.js",
       "src/ui/uiLifetime.js",
       "src/data/detectionPolicy.js",
       "src/i18n/index.js",
@@ -3580,7 +3612,7 @@
   },
   "regional-source": {
     "exports": ["./sources/regional"],
-    "modules": ["src/data/regionalModel.js"],
+    "modules": ["src/data/regionalModel.js", "src/geoDistance.js"],
     "external": []
   },
   "voice-action-schemas": {
@@ -3747,7 +3779,8 @@
       "src/data/regionalModel.js",
       "src/sources/httpBody.js",
       "src/i18n/marker.js",
-      "src/sources/nominatim.js"
+      "src/sources/nominatim.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -3769,7 +3802,8 @@
       "src/search/geospatial.js",
       "src/data/regionalModel.js",
       "src/sources/httpBody.js",
-      "src/i18n/marker.js"
+      "src/i18n/marker.js",
+      "src/geoDistance.js"
     ],
     "external": []
   },
@@ -3789,7 +3823,8 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/geoDistance.js"
     ],
     "external": ["pbf"]
   },
@@ -3799,7 +3834,8 @@
       "src/data/gtfsRealtime.js",
       "src/data/transitFeeds.js",
       "src/data/transitProxy.js",
-      "src/sources/transitHistory.js"
+      "src/sources/transitHistory.js",
+      "src/geoDistance.js"
     ],
     "external": ["pbf"]
   },
@@ -3867,7 +3903,8 @@
       "src/i18n/index.js",
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
-      "src/i18n/locales/ru.json"
+      "src/i18n/locales/ru.json",
+      "src/geoDistance.js"
     ],
     "external": ["cesium", "egm96-universal", "pbf"]
   },
@@ -3908,7 +3945,8 @@
       "src/i18n/index.js",
       "src/i18n/locale.js",
       "src/i18n/locales/es.json",
-      "src/i18n/locales/ru.json"
+      "src/i18n/locales/ru.json",
+      "src/geoDistance.js"
     ],
     "external": ["cesium", "pbf"]
   },
@@ -3931,7 +3969,8 @@
       "src/sources/transitHistory.js",
       "src/sources/transitService.js",
       "src/sources/transitHistoryStore.js",
-      "src/sources/rateLimit.js"
+      "src/sources/rateLimit.js",
+      "src/geoDistance.js"
     ],
     "external": ["pbf"]
   },
@@ -4050,10 +4089,14 @@
       "src/loadingFeedback.js",
       "src/data/installationFeedback.js",
       "src/view/index.js",
+      "src/view/styleParams.js",
+      "src/view/visual.js",
+      "src/bloom.js",
       "src/tools/views.js",
       "src/tools/globePanel.js",
       "src/tools/queries/panelRequest.js",
-      "src/data/detectionPolicy.js"
+      "src/data/detectionPolicy.js",
+      "src/geoDistance.js"
     ],
     "external": ["satellite.js"]
   },
@@ -4155,6 +4198,9 @@
     "exports": ["./view"],
     "modules": [
       "src/view/index.js",
+      "src/view/styleParams.js",
+      "src/view/visual.js",
+      "src/bloom.js",
       "src/data/idSwitches.js",
       "src/data/layerState.js",
       "src/data/layerStateTokenReservations.json",

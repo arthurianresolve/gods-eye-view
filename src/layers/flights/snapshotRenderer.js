@@ -25,6 +25,29 @@ export function createFlightSnapshotRenderer({
   const { warmGroundFloor } = groundFloor;
   const { sampleMeshFloorCells } = meshFloor;
   return function applySnapshot(snapshot, viewer) {
+    const positionMode =
+      snapshot.positionMode === 'recorded' ? 'recorded' : 'live';
+    const positionModeChanged =
+      flightState._positionSourceMode !== positionMode;
+    flightState._positionSourceMode = positionMode;
+    if (positionMode === 'recorded' || positionModeChanged) {
+      flightState._cachedDRFrame = -1;
+      flightState._cachedDRPosition = null;
+      flightState._drReconcileValid = false;
+      flightState._drReconcileIcao = null;
+      flightState._trackedFrameTimeFrame = -1;
+      flightState._trackedFrameTimeIcao = null;
+    }
+    if (positionModeChanged && positionMode === 'recorded')
+      tracking._clearTrail?.();
+    if (positionModeChanged && positionMode === 'recorded')
+      flightState._pruneHistoryAfterReplay = true;
+    const previouslyRecordedIds = new Set();
+    if (positionModeChanged && positionMode === 'live') {
+      for (const [icao24, meta] of records.data?.entries?.() || []) {
+        if (meta.positionMode === 'recorded') previouslyRecordedIds.add(icao24);
+      }
+    }
     const currentIcaos = new Set();
     const acceptedSnapshotIcaos = new Set();
     // Field-test round 3 (2026-07-06, Austin fleet-underground): viewer
@@ -59,8 +82,10 @@ export function createFlightSnapshotRenderer({
           rendering._releaseModel(icao24); // military-suppression: drop any 3D model too
           records.forget(icao24);
           flightState._cullPositions.delete(icao24);
-          flightState._positionHistory.delete(icao24);
-          flightState._displayCourse.delete(icao24);
+          if (positionMode !== 'recorded') {
+            flightState._positionHistory.delete(icao24);
+            flightState._displayCourse.delete(icao24);
+          }
           flightState._groundSnap.forget(icao24);
         }
         continue;
@@ -75,6 +100,9 @@ export function createFlightSnapshotRenderer({
           trackedId: flightState._trackedIcao,
           floorWarmPoints,
           sourceId: snapshot.source,
+          positionMode,
+          recordingId: snapshot.recordingId,
+          selectedTimeMs: snapshot.selectedTimeMs,
           sourceSnapshotObservedAtMs: snapshot.observedAtMs,
           sourceCoverage: snapshot.coverage,
           sourceFreshness: snapshot.freshness,
@@ -96,69 +124,76 @@ export function createFlightSnapshotRenderer({
       );
       const isTracked = icao24 === flightState._trackedIcao;
 
-      // Append to position history stamped with the FEED's fix epoch
-      // (time_position), not client receipt time — OpenSky positions arrive
-      // 5-15s stale and receipt-time stamping is what caused the
-      // back/forward oscillation. Only append when the fix actually
-      // advances, so stale repeats don't create zero-dt segments.
-      const fixTime = Cesium.JulianDate.fromDate(new Date(fixEpochMs));
-      if (!flightState._positionHistory.has(icao24)) {
-        flightState._positionHistory.set(icao24, []);
-      }
-      const history = flightState._positionHistory.get(icao24);
-      const newest = history[history.length - 1];
-      if (!newest || Cesium.JulianDate.greaterThan(fixTime, newest.time)) {
-        // Per-fix kinematics: the fix's own velocity/track ride along so the
-        // extrapolation paths use the values that BELONG to the fix they
-        // extend, not whatever the latest poll reported.
-        history.push({
-          time: fixTime,
-          epochMs: fixEpochMs,
-          position: position.clone(),
-          velocity: meta.velocity,
-          track: meta.true_track,
-        });
-        if (history.length > POSITION_HISTORY_LIMIT) {
-          history.shift();
+      // Append only LIVE fixes to the forward-only history used by live
+      // dead-reckoning. Recorded snapshots own an exact selected observation
+      // and must never rewind, extend, or otherwise contaminate that history.
+      if (positionMode !== 'recorded') {
+        const fixTime = Cesium.JulianDate.fromDate(new Date(fixEpochMs));
+        if (!flightState._positionHistory.has(icao24)) {
+          flightState._positionHistory.set(icao24, []);
         }
-        // Turn rate from the fix-track history — computed once per new fix
-        // (≤5 samples), consumed by the extrapolation paths at tick rate.
-        meta.turnRateDps = turnRateFromFixHistory(history);
-        // Trail accumulation is separate from the 5-fix DR history (PRD F1)
-        // so the visible trail keeps growing while tracked. Ground traffic
-        // appends nothing — a touchdown freezes the existing trail.
-        // Round 2 (owner): ground traffic appends too — taxi history stays
-        // live after touchdown (grounded flights positions are already
-        // surface-clamped via the surfaceM chain, so the ground leg drapes).
-        if (isTracked) tracking._appendTrailFix(position.clone());
-      } else {
-        const modelOwnsGroundVisual = rendering._modelOwnsVisual(icao24);
-        if (!modelOwnsGroundVisual) {
-          liftRepeatedGroundFix(newest, position, meta.onGround);
-        }
-        // Apply fresh kinematics only from a forward synthetic fix. Mutating
-        // the historical fix reprojects the entire stale interval and snaps
-        // the rendered aircraft when course or speed changes late.
-        const kinematicsChanged =
-          newest.velocity !== meta.velocity || newest.track !== meta.true_track;
-        if (kinematicsChanged) {
-          const synthetic = synthesizeForwardKinematicsFix(newest, {
-            epochMs: Date.now(),
+        const history = flightState._positionHistory.get(icao24);
+        const newest = history[history.length - 1];
+        if (!newest || Cesium.JulianDate.greaterThan(fixTime, newest.time)) {
+          // Per-fix kinematics: the fix's own velocity/track ride along so the
+          // extrapolation paths use the values that BELONG to the fix they
+          // extend, not whatever the latest poll reported.
+          history.push({
+            time: fixTime,
+            epochMs: fixEpochMs,
+            position: position.clone(),
             velocity: meta.velocity,
             track: meta.true_track,
-            turnRateDps: meta.turnRateDps,
           });
-          if (synthetic) {
-            history.push(synthetic);
-            if (history.length > POSITION_HISTORY_LIMIT) history.shift();
-            meta.turnRateDps = turnRateFromFixHistory(history);
-            if (isTracked) tracking._appendTrailFix(synthetic.position.clone());
+          if (history.length > POSITION_HISTORY_LIMIT) {
+            history.shift();
+          }
+          // Turn rate from the fix-track history — computed once per new fix
+          // (≤5 samples), consumed by the extrapolation paths at tick rate.
+          meta.turnRateDps = turnRateFromFixHistory(history);
+          // Trail accumulation is separate from the 5-fix DR history (PRD F1)
+          // so the visible trail keeps growing while tracked. Ground traffic
+          // appends nothing — a touchdown freezes the existing trail.
+          // Round 2 (owner): ground traffic appends too — taxi history stays
+          // live after touchdown (grounded flights positions are already
+          // surface-clamped via the surfaceM chain, so the ground leg drapes).
+          if (isTracked) tracking._appendTrailFix(position.clone());
+        } else {
+          const modelOwnsGroundVisual = rendering._modelOwnsVisual(icao24);
+          if (!modelOwnsGroundVisual) {
+            liftRepeatedGroundFix(newest, position, meta.onGround);
+          }
+          // Apply fresh kinematics only from a forward synthetic fix. Mutating
+          // the historical fix reprojects the entire stale interval and snaps
+          // the rendered aircraft when course or speed changes late.
+          const kinematicsChanged =
+            newest.velocity !== meta.velocity ||
+            newest.track !== meta.true_track;
+          if (kinematicsChanged) {
+            const synthetic = synthesizeForwardKinematicsFix(newest, {
+              epochMs: Date.now(),
+              velocity: meta.velocity,
+              track: meta.true_track,
+              turnRateDps: meta.turnRateDps,
+            });
+            if (synthetic) {
+              history.push(synthetic);
+              if (history.length > POSITION_HISTORY_LIMIT) history.shift();
+              meta.turnRateDps = turnRateFromFixHistory(history);
+              if (isTracked)
+                tracking._appendTrailFix(synthetic.position.clone());
+            }
           }
         }
       }
 
       if (flightState._billboards.has(icao24)) {
         const bb = flightState._billboards.get(icao24);
+        if (
+          positionMode === 'recorded' &&
+          !Cesium.Cartesian3.equals(bb.position, position)
+        )
+          bb.position = position;
         // Reclassify if the category resolved/changed (first extended poll);
         // a ground flip (landing/takeoff) re-scales the SAME billboard in
         // place — the transition is a restyle, never a removal.
@@ -190,16 +225,21 @@ export function createFlightSnapshotRenderer({
         // lifted onto the floor under that delayed position. Creating it at
         // the raw fix drew it ahead until the next fleet tick snapped it back;
         // skipping the floor started a taxiing contact low and then raised it.
-        const delayed = motion._deadReckon(icao24, new Cesium.Cartesian3());
+        const delayed =
+          positionMode === 'recorded'
+            ? position
+            : motion._deadReckon(icao24, new Cesium.Cartesian3());
         const displayed =
-          (delayed &&
-            motion._floorGroundedDisplayPosition(
-              icao24,
-              flightState.records.data.get(icao24) || meta,
-              delayed,
-              rendering._modelOwnsVisual(icao24),
-            )) ||
-          position;
+          positionMode === 'recorded'
+            ? position
+            : (delayed &&
+                motion._floorGroundedDisplayPosition(
+                  icao24,
+                  flightState.records.data.get(icao24) || meta,
+                  delayed,
+                  rendering._modelOwnsVisual(icao24),
+                )) ||
+              position;
         const bb = flightState._billboardCollection.add({
           position: displayed,
           image: aircraftIcon(rendering._iconKind(icao24, meta.klass)),
@@ -246,11 +286,15 @@ export function createFlightSnapshotRenderer({
     // feed gap, and the full grace left phantom planes parked at airports.
     for (const [icao24, bb] of flightState._billboards) {
       if (currentIcaos.has(icao24)) continue;
-      const absence = records.absence(icao24, {
-        complete: snapshot.complete,
-        retainIds: snapshot.retainIds,
-        likelyLanded: queries._likelyLanded(icao24),
-      });
+      const absence =
+        (positionMode === 'recorded' && snapshot.complete === true) ||
+        (previouslyRecordedIds.has(icao24) && !currentIcaos.has(icao24))
+          ? 'remove'
+          : records.absence(icao24, {
+              complete: snapshot.complete,
+              retainIds: snapshot.retainIds,
+              likelyLanded: queries._likelyLanded(icao24),
+            });
       if (absence === 'retain') continue;
       if (absence === 'stale') {
         if (icao24 === flightState._trackedIcao && flightState._trackedEntity) {
@@ -278,11 +322,57 @@ export function createFlightSnapshotRenderer({
       rendering._releaseModel(icao24); // aged-out aircraft: drop its 3D model (no orphan / cap leak)
       records.forget(icao24);
       flightState._cullPositions.delete(icao24);
-      flightState._positionHistory.delete(icao24);
-      flightState._displayCourse.delete(icao24);
+      if (positionMode !== 'recorded' && !previouslyRecordedIds.has(icao24)) {
+        flightState._positionHistory.delete(icao24);
+        flightState._displayCourse.delete(icao24);
+      }
       flightState._groundSnap.forget(icao24);
       flightState._displayFloorState.delete(icao24);
     }
+
+    // A recorded-only contact must not survive a return to live as a stale
+    // record or billboard, even when the first live response is partial.
+    for (const icao24 of previouslyRecordedIds) {
+      if (currentIcaos.has(icao24)) continue;
+      if (flightState._trackedIcao === icao24)
+        tracking._clearTracking(false, { evicted: true });
+      if (flightState._billboards.has(icao24)) continue;
+      if (records.data.has(icao24)) records.forget(icao24);
+      flightState._cullPositions.delete(icao24);
+      flightState._groundSnap.forget(icao24);
+      flightState._displayFloorState.delete(icao24);
+    }
+
+    // Retained live histories are intentionally kept while replay owns the
+    // view, but once a complete live snapshot resolves absence they no longer
+    // have a visual owner and can be retired safely.
+    if (
+      positionMode === 'live' &&
+      snapshot.complete === true &&
+      flightState._pruneHistoryAfterReplay
+    ) {
+      for (const icao24 of flightState._positionHistory.keys()) {
+        if (flightState._billboards.has(icao24)) continue;
+        flightState._positionHistory.delete(icao24);
+        flightState._displayCourse.delete(icao24);
+      }
+      for (const icao24 of flightState._displayCourse.keys()) {
+        if (!flightState._billboards.has(icao24))
+          flightState._displayCourse.delete(icao24);
+      }
+      flightState._pruneHistoryAfterReplay = false;
+    }
+
+    // A track can remain selected across replay. Rebuild its live-source trail
+    // only after a live snapshot actually contains that aircraft; replay must
+    // never borrow the retained live history or OpenSky backfill as a trail.
+    if (
+      positionModeChanged &&
+      positionMode === 'live' &&
+      flightState._trackedIcao &&
+      currentIcaos.has(flightState._trackedIcao)
+    )
+      tracking._startTrail?.(flightState._trackedIcao);
 
     // Fresh courses arrived — force a rotation pass on the next fleet tick
     flightState._lastCamPoseSig = '';

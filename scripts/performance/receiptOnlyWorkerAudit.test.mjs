@@ -37,15 +37,15 @@ const identity = {
   },
 };
 
-function makeEnvelope() {
-  const document = createReceiptOnlyWorkerAuditDocument(identity);
+function makeEnvelope(caseIdentity = identity) {
+  const document = createReceiptOnlyWorkerAuditDocument(caseIdentity);
   return {
     schema: 'gev-receipt-only-worker-audit/v1',
     status: 'all-document-receipt-paths-validated',
     workerAuditMode: 'receipt-only',
-    appCommit: identity.appCommit,
-    harnessCommit: identity.harnessCommit,
-    receiptSha256: identity.receiptSha256,
+    appCommit: caseIdentity.appCommit,
+    harnessCommit: caseIdentity.harnessCommit,
+    receiptSha256: caseIdentity.receiptSha256,
     liveBlobBodyAttestation: 'unavailable-by-design',
     pageInstrumentation: {
       createObjectUrlWrapped: false,
@@ -56,26 +56,30 @@ function makeEnvelope() {
       observation: 'external-puppeteer-request-and-worker-target-events-only',
     },
     workerSource: document.workerSource,
-    scriptRequestCount: identity.requestedAssetPaths.length,
-    loadedAssetPaths: [...identity.requestedAssetPaths],
+    scriptRequestCount: caseIdentity.requestedAssetPaths.length,
+    loadedAssetPaths: [...caseIdentity.requestedAssetPaths],
     unexpectedAssetPaths: [],
     workerAuditDocuments: [document],
   };
 }
 
-function validate(pageAssetAudit) {
+function validate(pageAssetAudit, caseIdentity = identity) {
   return validateReceiptOnlyWorkerAuditEnvelope({
     pageAssetAudit,
-    appCommit: identity.appCommit,
-    harnessCommit: identity.harnessCommit,
-    receiptSha256: identity.receiptSha256,
+    appCommit: caseIdentity.appCommit,
+    harnessCommit: caseIdentity.harnessCommit,
+    receiptSha256: caseIdentity.receiptSha256,
     expectedDocuments: [
-      { documentRole: identity.documentRole, documentId: identity.documentId },
+      {
+        documentRole: caseIdentity.documentRole,
+        documentId: caseIdentity.documentId,
+      },
     ],
-    expectedAssetPaths: identity.expectedAssetPaths,
-    bundleSha256: identity.embeddedWorkerContract.bundleSha256,
-    workerSourceSha256: identity.embeddedWorkerContract.workerSourceSha256,
-    allowedModuleCount: identity.embeddedWorkerContract.allowedModuleCount,
+    expectedAssetPaths: caseIdentity.expectedAssetPaths,
+    bundlePath: caseIdentity.embeddedWorkerContract.bundlePath,
+    bundleSha256: caseIdentity.embeddedWorkerContract.bundleSha256,
+    workerSourceSha256: caseIdentity.embeddedWorkerContract.workerSourceSha256,
+    allowedModuleCount: caseIdentity.embeddedWorkerContract.allowedModuleCount,
   });
 }
 
@@ -96,6 +100,23 @@ test('receipt-only audit records receipt-derived worker identity without page ho
   for (const value of Object.values(document.pageInstrumentation))
     if (typeof value === 'boolean') assert.equal(value, false);
   assert.equal(validate(makeEnvelope()), true);
+});
+
+test('receipt-only envelope accepts a digest-versioned Cesium bundle path', () => {
+  const bundlePath = `cesium/${'f'.repeat(64)}/Cesium.js`;
+  const digestIdentity = {
+    ...identity,
+    expectedAssetPaths: ['index.html', 'assets/app.js', bundlePath],
+    requestedAssetPaths: ['assets/app.js', bundlePath],
+    workerTargetUrls: [
+      'blob:http://127.0.0.1:4173/worker-id',
+      `http://127.0.0.1:4173/${bundlePath}`,
+    ],
+    embeddedWorkerContract: { ...identity.embeddedWorkerContract, bundlePath },
+  };
+  const envelope = makeEnvelope(digestIdentity);
+  assert.equal(validate(envelope, digestIdentity), true);
+  assert.equal(envelope.workerSource.bundlePath, bundlePath);
 });
 
 test('receipt-only audit rejects a missing script request count', () => {

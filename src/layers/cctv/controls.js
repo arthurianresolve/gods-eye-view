@@ -56,8 +56,8 @@ export function createControls({ state: layerState, services, parts, source }) {
         if (layerState._showProjection) {
           const active = parts.selection.getActiveRecord();
           if (active) parts.projection.ensureProjectionRuntime(active);
-          parts.projection.startProjectionLoop();
         }
+        parts.projection.startProjectionLoop();
       }
       if (typeof params.autoHop === 'boolean') {
         layerState._autoHop = params.autoHop;

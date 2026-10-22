@@ -311,6 +311,9 @@ test('recorded aircraft source selects actual prior observations and never falls
   );
   replay.setTime(3000);
   const historical = await replay.getSnapshot();
+  assert.equal(historical.positionMode, 'recorded');
+  assert.equal(historical.recordingId, 'recording-replay-source');
+  assert.equal(historical.selectedTimeMs, 3000);
   assert.equal(historical.records.length, 1);
   assert.equal(historical.records[0].positionTimeMs, 1000);
   assert.equal(historical.records[0].latitude, 1);
@@ -329,6 +332,9 @@ test('recorded aircraft source selects actual prior observations and never falls
   capabilities.destroy();
   replay.setTime(6000);
   const afterCoverage = await replay.getSnapshot();
+  assert.equal(afterCoverage.positionMode, 'recorded');
+  assert.equal(afterCoverage.recordingId, 'recording-replay-source');
+  assert.equal(afterCoverage.selectedTimeMs, 6000);
   assert.deepEqual(afterCoverage.records, []);
   assert.equal(afterCoverage.observedAtMs, null);
   service.destroy();

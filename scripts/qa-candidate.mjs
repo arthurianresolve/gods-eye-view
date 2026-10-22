@@ -4,7 +4,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluateManifestPerformanceEvidence } from './performance/candidatePerformanceEvidence.mjs';
+import {
+  evaluateManifestPerformanceEvidence,
+  evaluateManifestPerformanceEvidenceWithNativeMaps,
+} from './performance/candidatePerformanceEvidence.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
@@ -37,9 +40,31 @@ const EXTERNAL_CHECK_IDS = new Set([
   'platform-installs',
   'mixed-use-soak',
   'hardware-matrix',
+  'local-control-latency',
+  'visual-equivalence',
   'accessibility-review',
   'release-tag-match',
 ]);
+
+/** Keep the S69 gates visible until their revision-bound evidence is attached. */
+export function pendingPerformanceQualificationChecks() {
+  return [
+    {
+      id: 'local-control-latency',
+      required: true,
+      status: 'pending',
+      summary:
+        'Native local-control p95 <=100 ms with the independent readiness and full-render regression limits.',
+    },
+    {
+      id: 'visual-equivalence',
+      required: true,
+      status: 'pending',
+      summary:
+        'Matched screenshots and scene populations at unchanged effective visual settings.',
+    },
+  ];
+}
 
 /** Validate an external acceptance manifest against the candidate being reported. */
 export function readValidationManifest(
@@ -166,10 +191,39 @@ export function requiresPerformanceEvidence(
     return true;
   if (!manifestPath) return false;
   try {
-    return JSON.parse(readFileSync(manifestPath, 'utf8')).schemaVersion === 2;
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    return (
+      manifest.schemaVersion === 2 ||
+      (Array.isArray(manifest.checks) &&
+        manifest.checks.some((check) =>
+          ['local-control-latency', 'visual-equivalence'].includes(check?.id),
+        ))
+    );
   } catch {
     return false;
   }
+}
+
+/** Keep the synchronous reader compatible while the CLI verifies native maps. */
+export async function readValidationManifestWithNativeMaps(
+  filePath,
+  options = {},
+) {
+  if (!filePath) return null;
+  const bytes = readFileSync(filePath);
+  const manifest = readValidationManifest(filePath, options);
+  if (!bytes.equals(readFileSync(filePath)))
+    throw new Error('Validation manifest changed during review.');
+  const raw = JSON.parse(bytes);
+  if (raw.schemaVersion !== 2) return manifest;
+  const performanceEvidence =
+    await evaluateManifestPerformanceEvidenceWithNativeMaps(
+      raw.performanceEvidence,
+      { manifestPath: filePath, candidateCommit: options.candidateCommit },
+    );
+  if (!bytes.equals(readFileSync(filePath)))
+    throw new Error('Validation manifest changed during native map review.');
+  return Object.freeze({ ...manifest, performanceEvidence });
 }
 
 function commandCheck(
@@ -306,6 +360,7 @@ export async function runCandidateMatrix({
         status: 'pending',
         summary: 'Awaiting a hash-bound raw full-duration retention report.',
       },
+      ...pendingPerformanceQualificationChecks(),
     );
   }
 
@@ -336,10 +391,13 @@ export async function runCandidateMatrix({
   let validationManifest = null;
   if (manifestPath) {
     try {
-      validationManifest = readValidationManifest(manifestPath, {
-        candidateCommit: commit,
-        phase,
-      });
+      validationManifest = await readValidationManifestWithNativeMaps(
+        manifestPath,
+        {
+          candidateCommit: commit,
+          phase,
+        },
+      );
       const byId = new Map(
         validationManifest.checks.map((item) => [item.id, item]),
       );

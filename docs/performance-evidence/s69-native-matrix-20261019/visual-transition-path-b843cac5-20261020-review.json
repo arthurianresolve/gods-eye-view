@@ -1,0 +1,3341 @@
+{
+  "schema": "gev-visual-transition-path-independent-review/v1",
+  "reviewedAt": "2026-10-20T03:23:03.674Z",
+  "status": "diagnostic-completed",
+  "acceptanceEligible": false,
+  "diagnosticOnly": true,
+  "scope": "All original files independently hash verified. Unmasked pixel comparisons of fixed fresh-page state paths; this is diagnostic evidence only.",
+  "producerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "helper": {
+    "path": "run-visual-transition-path-diagnostic-b843cac5.mjs",
+    "sha256": "bc9e8b895fb09425a9033431938c8009d362f3644ba616f6f9e616bc5492b76b"
+  },
+  "images": [
+    {
+      "name": "slot-01-baseline-initial-on/initial-on-1.png",
+      "slot": 1,
+      "role": "baseline",
+      "statePath": "initial-on",
+      "state": "initial-on",
+      "sha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+    },
+    {
+      "name": "slot-02-baseline-on-off-on/restored-on-1.png",
+      "slot": 2,
+      "role": "baseline",
+      "statePath": "on-off-on",
+      "state": "restored-on",
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate-on-off-on/restored-on-1.png",
+      "slot": 3,
+      "role": "candidate",
+      "statePath": "on-off-on",
+      "state": "restored-on",
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-04-candidate-initial-on/initial-on-1.png",
+      "slot": 4,
+      "role": "candidate",
+      "statePath": "initial-on",
+      "state": "initial-on",
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    }
+  ],
+  "comparisons": [
+    {
+      "left": {
+        "name": "slot-01-baseline-initial-on/initial-on-1.png",
+        "slot": 1,
+        "role": "baseline",
+        "statePath": "initial-on",
+        "state": "initial-on",
+        "sha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+      },
+      "right": {
+        "name": "slot-02-baseline-on-off-on/restored-on-1.png",
+        "slot": 2,
+        "role": "baseline",
+        "statePath": "on-off-on",
+        "state": "restored-on",
+        "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+      },
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 4,
+      "maximumChannelDelta": 1,
+      "bounds": {
+        "minX": 223,
+        "minY": 41,
+        "maxX": 223,
+        "maxY": 193
+      },
+      "changedTiles": [
+        {
+          "origin": "192,192",
+          "pixels": 2,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,0",
+          "pixels": 1,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,128",
+          "pixels": 1,
+          "maxDelta": 1
+        }
+      ],
+      "tileCount": 3
+    },
+    {
+      "left": {
+        "name": "slot-03-candidate-on-off-on/restored-on-1.png",
+        "slot": 3,
+        "role": "candidate",
+        "statePath": "on-off-on",
+        "state": "restored-on",
+        "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+      },
+      "right": {
+        "name": "slot-04-candidate-initial-on/initial-on-1.png",
+        "slot": 4,
+        "role": "candidate",
+        "statePath": "initial-on",
+        "state": "initial-on",
+        "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+      },
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 0,
+      "maximumChannelDelta": 0,
+      "bounds": null,
+      "changedTiles": [],
+      "tileCount": 0
+    },
+    {
+      "left": {
+        "name": "slot-01-baseline-initial-on/initial-on-1.png",
+        "slot": 1,
+        "role": "baseline",
+        "statePath": "initial-on",
+        "state": "initial-on",
+        "sha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+      },
+      "right": {
+        "name": "slot-04-candidate-initial-on/initial-on-1.png",
+        "slot": 4,
+        "role": "candidate",
+        "statePath": "initial-on",
+        "state": "initial-on",
+        "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+      },
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 7747,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 222,
+        "maxY": 198
+      },
+      "changedTiles": [
+        {
+          "origin": "64,64",
+          "pixels": 1116,
+          "maxDelta": 103
+        },
+        {
+          "origin": "128,64",
+          "pixels": 1009,
+          "maxDelta": 42
+        },
+        {
+          "origin": "128,128",
+          "pixels": 980,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,128",
+          "pixels": 929,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,0",
+          "pixels": 841,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,0",
+          "pixels": 745,
+          "maxDelta": 2
+        },
+        {
+          "origin": "0,64",
+          "pixels": 479,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,128",
+          "pixels": 373,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,0",
+          "pixels": 312,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,64",
+          "pixels": 303,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,0",
+          "pixels": 261,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,128",
+          "pixels": 249,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,192",
+          "pixels": 58,
+          "maxDelta": 1
+        },
+        {
+          "origin": "64,192",
+          "pixels": 38,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,192",
+          "pixels": 37,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,192",
+          "pixels": 17,
+          "maxDelta": 1
+        }
+      ],
+      "tileCount": 16
+    },
+    {
+      "left": {
+        "name": "slot-02-baseline-on-off-on/restored-on-1.png",
+        "slot": 2,
+        "role": "baseline",
+        "statePath": "on-off-on",
+        "state": "restored-on",
+        "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+      },
+      "right": {
+        "name": "slot-03-candidate-on-off-on/restored-on-1.png",
+        "slot": 3,
+        "role": "candidate",
+        "statePath": "on-off-on",
+        "state": "restored-on",
+        "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+      },
+      "width": 2880,
+      "height": 1800,
+      "changedPixels": 7751,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      },
+      "changedTiles": [
+        {
+          "origin": "64,64",
+          "pixels": 1116,
+          "maxDelta": 103
+        },
+        {
+          "origin": "128,64",
+          "pixels": 1009,
+          "maxDelta": 42
+        },
+        {
+          "origin": "128,128",
+          "pixels": 980,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,128",
+          "pixels": 929,
+          "maxDelta": 2
+        },
+        {
+          "origin": "64,0",
+          "pixels": 841,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,0",
+          "pixels": 745,
+          "maxDelta": 2
+        },
+        {
+          "origin": "0,64",
+          "pixels": 479,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,128",
+          "pixels": 373,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,0",
+          "pixels": 312,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,64",
+          "pixels": 303,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,0",
+          "pixels": 262,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,128",
+          "pixels": 250,
+          "maxDelta": 1
+        },
+        {
+          "origin": "128,192",
+          "pixels": 58,
+          "maxDelta": 1
+        },
+        {
+          "origin": "64,192",
+          "pixels": 38,
+          "maxDelta": 1
+        },
+        {
+          "origin": "0,192",
+          "pixels": 37,
+          "maxDelta": 1
+        },
+        {
+          "origin": "192,192",
+          "pixels": 19,
+          "maxDelta": 1
+        }
+      ],
+      "tileCount": 16
+    }
+  ],
+  "slots": [
+    {
+      "id": "slot-01-baseline-initial-on",
+      "status": "completed",
+      "cleanup": {
+        "interceptionDrain": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "pageClose": {
+          "closeCompleted": true,
+          "openPageCount": 0
+        },
+        "interceptionRelease": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "browserClose": {
+          "closeCompleted": true,
+          "forcedProcessTermination": false,
+          "observation": {
+            "closeStatus": "completed",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 5000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": false,
+            "closeStartHostMs": 100568.71,
+            "closeSettledHostMs": 101395.1514,
+            "closeElapsedMs": 826.4413999999961,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 770.3224000000046
+            },
+            "protocolCloseTrace": null,
+            "forceProcessStatus": "not-needed",
+            "forceProcessAttempted": false,
+            "forceProcessCallbackInvoked": false,
+            "forceProcessElapsedMs": null
+          }
+        },
+        "browserCloseProof": "passed"
+      },
+      "readinessAttempts": [
+        {
+          "index": 0,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:19:26.433Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 24,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 141,
+              "elapsedMs": 4890.79999999702
+            },
+            "proof": {
+              "revision": 80,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 2,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 1,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:19:27.698Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 3,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 152,
+              "elapsedMs": 404.09999999403954
+            },
+            "proof": {
+              "revision": 82,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 4,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "initial-on",
+          "status": "completed",
+          "presentationDifferences": []
+        }
+      ]
+    },
+    {
+      "id": "slot-02-baseline-on-off-on",
+      "status": "completed",
+      "cleanup": {
+        "interceptionDrain": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "pageClose": {
+          "closeCompleted": true,
+          "openPageCount": 0
+        },
+        "interceptionRelease": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "browserClose": {
+          "closeCompleted": true,
+          "forcedProcessTermination": false,
+          "observation": {
+            "closeStatus": "completed",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 5000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": false,
+            "closeStartHostMs": 159599.5839,
+            "closeSettledHostMs": 160434.5427,
+            "closeElapsedMs": 834.9587999999931,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 782.3460999999952
+            },
+            "protocolCloseTrace": null,
+            "forceProcessStatus": "not-needed",
+            "forceProcessAttempted": false,
+            "forceProcessCallbackInvoked": false,
+            "forceProcessElapsedMs": null
+          }
+        },
+        "browserCloseProof": "passed"
+      },
+      "readinessAttempts": [
+        {
+          "index": 0,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:20:26.933Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 21,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 126,
+              "elapsedMs": 4726.20000000298
+            },
+            "proof": {
+              "revision": 79,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 2,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 1,
+          "expectedHudVisible": false,
+          "observedAt": "2026-10-20T03:20:28.473Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 5,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 138,
+              "elapsedMs": 1165.9000000059605
+            },
+            "proof": {
+              "revision": 83,
+              "hudVisible": false,
+              "hudOpacity": 0,
+              "hudVisibility": "hidden",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 234,
+                    "right": 1388,
+                    "bottom": 864,
+                    "width": 330,
+                    "height": 630
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 648,
+                    "clientWidth": 330,
+                    "clientHeight": 630,
+                    "offsetWidth": 330,
+                    "offsetHeight": 630
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 234,
+                    "right": 1388,
+                    "bottom": 864,
+                    "width": 330,
+                    "height": 630
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 628,
+                    "offsetWidth": 330,
+                    "offsetHeight": 630
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 4,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 465,
+                    "right": 1187.875,
+                    "bottom": 484.5,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 2,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:20:30.075Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 3,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 151,
+              "elapsedMs": 473.6000000089407
+            },
+            "proof": {
+              "revision": 87,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 6,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "restored-on",
+          "status": "completed",
+          "presentationDifferences": []
+        }
+      ]
+    },
+    {
+      "id": "slot-03-candidate-on-off-on",
+      "status": "completed",
+      "cleanup": {
+        "interceptionDrain": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "pageClose": {
+          "closeCompleted": true,
+          "openPageCount": 0
+        },
+        "interceptionRelease": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "browserClose": {
+          "closeCompleted": true,
+          "forcedProcessTermination": false,
+          "observation": {
+            "closeStatus": "completed",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 5000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": false,
+            "closeStartHostMs": 206295.222,
+            "closeSettledHostMs": 206746.6663,
+            "closeElapsedMs": 451.44430000000284,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 407.1414999999979
+            },
+            "protocolCloseTrace": null,
+            "forceProcessStatus": "not-needed",
+            "forceProcessAttempted": false,
+            "forceProcessCallbackInvoked": false,
+            "forceProcessElapsedMs": null
+          }
+        },
+        "browserCloseProof": "passed"
+      },
+      "readinessAttempts": [
+        {
+          "index": 0,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:21:21.323Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 14,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 98,
+              "elapsedMs": 1517.7999999970198
+            },
+            "proof": {
+              "revision": 6,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 2,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 1,
+          "expectedHudVisible": false,
+          "observedAt": "2026-10-20T03:21:22.774Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 11,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 110,
+              "elapsedMs": 1295.5999999940395
+            },
+            "proof": {
+              "revision": 12,
+              "hudVisible": false,
+              "hudOpacity": 0,
+              "hudVisibility": "hidden",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 234,
+                    "right": 1388,
+                    "bottom": 864,
+                    "width": 330,
+                    "height": 630
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 648,
+                    "clientWidth": 330,
+                    "clientHeight": 630,
+                    "offsetWidth": 330,
+                    "offsetHeight": 630
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 234,
+                    "right": 1388,
+                    "bottom": 864,
+                    "width": 330,
+                    "height": 630
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 628,
+                    "offsetWidth": 330,
+                    "offsetHeight": 630
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 4,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 465,
+                    "right": 1187.875,
+                    "bottom": 484.5,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 2,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:21:24.377Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 7,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 119,
+              "elapsedMs": 963
+            },
+            "proof": {
+              "revision": 16,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 6,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "restored-on",
+          "status": "completed",
+          "presentationDifferences": []
+        }
+      ]
+    },
+    {
+      "id": "slot-04-candidate-initial-on",
+      "status": "completed",
+      "cleanup": {
+        "interceptionDrain": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "pageClose": {
+          "closeCompleted": true,
+          "openPageCount": 0
+        },
+        "interceptionRelease": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "browserClose": {
+          "closeCompleted": true,
+          "forcedProcessTermination": false,
+          "observation": {
+            "closeStatus": "completed",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 5000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": false,
+            "closeStartHostMs": 253781.9057,
+            "closeSettledHostMs": 254194.7491,
+            "closeElapsedMs": 412.8433999999834,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 373.8067999999912
+            },
+            "protocolCloseTrace": null,
+            "forceProcessStatus": "not-needed",
+            "forceProcessAttempted": false,
+            "forceProcessCallbackInvoked": false,
+            "forceProcessElapsedMs": null
+          }
+        },
+        "browserCloseProof": "passed"
+      },
+      "readinessAttempts": [
+        {
+          "index": 0,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:22:08.804Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 11,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 96,
+              "elapsedMs": 1291.300000011921
+            },
+            "proof": {
+              "revision": 6,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 2,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        },
+        {
+          "index": 1,
+          "expectedHudVisible": true,
+          "observedAt": "2026-10-20T03:22:09.156Z",
+          "result": {
+            "status": "ready",
+            "consecutiveStableRenders": 2,
+            "completedRenders": 2,
+            "completedRender": {
+              "status": "rendered",
+              "frameNumber": 98,
+              "elapsedMs": 47.70000000298023
+            },
+            "proof": {
+              "revision": 6,
+              "hudVisible": true,
+              "hudOpacity": 1,
+              "hudVisibility": "visible",
+              "hudDisplay": "block",
+              "recordingVisible": true,
+              "summaryTypingComplete": true,
+              "summary": "NORMAL CITY NEAR FROST BANK TOWER (AUSTIN) 0KM | NORTH AMERICA | ALT 2.0KM | WINDOW 2x1KM | SUN -10° | ONA 0° | UTC-7 | FALLBACK CCTV",
+              "documentVisible": true,
+              "documentFocused": true,
+              "scrollContainers": [
+                {
+                  "id": "cctv-panel",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 348,
+                    "height": 442,
+                    "clientWidth": 330,
+                    "clientHeight": 424,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "block",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                },
+                {
+                  "id": "cctv-panel-inner",
+                  "present": true,
+                  "rect": {
+                    "left": 1058,
+                    "top": 266.3984375,
+                    "right": 1388,
+                    "bottom": 690.796875,
+                    "width": 330,
+                    "height": 424.3984375
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 318,
+                    "height": 638,
+                    "clientWidth": 318,
+                    "clientHeight": 422,
+                    "offsetWidth": 330,
+                    "offsetHeight": 424
+                  },
+                  "computed": {
+                    "display": "flex",
+                    "visibility": "visible",
+                    "overflowX": "auto",
+                    "overflowY": "auto",
+                    "scrollbarGutter": "stable",
+                    "scrollbarWidth": "thin"
+                  }
+                },
+                {
+                  "id": "cctv-cyber-panel-body",
+                  "present": true,
+                  "rect": {
+                    "left": 0,
+                    "top": 0,
+                    "right": 0,
+                    "bottom": 0,
+                    "width": 0,
+                    "height": 0
+                  },
+                  "scroll": {
+                    "left": 0,
+                    "top": 0,
+                    "width": 0,
+                    "height": 0,
+                    "clientWidth": 0,
+                    "clientHeight": 0,
+                    "offsetWidth": 0,
+                    "offsetHeight": 0
+                  },
+                  "computed": {
+                    "display": "contents",
+                    "visibility": "visible",
+                    "overflowX": "visible",
+                    "overflowY": "visible",
+                    "scrollbarGutter": "auto",
+                    "scrollbarWidth": "auto"
+                  }
+                }
+              ],
+              "pointer": {
+                "x": 1,
+                "y": 1,
+                "pointerType": "mouse"
+              },
+              "activeElement": {
+                "tagName": "BODY",
+                "id": "",
+                "className": ""
+              },
+              "gaze": {
+                "status": "ready",
+                "reducedMotion": false,
+                "pointerMoveSequence": 4,
+                "resetSequence": 0,
+                "expected": {
+                  "pointer": {
+                    "x": 1,
+                    "y": 1
+                  },
+                  "logos": [
+                    {
+                      "id": "",
+                      "key": "logo-0",
+                      "rect": {
+                        "left": 36,
+                        "top": 32,
+                        "width": 52,
+                        "height": 34.8828125
+                      },
+                      "transform": "translate(-6.48 -5.15)"
+                    }
+                  ]
+                },
+                "logos": [
+                  {
+                    "id": "",
+                    "key": "logo-0",
+                    "rect": {
+                      "left": 36,
+                      "top": 32,
+                      "width": 52,
+                      "height": 34.8828125
+                    },
+                    "mode": "inline-svg",
+                    "image": null,
+                    "globeTransform": "translate(-6.48 -5.15)",
+                    "cageTransform": "translate(-6.48 -5.15)",
+                    "style": {
+                      "transform": "none",
+                      "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "globeStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    },
+                    "cageStyle": {
+                      "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                      "filter": "none",
+                      "transitionProperty": "all",
+                      "transitionDuration": "0s",
+                      "transitionDelay": "0s",
+                      "animationName": "none",
+                      "animationDuration": "0s"
+                    }
+                  }
+                ],
+                "activeAnimations": [],
+                "animationOverflow": false,
+                "titleStyle": {
+                  "filter": "none",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none",
+                  "animationDuration": "0s"
+                },
+                "cctvEffects": [
+                  {
+                    "id": "cctv-panel",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-panel-inner",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "blur(24px) saturate(1.4)",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  },
+                  {
+                    "id": "cctv-cyber-panel-body",
+                    "present": true,
+                    "filter": "none",
+                    "backdropFilter": "none",
+                    "transitionProperty": "all",
+                    "transitionDuration": "0s",
+                    "transitionDelay": "0s",
+                    "animationName": "none",
+                    "animationDuration": "0s"
+                  }
+                ],
+                "sourceBadge": {
+                  "rect": {
+                    "left": 1073,
+                    "top": 497.3984375,
+                    "right": 1187.875,
+                    "bottom": 516.8984375,
+                    "width": 114.875,
+                    "height": 19.5
+                  },
+                  "filter": "none",
+                  "backdropFilter": "none",
+                  "borderRadius": "999px",
+                  "transitionProperty": "all",
+                  "transitionDuration": "0s",
+                  "animationName": "none"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "states": [
+        {
+          "id": "initial-on",
+          "status": "completed",
+          "presentationDifferences": []
+        }
+      ]
+    }
+  ],
+  "decoder": {
+    "name": "pngjs",
+    "version": "7.0.0",
+    "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+    "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+  },
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-transition-path-b843cac5-e7-190c5ab6",
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 414470,
+      "sha256": "71f71515af4d6b5caf0ebf2e07a7aa5b0199912ce8073ccda7928581a3742194"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-transition-path-diagnostic-b843cac5.mjs",
+      "bytes": 34957,
+      "sha256": "bc9e8b895fb09425a9033431938c8009d362f3644ba616f6f9e616bc5492b76b"
+    },
+    {
+      "name": "slot-01-baseline-initial-on/initial-on-1.png",
+      "bytes": 1522428,
+      "sha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+    },
+    {
+      "name": "slot-02-baseline-on-off-on/restored-on-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate-on-off-on/restored-on-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-04-candidate-initial-on/initial-on-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "predeclared-plan.json",
+      "bytes": 4522,
+      "sha256": "36b2e37fb02a600f206fb1ceb1ef17e0546fa2926dcb40a618d1e960e8de73ac"
+    }
+  ]
+}

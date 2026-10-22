@@ -3,14 +3,19 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import {
+  validatePairedPerformanceReports,
+  validatePairedMapPerformanceReports,
+} from './pairedReport.mjs';
 import { PERFORMANCE_ACCEPTANCE_POLICY_ID } from './candidatePerformanceEvidence.mjs';
 import { AUSTIN_OPERATING_FIXED_TIME } from './austinOperatingWorkloadContract.mjs';
+import { assertNativeSharpnessProfile } from './nativeSharpnessProfile.mjs';
 
 export const PERFORMANCE_MATRIX_PLAN_SCHEMA = 'gev-performance-matrix-plan/v1';
 export const PERFORMANCE_MATRIX_RESULT_SCHEMA =
   'gev-performance-matrix-result/v1';
 export const PERFORMANCE_MATRIX_FIXED_TIME = '2026-10-08T12:00:00.000Z';
+export const PERFORMANCE_COMPARISON_PROFILE = 'native-sharpness-v1';
 
 export const PERFORMANCE_MATRIX_ROWS = Object.freeze([
   Object.freeze({
@@ -138,6 +143,24 @@ function validateRevision(revision, role) {
   });
 }
 
+function validateHarness(identity, label) {
+  requireObject(identity, `${label} is required`);
+  assert.match(identity.commit || '', SHA1, `${label}.commit`);
+  return Object.freeze({
+    commit: identity.commit,
+    checkout: requireAbsolutePath(identity.checkout, `${label}.checkout`),
+  });
+}
+
+export function matrixCaptureHarness(plan, row) {
+  return (
+    row.captureHarness ?? {
+      commit: plan.harnessCommit,
+      checkout: plan.harnessCheckout,
+    }
+  );
+}
+
 export function validatePerformanceMatrixPlan(plan) {
   requireObject(plan, 'Matrix plan is required');
   assert.equal(plan.schema, PERFORMANCE_MATRIX_PLAN_SCHEMA);
@@ -147,6 +170,14 @@ export function validatePerformanceMatrixPlan(plan) {
   const harnessCheckout = requireAbsolutePath(
     plan.harnessCheckout,
     'harnessCheckout',
+  );
+  const defaultHarness = {
+    commit: plan.harnessCommit,
+    checkout: harnessCheckout,
+  };
+  const buildHarness = validateHarness(
+    plan.buildHarness ?? defaultHarness,
+    'buildHarness',
   );
   const outputRoot = requireAbsolutePath(plan.outputRoot, 'outputRoot');
   const baseline = validateRevision(plan.baseline, 'baseline');
@@ -163,7 +194,13 @@ export function validatePerformanceMatrixPlan(plan) {
     const expected = PERFORMANCE_MATRIX_ROWS[index];
     assert.equal(row.id, expected.id, `rows[${index}].id`);
     assert.deepEqual(row.order, expected.order, `${row.id}.order`);
-    return expected;
+    return Object.freeze({
+      ...expected,
+      captureHarness: validateHarness(
+        row.captureHarness ?? defaultHarness,
+        `${row.id}.captureHarness`,
+      ),
+    });
   });
   assert.equal(
     rows.filter((row) => row.order[0] === 'baseline').length,
@@ -181,10 +218,12 @@ export function validatePerformanceMatrixPlan(plan) {
     fixedTime: PERFORMANCE_MATRIX_FIXED_TIME,
     harnessCommit: plan.harnessCommit,
     harnessCheckout,
+    buildHarness,
     outputRoot,
     baseline,
     candidate,
     rows: Object.freeze(rows),
+    comparisonProfile: plan.comparisonProfile ?? 'legacy',
     ...(plan.chromeExecutable
       ? {
           chromeExecutable: requireAbsolutePath(
@@ -207,11 +246,12 @@ export function matrixReportPath(plan, row, role) {
 }
 
 export function createMatrixCaptureInvocation(plan, row, role) {
+  const captureHarness = matrixCaptureHarness(plan, row);
   const revision = plan[role];
   const build = revision.builds[row.buildProfile];
   const reportPath = matrixReportPath(plan, row, role);
   const script = path.resolve(
-    plan.harnessCheckout,
+    captureHarness.checkout,
     'scripts',
     'capture-scene-performance.mjs',
   );
@@ -245,21 +285,33 @@ export function createMatrixCaptureInvocation(plan, row, role) {
     '--app-checkout',
     revision.appCheckout,
     '--harness-checkout',
-    plan.harnessCheckout,
+    captureHarness.checkout,
     '--build-root',
     build.root,
     '--expected-app-sha',
     revision.appCommit,
     '--expected-harness-sha',
-    plan.harnessCommit,
+    captureHarness.commit,
     '--served-base-url',
     build.baseUrl,
   ];
+  if (
+    plan.buildHarness.commit !== captureHarness.commit ||
+    plan.buildHarness.checkout !== captureHarness.checkout
+  )
+    args.push(
+      '--build-harness-checkout',
+      plan.buildHarness.checkout,
+      '--expected-build-harness-sha',
+      plan.buildHarness.commit,
+    );
+  args.push('--comparison-profile', plan.comparisonProfile ?? 'legacy');
   if (row.mixedLayers) args.push('--mixed-layers');
   if (row.buildProfile !== 'standard')
     args.push('--build-profile', row.buildProfile);
   return Object.freeze({
     command: process.execPath,
+    cwd: captureHarness.checkout,
     args: Object.freeze(args),
     reportPath,
     env: Object.freeze({
@@ -279,13 +331,109 @@ export function sha256File(filePath) {
 
 export function readReusableMatrixReport(plan, row, role) {
   const reportPath = matrixReportPath(plan, row, role);
-  const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+  let report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
   const revision = plan[role];
   assert.equal(report.schema, 'gev-performance-capture/v1');
+  const expectedProfile = plan.comparisonProfile ?? 'legacy';
+  const declaredProfile = report.comparisonProfile;
+  if (declaredProfile !== undefined)
+    assert.equal(
+      declaredProfile,
+      expectedProfile,
+      'Reusable report comparison profile differs from matrix plan',
+    );
+  else if (expectedProfile === 'legacy') {
+    // Historical reports predate the field and remain intentionally readable.
+    // They are legacy only when the plan explicitly requests legacy.
+  } else {
+    // The capture producer in the frozen 1906 evidence omitted the top-level
+    // label. Accept that omission only after proving every native boundary;
+    // never infer native quality from the missing field alone.
+    assert.equal(
+      expectedProfile,
+      PERFORMANCE_COMPARISON_PROFILE,
+      'Only the declared native profile has a bounded compatibility path',
+    );
+    assert.ok(Array.isArray(report.captures) && report.captures.length > 0);
+    let derivedProfile = null;
+    for (const [index, capture] of report.captures.entries()) {
+      for (const phase of ['before', 'after']) {
+        const boundaryProfiles = [
+          capture.settings?.[phase]?.nativeSharpnessProfile,
+          capture.conditions?.[phase]?.settings?.nativeSharpnessProfile,
+          capture.conditions?.[phase]?.environment?.nativeSharpnessProfile,
+        ];
+        for (const [boundaryIndex, profile] of boundaryProfiles.entries()) {
+          assertNativeSharpnessProfile(
+            { environment: { nativeSharpnessProfile: profile } },
+            `${role} capture ${index + 1} ${phase} boundary ${boundaryIndex + 1}`,
+          );
+          derivedProfile ||= profile;
+          assert.deepEqual(
+            profile,
+            derivedProfile,
+            `${role} capture ${index + 1} ${phase} native profile differs from paired boundaries`,
+          );
+          const boundary = capture.conditions?.[phase]?.environment;
+          assert.deepEqual(
+            boundary?.viewport,
+            profile.viewport,
+            `${role} capture ${index + 1} ${phase} boundary viewport differs`,
+          );
+          assert.deepEqual(
+            boundary?.drawingBuffer,
+            profile.drawingBuffer,
+            `${role} capture ${index + 1} ${phase} boundary drawing buffer differs`,
+          );
+        }
+      }
+    }
+    if (report.environment?.nativeSharpnessProfile !== undefined) {
+      assertNativeSharpnessProfile(report, `${role} report environment`);
+      assert.deepEqual(
+        report.environment.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} explicit environment native profile differs from boundaries`,
+      );
+    }
+    assert.deepEqual(
+      report.environment.viewport,
+      derivedProfile.viewport,
+      `${role} environment viewport differs from native boundaries`,
+    );
+    assert.deepEqual(
+      report.environment.drawingBuffer,
+      derivedProfile.drawingBuffer,
+      `${role} environment drawing buffer differs from native boundaries`,
+    );
+    // Keep the raw evidence untouched on disk while giving paired validation
+    // an explicit, provenance-backed effective profile in memory.
+    report = {
+      ...report,
+      comparisonProfile: expectedProfile,
+      environment: {
+        ...report.environment,
+        nativeSharpnessProfile: derivedProfile,
+      },
+      comparisonProfileEvidence: {
+        status: 'derived-from-all-capture-boundaries',
+        boundaryCount: report.captures.length * 2,
+      },
+    };
+  }
   assert.equal(report.comparisonEligible, true);
   assert.equal(report.comparisonReadiness?.status, 'ready');
   assert.equal(report.source?.appCommit, revision.appCommit);
-  assert.equal(report.source?.harnessCommit, plan.harnessCommit);
+  assert.equal(
+    report.source?.harnessCommit,
+    matrixCaptureHarness(plan, row).commit,
+    'Capture producer differs from the workload plan',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.harnessCommit,
+    plan.buildHarness.commit,
+    'Build harness differs from the matrix plan',
+  );
   assert.equal(report.workload?.providerFixture, row.providerFixture);
   assert.equal(report.workload?.warmupMs, 30_000);
   assert.equal(report.workload?.durationPerSampleMs, 60_000);
@@ -316,16 +464,47 @@ export function readReusableMatrixReport(plan, row, role) {
 }
 
 export function validateMatrixPair(plan, row) {
+  return reviewMatrixPair(plan, row, validatePairedPerformanceReports);
+}
+
+/** Independently verify the native map corpus without changing legacy callers. */
+export async function validateMatrixPairWithNativeEvidence(plan, row) {
+  return reviewMatrixPair(
+    plan,
+    row,
+    row.id === 'map-streaming'
+      ? validatePairedMapPerformanceReports
+      : validatePairedPerformanceReports,
+  );
+}
+
+function reviewMatrixPair(plan, row, validate) {
   const baseline = readReusableMatrixReport(plan, row, 'baseline');
   const candidate = readReusableMatrixReport(plan, row, 'candidate');
-  return validatePairedPerformanceReports({
+  const result = validate({
     baseline,
     candidate,
     expectedAppCommits: {
       baseline: plan.baseline.appCommit,
       candidate: plan.candidate.appCommit,
     },
+    expectedComparisonProfile:
+      plan.comparisonProfile === 'legacy' ? null : plan.comparisonProfile,
   });
+  const withProfileEvidence = (comparison) => ({
+    ...comparison,
+    comparisonProfileEvidence: {
+      baseline: baseline.comparisonProfileEvidence || {
+        status: 'declared-in-report',
+      },
+      candidate: candidate.comparisonProfileEvidence || {
+        status: 'declared-in-report',
+      },
+    },
+  });
+  return result instanceof Promise
+    ? result.then(withProfileEvidence)
+    : withProfileEvidence(result);
 }
 
 export function createMatrixResult(plan, completedRows, startedAt) {
@@ -341,6 +520,13 @@ export function createMatrixResult(plan, completedRows, startedAt) {
       baselineAppCommit: plan.baseline.appCommit,
       candidateAppCommit: plan.candidate.appCommit,
       harnessCommit: plan.harnessCommit,
+      buildHarnessCommit: plan.buildHarness.commit,
+      captureHarnessByWorkload: Object.fromEntries(
+        plan.rows.map((row) => [
+          row.id,
+          matrixCaptureHarness(plan, row).commit,
+        ]),
+      ),
     },
     environmentId: 'windows-uhd620',
     rows: completedRows,

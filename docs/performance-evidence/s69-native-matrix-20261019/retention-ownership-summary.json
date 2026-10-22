@@ -1,0 +1,271 @@
+{
+  "schema": "gev-retention-ownership-summary/v1",
+  "reviewedAt": "2026-10-19T09:33:09.656Z",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "environment": {
+    "os": "Windows",
+    "browser": "Chrome/155.0.8059.84",
+    "renderer": "Intel UHD620 via D3D11, hardware validated",
+    "location": "Ampfing, Germany"
+  },
+  "protocol": {
+    "warmupCycles": 2,
+    "measuredCycles": 16,
+    "finalDrainMs": 8000,
+    "forcedGC": true,
+    "allocationSampling": true,
+    "measurementScope": "Retained ownership investigation; excluded from latency comparisons"
+  },
+  "fixes": [
+    {
+      "commit": "9dc2b1cbdd6ee46c9da6917e761b6bac1f041237",
+      "description": "Dispose the Puppeteer import-control selector handle after the readiness check."
+    },
+    {
+      "commit": "89601fcd4c72e889b843f4b5ad418b1860e4db3e",
+      "description": "Dispose console argument handles only for the exclusive page/worker consumer; bound and verify disposal before retained checkpoints."
+    }
+  ],
+  "probes": [
+    {
+      "role": "original",
+      "harnessCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+      "privateArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/retention-ownership-original-556-1792398086727",
+      "reviewSha256": "360069a23b6c753caafd33cdb356737a89abe0c27b552d83e7830cb4e44079ad",
+      "checkpoints": [
+        {
+          "label": "warmed-baseline",
+          "cycle": 0,
+          "heapBytes": 253549936,
+          "nodes": 6351,
+          "listeners": 666,
+          "connected": 5165
+        },
+        {
+          "label": "measured",
+          "cycle": 4,
+          "heapBytes": 263378652,
+          "nodes": 6372,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "measured",
+          "cycle": 8,
+          "heapBytes": 263340592,
+          "nodes": 6395,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "measured",
+          "cycle": 12,
+          "heapBytes": 264268580,
+          "nodes": 6420,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "measured",
+          "cycle": 16,
+          "heapBytes": 265277020,
+          "nodes": 6440,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "drained",
+          "cycle": 16,
+          "heapBytes": 264938432,
+          "nodes": 6379,
+          "listeners": 664,
+          "connected": 5167
+        }
+      ],
+      "growth": {
+        "heapBytes": 11388496,
+        "nodes": 28,
+        "connected": 2
+      }
+    },
+    {
+      "role": "disposed",
+      "harnessCommit": "9dc2b1cbdd6ee46c9da6917e761b6bac1f041237",
+      "privateArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/retention-ownership-disposed-556-1792398591245",
+      "reviewSha256": "ec97a08a03f6602026fa91edce2574931eba7125b56b82d1779156cf2d432850",
+      "checkpoints": [
+        {
+          "label": "warmed-baseline",
+          "cycle": 0,
+          "heapBytes": 253291432,
+          "nodes": 6352,
+          "listeners": 666,
+          "connected": 5165
+        },
+        {
+          "label": "measured",
+          "cycle": 4,
+          "heapBytes": 263215704,
+          "nodes": 6390,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "measured",
+          "cycle": 8,
+          "heapBytes": 263380620,
+          "nodes": 6412,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "measured",
+          "cycle": 12,
+          "heapBytes": 264468728,
+          "nodes": 6431,
+          "listeners": 666,
+          "connected": 5167
+        },
+        {
+          "label": "measured",
+          "cycle": 16,
+          "heapBytes": 265082908,
+          "nodes": 6446,
+          "listeners": 668,
+          "connected": 5167
+        },
+        {
+          "label": "drained",
+          "cycle": 16,
+          "heapBytes": 265005884,
+          "nodes": 6385,
+          "listeners": 664,
+          "connected": 5167
+        }
+      ],
+      "growth": {
+        "heapBytes": 11714452,
+        "nodes": 33,
+        "connected": 2
+      }
+    },
+    {
+      "role": "exclusive",
+      "harnessCommit": "89601fcd4c72e889b843f4b5ad418b1860e4db3e",
+      "privateArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/retention-ownership-exclusive-556-1792399388606",
+      "reviewSha256": "29d526120a28db9a0d2ceaacaba91fc0125b48ee5fa3d9ff8ef64c4f6b25fdd9",
+      "checkpoints": [
+        {
+          "label": "warmed-baseline",
+          "cycle": 0,
+          "heapBytes": 252391664,
+          "nodes": 6343,
+          "listeners": 666,
+          "connected": 5165,
+          "consoleHandleOwnership": {
+            "disposed": 474,
+            "skipped": 0,
+            "pending": 0,
+            "errors": 0
+          }
+        },
+        {
+          "label": "measured",
+          "cycle": 4,
+          "heapBytes": 261642428,
+          "nodes": 6373,
+          "listeners": 666,
+          "connected": 5167,
+          "consoleHandleOwnership": {
+            "disposed": 524,
+            "skipped": 0,
+            "pending": 0,
+            "errors": 0
+          }
+        },
+        {
+          "label": "measured",
+          "cycle": 8,
+          "heapBytes": 261652768,
+          "nodes": 6404,
+          "listeners": 666,
+          "connected": 5167,
+          "consoleHandleOwnership": {
+            "disposed": 572,
+            "skipped": 0,
+            "pending": 0,
+            "errors": 0
+          }
+        },
+        {
+          "label": "measured",
+          "cycle": 12,
+          "heapBytes": 262729376,
+          "nodes": 6426,
+          "listeners": 666,
+          "connected": 5167,
+          "consoleHandleOwnership": {
+            "disposed": 619,
+            "skipped": 0,
+            "pending": 0,
+            "errors": 0
+          }
+        },
+        {
+          "label": "measured",
+          "cycle": 16,
+          "heapBytes": 263856364,
+          "nodes": 6451,
+          "listeners": 668,
+          "connected": 5167,
+          "consoleHandleOwnership": {
+            "disposed": 667,
+            "skipped": 0,
+            "pending": 0,
+            "errors": 0
+          }
+        },
+        {
+          "label": "drained",
+          "cycle": 16,
+          "heapBytes": 263494740,
+          "nodes": 6390,
+          "listeners": 664,
+          "connected": 5167,
+          "consoleHandleOwnership": {
+            "disposed": 669,
+            "skipped": 0,
+            "pending": 0,
+            "errors": 0
+          }
+        }
+      ],
+      "growth": {
+        "heapBytes": 11103076,
+        "nodes": 47,
+        "connected": 2
+      }
+    }
+  ],
+  "conclusion": "Both fixes address definite QA ownership omissions. Neither short probe demonstrates that the remaining retained growth is resolved. The original 60-minute soak remains failed at 6.3166% final-window growth against the unchanged 5% limit. The WeakRef probe demonstrates a small inspector-owned contribution; a bounded compressed heap capture is prepared for the remaining ownership investigation.",
+  "limitations": [
+    "Allocation sites do not establish retention paths.",
+    "Minified constructor names alone do not establish Cesium source types.",
+    "The three sequential diagnostics are not a latency comparison or full-soak acceptance."
+  ],
+  "weakReferenceProbe": {
+    "rawSha256": "895aca1ccd801e9466a951f1388d3e0efa5f40067d2aa2130ceefef4cdfeecb6",
+    "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/retention-ownership-console-weakref-556-1792401774343",
+    "measuredCycles": 8,
+    "warmupCycles": 2,
+    "loggedObjectsCollected": 42,
+    "heapBytesRecovered": 100288,
+    "domNodesRecovered": 0,
+    "transientSentinelCollected": true,
+    "strongSentinelSurvived": true,
+    "conclusion": "Inspector retention is demonstrated, but the measured recovery is insufficient to explain the full-hour heap and DOM trend."
+  },
+  "currentStatus": "Retention unresolved. Original failed soak is preserved; no acceptance promotion."
+}

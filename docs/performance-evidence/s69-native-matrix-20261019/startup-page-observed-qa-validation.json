@@ -1,0 +1,97 @@
+{
+  "schema": "gev-startup-page-observed-qa-validation/v1",
+  "startedAt": "2026-10-19T20:56:18.334Z",
+  "baseCommit": "ac50400cb47c982039e8710ea7ff8972e7da239f",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "c685f921c605647db81ef119d1c2030d807ed9a74c58efa973fc6d56b2ba4883"
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.mjs",
+      "sha256": "dd7399980cb99fbc15e00ab554d3e1f60a37c2d94fb4acf352d72a75cb224c21"
+    },
+    {
+      "name": "scripts/performance/startupObservationMethod.test.mjs",
+      "sha256": "63106990a77928e684cad73d6a5d83797be9b3d821648a82ac5974ac1246a719"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.mjs",
+      "sha256": "578f0fd67f6bbb7318b9096972eb5126ffa660455a561132917f8d7792449465"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "sha256": "d5ca81209cfcd004c57342bafe480b0da80bce3680dddbaf25979077c16bb6b0"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.test.mjs",
+      "sha256": "c919947c2c2ef33ababe72efe5ee4b93a28868af9c6f4cbdd5351cc3bae55f85"
+    },
+    {
+      "name": "scripts/performance/captureProducerCli.test.mjs",
+      "sha256": "8c5af4808000e2716d0f3eefab17dafdfecd8a5614cd66e6c4f99571939e350a"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "sha256": "5acb5ac18a9a5046437102078df1ef0c88499d782b47cac250ff6e88cc18f377"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "sha256": "4bfaa628021fe9cd07a63f3e90dad7a8acab0727482b5d8771a82fb6ea0cfafc"
+    }
+  ],
+  "tests": [
+    "scripts/performance/startupObservationMethod.test.mjs",
+    "scripts/performance/balancedStartupConfirmation.test.mjs",
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/captureProducerCli.test.mjs"
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "88a80cc356d6d4670fc58799a75f42123bb51ddbaefadebe6d881d59ba3d74ab",
+      "summary": [
+        "ℹ tests 33",
+        "ℹ pass 33",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 4995.45122"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "9ffd93e1ee3a0d62b8f19badf17f259800a633d8f9b270ffdd3ce426dd76e3ba",
+      "summary": [
+        "ℹ tests 33",
+        "ℹ pass 33",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 4955.804698"
+      ]
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "logSha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed."
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-page-observed-review-20261019-attempt2",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "priorValidationPreservedAt": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-page-observed-review-20261019",
+  "scope": "QA-only opt-in page-observed startup confirmation. Foreground preparation occurs before navigation; page readiness values are observed upper bounds. Existing default reports and 10% thresholds are unchanged. Methods must not be mixed and historical failures stay preserved.",
+  "completedAt": "2026-10-19T20:56:31.472Z"
+}

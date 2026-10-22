@@ -13,15 +13,20 @@ function publicProfileUrl(value) {
   if (typeof value !== 'string' || !value) return '';
   const publicPath = (pathname) =>
     pathname.length <= 320 &&
-    /^\/(?:assets|src|scripts|node_modules|@id)\/[A-Za-z0-9._/@-]+$/.test(
+    !pathname.includes('..') &&
+    (/^\/(?:assets|src|scripts|node_modules|@id)\/[A-Za-z0-9._/@-]+$/.test(
       pathname,
-    ) &&
-    !pathname.includes('..');
+    ) ||
+      /^\/cesium\/(?:Cesium\.js|[a-f0-9]{64}\/Cesium\.js)$/.test(pathname));
   if (publicPath(value)) return value;
   try {
     const url = new URL(value);
     return url.protocol === 'http:' &&
       ['127.0.0.1', 'localhost'].includes(url.hostname) &&
+      !url.username &&
+      !url.password &&
+      !url.search &&
+      !url.hash &&
       publicPath(url.pathname)
       ? url.pathname
       : '[non-fixture source]';
@@ -432,6 +437,9 @@ export async function runBoundedBoundaryProfile({
     record.profilerErrors.push(...cleanupErrors.map(safeProfilerError));
   }
 
+  record.windowCapReached = windowCapReached;
+  record.windowCapMs = windowCapReached ? maxWindowMs : null;
+
   if (profile) {
     try {
       const deliveryOverheadLimitMs = operationTimeoutMs;
@@ -455,8 +463,6 @@ export async function runBoundedBoundaryProfile({
       });
       record.sha256 = createHash('sha256').update(bytes).digest('hex');
       record.byteLength = bytes.byteLength;
-      record.windowCapReached = windowCapReached;
-      record.windowCapMs = windowCapReached ? maxWindowMs : null;
       record.profileWindowMs = profileWindowMs;
       record.stopOverrunMs = stopOverrunMs;
       record.status =

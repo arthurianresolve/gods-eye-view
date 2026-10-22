@@ -1,0 +1,126 @@
+{
+  "schema": "gev-failed-visual-diagnostic-review/v1",
+  "reviewedAt": "2026-10-19T22:40:11.842Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "producerCommit": "aa400dfec20f8e4e10261c7e5d172c687a38ddf3",
+  "applicationCommits": {
+    "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841"
+  },
+  "error": {
+    "name": "AssertionError",
+    "message": "hud-visible presentation changed during paused captures"
+  },
+  "groups": [
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-visible",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "presentationStateRetained": true,
+      "error": null
+    },
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-restored",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "presentationStateRetained": true,
+      "error": null
+    },
+    {
+      "slot": "slot-02-candidate",
+      "state": "hud-visible",
+      "status": "failed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "presentationStateRetained": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "hud-visible presentation changed during paused captures"
+      }
+    }
+  ],
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-production-repeat-190c5ab6-aa400",
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 117276,
+      "sha256": "ae8a7f3370715b32639a6232ac360e982db006aebfe0135e07ffad497d4b1e6b"
+    },
+    {
+      "name": "interference-note.json",
+      "bytes": 1141,
+      "sha256": "4a35b0a81647ade9127132e9da6e52cfcdc71be919d8895ca9ce7489d5e8b32e"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-production-repeat-190c5ab6-aa400.mjs",
+      "bytes": 29046,
+      "sha256": "97eaaa0903300166fa0b2383a310c2ef560fbe89a6b90144c0f67f653ff32d87"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-2.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-3.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-2.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-3.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-1.png",
+      "bytes": 1521486,
+      "sha256": "93b8e3f8e24acb1e84396f6cff83d0eed7436b2b19174d9ba1174ef061ca5141"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-2.png",
+      "bytes": 1521486,
+      "sha256": "93b8e3f8e24acb1e84396f6cff83d0eed7436b2b19174d9ba1174ef061ca5141"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-3.png",
+      "bytes": 1521486,
+      "sha256": "93b8e3f8e24acb1e84396f6cff83d0eed7436b2b19174d9ba1174ef061ca5141"
+    }
+  ],
+  "scope": "Incomplete ABBA diagnostic. The candidate presentation invariant failed and its before/after state was not persisted by this helper version. Captured PNG groups are internally byte-identical, which does not establish baseline/candidate visual equivalence. An unrelated local test overlap was not bounded; the interference note is retained."
+}

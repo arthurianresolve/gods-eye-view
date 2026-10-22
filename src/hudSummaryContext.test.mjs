@@ -40,7 +40,14 @@ async function flushMicrotasks() {
 function installHud({ summarize } = {}) {
   const previousDocument = globalThis.document;
   const previousWindow = globalThis.window;
-  globalThis.document = { getElementById: () => null };
+  const visibilityTarget = new EventTarget();
+  globalThis.document = {
+    hidden: false,
+    getElementById: () => null,
+    addEventListener: visibilityTarget.addEventListener.bind(visibilityTarget),
+    removeEventListener:
+      visibilityTarget.removeEventListener.bind(visibilityTarget),
+  };
   globalThis.window = { setTimeout, clearTimeout };
 
   let moveEndListener = null;

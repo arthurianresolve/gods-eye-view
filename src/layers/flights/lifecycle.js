@@ -94,6 +94,8 @@ export function createLifecycle({
       flightState._detectionObjects = new Map();
       flightState.records.data = new Map();
       flightState._positionHistory = new Map();
+      flightState._positionSourceMode = 'live';
+      flightState._pruneHistoryAfterReplay = false;
       flightState._displayCourse.clear();
       flightState._groundSnap.clear();
       flightState.feed._count = 0;
@@ -321,6 +323,8 @@ export function createLifecycle({
       flightState._detectionObjects.clear();
       flightState.records.data.clear();
       flightState._positionHistory.clear();
+      flightState._positionSourceMode = 'live';
+      flightState._pruneHistoryAfterReplay = false;
       flightState._displayCourse.clear();
       flightState._groundSnap.clear();
       flightState._displayFloorState.clear();

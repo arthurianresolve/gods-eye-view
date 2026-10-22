@@ -1,0 +1,163 @@
+{
+  "schema": "gev-s69-retired-source-experiment-disposition/v1",
+  "createdAt": "2026-10-22T11:52:53.278Z",
+  "status": "rejected",
+  "candidate": "35b9357a47fbb4e989d0b2d5e649625e5b39de61",
+  "parent": "5ac868ef1e7fe8eee61ea6de99b2836416db2085",
+  "scope": "Hide the captured Entity source immediately and retire its Cesium visualizers after one RAF-to-task opportunity with bounded cleanup.",
+  "validation": {
+    "focusedTests": "160/160",
+    "formatting": "pass",
+    "imports": "pass",
+    "packageBoundaries": "pass",
+    "buildReceiptSha256": "96257cde48616057702214d3f4503317809aa808f11f6bc3b8a4c9323a45941d",
+    "buildReceiptFileSha256": "87cd74614655e89259c9e947516b083eb73fc78bda87624284a20a68dfd841e9",
+    "identityPlanSha256": "f6afecbb1c4570c25248e28ff9924591f72b44cf494c6d3504e5bb6f46165500"
+  },
+  "artifacts": {
+    "rawCaptureSha256": "7682476ef904f4d7d01c64bc13654a708252a279fe202922759ceab7a895a4e4",
+    "reviewSha256": "a3631a1321ac144ba47d9a719e1aeef862ccec4aace8dbf1402e68006b7976eb"
+  },
+  "result": {
+    "status": "failed",
+    "acceptanceEligible": false,
+    "metrics": {
+      "coldStartup": {
+        "status": "unavailable",
+        "reason": "Identity-only build proof supplies no cold-startup observations."
+      },
+      "localControl": {
+        "status": "failed",
+        "protocolVersion": 4,
+        "feedbackPolicy": "trusted-click-event-timing-observed-acknowledgement-v6",
+        "semantic": "Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.",
+        "baseline": {
+          "sampleCount": 20,
+          "clickToAcceptedIntentP95Ms": 1.600000023841858,
+          "clickToNextRenderingP95Ms": 120,
+          "diagnosticTwoRafFeedbackP95Ms": 59.69999998807907,
+          "clickToFullReadyStateP95Ms": 37.69999998807907,
+          "clickToFullRenderedReadinessP95Ms": 43.5,
+          "acknowledgementCorrectness": {
+            "status": "observed",
+            "proof": "same-intent-current-visible-natural-raf-v1",
+            "sampleCount": 20
+          },
+          "compositorAttribution": {
+            "status": "unavailable",
+            "reason": "no-acknowledgement-to-presented-frame-binding"
+          },
+          "diagnosticUncertainGeometryObservations": 255,
+          "absoluteAcknowledgementFailures": [
+            "matched click-to-next-rendering p95 exceeds the 100ms limit"
+          ]
+        },
+        "candidate": {
+          "sampleCount": 20,
+          "clickToAcceptedIntentP95Ms": 3,
+          "clickToNextRenderingP95Ms": 216,
+          "diagnosticTwoRafFeedbackP95Ms": 65.90000003576279,
+          "clickToFullReadyStateP95Ms": 41.89999997615814,
+          "clickToFullRenderedReadinessP95Ms": 48.5,
+          "acknowledgementCorrectness": {
+            "status": "observed",
+            "proof": "same-intent-current-visible-natural-raf-v1",
+            "sampleCount": 20
+          },
+          "compositorAttribution": {
+            "status": "unavailable",
+            "reason": "no-acknowledgement-to-presented-frame-binding"
+          },
+          "diagnosticUncertainGeometryObservations": 246
+        },
+        "absoluteAcknowledgementLimitMs": 100,
+        "absoluteAcknowledgementGateAppliesTo": "candidate",
+        "fullReadinessRegressionLimitPct": 10,
+        "failures": [
+          "matched click-to-next-rendering p95 exceeds the 100ms limit",
+          "click-to-full-ready state regression exceeds 10%",
+          "click-to-full-rendered readiness regression exceeds 10%"
+        ],
+        "measurementEnvironment": {
+          "schema": "gev-qualification-native-window-environment/v1",
+          "mode": "native-window-viewport-v1",
+          "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+          "viewport": {
+            "width": 1280,
+            "height": 537,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2560,
+            "height": 1074
+          }
+        }
+      },
+      "loadedReplaySeek": {
+        "status": "measured",
+        "protocolVersion": 4,
+        "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+        "baseline": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 62.39999997615814,
+          "inputToRenderedFrameP95Ms": 75.80000001192093
+        },
+        "candidate": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 57.30000001192093,
+          "inputToRenderedFrameP95Ms": 61.40000003576279
+        },
+        "limitMs": 250,
+        "failures": [],
+        "measurementEnvironment": {
+          "schema": "gev-qualification-native-window-environment/v1",
+          "mode": "native-window-viewport-v1",
+          "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+          "viewport": {
+            "width": 1280,
+            "height": 537,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2560,
+            "height": 1074
+          }
+        }
+      },
+      "sampledPeakHeap": {
+        "status": "measured",
+        "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+        "baselinePeakHeapBytes": 72324528,
+        "candidatePeakHeapBytes": 74903956,
+        "sampleCountByBuild": {
+          "baseline": 83,
+          "candidate": 82
+        },
+        "actualDurationMsByBuild": {
+          "baseline": 88402.56279999999,
+          "candidate": 86976.6066
+        },
+        "changePct": 3.5664636484043144,
+        "regressionOver10Pct": false,
+        "sourceSoakStatus": null,
+        "sourceSoakFailurePreserved": false,
+        "thresholdPct": 10,
+        "measurementEnvironment": {
+          "schema": "gev-qualification-native-window-environment/v1",
+          "mode": "native-window-viewport-v1",
+          "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+          "viewport": {
+            "width": 1280,
+            "height": 537,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2560,
+            "height": 1074
+          }
+        }
+      }
+    }
+  },
+  "decision": "Reject and do not push: candidate native next-paint p95 worsened from 120 ms to 216 ms and both independent readiness comparisons exceeded the 10% regression limit. The local experiment branch remains historical only."
+}

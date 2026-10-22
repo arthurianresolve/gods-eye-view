@@ -84,6 +84,9 @@ async function runCaptureReleaseCase(
     `export function execFile(_file, _args, _options, callback) {
   callback(new Error('unexpected asynchronous child process command'));
 }
+export function spawn() {
+  throw new Error('unexpected foreground helper spawn in headless capture');
+}
 export function execFileSync(_file, args) {
   if (args.includes('rev-parse')) return process.env.GEV_CAPTURE_HARNESS_SHA;
   if (args.includes('status')) return '';
@@ -113,6 +116,13 @@ export async function beginCaptureBuildProvenance(options) {
     mockWorkerContractPath,
     `export const MAX_WORKER_BLOB_RECORDS = 128;
 export const MAX_WORKER_TARGETS = 64;
+export function resolveCesiumBundlePath(assets) {
+  const paths = assets
+    .map((asset) => asset.path)
+    .filter((assetPath) => assetPath.endsWith('/Cesium.js'));
+  if (paths.length !== 1) throw new Error('fixture Cesium bundle path is ambiguous');
+  return paths[0];
+}
 export function deriveCesiumEmbeddedWorkerContract() {
   return { schema: 'gev-cesium-embedded-worker-contract/v1', allowedModuleIds: ['task'] };
 }

@@ -1,0 +1,109 @@
+{
+  "schema": "gev-allocation-cohort-review/v1",
+  "reviewedAt": "2026-10-19T10:59:55.900Z",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "harnessCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "archiveRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/allocation-cohorts-d8ef-1792406708512",
+  "archiveReceiptSha256": "8b9a20d2ccfb6af98fc1e5d24fef22bc1557c771ddd6f20ba7f7c2e8e5879410",
+  "receiptSha256": "c75e4c16108f56d6ec137e9984dbde9c1b6a5be4d6ea57ee6a60ea5284a73a0e",
+  "analysisSha256": "9694381b589a81873b40d600291b30bd327de4c73a38cb35f21ca330a3e0c4f9",
+  "privateHeap": {
+    "root": "/opt/gods-eye-view-validation/s61-s70-20261018/cohort-retainer-d8ef-1792406666471",
+    "rawSha256": "7f1bb313556b2ee84bef98bcb93a852f7530dc495f6e12d9ff7d69bd7331e5c2",
+    "rawBytes": 726582129,
+    "compressedSha256": "758840edac8b45e2997b151f2b5620c00821eb167f3aad094e41f85990acfcc3",
+    "compressedBytes": 133407728
+  },
+  "allocationCohorts": [
+    {
+      "cycle": 0,
+      "count": 3639862,
+      "selfBytes": 143727556
+    },
+    {
+      "cycle": 1,
+      "count": 12951,
+      "selfBytes": 2279404
+    },
+    {
+      "cycle": 2,
+      "count": 9156,
+      "selfBytes": 1036816
+    },
+    {
+      "cycle": 3,
+      "count": 9763,
+      "selfBytes": 874296
+    },
+    {
+      "cycle": 4,
+      "count": 8135,
+      "selfBytes": 692960
+    },
+    {
+      "cycle": 5,
+      "count": 7676,
+      "selfBytes": 587260
+    },
+    {
+      "cycle": 6,
+      "count": 7227,
+      "selfBytes": 426828
+    },
+    {
+      "cycle": 7,
+      "count": 22946,
+      "selfBytes": 931924
+    },
+    {
+      "cycle": 8,
+      "count": 3112845,
+      "selfBytes": 108281040
+    },
+    {
+      "cycle": "after-final",
+      "count": 1322653,
+      "selfBytes": 46232
+    }
+  ],
+  "conclusions": [
+    "The bounded WeakRef census observed 672 data source, visualizer and batch owners. Earlier data sources were collectible by the next cycle; previous visualizers and batches were also collectible. This is diagnostic ownership evidence, not an hour-long acceptance pass.",
+    "Shader cache entries remained 91, with 26 shaders and zero pending releases. The observed shader-key character total remained unchanged.",
+    "The largest surviving intermediate-cycle allocations are compiled code and instruction streams. Other sampled paths lead to current picking state, terrain spatial caches, current bounded records, the diagnostic WeakRefs and attached controls. Reachability paths are not dominator or retained-size measurements.",
+    "No additional application lifetime correction is justified by these samples. V8 warmup and current scene retention remain distinct from the proven cancelled-image leak.",
+    "Do not subtract compiled code or cache bytes from the acceptance heap metric. The previous 6.32% final-window failure remains failed; the exact candidate still requires the unchanged 60-minute soak and 5% final-30-minute gate."
+  ],
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 469881.6318,
+      "closeSettledHostMs": 472813.5258,
+      "closeElapsedMs": 2931.8940000000293,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 2827.152999999991
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

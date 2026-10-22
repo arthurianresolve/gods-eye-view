@@ -1,0 +1,177 @@
+{
+  "schema": "gev-current-candidate-manifest-review/v1",
+  "reviewedAt": "2026-10-19T08:04:18.734Z",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "consumerCommit": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+  "manifest": {
+    "path": "current-candidate556-manifest-20261019T080416116Z.json",
+    "sha256": "154dfaf2c7cba57b69e19000e04cb7e3ab14b2831b65bde6afd808e74e70f807"
+  },
+  "comparison": {
+    "acceptancePolicyId": "gev-cesium-acceptance/2026-10-18",
+    "status": "failed",
+    "failures": [
+      "windows-uhd620-chrome155-native/weather-effects: regression over 10% in scripted-motion."
+    ],
+    "pending": [
+      "The dense-motion 20% performance objective is unassessed; its required measurement is missing.",
+      "The selected-aircraft-tracking 20% performance objective is unassessed; its required measurement is missing.",
+      "Required comparison workloads missing: operating-view, dense-investigation, selected-aircraft-tracking, infrastructure.",
+      "Infrastructure comparison variants missing: infrastructure-datacenters, infrastructure."
+    ],
+    "performanceObjectives": [
+      {
+        "id": "dense-motion",
+        "scenario": "scripted-motion",
+        "targetImprovementPct": 20,
+        "actualImprovementPct": null,
+        "status": "unassessed"
+      },
+      {
+        "id": "selected-aircraft-tracking",
+        "scenario": "selected-aircraft-tracking",
+        "targetImprovementPct": 20,
+        "actualImprovementPct": null,
+        "status": "unassessed"
+      }
+    ],
+    "missingWorkloads": [
+      "operating-view",
+      "dense-investigation",
+      "selected-aircraft-tracking",
+      "infrastructure"
+    ],
+    "workloadIds": [
+      "map-streaming",
+      "weather-effects"
+    ],
+    "workloadValidationModes": {
+      "operating-view": "five-pair-timed",
+      "dense-investigation": "five-pair-timed",
+      "selected-aircraft-tracking": "five-pair-timed",
+      "infrastructure": "five-pair-timed-all-four-variants",
+      "weather-effects": "five-pair-timed",
+      "lifecycle-stress": "full-soak-retention",
+      "map-streaming": "five-pair-timed-contract-required"
+    },
+    "infrastructureVariantCoverage": {
+      "requiredVariants": [
+        "infrastructure-datacenters",
+        "infrastructure-dams",
+        "infrastructure-cables",
+        "infrastructure"
+      ],
+      "observedVariants": [
+        "infrastructure-cables",
+        "infrastructure-dams"
+      ],
+      "missingVariants": [
+        "infrastructure-datacenters",
+        "infrastructure"
+      ]
+    },
+    "environments": [
+      {
+        "environmentId": "windows-uhd620-chrome155-native",
+        "workloadId": "infrastructure-dams",
+        "status": "measured",
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "regressionDisposition": null,
+        "reason": null
+      },
+      {
+        "environmentId": "windows-uhd620-chrome155-native",
+        "workloadId": "infrastructure-cables",
+        "status": "measured",
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "regressionDisposition": null,
+        "reason": null
+      },
+      {
+        "environmentId": "windows-uhd620-chrome155-native",
+        "workloadId": "austin-map-streaming-v1",
+        "status": "measured",
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "regressionDisposition": null,
+        "reason": null
+      },
+      {
+        "environmentId": "windows-uhd620-chrome155-native",
+        "workloadId": "weather-effects",
+        "status": "measured",
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "regressionDisposition": null,
+        "reason": null
+      }
+    ]
+  },
+  "retention": {
+    "status": "failed",
+    "failures": [
+      "windows-uhd620-chrome155-native: Retained heap exceeded 5% growth over the final 30-minute window."
+    ],
+    "pending": [],
+    "environments": [
+      {
+        "environmentId": "windows-uhd620-chrome155-native",
+        "status": "failed",
+        "primaryEligible": true,
+        "renderer": {
+          "kind": "native-gpu",
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": true,
+          "hosted": false,
+          "hostIdentityComplete": true
+        },
+        "artifact": {
+          "path": "staged-final-ampfing-soak-20261019T070207829Z/staged-final-ampfing-soak-20261019T070207829Z.json",
+          "sha256": "4a56108a6f38a121f8b38bd462a103126d874ccb112674e2afccbd4968738a9c"
+        },
+        "stability": {
+          "status": "failed",
+          "failures": [
+            "Retained heap exceeded 5% growth over the final 30-minute window."
+          ],
+          "pending": [],
+          "heapGrowthRatio": 0.06316633701356901
+        },
+        "errors": [
+          "Retained heap exceeded 5% growth over the final 30-minute window."
+        ],
+        "pending": [],
+        "reason": null
+      }
+    ]
+  },
+  "scope": "Completed dam/cable/map/weather confirmation and private signed-package Ampfing soak only. Missing matrix rows, deployment and other acceptance requirements remain pending. Weather uses a separately identified correctness-only control; no regression waiver.",
+  "productionChanged": false
+}

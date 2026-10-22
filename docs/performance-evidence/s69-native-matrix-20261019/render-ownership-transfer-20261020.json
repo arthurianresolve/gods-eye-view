@@ -1,0 +1,67 @@
+{
+  "schema": "gev-render-ownership-attempts-transfer/v1",
+  "status": "all-attempts-verified",
+  "startedAt": "2026-10-20T15:18:00.304Z",
+  "transportHelperSha256": "aca513c1c043c4c6ffc4b84a43efd7111dc469338ed1daff3ef85e5649589472",
+  "limits": {
+    "maximumFileBytes": 33554432,
+    "maximumTotalBytes": 201326592,
+    "maximumFiles": 100,
+    "maximumDepth": 3,
+    "minimumRemoteFreeBytesAfterCopy": 1291845632
+  },
+  "archives": [
+    {
+      "source": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/render-ownership-fb389928-3fdbcf42-20261020-attempt1-archive-20261020",
+      "originalStatus": "failed",
+      "fileCount": 12,
+      "totalBytes": 182318,
+      "manifestSha256": "4d15774ef6e8f471e585188bc84099392c6390ef9e2e6a98e935b8d82c23e58e",
+      "localManifest": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020.vm-transfer.json",
+      "processSha256": "539976d361d6d560133e74c3166dc6df483d9f2c1efc4c11876f8a23941ddcc1",
+      "traceFiles": []
+    },
+    {
+      "source": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020-r2",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/render-ownership-fb389928-3fdbcf42-20261020-r2-archive-20261020",
+      "originalStatus": "failed",
+      "fileCount": 13,
+      "totalBytes": 36087035,
+      "manifestSha256": "6b6e980b8adeb50262734b0a9c07038479151ead9bd1414b0b038d5dc4851f19",
+      "localManifest": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020-r2.vm-transfer.json",
+      "processSha256": "bcf5fef954ec193032bd798a4d238559e58215e3d6fead9ff8a07c34f6e51d51",
+      "traceFiles": [
+        {
+          "name": "trace-fb389928.json.partial-42116-1792509071473",
+          "bytes": 33554432,
+          "sha256": "e60aa97abb316a922cde8c99dcf08aa741037d2500c2a8450815a4f387239801"
+        }
+      ]
+    },
+    {
+      "source": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020-r3",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/render-ownership-fb389928-3fdbcf42-20261020-r3-archive-20261020",
+      "originalStatus": "completed-diagnostic-only",
+      "fileCount": 13,
+      "totalBytes": 31240865,
+      "manifestSha256": "ccffbdbc1c07c2b010fea160b7eff0610729c149b1d355a3e1752a09fbf8c0f1",
+      "localManifest": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\render-ownership-fb389928-3fdbcf42-20261020-r3.vm-transfer.json",
+      "processSha256": "b0120897ccdacfc1020448493896f679b1f3e801a633c41c2fd9970a946aa4c2",
+      "traceFiles": [
+        {
+          "name": "trace-fb389928.json",
+          "bytes": 28754196,
+          "sha256": "e55ad26945d657c48b5ed0b508ce5d1f53be101a225744314bad144a63e9038b"
+        }
+      ]
+    }
+  ],
+  "acceptanceEligible": false,
+  "browserStarted": false,
+  "buildStarted": false,
+  "productionChanged": false,
+  "totalFiles": 38,
+  "totalBytes": 67510218,
+  "completedAt": "2026-10-20T15:18:14.138Z"
+}

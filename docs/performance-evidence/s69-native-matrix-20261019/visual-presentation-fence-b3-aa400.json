@@ -1,0 +1,2416 @@
+{
+  "schema": "gev-visual-presentation-fence-review/v1",
+  "reviewedAt": "2026-10-19T20:54:51.089Z",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "applicationCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "qaCommit": "aa400dfec20f8e4e10261c7e5d172c687a38ddf3",
+  "sourceSha256": "1942b9ae715dc1500ba335fb8cdd2b8a913ebb0cba77b3c395bea94a352b75a0",
+  "sourceStatus": "captured-awaiting-pixel-diagnosis",
+  "files": [
+    {
+      "name": "diagnostic.json",
+      "bytes": 114213,
+      "sha256": "1942b9ae715dc1500ba335fb8cdd2b8a913ebb0cba77b3c395bea94a352b75a0"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 14601,
+      "sha256": "d8c5e2e73390042f4b274c3656bc3c3807b356445779d359a2ad1afff277b80e"
+    },
+    {
+      "name": "build-receipt.json",
+      "bytes": 206353,
+      "sha256": "b9d5eb8bb949b288a41956d8b847a24c052032d827a3a36e31fe8abc1cf9e9a3"
+    },
+    {
+      "name": "A.png",
+      "bytes": 1522503,
+      "sha256": "c1df12f44349b74b5d5786e28587b9347bea11e1383714651f3534c2262063da"
+    },
+    {
+      "name": "B.png",
+      "bytes": 1521671,
+      "sha256": "51b405a4c7afc0290b5637231b9533eb15752c55063abbe395b351b707fd1194"
+    },
+    {
+      "name": "C.png",
+      "bytes": 1512542,
+      "sha256": "42e9b932d1805e3f38fa257bbaa0268146781825cbb6e99a68a5213e5b85ccdd"
+    }
+  ],
+  "comparisons": [
+    {
+      "from": "A",
+      "to": "B",
+      "changedPixels": 2033892,
+      "alphaChangedPixels": 0,
+      "logoChangedPixels": 35872,
+      "outsideLogoPixels": 1998020,
+      "maxDelta": 7,
+      "bounds": {
+        "minX": 0,
+        "minY": 0,
+        "maxX": 2879,
+        "maxY": 1798
+      }
+    },
+    {
+      "from": "B",
+      "to": "C",
+      "changedPixels": 13632,
+      "alphaChangedPixels": 0,
+      "logoChangedPixels": 0,
+      "outsideLogoPixels": 13632,
+      "maxDelta": 252,
+      "bounds": {
+        "minX": 515,
+        "minY": 284,
+        "maxX": 2313,
+        "maxY": 502
+      }
+    },
+    {
+      "from": "A",
+      "to": "C",
+      "changedPixels": 2040776,
+      "alphaChangedPixels": 0,
+      "logoChangedPixels": 35872,
+      "outsideLogoPixels": 2004904,
+      "maxDelta": 252,
+      "bounds": {
+        "minX": 0,
+        "minY": 0,
+        "maxX": 2879,
+        "maxY": 1798
+      }
+    }
+  ],
+  "frameNumbers": [
+    {
+      "id": "A",
+      "method": "unpaused",
+      "before": 81,
+      "after": 82,
+      "gazeBefore": {
+        "status": "ready",
+        "reducedMotion": false,
+        "pointerMoveSequence": 2,
+        "resetSequence": 0,
+        "expected": {
+          "pointer": {
+            "x": 1,
+            "y": 1
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "transform": "translate(-6.48 -5.15)"
+            }
+          ]
+        },
+        "logos": [
+          {
+            "id": "",
+            "key": "logo-0",
+            "rect": {
+              "left": 36,
+              "top": 32,
+              "width": 52,
+              "height": 34.8828125
+            },
+            "mode": "inline-svg",
+            "image": null,
+            "globeTransform": "translate(-6.48 -5.15)",
+            "cageTransform": "translate(-6.48 -5.15)",
+            "style": {
+              "transform": "none",
+              "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "globeStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "cageStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          }
+        ],
+        "activeAnimations": [],
+        "animationOverflow": false,
+        "titleStyle": {
+          "filter": "none",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none",
+          "animationDuration": "0s"
+        },
+        "cctvEffects": [
+          {
+            "id": "cctv-panel",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-panel-inner",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "blur(24px) saturate(1.4)",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-cyber-panel-body",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          }
+        ],
+        "sourceBadge": {
+          "rect": {
+            "left": 1073,
+            "top": 497.3984375,
+            "right": 1187.875,
+            "bottom": 516.8984375,
+            "width": 114.875,
+            "height": 19.5
+          },
+          "filter": "none",
+          "backdropFilter": "none",
+          "borderRadius": "999px",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none"
+        }
+      },
+      "gazeAfter": {
+        "status": "ready",
+        "reducedMotion": false,
+        "pointerMoveSequence": 2,
+        "resetSequence": 0,
+        "expected": {
+          "pointer": {
+            "x": 1,
+            "y": 1
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "transform": "translate(-6.48 -5.15)"
+            }
+          ]
+        },
+        "logos": [
+          {
+            "id": "",
+            "key": "logo-0",
+            "rect": {
+              "left": 36,
+              "top": 32,
+              "width": 52,
+              "height": 34.8828125
+            },
+            "mode": "inline-svg",
+            "image": null,
+            "globeTransform": "translate(-6.48 -5.15)",
+            "cageTransform": "translate(-6.48 -5.15)",
+            "style": {
+              "transform": "none",
+              "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "globeStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "cageStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          }
+        ],
+        "activeAnimations": [],
+        "animationOverflow": false,
+        "titleStyle": {
+          "filter": "none",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none",
+          "animationDuration": "0s"
+        },
+        "cctvEffects": [
+          {
+            "id": "cctv-panel",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-panel-inner",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "blur(24px) saturate(1.4)",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-cyber-panel-body",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          }
+        ],
+        "sourceBadge": {
+          "rect": {
+            "left": 1073,
+            "top": 497.3984375,
+            "right": 1187.875,
+            "bottom": 516.8984375,
+            "width": 114.875,
+            "height": 19.5
+          },
+          "filter": "none",
+          "backdropFilter": "none",
+          "borderRadius": "999px",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none"
+        }
+      }
+    },
+    {
+      "id": "B",
+      "method": "debugger-paused",
+      "before": 82,
+      "after": 82,
+      "gazeBefore": {
+        "status": "ready",
+        "reducedMotion": false,
+        "pointerMoveSequence": 2,
+        "resetSequence": 0,
+        "expected": {
+          "pointer": {
+            "x": 1,
+            "y": 1
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "transform": "translate(-6.48 -5.15)"
+            }
+          ]
+        },
+        "logos": [
+          {
+            "id": "",
+            "key": "logo-0",
+            "rect": {
+              "left": 36,
+              "top": 32,
+              "width": 52,
+              "height": 34.8828125
+            },
+            "mode": "inline-svg",
+            "image": null,
+            "globeTransform": "translate(-6.48 -5.15)",
+            "cageTransform": "translate(-6.48 -5.15)",
+            "style": {
+              "transform": "none",
+              "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "globeStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "cageStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          }
+        ],
+        "activeAnimations": [],
+        "animationOverflow": false,
+        "titleStyle": {
+          "filter": "none",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none",
+          "animationDuration": "0s"
+        },
+        "cctvEffects": [
+          {
+            "id": "cctv-panel",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-panel-inner",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "blur(24px) saturate(1.4)",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-cyber-panel-body",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          }
+        ],
+        "sourceBadge": {
+          "rect": {
+            "left": 1073,
+            "top": 497.3984375,
+            "right": 1187.875,
+            "bottom": 516.8984375,
+            "width": 114.875,
+            "height": 19.5
+          },
+          "filter": "none",
+          "backdropFilter": "none",
+          "borderRadius": "999px",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none"
+        }
+      },
+      "gazeAfter": {
+        "status": "ready",
+        "reducedMotion": false,
+        "pointerMoveSequence": 2,
+        "resetSequence": 0,
+        "expected": {
+          "pointer": {
+            "x": 1,
+            "y": 1
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "transform": "translate(-6.48 -5.15)"
+            }
+          ]
+        },
+        "logos": [
+          {
+            "id": "",
+            "key": "logo-0",
+            "rect": {
+              "left": 36,
+              "top": 32,
+              "width": 52,
+              "height": 34.8828125
+            },
+            "mode": "inline-svg",
+            "image": null,
+            "globeTransform": "translate(-6.48 -5.15)",
+            "cageTransform": "translate(-6.48 -5.15)",
+            "style": {
+              "transform": "none",
+              "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "globeStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "cageStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          }
+        ],
+        "activeAnimations": [],
+        "animationOverflow": false,
+        "titleStyle": {
+          "filter": "none",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none",
+          "animationDuration": "0s"
+        },
+        "cctvEffects": [
+          {
+            "id": "cctv-panel",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-panel-inner",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "blur(24px) saturate(1.4)",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-cyber-panel-body",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          }
+        ],
+        "sourceBadge": {
+          "rect": {
+            "left": 1073,
+            "top": 497.3984375,
+            "right": 1187.875,
+            "bottom": 516.8984375,
+            "width": 114.875,
+            "height": 19.5
+          },
+          "filter": "none",
+          "backdropFilter": "none",
+          "borderRadius": "999px",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none"
+        }
+      }
+    },
+    {
+      "id": "C",
+      "method": "unpaused",
+      "before": 84,
+      "after": 91,
+      "gazeBefore": {
+        "status": "ready",
+        "reducedMotion": false,
+        "pointerMoveSequence": 2,
+        "resetSequence": 0,
+        "expected": {
+          "pointer": {
+            "x": 1,
+            "y": 1
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "transform": "translate(-6.48 -5.15)"
+            }
+          ]
+        },
+        "logos": [
+          {
+            "id": "",
+            "key": "logo-0",
+            "rect": {
+              "left": 36,
+              "top": 32,
+              "width": 52,
+              "height": 34.8828125
+            },
+            "mode": "inline-svg",
+            "image": null,
+            "globeTransform": "translate(-6.48 -5.15)",
+            "cageTransform": "translate(-6.48 -5.15)",
+            "style": {
+              "transform": "none",
+              "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "globeStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "cageStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          }
+        ],
+        "activeAnimations": [],
+        "animationOverflow": false,
+        "titleStyle": {
+          "filter": "none",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none",
+          "animationDuration": "0s"
+        },
+        "cctvEffects": [
+          {
+            "id": "cctv-panel",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-panel-inner",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "blur(24px) saturate(1.4)",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-cyber-panel-body",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          }
+        ],
+        "sourceBadge": {
+          "rect": {
+            "left": 1073,
+            "top": 497.3984375,
+            "right": 1187.875,
+            "bottom": 516.8984375,
+            "width": 114.875,
+            "height": 19.5
+          },
+          "filter": "none",
+          "backdropFilter": "none",
+          "borderRadius": "999px",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none"
+        }
+      },
+      "gazeAfter": {
+        "status": "ready",
+        "reducedMotion": false,
+        "pointerMoveSequence": 2,
+        "resetSequence": 0,
+        "expected": {
+          "pointer": {
+            "x": 1,
+            "y": 1
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "transform": "translate(-6.48 -5.15)"
+            }
+          ]
+        },
+        "logos": [
+          {
+            "id": "",
+            "key": "logo-0",
+            "rect": {
+              "left": 36,
+              "top": 32,
+              "width": 52,
+              "height": 34.8828125
+            },
+            "mode": "inline-svg",
+            "image": null,
+            "globeTransform": "translate(-6.48 -5.15)",
+            "cageTransform": "translate(-6.48 -5.15)",
+            "style": {
+              "transform": "none",
+              "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "globeStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            "cageStyle": {
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "filter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          }
+        ],
+        "activeAnimations": [],
+        "animationOverflow": false,
+        "titleStyle": {
+          "filter": "none",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none",
+          "animationDuration": "0s"
+        },
+        "cctvEffects": [
+          {
+            "id": "cctv-panel",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-panel-inner",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "blur(24px) saturate(1.4)",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          {
+            "id": "cctv-cyber-panel-body",
+            "present": true,
+            "filter": "none",
+            "backdropFilter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "transitionDelay": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          }
+        ],
+        "sourceBadge": {
+          "rect": {
+            "left": 1073,
+            "top": 497.3984375,
+            "right": 1187.875,
+            "bottom": 516.8984375,
+            "width": 114.875,
+            "height": 19.5
+          },
+          "filter": "none",
+          "backdropFilter": "none",
+          "borderRadius": "999px",
+          "transitionProperty": "all",
+          "transitionDuration": "0s",
+          "animationName": "none"
+        }
+      }
+    }
+  ],
+  "naturalFrames": {
+    "initial": 82,
+    "frames": [
+      83,
+      84
+    ]
+  },
+  "scope": "Whole-image comparisons. Logo rectangle only localizes differences; it is never masked or exempted. This diagnostic cannot satisfy final visual acceptance.",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-presentation-fence-b3-aa400",
+  "paintSignatures": [
+    {
+      "id": "A",
+      "before": {
+        "uiTheme": null,
+        "viewBox": "180 120 775 520",
+        "titleBar": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 376.1328125,
+            "height": 55.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "188.066px 27.9414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "wrapper": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "svg": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": {
+            "a": 0.06708233173076923,
+            "b": 0,
+            "c": 0,
+            "d": 0.06708233173076923,
+            "e": 23.930776742788463,
+            "f": 23.950120192307693
+          }
+        },
+        "paths": {
+          "outer_eye": {
+            "rect": {
+              "x": 37.72806930541992,
+              "y": 33.00623321533203,
+              "width": 48.72035598754883,
+              "height": 32.736183166503906
+            },
+            "paint": {
+              "fill": "rgba(68, 84, 114, 0.48)",
+              "stroke": "rgb(68, 136, 187)",
+              "strokeWidth": "10px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "inner_eye": {
+            "rect": {
+              "x": 48.95463562011719,
+              "y": 36.02393341064453,
+              "width": 26.157814025878906,
+              "height": 26.566619873046875
+            },
+            "paint": {
+              "fill": "rgb(0, 246, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "globe": {
+            "rect": {
+              "x": 53.627384185791016,
+              "y": 40.99030685424805,
+              "width": 16.144176483154297,
+              "height": 16.144168853759766
+            },
+            "paint": {
+              "fill": "rgb(0, 0, 0)",
+              "stroke": "rgb(0, 246, 255)",
+              "strokeWidth": "6.99px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          },
+          "globe_cage": {
+            "rect": {
+              "x": 48.686302185058594,
+              "y": 35.64653015136719,
+              "width": 26.026336669921875,
+              "height": 26.630477905273438
+            },
+            "paint": {
+              "fill": "rgb(255, 255, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "0.63",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          }
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2,
+          "scale": 1,
+          "offsetLeft": 0,
+          "offsetTop": 0
+        }
+      },
+      "after": {
+        "uiTheme": null,
+        "viewBox": "180 120 775 520",
+        "titleBar": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 376.1328125,
+            "height": 55.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "188.066px 27.9414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "wrapper": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "svg": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": {
+            "a": 0.06708233173076923,
+            "b": 0,
+            "c": 0,
+            "d": 0.06708233173076923,
+            "e": 23.930776742788463,
+            "f": 23.950120192307693
+          }
+        },
+        "paths": {
+          "outer_eye": {
+            "rect": {
+              "x": 37.72806930541992,
+              "y": 33.00623321533203,
+              "width": 48.72035598754883,
+              "height": 32.736183166503906
+            },
+            "paint": {
+              "fill": "rgba(68, 84, 114, 0.48)",
+              "stroke": "rgb(68, 136, 187)",
+              "strokeWidth": "10px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "inner_eye": {
+            "rect": {
+              "x": 48.95463562011719,
+              "y": 36.02393341064453,
+              "width": 26.157814025878906,
+              "height": 26.566619873046875
+            },
+            "paint": {
+              "fill": "rgb(0, 246, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "globe": {
+            "rect": {
+              "x": 53.627384185791016,
+              "y": 40.99030685424805,
+              "width": 16.144176483154297,
+              "height": 16.144168853759766
+            },
+            "paint": {
+              "fill": "rgb(0, 0, 0)",
+              "stroke": "rgb(0, 246, 255)",
+              "strokeWidth": "6.99px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          },
+          "globe_cage": {
+            "rect": {
+              "x": 48.686302185058594,
+              "y": 35.64653015136719,
+              "width": 26.026336669921875,
+              "height": 26.630477905273438
+            },
+            "paint": {
+              "fill": "rgb(255, 255, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "0.63",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          }
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2,
+          "scale": 1,
+          "offsetLeft": 0,
+          "offsetTop": 0
+        }
+      }
+    },
+    {
+      "id": "B",
+      "before": {
+        "uiTheme": null,
+        "viewBox": "180 120 775 520",
+        "titleBar": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 376.1328125,
+            "height": 55.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "188.066px 27.9414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "wrapper": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "svg": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": {
+            "a": 0.06708233173076923,
+            "b": 0,
+            "c": 0,
+            "d": 0.06708233173076923,
+            "e": 23.930776742788463,
+            "f": 23.950120192307693
+          }
+        },
+        "paths": {
+          "outer_eye": {
+            "rect": {
+              "x": 37.72806930541992,
+              "y": 33.00623321533203,
+              "width": 48.72035598754883,
+              "height": 32.736183166503906
+            },
+            "paint": {
+              "fill": "rgba(68, 84, 114, 0.48)",
+              "stroke": "rgb(68, 136, 187)",
+              "strokeWidth": "10px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "inner_eye": {
+            "rect": {
+              "x": 48.95463562011719,
+              "y": 36.02393341064453,
+              "width": 26.157814025878906,
+              "height": 26.566619873046875
+            },
+            "paint": {
+              "fill": "rgb(0, 246, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "globe": {
+            "rect": {
+              "x": 53.627384185791016,
+              "y": 40.99030685424805,
+              "width": 16.144176483154297,
+              "height": 16.144168853759766
+            },
+            "paint": {
+              "fill": "rgb(0, 0, 0)",
+              "stroke": "rgb(0, 246, 255)",
+              "strokeWidth": "6.99px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          },
+          "globe_cage": {
+            "rect": {
+              "x": 48.686302185058594,
+              "y": 35.64653015136719,
+              "width": 26.026336669921875,
+              "height": 26.630477905273438
+            },
+            "paint": {
+              "fill": "rgb(255, 255, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "0.63",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          }
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2,
+          "scale": 1,
+          "offsetLeft": 0,
+          "offsetTop": 0
+        }
+      },
+      "after": {
+        "uiTheme": null,
+        "viewBox": "180 120 775 520",
+        "titleBar": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 376.1328125,
+            "height": 55.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "188.066px 27.9414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "wrapper": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "svg": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": {
+            "a": 0.06708233173076923,
+            "b": 0,
+            "c": 0,
+            "d": 0.06708233173076923,
+            "e": 23.930776742788463,
+            "f": 23.950120192307693
+          }
+        },
+        "paths": {
+          "outer_eye": {
+            "rect": {
+              "x": 37.72806930541992,
+              "y": 33.00623321533203,
+              "width": 48.72035598754883,
+              "height": 32.736183166503906
+            },
+            "paint": {
+              "fill": "rgba(68, 84, 114, 0.48)",
+              "stroke": "rgb(68, 136, 187)",
+              "strokeWidth": "10px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "inner_eye": {
+            "rect": {
+              "x": 48.95463562011719,
+              "y": 36.02393341064453,
+              "width": 26.157814025878906,
+              "height": 26.566619873046875
+            },
+            "paint": {
+              "fill": "rgb(0, 246, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "globe": {
+            "rect": {
+              "x": 53.627384185791016,
+              "y": 40.99030685424805,
+              "width": 16.144176483154297,
+              "height": 16.144168853759766
+            },
+            "paint": {
+              "fill": "rgb(0, 0, 0)",
+              "stroke": "rgb(0, 246, 255)",
+              "strokeWidth": "6.99px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          },
+          "globe_cage": {
+            "rect": {
+              "x": 48.686302185058594,
+              "y": 35.64653015136719,
+              "width": 26.026336669921875,
+              "height": 26.630477905273438
+            },
+            "paint": {
+              "fill": "rgb(255, 255, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "0.63",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          }
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2,
+          "scale": 1,
+          "offsetLeft": 0,
+          "offsetTop": 0
+        }
+      }
+    },
+    {
+      "id": "C",
+      "before": {
+        "uiTheme": null,
+        "viewBox": "180 120 775 520",
+        "titleBar": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 376.1328125,
+            "height": 55.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "188.066px 27.9414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "wrapper": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "svg": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": {
+            "a": 0.06708233173076923,
+            "b": 0,
+            "c": 0,
+            "d": 0.06708233173076923,
+            "e": 23.930776742788463,
+            "f": 23.950120192307693
+          }
+        },
+        "paths": {
+          "outer_eye": {
+            "rect": {
+              "x": 37.72806930541992,
+              "y": 33.00623321533203,
+              "width": 48.72035598754883,
+              "height": 32.736183166503906
+            },
+            "paint": {
+              "fill": "rgba(68, 84, 114, 0.48)",
+              "stroke": "rgb(68, 136, 187)",
+              "strokeWidth": "10px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "inner_eye": {
+            "rect": {
+              "x": 48.95463562011719,
+              "y": 36.02393341064453,
+              "width": 26.157814025878906,
+              "height": 26.566619873046875
+            },
+            "paint": {
+              "fill": "rgb(0, 246, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "globe": {
+            "rect": {
+              "x": 53.627384185791016,
+              "y": 40.99030685424805,
+              "width": 16.144176483154297,
+              "height": 16.144168853759766
+            },
+            "paint": {
+              "fill": "rgb(0, 0, 0)",
+              "stroke": "rgb(0, 246, 255)",
+              "strokeWidth": "6.99px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          },
+          "globe_cage": {
+            "rect": {
+              "x": 48.686302185058594,
+              "y": 35.64653015136719,
+              "width": 26.026336669921875,
+              "height": 26.630477905273438
+            },
+            "paint": {
+              "fill": "rgb(255, 255, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "0.63",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          }
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2,
+          "scale": 1,
+          "offsetLeft": 0,
+          "offsetTop": 0
+        }
+      },
+      "after": {
+        "uiTheme": null,
+        "viewBox": "180 120 775 520",
+        "titleBar": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 376.1328125,
+            "height": 55.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "188.066px 27.9414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "wrapper": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": null
+        },
+        "svg": {
+          "rect": {
+            "x": 36,
+            "y": 32,
+            "width": 52,
+            "height": 34.8828125
+          },
+          "paint": {
+            "fill": "rgb(0, 0, 0)",
+            "stroke": "none",
+            "strokeWidth": "1px",
+            "opacity": "1",
+            "fillOpacity": "1",
+            "strokeOpacity": "1",
+            "paintOrder": "normal",
+            "color": "rgb(232, 234, 237)",
+            "visibility": "visible",
+            "transform": "none",
+            "transformOrigin": "26px 17.4414px",
+            "vectorEffect": "none",
+            "mixBlendMode": "normal",
+            "isolation": "auto",
+            "filter": "none",
+            "backdropFilter": "none",
+            "contain": "none",
+            "willChange": "auto"
+          },
+          "screenTransform": {
+            "a": 0.06708233173076923,
+            "b": 0,
+            "c": 0,
+            "d": 0.06708233173076923,
+            "e": 23.930776742788463,
+            "f": 23.950120192307693
+          }
+        },
+        "paths": {
+          "outer_eye": {
+            "rect": {
+              "x": 37.72806930541992,
+              "y": 33.00623321533203,
+              "width": 48.72035598754883,
+              "height": 32.736183166503906
+            },
+            "paint": {
+              "fill": "rgba(68, 84, 114, 0.48)",
+              "stroke": "rgb(68, 136, 187)",
+              "strokeWidth": "10px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "inner_eye": {
+            "rect": {
+              "x": 48.95463562011719,
+              "y": 36.02393341064453,
+              "width": 26.157814025878906,
+              "height": 26.566619873046875
+            },
+            "paint": {
+              "fill": "rgb(0, 246, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "none",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.930776742788463,
+              "f": 23.950120192307693
+            }
+          },
+          "globe": {
+            "rect": {
+              "x": 53.627384185791016,
+              "y": 40.99030685424805,
+              "width": 16.144176483154297,
+              "height": 16.144168853759766
+            },
+            "paint": {
+              "fill": "rgb(0, 0, 0)",
+              "stroke": "rgb(0, 246, 255)",
+              "strokeWidth": "6.99px",
+              "opacity": "1",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          },
+          "globe_cage": {
+            "rect": {
+              "x": 48.686302185058594,
+              "y": 35.64653015136719,
+              "width": 26.026336669921875,
+              "height": 26.630477905273438
+            },
+            "paint": {
+              "fill": "rgb(255, 255, 255)",
+              "stroke": "rgb(0, 0, 0)",
+              "strokeWidth": "1px",
+              "opacity": "0.63",
+              "fillOpacity": "1",
+              "strokeOpacity": "1",
+              "paintOrder": "normal",
+              "color": "rgb(232, 234, 237)",
+              "visibility": "visible",
+              "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+              "transformOrigin": "0px 0px",
+              "vectorEffect": "none",
+              "mixBlendMode": "normal",
+              "isolation": "auto",
+              "filter": "none",
+              "backdropFilter": "none",
+              "contain": "none",
+              "willChange": "auto"
+            },
+            "screenTransform": {
+              "a": 0.06708233173076923,
+              "b": 0,
+              "c": 0,
+              "d": 0.06708233173076923,
+              "e": 23.496083231893586,
+              "f": 23.60464617749676
+            }
+          }
+        },
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2,
+          "scale": 1,
+          "offsetLeft": 0,
+          "offsetTop": 0
+        }
+      }
+    }
+  ],
+  "build": {
+    "applicationCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+    "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "receiptPath": "build-receipt.json",
+    "receiptSha256": "b9d5eb8bb949b288a41956d8b847a24c052032d827a3a36e31fe8abc1cf9e9a3"
+  },
+  "paintSignatureStable": true
+}

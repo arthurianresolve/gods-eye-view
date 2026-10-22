@@ -44,6 +44,7 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     assert.ok(csp.includes(directive), directive);
   }
   assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"));
+  assert.deepEqual(config.preview.allowedHosts, config.server.allowedHosts);
   assert.deepEqual(config.preview.headers, config.server.headers);
   assert.deepEqual(config.define, {
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
@@ -72,6 +73,13 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
       host: '0.0.0.0',
       allowedHosts: ['localhost', '127.0.0.1', 'globe.lan'],
     }).server.allowedHosts,
+    ['localhost', '127.0.0.1', 'globe.lan'],
+  );
+  assert.deepEqual(
+    createBrowserViteConfig({
+      host: '0.0.0.0',
+      allowedHosts: ['localhost', '127.0.0.1', 'globe.lan'],
+    }).preview.allowedHosts,
     ['localhost', '127.0.0.1', 'globe.lan'],
   );
   assert.equal(
@@ -109,13 +117,14 @@ test('root config retains existing named exports and standalone provider order',
     'standalone dev config must expose a real checkout commit when available',
   );
   assert.deepEqual(
-    config.plugins.slice(5, -4).map((plugin) => plugin.name),
+    config.plugins.slice(5, -5).map((plugin) => plugin.name),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
-  assert.equal(config.plugins.at(-5).name, 'gev-key-setup');
+  assert.equal(config.plugins.at(-6).name, 'gev-key-setup');
   // The local MCP route follows every provider and precedes the API fallback.
-  assert.equal(config.plugins.at(-4).name, 'local-mcp');
-  assert.equal(config.plugins.at(-3).name, 'api-not-found');
+  assert.equal(config.plugins.at(-5).name, 'local-mcp');
+  assert.equal(config.plugins.at(-4).name, 'api-not-found');
+  assert.equal(config.plugins.at(-3).name, 'gev-unwatched-runtime-dirs');
   assert.equal(config.plugins.at(-2).name, 'embed-framing');
   assert.equal(config.plugins.at(-1).name, 'panel-build');
 });

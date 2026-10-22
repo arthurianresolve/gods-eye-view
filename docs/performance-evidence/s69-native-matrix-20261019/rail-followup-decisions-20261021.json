@@ -1,0 +1,162 @@
+{
+  "schema": "gev-rail-followup-decisions/v1",
+  "createdAt": "2026-10-21T03:20:10.285Z",
+  "application": "1b53f7068c4eb844af4238eca9a7e6f18ebf24db",
+  "qa": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "acceptanceEligible": false,
+  "productionChanged": false,
+  "rail": {
+    "raw": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\right-rail-short-ec0-1b53f706-20261021\\result.json",
+      "bytes": 1377640,
+      "sha256": "f2ab9c1589366cd0d1747abd56ab29d99476c149e9f79dac6e7fa964742d3444",
+      "planSha256": "3f6c516248351f9c37980ba10749432a017416b1c9deceba1902d90c1ce203af"
+    },
+    "timings": [
+      {
+        "role": "baseline",
+        "nativeMs": [
+          264,
+          160,
+          48,
+          96,
+          48,
+          112
+        ],
+        "readinessMs": [
+          394,
+          15.5,
+          81.5,
+          12.5,
+          86.90000000596046,
+          13.400000005960464
+        ],
+        "completedRenderMs": [
+          397.5,
+          18.400000005960464,
+          83.59999999403954,
+          14.599999994039536,
+          89.09999999403954,
+          14.799999982118607
+        ]
+      },
+      {
+        "role": "candidate",
+        "nativeMs": [
+          256,
+          136,
+          48,
+          96,
+          48,
+          96
+        ],
+        "readinessMs": [
+          378.59999999403954,
+          11.599999994039536,
+          75.2999999821186,
+          13.5,
+          98.89999997615814,
+          13.5
+        ],
+        "completedRenderMs": [
+          382,
+          14.900000005960464,
+          77.19999998807907,
+          15.599999994039536,
+          101.69999998807907,
+          15.099999994039536
+        ]
+      }
+    ],
+    "decision": "First compiled short comparison of the accepted rounding correction: descriptive improvement in first OFF, but no formal acceptance; first OFF remains136ms. A brief local trace read overlapped this diagnostic campaign, so it is not a pristine formal timing run."
+  },
+  "properties": {
+    "raw": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\rail-property-short-1b53-20261021\\result.json",
+      "bytes": 1379037,
+      "sha256": "108e3f028c1ddbb1b201de2920faa30d23e3fadf91dc1a5c39a9d9c2687abb32",
+      "planSha256": "201873d67c670b0248948cbf8b788197225ace098d377a1bcd6c4cae5bafdc62"
+    },
+    "optical": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\rail-property-optical-1b53-20261021\\result.json",
+      "bytes": 128980,
+      "sha256": "df57de6773da721497a69e6a35f67c98e02b9e3967bd11e041d6c466548ffb45",
+      "planSha256": "9af8623c1eaf37fe59152764c29126149dc381f97cda487a68ce86147e3b96b2"
+    },
+    "timings": [
+      {
+        "role": "control",
+        "nativeMs": [
+          208,
+          112,
+          48,
+          96,
+          48,
+          96
+        ],
+        "readinessMs": [
+          336.09999999403954,
+          13.200000017881393,
+          82,
+          13.400000005960464,
+          77.90000000596046,
+          13.300000011920929
+        ],
+        "completedRenderMs": [
+          338.5,
+          14.700000017881393,
+          84.09999999403954,
+          14.799999982118607,
+          79.80000001192093,
+          14.700000017881393
+        ]
+      },
+      {
+        "role": "property",
+        "nativeMs": [
+          240,
+          120,
+          48,
+          96,
+          48,
+          96
+        ],
+        "readinessMs": [
+          408.90000000596046,
+          14.900000005960464,
+          80.59999999403954,
+          13.099999994039536,
+          96.2999999821186,
+          14.800000011920929
+        ],
+        "completedRenderMs": [
+          412.30000001192093,
+          20.100000023841858,
+          82.90000000596046,
+          14.699999988079071,
+          98.2999999821186,
+          16.100000023841858
+        ]
+      }
+    ],
+    "decision": "Reject non-inheriting allocation-property CSS. One exact mounted case passes, but native timings do not improve. This is a follow-up on the prior b05daee3 rejection with the new rail correction, not an independent new optimization. No runtime adoption."
+  },
+  "panelPromotion": {
+    "raw": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\panel-promotion-stable-optical-1b53-20261021\\result.json",
+      "bytes": 128918,
+      "sha256": "bab56782b9d747d898c13f06917669ee88f672909c4106d2e99146b19d7ea37d",
+      "planSha256": "1e2dc02807bd2b2a2d7fa3f7ff43f54dc7e8579b60ffbea2d81e97ad7125bdb8"
+    },
+    "decision": "Reject panel compositor promotion. The stable-initialization follow-up fails exact pixels. No latency run or production change."
+  },
+  "ci": {
+    "head": "1b53f7068c4eb844af4238eca9a7e6f18ebf24db",
+    "merge": "a79676cf35f99f800c8c6f5df908e3a7a8b9a837",
+    "identicalGitTree": "7b9fad4a52333c700bf01e1471b7a2ceebd0d535",
+    "selectedJobsPassed": 7,
+    "ciUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39535717261",
+    "releaseUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39535717279",
+    "releaseSourceScope": "PR merge artifact. Equal source trees verified; this is not an exact-head release artifact or final deployment acceptance."
+  }
+}

@@ -7,11 +7,21 @@ import { createStandaloneControls } from './controls.js';
 import { createStandaloneData } from './data.js';
 import { createStandaloneTools } from './tools.js';
 import { resolveLocale, applyDocumentLanguage } from '../i18n/locale.js';
-import { applyDocumentTranslations, setLocale } from '../i18n/index.js';
+import {
+  applyDocumentTranslations,
+  getLocale,
+  prepareLocale,
+  setLocale,
+} from '../i18n/index.js';
 import { createGoogleTokenSource } from '../maps/googleTokens.js';
 
 // The existing controls and layer catalog contain page-scoped state.
 let constructed = false;
+
+// Resolve the requested catalog during the application's async scene phase.
+// This keeps locale preparation ahead of controls/data/tools construction while
+// remaining compatible with the production browser target (no top-level await).
+const bootLocale = resolveLocale();
 
 /** Compose the standalone application once per page. Reload to start again. */
 export function createStandaloneApplication({
@@ -26,20 +36,23 @@ export function createStandaloneApplication({
   if (constructed)
     throw new Error('The standalone application already owns this page');
   constructed = true;
-  // Locale is resolved before any UI initialization so <html lang>/<html dir>
-  // and every catalog lookup agree from the first painted frame. Module
-  // scripts execute after parsing, so the DOM is ready here and every
-  // data-i18n* element honors the resolved locale without a reload.
-  const activeLocale = resolveLocale();
-  setLocale(activeLocale);
-  applyDocumentLanguage(document, activeLocale);
-  applyDocumentTranslations(document);
   const loadingScreen = document.getElementById('loading-screen');
   const loaderStatus = loadingScreen.querySelector('.loader-status');
   let placeSearch;
   let catalog;
   return createApplication({
     createScene: async (context) => {
+      // Prepare before constructing any UI-facing component. A failed dynamic
+      // catalog keeps the requested preference for explicit retry while the
+      // first paint uses English.
+      try {
+        await prepareLocale(bootLocale);
+      } catch {
+        setLocale('en', { preserveRequested: true });
+      }
+      const activeLocale = getLocale();
+      applyDocumentLanguage(document, activeLocale);
+      applyDocumentTranslations(document);
       placeSearch = createStandalonePlaceSearch({
         // The bundled city and landmark data the offline name provider reads.
         // The search package takes it as plain data rather than importing it,

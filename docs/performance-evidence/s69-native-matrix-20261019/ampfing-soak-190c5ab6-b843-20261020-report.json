@@ -1,0 +1,30 @@
+{
+  "schema": "gev-public-ampfing-soak-report/v1",
+  "status": "passed",
+  "diagnosticOnly": false,
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "qaCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "productionCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "raw": {
+    "path": "../gev-s61-evidence-19065997/staged-final-ampfing-soak-20261020T045224505Z.json",
+    "sha256": "39624079da8663a4c791db8e2092c6bcbac0f7531d7f9e61e70d88b613d12a48"
+  },
+  "independentReview": {
+    "path": "../gev-s61-evidence-19065997/staged-final-ampfing-soak-20261020T045224505Z.json.independent-review.json",
+    "sha256": "e248189d7b14143d7d8a7ecc52393d4f13910f7a9c5ae9bf044be8e9ab6e4ed9",
+    "status": "passed"
+  },
+  "transferManifest": {
+    "path": "../gev-s61-evidence-19065997/staged-final-ampfing-soak-20261020T045224505Z.json.transfer-manifest.json",
+    "sha256": "2f91681864d66b2a2d6da7dafe693e6892cb47efbd0a1782227013c9d28c6f9d"
+  },
+  "vmArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-soak-190c5ab6-b843cac5-staged-final-ampfing-soak-20261020T045224505Z-r2",
+  "durationMs": 3639274,
+  "duration": "60m39s",
+  "cycles": 251,
+  "retainedHeapGrowthRatio": 0.028949687682857578,
+  "renderer": "Intel UHD 620 / ANGLE D3D11",
+  "browser": "Chrome/155.0.8059.84",
+  "foregroundCleanupSchedule": "passed",
+  "scope": "Final Ampfing retention soak only; workload comparisons, visual equivalence and release activation remain separate."
+}

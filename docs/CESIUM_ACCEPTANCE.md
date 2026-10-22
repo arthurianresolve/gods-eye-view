@@ -1,8 +1,45 @@
 # Cesium completion and acceptance criteria
 
-Policy: `gev-cesium-acceptance/2026-10-15`.
+Policy: `gev-cesium-acceptance/2026-10-18`.
 
-This amendment governs the remaining S47â€“S60 work. It supersedes conflicting
+A parked camera does not establish a static scene. The broad idle exemption at
+`4a24624b` through `089e86d3` remains reverted. The Austin investigation now
+establishes that wind is intentionally invisible at its 12,000 m parked view,
+satellite positions continue updating, and wind advances normally after moving
+to 60,000 m. Candidate scheduling replaces the baseline's unnecessary continuous
+still-CCTV hold. The raw idle p95 increase of 80.8% remains recorded.
+
+The 18 October amendment permits a separately recorded, hash-bound disposition
+for that exact application pair, fixture and interval metric. The validator
+checks actual raw reports, native settings at every boundary, renderer identity,
+each diagnostic demand state, moving satellite witnesses, wind re-entry and
+cleanup. It resolves only `idle`; motion, other workloads, visual equivalence
+and retention retain their gates. Missing or contradictory proof fails. It
+does not provide a generic exemption for animated parked views.
+
+The narrow CCTV/HUD visual control also permits
+`matched-visible-control-variance-v1`, documented in the
+[visual qualification method](../scripts/performance/FINAL_VISUAL_QUALIFICATION.md).
+Three states must match exactly across builds. An initial still may differ only
+when it equals one complete same-build visible control, both controls agree
+across builds, and their variation is at most ten pixels with RGB deltas at most
+10/255 and unchanged alpha. Seven corner pixels exhibited this variation in
+both unchanged builds. No masks or image edits are allowed. Earlier strict
+comparison failures remain failed records with the subsequent consumer review
+identified separately. The default validator remains bit-exact.
+
+The approved S61–S70 follow-up is recorded in the performance plan. S61 is
+engineering work for the frozen upstream merge, historical evidence ledger and
+the native sharpness profile; it does not close candidate qualification or the
+performance objectives. The final follow-up denominator is 10, with one shared
+matrix and one physical Windows soak.
+
+For S61, implementation, full automatic gates and primary Windows evidence are
+recorded separately. Exact candidate `19065997` passes the full automatic gates;
+the final shared matrix and candidate soak remain pending. No stable publication
+or human-review result is implied.
+
+This amendment governs the remaining S47–S60 work. It supersedes conflicting
 completion wording in the dated sections of [the performance plan](CESIUM_PERFORMANCE_PLAN.md).
 It responds to the user's request to reassess acceptance, the available Windows
 UHD 620 machine and Linux VM105, and the experiment results already recorded.
@@ -63,10 +100,11 @@ reconciliation are not complete. S50 closure includes the reviewed rendered
 retention comparison and real-layer workspace restore integration. S56 closes
 the real caller cleanup gaps and explicitly retains framebuffer preservation.
 S57 includes strict native production map/fault journeys and map ownership.
-The physical Windows retention gate now passes on the exact current candidate;
-it qualifies the applicable S49/S60 retention requirements without filling the
-separate timed-workload rows for S47, S48, S51-S59. The fourteen-slice
-denominator is unchanged.
+The physical Windows retention gate passes on the previous candidate `d8ef9002`;
+that result does not qualify the current `b3c49b19` candidate, which adds a
+recorded-aircraft correctness fix. A fresh current-candidate retention run and
+the separate timed-workload rows remain required. The fourteen-slice denominator
+is unchanged.
 
 ## Requirements that remain mandatory
 
@@ -111,22 +149,22 @@ check. A paired `lifecycle-stress` row is rejected, and a passing soak cannot
 fill a timed workload. Map-streaming remains a required timed family. Its five-run paired capture/export contract is implemented and automatically checked; diagnostic reports
 and generic workload aliases do not satisfy it.
 
-| Slice | Engineering closure                                                                                                                                                                                                       | Final qualification evidence                                                                                                                                                                                            |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slice | Engineering closure                                                                                                                                                                                                                                                           | Final qualification evidence                                                                                                                                                                                                                    |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S47   | Report all seven families with explicit validation modes: six timed families and lifecycle retention; build, fixture, settings, populations and absolute-time route checks work; delay negative control fails as intended; map-streaming has a five-run timed export contract | Five matched baseline/candidate runs for timed families, with complete identity and visual conditions; lifecycle uses the separate full-soak gate; map-streaming still needs real baseline/candidate browser exports and hardware qualification |
-| S48   | Bounded opt-in timings and ownership inventory cover changed/retention-relevant paths; each metric names its source and units; disabled mode and overhead are checked; unsupported GPU timing stays unavailable           | Leading measured costs for each relevant workload; diagnostic runs separate from latency runs                                                                                                                           |
-| S49   | Import, workspace, CCTV, terrain and picking lifecycle cases handle success, failure, cancellation and stale completion; current reproductions are fixed; worker interception and asset loading are verified              | Full affected Windows journeys and the current-candidate 60-minute retention gate; historical unexplained failures remain disclosed                                                                                     |
-| S50   | All source/pose/terrain/parameter revisions participate in geometry ownership; one latest pending build per feature; equivalent visibility/restore reuses geometry; superseded results are disposed                       | Terrain/pose appearance, selection/frusta, build-count and rapid-edit checks                                                                                                                                            |
-| S51   | Audit callbacks/holds once; adopt scheduled demand where measured useful and keep justified continuous owners; verify wake, visibility, final frame and teardown                                                          | At most two frames in ten seconds for a genuinely static settled fixture; periodic/animated fixtures retain their specified cadence                                                                                     |
-| S52   | Validate projection/layout/text reuse, complete invalidation inputs, picking and accessibility mirror; retain painting if its measured cache experiment is rejected                                                       | Dense moving and static overlays retain content, placement, fades and interaction with no accepted regression                                                                                                           |
-| S53   | Audit writes/membership/allocations; retain beneficial scratch/write changes; dispose of the frequency-split and opacity experiments by accepted change or evidenced rejection                                            | Selected-object, horizon, focus and fading equivalence; claim upload reduction only if uploads were actually measured                                                                                                   |
-| S54   | Preserve record/evidence/pick identity and ownership; decide separately for datacenters, dams and cables whether batching improves the eligible representation                                                            | Individual and combined layers, activation/retention, duplicate names, legacy IDs, terrain/LOD and selection; a rejected dam/cable prototype need not be replaced merely to satisfy a conversion quota                  |
-| S55   | Share valid tracked-frame data and remove measured redundant work while preserving invalidation and camera authority; record remaining work as justified existing behavior or a measured experiment                       | Follow/cockpit/CCTV/replay/manual transitions, tracking motion p95 and long tasks; the 20% target is reported separately                                                                                                |
-| S56   | Shared fresh-frame capture owns every listener, timeout and surface; all callers and failure paths are checked; make an explicit preservation-default decision                                                            | Full application idle/moving/portrait/resized/restored/hidden capture matrix; keep `preserveDrawingBuffer: true` if disabling it is not demonstrably safe and beneficial                                                |
-| S57   | Superseded imagery/terrain/tileset/comparison loads are retired; explicit retry and provider cache ownership work; native fixture coverage and rendered fault controls are complete                                       | Both-revision production map journey, repeated switching/streaming, unchanged detail/attribution and bounded resources                                                                                                  |
-| S58   | Audit the named wind/weather/effect ownership paths; retain proven resource reuse and decide each proposed pass removal from measurements                                                                                 | Equal paths, vertices, frame times, colors/opacity/effect strengths; pause/resume, reduced motion, source and map-host changes                                                                                          |
-| S59   | Cooperative preparation and bounded queues preserve complete records and selection; cancellation/stale refreshes cannot publish; decide decoding and UI work from measured blocking costs                                 | Large import and catalog/workspace journeys, complete data, total completion time and interaction limits; four milliseconds remains a batch target, not permission to truncate an indivisible record                    |
-| S60   | Consume exact-source results, distinguish objective/support outcomes, reconcile branches, freeze one candidate, update reports and verify the deployed artifact                                                           | All mandatory available-environment checks, primary Windows comparisons and soak, remote dev identity and VM105 HTTPS/persistence checks                                                                                |
+| S48   | Bounded opt-in timings and ownership inventory cover changed/retention-relevant paths; each metric names its source and units; disabled mode and overhead are checked; unsupported GPU timing stays unavailable                                                               | Leading measured costs for each relevant workload; diagnostic runs separate from latency runs                                                                                                                                                   |
+| S49   | Import, workspace, CCTV, terrain and picking lifecycle cases handle success, failure, cancellation and stale completion; current reproductions are fixed; worker interception and asset loading are verified                                                                  | Full affected Windows journeys and the current-candidate 60-minute retention gate; historical unexplained failures remain disclosed                                                                                                             |
+| S50   | All source/pose/terrain/parameter revisions participate in geometry ownership; one latest pending build per feature; equivalent visibility/restore reuses geometry; superseded results are disposed                                                                           | Terrain/pose appearance, selection/frusta, build-count and rapid-edit checks                                                                                                                                                                    |
+| S51   | Audit callbacks/holds once; adopt scheduled demand where measured useful and keep justified continuous owners; verify wake, visibility, final frame and teardown                                                                                                              | At most two frames in ten seconds for a genuinely static settled fixture; periodic/animated fixtures retain their specified cadence                                                                                                             |
+| S52   | Validate projection/layout/text reuse, complete invalidation inputs, picking and accessibility mirror; retain painting if its measured cache experiment is rejected                                                                                                           | Dense moving and static overlays retain content, placement, fades and interaction with no accepted regression                                                                                                                                   |
+| S53   | Audit writes/membership/allocations; retain beneficial scratch/write changes; dispose of the frequency-split and opacity experiments by accepted change or evidenced rejection                                                                                                | Selected-object, horizon, focus and fading equivalence; claim upload reduction only if uploads were actually measured                                                                                                                           |
+| S54   | Preserve record/evidence/pick identity and ownership; decide separately for datacenters, dams and cables whether batching improves the eligible representation                                                                                                                | Individual and combined layers, activation/retention, duplicate names, legacy IDs, terrain/LOD and selection; a rejected dam/cable prototype need not be replaced merely to satisfy a conversion quota                                          |
+| S55   | Share valid tracked-frame data and remove measured redundant work while preserving invalidation and camera authority; record remaining work as justified existing behavior or a measured experiment                                                                           | Follow/cockpit/CCTV/replay/manual transitions, tracking motion p95 and long tasks; the 20% target is reported separately                                                                                                                        |
+| S56   | Shared fresh-frame capture owns every listener, timeout and surface; all callers and failure paths are checked; make an explicit preservation-default decision                                                                                                                | Full application idle/moving/portrait/resized/restored/hidden capture matrix; keep `preserveDrawingBuffer: true` if disabling it is not demonstrably safe and beneficial                                                                        |
+| S57   | Superseded imagery/terrain/tileset/comparison loads are retired; explicit retry and provider cache ownership work; native fixture coverage and rendered fault controls are complete                                                                                           | Both-revision production map journey, repeated switching/streaming, unchanged detail/attribution and bounded resources                                                                                                                          |
+| S58   | Audit the named wind/weather/effect ownership paths; retain proven resource reuse and decide each proposed pass removal from measurements                                                                                                                                     | Equal paths, vertices, frame times, colors/opacity/effect strengths; pause/resume, reduced motion, source and map-host changes                                                                                                                  |
+| S59   | Cooperative preparation and bounded queues preserve complete records and selection; cancellation/stale refreshes cannot publish; decide decoding and UI work from measured blocking costs                                                                                     | Large import and catalog/workspace journeys, complete data, total completion time and interaction limits; four milliseconds remains a batch target, not permission to truncate an indivisible record                                            |
+| S60   | Consume exact-source results, distinguish objective/support outcomes, reconcile branches, freeze one candidate, update reports and verify the deployed artifact                                                                                                               | All mandatory available-environment checks, primary Windows comparisons and soak, remote dev identity and VM105 HTTPS/persistence checks                                                                                                        |
 
 A no-change decision needs a named hypothesis, unchanged control, measured or
 reproduced reason, affected visual/functional checks, retained raw evidence,

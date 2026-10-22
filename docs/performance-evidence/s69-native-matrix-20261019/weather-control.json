@@ -1,0 +1,40 @@
+{
+  "schema": "gev-baseline-correctness-control/v1",
+  "createdAt": "2026-10-19T03:01:13.824Z",
+  "status": "control-built-and-tested",
+  "originalBaseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "controlCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "changed": [
+    {
+      "path": "src/layers/weather/index.js",
+      "sha256": "4ef0bcbed9c2f7a81da7a45f8cfc73d5113b00996de0124f00099ba4b891dec9"
+    },
+    {
+      "path": "src/layers/weather/weather.test.mjs",
+      "sha256": "c0ae6ed965acf39847e7b4f6adee9ed3210cf0d839b40b261e1edb6658f7b2fa"
+    }
+  ],
+  "patchSha256": "6c50a7c57c1a81480f4978fc2e71677484d36ea2e695a12dd5a946aeda07d666",
+  "bundleSha256": "47ac4254ceef15f92465894d81e3c45c9f94e9ec9cdb1c2c34f091b995cd9c8d",
+  "scope": "Weather timing control only. Applies the candidate weather ownership fix to the frozen baseline; all other tracked files are unchanged. Original baseline failures remain failures. Do not attribute this shared correctness fix to a measured speed improvement.",
+  "productionChanged": false,
+  "build": {
+    "code": 0,
+    "signal": null
+  },
+  "tests": [
+    {
+      "runtime": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "runtime": "/opt/nodejs/current/bin/node",
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "completedAt": "2026-10-19T03:01:37.223Z",
+  "receiptSha256": "c92035a3ef08222015e5361061079ad0a87c3ae286ab1fb009c97b337f4cab0e"
+}

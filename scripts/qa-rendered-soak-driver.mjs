@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   classifyRenderer,
   readBrowserGraphicsInfo,
@@ -11,6 +12,7 @@ import {
   launchFixtureBrowser,
   prepareFixturePage,
   cleanupFixturePageDiagnostics,
+  flushFixturePageConsoleOwnership,
   bootFixturePage,
   clickControl,
   openWorkspace,
@@ -21,13 +23,691 @@ import { closeTargetBeforeFixtureInterceptionRelease } from './performance/fixtu
 import { runCesiumWorkerProbeInPage } from './performance/cesiumWorkerProbeInPage.mjs';
 import { createSyntheticAircraftFrames } from '../src/recording/syntheticFixture.js';
 import { createRecordingBundle } from '../src/recording/bundle.js';
+import {
+  createNativeWindowViewportOwner,
+  resolveNativeWindowBrowserOptions,
+} from './performance/nativeWindowViewport.mjs';
 
 const RENDERED_WORKSPACE_TIMEOUT_MS = 120_000;
+export const SOAK_DATACENTER_FEATURE_COUNT = 8;
+const SOAK_DATACENTER_FIXTURE_SCHEMA = 'gev-soak-datacenter-fixture/v2';
 const DEFAULT_SOAK_LOCATION = Object.freeze({
   latitude: 40.7,
   longitude: -73.9,
   altitude: 1000,
 });
+
+// The rendered soak starts its controlled view on the OSM map with DENSE 75.
+// Keep those fixture settings explicit while using the share codec to suppress
+// the default Austin fly-in at both measured-page navigations.
+export function createSoakFixtureShareHash(location) {
+  const resolved = resolveRenderedSoakLocation(location);
+  const params = new URLSearchParams({
+    v: '2',
+    lat: String(resolved.latitude),
+    lon: String(resolved.longitude),
+    alt: String(resolved.altitude),
+    heading: '0',
+    pitch: '-90',
+    roll: '0',
+    map: 'osm',
+    dm: 'DENSE',
+    dd: '75',
+    // Absent fields use legacy link defaults, not fresh-profile defaults.
+    bi: '0',
+    bv: '2',
+    kf: '7',
+    ko: '1',
+    scf: '11',
+  });
+  return `#${params.toString()}`;
+}
+
+/** Force a new application document before booting with the fixture view. */
+export async function bootSoakFixtureFromFreshDocument(
+  page,
+  base,
+  options,
+  boot = bootFixturePage,
+) {
+  await page.goto('about:blank', { waitUntil: 'load' });
+  return boot(page, base, options);
+}
+
+/** Wait predicate shared by setup and replay selection. */
+export function hasSoakRecordingOptionInPage() {
+  const selection = document.querySelector(
+    '.investigation-timeline-aircraft-select',
+  );
+  return Array.from(selection?.options || []).some(
+    (option) => option.value === 'recording-rendered-soak',
+  );
+}
+
+export function isSoakDatacenterAssetRequest(requestUrl, appBase) {
+  let request;
+  let base;
+  try {
+    request = new URL(String(requestUrl), appBase);
+    base = new URL(appBase);
+  } catch {
+    return false;
+  }
+  if (request.origin !== base.origin) return false;
+  return (
+    /(?:^|\/)assets\/datacenters-[A-Za-z0-9_-]{8}\.geojsonl$/.test(
+      request.pathname,
+    ) ||
+    request.pathname.endsWith(
+      '/src/data/local_data/datacenters/datacenters.geojsonl',
+    )
+  );
+}
+
+/** Return a bounded snapshot of fixture delivery state for persisted evidence. */
+export function createSoakDatacenterFixtureReceipt(validation, requests) {
+  return {
+    ...validation,
+    requests: (Array.isArray(requests) ? requests : [])
+      .slice(0, 4)
+      .map((request) => ({
+        origin: request.origin,
+        pathname: request.pathname,
+        prepared: request.prepared === true,
+        fulfilled: request.fulfilled === true,
+        responseStatus: request.responseStatus ?? null,
+        bodySha256: request.bodySha256 ?? null,
+        deliveredFeatureCount: request.deliveredFeatureCount ?? null,
+      })),
+  };
+}
+
+export function createSoakDatacenterFixture(location) {
+  const body = Array.from({ length: SOAK_DATACENTER_FEATURE_COUNT }, (_, n) =>
+    JSON.stringify({
+      type: 'Feature',
+      id: 'way/' + (n + 1),
+      properties: { name: 'Synthetic datacenter ' + n },
+      geometry: {
+        type: 'Point',
+        coordinates: [location.longitude + n * 0.002, location.latitude],
+      },
+    }),
+  ).join('\n');
+  return {
+    body,
+    featureCount: SOAK_DATACENTER_FEATURE_COUNT,
+    bodySha256: createHash('sha256').update(body).digest('hex'),
+  };
+}
+
+/** Keep the live source empty until the seeded recording is selected. */
+export function respondToSoakLiveFlights(url, request, base) {
+  if (
+    url.origin !== new URL(base).origin ||
+    url.pathname !== '/api/flights' ||
+    request?.method?.() !== 'GET'
+  )
+    return undefined;
+  return {
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ time: 0, states: [] }),
+  };
+}
+
+/** Select and commit one endpoint through the actual recorded timeline control. */
+export async function seekRenderedSoakRecordingInPage(iteration) {
+  const app = window.__godsEyeView;
+  const source = app?.aircraftSource;
+  const state = source?.getState?.();
+  if (
+    !app?.dataManager ||
+    state?.mode !== 'recorded' ||
+    state?.recordingId !== 'recording-rendered-soak'
+  )
+    throw new Error('Soak replay recording was not selected');
+  const ticks = source.getTimeline?.()?.ticks;
+  const slider = document.querySelector(
+    '.investigation-timeline-slider-control',
+  );
+  if (!Array.isArray(ticks) || ticks.length < 2 || !slider || slider.disabled)
+    throw new Error('Soak replay timeline is unavailable');
+  const index = iteration % 2 ? Number(slider.min) : Number(slider.max);
+  const selectedTimeMs = ticks[index];
+  if (
+    !Number.isSafeInteger(index) ||
+    index < 0 ||
+    index >= ticks.length ||
+    !Number.isFinite(selectedTimeMs)
+  )
+    throw new Error('Soak replay endpoint is invalid');
+
+  slider.value = String(index);
+  slider.dispatchEvent(new Event('input', { bubbles: true }));
+  // The production slider coalesces `input` for drag preview and commits on
+  // `change`. Explicitly finish this harness selection so a pending 150 ms
+  // drag timer cannot race layer enable/refresh.
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
+  const committedState = source.getState();
+  if (committedState.targetMs !== selectedTimeMs)
+    throw new Error('Soak replay endpoint was not committed');
+
+  const snapshot = await source.getSnapshot();
+  if (
+    snapshot?.selectedTimeMs !== selectedTimeMs ||
+    !Array.isArray(snapshot.records) ||
+    snapshot.records.length === 0
+  )
+    throw new Error('Soak replay endpoint has no recorded observations');
+  await app.dataManager.setEnabled('flights', true);
+  await app.dataManager.refreshLayer('flights');
+  return {
+    recordingId: committedState.recordingId,
+    selectedTimeMs,
+    targetIndex: index,
+    recordCount: snapshot.records.length,
+  };
+}
+
+/** Return only bounded replay identity/readiness fields for failure receipts. */
+export function readSoakReplayDiagnosticInPage(phase) {
+  const boundedErrorName = (error) => {
+    const name = typeof error?.name === 'string' ? error.name : '';
+    return /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/.test(name) ? name : 'Error';
+  };
+  const app = window.__godsEyeView;
+  const source = app?.aircraftSource;
+  const slider = document.querySelector(
+    '.investigation-timeline-slider-control',
+  );
+  const selection = document.querySelector(
+    '.investigation-timeline-aircraft-select',
+  );
+  let sourceReadError = null;
+  let targetOptionPresent = null;
+  try {
+    targetOptionPresent = Boolean(
+      selection &&
+      Array.from(selection.options || []).some(
+        (option) => option.value === 'recording-rendered-soak',
+      ),
+    );
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  const flights = app?.dataManager?.layers?.get('flights');
+  let state = null;
+  let timeline = null;
+  try {
+    const value = source?.getState?.();
+    if (value) {
+      const coverage = value.coverage;
+      state = {
+        mode: typeof value.mode === 'string' ? value.mode.slice(0, 16) : null,
+        recordingId:
+          typeof value.recordingId === 'string'
+            ? value.recordingId.slice(0, 80)
+            : null,
+        targetMs: Number.isFinite(value.targetMs) ? value.targetMs : null,
+        recordCount: Number.isFinite(value.recordCount)
+          ? value.recordCount
+          : null,
+        truncated:
+          typeof value.truncated === 'boolean' ? value.truncated : null,
+        coverage:
+          coverage &&
+          Number.isFinite(coverage.from) &&
+          Number.isFinite(coverage.to)
+            ? { from: coverage.from, to: coverage.to }
+            : null,
+      };
+    }
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  try {
+    const value = source?.getTimeline?.();
+    const ticks = value?.ticks;
+    if (Array.isArray(ticks)) {
+      timeline = {
+        tickCount: ticks.length,
+        firstTickMs: Number.isFinite(ticks[0]) ? ticks[0] : null,
+        lastTickMs: Number.isFinite(ticks.at(-1)) ? ticks.at(-1) : null,
+      };
+    }
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  let stats = null;
+  try {
+    const value = flights?.module?.getStats?.();
+    if (value && Number.isFinite(value.count)) stats = { count: value.count };
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  let flightsEnabled = null;
+  try {
+    if (typeof app?.dataManager?.isEnabled === 'function')
+      flightsEnabled = Boolean(app.dataManager.isEnabled('flights'));
+  } catch (error) {
+    sourceReadError ||= boundedErrorName(error);
+  }
+  return {
+    phase: typeof phase === 'string' ? phase.slice(0, 48) : 'unknown',
+    source: state,
+    timeline,
+    sourceReadError,
+    selection: {
+      value:
+        typeof selection?.value === 'string'
+          ? selection.value.slice(0, 80)
+          : null,
+      targetOptionPresent,
+      slider: slider
+        ? {
+            disabled: Boolean(slider.disabled),
+            min: String(slider.min).slice(0, 16),
+            max: String(slider.max).slice(0, 16),
+            value: String(slider.value).slice(0, 16),
+          }
+        : null,
+    },
+    flights: {
+      enabled: flightsEnabled,
+      stats,
+    },
+  };
+}
+
+/** Put the camera over the synthetic fixture and witness two fresh frames. */
+export async function prepareSoakDatacenterFixtureViewInPage(location) {
+  const app = window.__godsEyeView;
+  const viewer = app?.viewer;
+  const camera = viewer?.camera;
+  const scene = viewer?.scene;
+  const runImmediateNavigation =
+    app?.styleManager?.runImmediateLocationNavigation;
+  if (
+    !camera?.position?.constructor?.fromDegrees ||
+    !scene?.postRender?.addEventListener ||
+    typeof runImmediateNavigation !== 'function'
+  )
+    throw new Error('Datacenter fixture camera is unavailable.');
+  const applyPose = () => {
+    const destination = camera.position.constructor.fromDegrees(
+      location.longitude,
+      location.latitude,
+      location.altitude,
+    );
+    camera.setView({
+      destination,
+      orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+    });
+    return true;
+  };
+  const firstNavigationAccepted = runImmediateNavigation.call(
+    app.styleManager,
+    applyPose,
+  );
+  if (firstNavigationAccepted !== true)
+    throw new Error('Datacenter fixture camera did not acquire navigation.');
+
+  const frameBefore = scene.frameState?.frameNumber;
+  if (!Number.isFinite(frameBefore))
+    throw new Error('Datacenter fixture camera frame counter is unavailable.');
+  const poseMatches = () => {
+    const cartographic = camera.positionCartographic;
+    const frameNumber = scene.frameState?.frameNumber;
+    return cartographic && Number.isFinite(frameNumber)
+      ? {
+          frameNumber,
+          latitude: (cartographic.latitude * 180) / Math.PI,
+          longitude: (cartographic.longitude * 180) / Math.PI,
+          altitude: cartographic.height,
+          heading: camera.heading,
+          pitch: camera.pitch,
+          roll: camera.roll,
+        }
+      : null;
+  };
+  const poseMatchesTarget = (pose) =>
+    pose &&
+    pose.frameNumber > frameBefore &&
+    Math.abs(pose.latitude - location.latitude) <= 1e-6 &&
+    Math.abs(pose.longitude - location.longitude) <= 1e-6 &&
+    Math.abs(pose.altitude - location.altitude) <= 1 &&
+    Math.abs(Math.atan2(Math.sin(pose.heading), Math.cos(pose.heading))) <=
+      1e-6 &&
+    Math.abs(
+      Math.atan2(
+        Math.sin(pose.pitch + Math.PI / 2),
+        Math.cos(pose.pitch + Math.PI / 2),
+      ),
+    ) <= 1e-6 &&
+    Math.abs(Math.atan2(Math.sin(pose.roll), Math.cos(pose.roll))) <= 1e-6;
+  let lastObservedPose = null;
+  const observedPose = await new Promise((resolve, reject) => {
+    let settled = false;
+    let matchingFrames = 0;
+    let lastMatchingFrameNumber = null;
+    let removePostRender = () => {};
+    const timer = setTimeout(() => {
+      const error = new Error(
+        'Datacenter fixture camera pose did not settle; last observed pose: ' +
+          JSON.stringify(lastObservedPose),
+      );
+      error.cameraPose = lastObservedPose || poseMatches();
+      finish(error);
+    }, 15_000);
+    const finish = (error, pose = null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      removePostRender();
+      if (error) reject(error);
+      else resolve(pose);
+    };
+    const onPostRender = () => {
+      if (settled) return;
+      const pose = poseMatches();
+      lastObservedPose = pose;
+      if (!poseMatchesTarget(pose)) {
+        matchingFrames = 0;
+        lastMatchingFrameNumber = null;
+      } else if (pose.frameNumber !== lastMatchingFrameNumber) {
+        matchingFrames++;
+        lastMatchingFrameNumber = pose.frameNumber;
+      }
+      if (matchingFrames >= 2) {
+        finish(null, pose);
+        return;
+      }
+      try {
+        scene.requestRender?.();
+      } catch (error) {
+        const failure =
+          error instanceof Error ? error : new Error(String(error));
+        failure.cameraPose = lastObservedPose || poseMatches();
+        finish(failure);
+      }
+    };
+    try {
+      removePostRender =
+        scene.postRender.addEventListener(onPostRender) || (() => {});
+      scene.requestRender?.();
+    } catch (error) {
+      const failure = error instanceof Error ? error : new Error(String(error));
+      failure.cameraPose = lastObservedPose || poseMatches();
+      finish(failure);
+    }
+  });
+  return {
+    requested: {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      altitude: location.altitude,
+    },
+    observed: {
+      latitude: observedPose.latitude,
+      longitude: observedPose.longitude,
+      altitude: observedPose.altitude,
+    },
+    heading: observedPose.heading,
+    pitch: observedPose.pitch,
+    roll: observedPose.roll,
+    frameNumber: observedPose.frameNumber,
+  };
+}
+
+export function readSoakDatacenterCameraPoseInPage() {
+  const camera = window.__godsEyeView?.viewer?.camera;
+  const cartographic = camera?.positionCartographic;
+  const frameNumber =
+    window.__godsEyeView?.viewer?.scene?.frameState?.frameNumber;
+  if (!cartographic || !Number.isFinite(frameNumber)) return null;
+  const pose = {
+    latitude: (cartographic.latitude * 180) / Math.PI,
+    longitude: (cartographic.longitude * 180) / Math.PI,
+    altitude: cartographic.height,
+    heading: camera.heading,
+    pitch: camera.pitch,
+    roll: camera.roll,
+    frameNumber,
+  };
+  return Object.values(pose).every(Number.isFinite) ? pose : null;
+}
+
+export function installSoakDatacenterPostRenderWitnessInPage() {
+  const scene = window.__godsEyeView?.viewer?.scene;
+  if (!scene?.postRender?.addEventListener)
+    throw new Error('Datacenter fixture postRender boundary is unavailable.');
+  window.__soakRenderedFrames = 0;
+  window.__soakDatacenterPreflightActive = false;
+  window.__soakDatacenterRenderWitness = null;
+  scene.postRender.addEventListener(() => {
+    window.__soakRenderedFrames++;
+    if (!window.__soakDatacenterPreflightActive) return;
+    const app = window.__godsEyeView;
+    const module = app.dataManager.layers.get('local-datacenters')?.module;
+    const lod = module?.getLodDiagnostics?.();
+    window.__soakDatacenterRenderWitness = {
+      renderedFrames: window.__soakRenderedFrames,
+      frameNumber: scene.frameState?.frameNumber ?? null,
+      enabled: app.dataManager.isEnabled('local-datacenters'),
+      computed: lod?.computed === true,
+      total: Number.isInteger(lod?.total) ? lod.total : null,
+      active: Number.isInteger(lod?.active) ? lod.active : null,
+    };
+  });
+}
+
+export function startSoakDatacenterPreflightWitnessInPage() {
+  window.__soakDatacenterPreflightActive = true;
+  window.__soakDatacenterRenderWitness = null;
+  return window.__soakRenderedFrames ?? null;
+}
+
+export function stopSoakDatacenterPreflightWitnessInPage() {
+  window.__soakDatacenterPreflightActive = false;
+}
+
+export async function stopSoakDatacenterPreflightWitness(page, validation) {
+  try {
+    await page.evaluate(stopSoakDatacenterPreflightWitnessInPage);
+    validation.preloadWitnessCollectionStopped = true;
+  } catch (cleanupError) {
+    validation.preloadWitnessCollectionStopped = false;
+    if (validation.status === 'validated') {
+      validation.status = 'failed';
+      validation.failureReason =
+        cleanupError?.message || 'Datacenter preflight witness cleanup failed.';
+      throw cleanupError;
+    }
+    validation.failureReason +=
+      '; preflight witness cleanup failed: ' +
+      (cleanupError?.message || String(cleanupError));
+  }
+}
+
+export function evaluateSoakDatacenterEnabledState(
+  state,
+  expectedFeatureCount,
+) {
+  const enabled = state?.enabled === true;
+  const lod = state?.lod;
+  const computed = lod?.computed === true;
+  const total = Number.isInteger(lod?.total) ? lod.total : null;
+  const active = Number.isInteger(lod?.active) ? lod.active : null;
+  const populationObserved = total === expectedFeatureCount;
+  const renderableObserved = active !== null && active > 0;
+  const renderedFrameObserved = state?.renderedFrameObserved === true;
+  return {
+    enabled,
+    computed,
+    total,
+    active,
+    populationObserved,
+    renderableObserved,
+    renderedFrameObserved,
+    observed:
+      enabled &&
+      computed &&
+      populationObserved &&
+      renderableObserved &&
+      renderedFrameObserved,
+    failureReason: !enabled
+      ? 'layer-not-enabled'
+      : !computed
+        ? 'lod-not-computed'
+        : !populationObserved
+          ? 'materialized-population-mismatch'
+          : !renderableObserved
+            ? 'no-renderable-feature-in-view'
+            : !renderedFrameObserved
+              ? 'no-completed-visible-frame'
+              : null,
+  };
+}
+
+export function evaluateSoakDatacenterDisabledState(state, renderedFrameStart) {
+  const enabled = state?.enabled === true;
+  const computed = state?.computed === true;
+  const total = Number.isInteger(state?.total) ? state.total : null;
+  const active = Number.isInteger(state?.active) ? state.active : null;
+  const renderedFrames = Number.isFinite(state?.renderedFrames)
+    ? state.renderedFrames
+    : null;
+  const frameNumber = Number.isFinite(state?.frameNumber)
+    ? state.frameNumber
+    : null;
+  const renderedFrameObserved =
+    Number.isFinite(renderedFrameStart) &&
+    renderedFrames !== null &&
+    renderedFrames > renderedFrameStart;
+  return {
+    enabled,
+    computed,
+    total,
+    active,
+    renderedFrames,
+    frameNumber,
+    renderedFrameObserved,
+    observed:
+      !enabled &&
+      !computed &&
+      total === 0 &&
+      active === 0 &&
+      renderedFrameObserved,
+  };
+}
+
+async function assertSoakConsoleOwnership(page) {
+  const ownership = await flushFixturePageConsoleOwnership(page);
+  if (
+    !ownership ||
+    ownership.pending !== 0 ||
+    ownership.skipped !== 0 ||
+    ownership.errors !== 0
+  )
+    throw new Error(
+      'Rendered soak console handle ownership did not drain cleanly: ' +
+        JSON.stringify(ownership),
+    );
+  return ownership;
+}
+
+export function readNativeResolutionEvidenceInPage() {
+  const app = window.__godsEyeView;
+  const viewer = app?.viewer;
+  const canvas = viewer?.scene?.canvas;
+  const globe = viewer?.scene?.globe;
+  if (!viewer || !canvas || !globe)
+    throw new Error('Native resolution evidence needs an active viewer.');
+  return {
+    devicePixelRatio: window.devicePixelRatio,
+    canvas: {
+      clientWidth: canvas.clientWidth,
+      clientHeight: canvas.clientHeight,
+      width: canvas.width,
+      height: canvas.height,
+    },
+    sceneDrawingBuffer: {
+      width: viewer.scene.drawingBufferWidth,
+      height: viewer.scene.drawingBufferHeight,
+    },
+    resolutionScale: viewer.resolutionScale,
+    useBrowserRecommendedResolution: viewer.useBrowserRecommendedResolution,
+    maximumScreenSpaceError: globe.maximumScreenSpaceError,
+  };
+}
+
+export function assertNativeResolutionEvidence(
+  evidence,
+  expectedDpr,
+  label,
+  expectedGeometry = null,
+) {
+  if (
+    typeof expectedDpr !== 'number' ||
+    !Number.isFinite(expectedDpr) ||
+    expectedDpr <= 0
+  )
+    throw new TypeError('Native device pixel ratio is invalid.');
+  if (
+    typeof evidence?.devicePixelRatio !== 'number' ||
+    !Number.isFinite(evidence.devicePixelRatio) ||
+    evidence.devicePixelRatio <= 0 ||
+    Math.abs(evidence.devicePixelRatio - expectedDpr) > 0.01
+  )
+    throw new Error(`${label} native device pixel ratio changed.`);
+  if (
+    typeof evidence?.useBrowserRecommendedResolution !== 'boolean' ||
+    !Number.isFinite(evidence?.resolutionScale) ||
+    !Number.isFinite(evidence?.maximumScreenSpaceError)
+  )
+    throw new Error(`${label} native sharpness settings are unavailable.`);
+  const expectedSettings = expectedGeometry || {
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+  };
+  if (
+    evidence.useBrowserRecommendedResolution !==
+      expectedSettings.useBrowserRecommendedResolution ||
+    evidence.resolutionScale !== expectedSettings.resolutionScale ||
+    evidence.maximumScreenSpaceError !==
+      expectedSettings.maximumScreenSpaceError
+  )
+    throw new Error(`${label} native sharpness settings changed.`);
+  const canvas = evidence?.canvas;
+  const expectedCanvas = expectedGeometry?.canvas || {
+    clientWidth: 1440,
+    clientHeight: 1000,
+    width: Math.floor(1440 * expectedDpr),
+    height: Math.floor(1000 * expectedDpr),
+  };
+  if (
+    !Number.isInteger(canvas?.clientWidth) ||
+    !Number.isInteger(canvas?.clientHeight) ||
+    canvas.clientWidth <= 0 ||
+    canvas.clientHeight <= 0 ||
+    canvas.clientWidth !== expectedCanvas.clientWidth ||
+    canvas.clientHeight !== expectedCanvas.clientHeight ||
+    canvas.width !== expectedCanvas.width ||
+    canvas.height !== expectedCanvas.height ||
+    evidence.sceneDrawingBuffer?.width !== canvas.width ||
+    evidence.sceneDrawingBuffer?.height !== canvas.height
+  )
+    throw new Error(`${label} native drawing buffer differs from CSS size.`);
+  return evidence;
+}
+
+export function resolveNativeSoakViewport(nativeDpr) {
+  if (!Number.isFinite(nativeDpr) || nativeDpr <= 0)
+    throw new TypeError('Native device pixel ratio is invalid.');
+  return { width: 1440, height: 1000, deviceScaleFactor: nativeDpr };
+}
 
 /** Normalize the fixture's geographic center so soak evidence names its view. */
 export function resolveRenderedSoakLocation(location = {}) {
@@ -106,11 +786,80 @@ export async function createRenderedSoakDriver(
     expectedCommit,
     prewarmApplication = false,
     location,
+    nativeResolution = false,
+    nativeWindowViewport = false,
   } = {},
 ) {
   const soakLocation = resolveRenderedSoakLocation(location);
-  const browser = await launchFixtureBrowser(browserOptions);
+  const soakShareHash = createSoakFixtureShareHash(soakLocation);
+  const resolvedBrowserOptions = resolveNativeWindowBrowserOptions(
+    browserOptions,
+    {
+      nativeResolution,
+      nativeWindowViewport,
+    },
+  );
+  if (nativeWindowViewport) {
+    assert.equal(
+      process.platform,
+      'win32',
+      'Native-window v1 requires the Windows desktop',
+    );
+    assert.equal(
+      prewarmApplication,
+      false,
+      'Native-window v1 requires a fresh un-emulated page',
+    );
+  }
+  const browser = await launchFixtureBrowser({
+    ...resolvedBrowserOptions,
+    ...(nativeResolution ? { defaultViewport: null } : {}),
+  });
   const closeBrowser = createOwnedSoakCloser(browser);
+  let diagnosticsPage = null;
+  let nativeWindowOwner = null;
+  const nativeWindowEvidence = {};
+  let closePromise = null;
+  const closeSoak = () => {
+    if (closePromise) return closePromise;
+    closePromise = (async () => {
+      let diagnosticsError = null;
+      let nativeWindowGeometryHelper = null;
+      try {
+        if (diagnosticsPage)
+          await cleanupFixturePageDiagnostics(diagnosticsPage);
+      } catch (error) {
+        diagnosticsError = error;
+      }
+      try {
+        nativeWindowGeometryHelper =
+          (await nativeWindowOwner?.dispose())?.hostQueryCleanup || null;
+      } catch (error) {
+        diagnosticsError ||= error;
+        nativeWindowGeometryHelper =
+          error.nativeWindowGeometryHelperCleanup || null;
+      }
+      let browserClose;
+      let browserCloseError = null;
+      try {
+        browserClose = await closeBrowser();
+      } catch (error) {
+        browserCloseError = error;
+        browserClose = error.browserClose || { closeCompleted: false };
+      }
+      if (nativeWindowGeometryHelper)
+        browserClose.nativeWindowGeometryHelper = nativeWindowGeometryHelper;
+      if (diagnosticsError) {
+        diagnosticsError.browserClose = browserClose;
+        if (browserCloseError)
+          diagnosticsError.cleanupError = browserCloseError;
+        throw diagnosticsError;
+      }
+      if (browserCloseError) throw browserCloseError;
+      return browserClose;
+    })();
+    return closePromise;
+  };
   let startupPrewarm = null;
   let cameraFailure = true;
   let cameraHealthCalls = 0;
@@ -118,6 +867,45 @@ export async function createRenderedSoakDriver(
   const cameraHealthHistory = [];
   let archiveFailure = true;
   let archiveCalls = 0;
+  const datacenterFixture = createSoakDatacenterFixture(soakLocation);
+  const datacenterAssetRequests = [];
+  const datacenterPreparedRequests = new Map();
+  const datacenterFixtureValidation = {
+    schema: SOAK_DATACENTER_FIXTURE_SCHEMA,
+    fulfillmentProtocol: 'cdp-fetch-fulfilled-hash-count-v1',
+    status: 'pending',
+    requestCount: 0,
+    preparedRequestCount: 0,
+    fulfilledRequestCount: 0,
+    applicationOrigin: new URL(base).origin,
+    assetOrigin: null,
+    assetPath: null,
+    responseStatus: null,
+    expectedBodySha256: datacenterFixture.bodySha256,
+    expectedFeatureCount: datacenterFixture.featureCount,
+    bodySha256: null,
+    deliveredFeatureCount: null,
+    materializedFeatureCount: null,
+    disabledMaterializedFeatureCount: null,
+    disabledRenderableCount: null,
+    setupTiming: 'unmeasured-before-interaction-samples',
+    preloadEnabledObserved: false,
+    preloadEnabledState: null,
+    preloadCameraPose: null,
+    preloadFailureCameraPose: null,
+    preloadRenderedFrameStart: null,
+    preloadRenderedFrameEnd: null,
+    preloadRenderWitness: null,
+    preloadRenderedFrameObserved: false,
+    preloadDisabledRenderedFrameStart: null,
+    preloadDisabledRenderedFrameEnd: null,
+    preloadDisabledRenderWitness: null,
+    preloadDisabledRenderedFrameObserved: false,
+    preloadWitnessCollectionStopped: false,
+    preloadDisabledObserved: false,
+    failureReason: null,
+  };
+  let datacenterFixtureValidationPromise = null;
   const png = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=',
     'base64',
@@ -133,11 +921,68 @@ export async function createRenderedSoakDriver(
       startupPrewarm = await prewarmRenderedApplication(browser, base);
       console.log(`SOAK prewarm ${startupPrewarm.status}`);
     }
+    const nativePage = nativeResolution ? await browser.newPage() : null;
+    const nativeDpr = nativePage
+      ? await nativePage.evaluate(() => window.devicePixelRatio)
+      : null;
+    if (nativeResolution && (!Number.isFinite(nativeDpr) || nativeDpr <= 0))
+      throw new Error('Native device pixel ratio could not be observed.');
+    if (nativeWindowViewport) {
+      nativeWindowOwner = await createNativeWindowViewportOwner({
+        page: nativePage,
+        browserPid: browser.process()?.pid,
+        browserOptions: resolvedBrowserOptions,
+      });
+      assert.equal(nativeWindowOwner.nativeDpr, nativeDpr);
+      nativeWindowEvidence.schema = nativeWindowOwner.schema;
+      nativeWindowEvidence.configured = nativeWindowOwner.configured;
+    }
     const { page, errors, verifyNetwork } = await prepareFixturePage(
       browser,
       base,
       {
+        exclusiveConsoleHandleOwnership: true,
+        ...(nativeWindowViewport ? { nativeWindowViewport: true } : {}),
+        ...(nativePage
+          ? {
+              page: nativePage,
+              ...(!nativeWindowViewport
+                ? { viewport: resolveNativeSoakViewport(nativeDpr) }
+                : {}),
+            }
+          : {}),
+        onFulfilled({ requestId, url, status, bodyBase64 }) {
+          let fulfilledUrl;
+          try {
+            fulfilledUrl = new URL(url);
+          } catch {
+            return;
+          }
+          if (!isSoakDatacenterAssetRequest(fulfilledUrl.href, base)) return;
+          const bytes = Buffer.from(bodyBase64, 'base64');
+          const body = bytes.toString('utf8');
+          const rows = body.split(/\r?\n/).filter(Boolean);
+          const bodySha256 = createHash('sha256').update(bytes).digest('hex');
+          const prepared = datacenterPreparedRequests.get(requestId);
+          datacenterFixtureValidation.fulfilledRequestCount++;
+          datacenterFixtureValidation.responseStatus = status;
+          datacenterFixtureValidation.bodySha256 = bodySha256;
+          datacenterFixtureValidation.deliveredFeatureCount = rows.length;
+          if (prepared) {
+            const record = prepared.record;
+            record.fulfilled = true;
+            record.responseStatus = status;
+            record.bodySha256 = bodySha256;
+            record.deliveredFeatureCount = rows.length;
+            datacenterPreparedRequests.delete(requestId);
+          } else {
+            datacenterFixtureValidation.failureReason =
+              'Fulfilled fixture response did not match a prepared request.';
+          }
+        },
         respond(url, request) {
+          const liveFlights = respondToSoakLiveFlights(url, request, base);
+          if (liveFlights) return liveFlights;
           if (url.hostname === 'terrain.reearth.land')
             return {
               status: 404,
@@ -145,29 +990,34 @@ export async function createRenderedSoakDriver(
               body: 'fixture terrain unavailable',
             };
           // Keep the hermetic soak representative of the real infrastructure
-          // layer while bounding Cesium's data-source lifecycle. The production
-          // file is several thousand features and is covered by the layer's
-          // focused tests; the mixed-use soak must measure retained resources
-          // from repeated journeys rather than fixture volume.
-          if (url.pathname.endsWith('/datacenters.geojsonl'))
+          // layer while bounding Cesium's data-source lifecycle. Vite emits
+          // this imported asset as /assets/datacenters-<hash>.geojsonl.
+          if (isSoakDatacenterAssetRequest(url.href, base)) {
+            const prepared = {
+              origin: url.origin,
+              pathname: url.pathname,
+              prepared: true,
+              fulfilled: false,
+              responseStatus: null,
+              bodySha256: null,
+              deliveredFeatureCount: null,
+            };
+            if (datacenterAssetRequests.length < 4)
+              datacenterAssetRequests.push(prepared);
+            if (datacenterPreparedRequests.size < 4)
+              datacenterPreparedRequests.set(request.requestId, {
+                record: prepared,
+              });
+            datacenterFixtureValidation.requestCount++;
+            datacenterFixtureValidation.preparedRequestCount++;
+            datacenterFixtureValidation.assetOrigin = url.origin;
+            datacenterFixtureValidation.assetPath = url.pathname;
             return {
               status: 200,
               contentType: 'application/x-ndjson',
-              body: Array.from({ length: 8 }, (_, n) =>
-                JSON.stringify({
-                  type: 'Feature',
-                  id: 'way/' + (n + 1),
-                  properties: { name: 'Synthetic datacenter ' + n },
-                  geometry: {
-                    type: 'Point',
-                    coordinates: [
-                      soakLocation.longitude + n * 0.002,
-                      soakLocation.latitude,
-                    ],
-                  },
-                }),
-              ).join('\n'),
+              body: datacenterFixture.body,
             };
+          }
           if (url.pathname === '/api/cctv/sources')
             return json({
               sources: [0, 1].map((n) => ({
@@ -242,6 +1092,7 @@ export async function createRenderedSoakDriver(
         },
       },
     );
+    diagnosticsPage = page;
     await page.evaluateOnNewDocument(installWorkerDiagnostics);
     // Save-as uses a native prompt in production. The application normally
     // replaces window.prompt during fixture boot, but keep the soak setup
@@ -258,7 +1109,20 @@ export async function createRenderedSoakDriver(
       // activation allowance outside the measured soak interval; ordinary
       // browser gates retain the stricter shared default.
       applicationReadyTimeoutMs: 180_000,
+      hash: soakShareHash,
     });
+    if (nativeWindowOwner)
+      nativeWindowEvidence.startup = await nativeWindowOwner.capture(
+        'application-startup',
+      );
+    const initialNativeResolution = nativeResolution
+      ? assertNativeResolutionEvidence(
+          await page.evaluate(readNativeResolutionEvidenceInPage),
+          nativeDpr,
+          'Initial soak',
+          nativeWindowEvidence.startup?.page.nativeResolution ?? null,
+        )
+      : null;
     console.log('SOAK application ready');
     const applicationCommit = await page.evaluate(
       () =>
@@ -300,8 +1164,23 @@ export async function createRenderedSoakDriver(
       await app.aircraftRecording.stop('fixture-ready');
     }, recordingFrames);
     console.log('SOAK boot application');
-    await bootFixturePage(page, base);
+    // Seeded recordings are read when the application initializes. The
+    // share-link restore can canonicalize its fragment, so the second
+    // bootFixturePage navigation must start from a fresh document instead of
+    // relying on a same-document hash navigation to reload the app.
+    await bootSoakFixtureFromFreshDocument(page, base, {
+      hash: soakShareHash,
+    });
+    if (nativeWindowOwner)
+      nativeWindowEvidence.freshDocumentRestore =
+        await nativeWindowOwner.capture('fresh-document-restore');
     console.log('SOAK application ready');
+    const recordingOptionDeadlineAt = Date.now() + 30_000;
+    await waitForReplayState(
+      'seeded-recording-option',
+      hasSoakRecordingOptionInPage,
+      recordingOptionDeadlineAt,
+    );
     const soakPhase = (phase, operation, diagnosticContext) =>
       runWorkspaceFixturePhase(page, phase, operation, {
         diagnosticContext,
@@ -359,12 +1238,7 @@ export async function createRenderedSoakDriver(
     );
     const ids = [firstId, secondId];
     const session = await page.createCDPSession();
-    await page.evaluate(() => {
-      window.__soakRenderedFrames = 0;
-      window.__godsEyeView.viewer.scene.postRender.addEventListener(
-        () => window.__soakRenderedFrames++,
-      );
-    });
+    await page.evaluate(installSoakDatacenterPostRenderWitnessInPage);
     const renderer = await page.evaluate(() => {
       const canvas = window.__godsEyeView.viewer.scene.canvas;
       const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
@@ -414,6 +1288,34 @@ export async function createRenderedSoakDriver(
             state,
           });
         throw error;
+      }
+    }
+    async function replayStateFailure(phase, error) {
+      const state = await page
+        .evaluate(readSoakReplayDiagnosticInPage, phase)
+        .catch((stateError) => ({
+          phase,
+          observationError:
+            typeof stateError?.name === 'string' &&
+            /^[A-Za-z][A-Za-z0-9_.-]{0,39}$/.test(stateError.name)
+              ? stateError.name
+              : 'Error',
+        }));
+      error.message += '; replay ' + phase + ' state: ' + JSON.stringify(state);
+      throw error;
+    }
+    async function waitForReplayState(
+      phase,
+      predicate,
+      deadlineAt = Date.now() + 30_000,
+    ) {
+      try {
+        await page.waitForFunction(predicate, {
+          polling: 100,
+          timeout: Math.max(1, deadlineAt - Date.now()),
+        });
+      } catch (error) {
+        await replayStateFailure(phase, error);
       }
     }
     async function waitForCameraState(phase, predicate, timeout = 30_000) {
@@ -547,6 +1449,11 @@ export async function createRenderedSoakDriver(
         timeoutMs: RENDERED_WORKSPACE_TIMEOUT_MS,
         onProgress: onWorkspacePhase,
       });
+      if (nativeWindowOwner)
+        nativeWindowEvidence.latestWorkspaceRestore =
+          await nativeWindowOwner.capture(
+            'workspace-restore-start-' + iteration,
+          );
       await importFixtureGeometry(page, 'Rendered soak ' + iteration, {
         onProgress: onWorkspacePhase,
       });
@@ -626,32 +1533,65 @@ export async function createRenderedSoakDriver(
       // can open a fresh, unpinned camera evidence view.
       await clickControl(page, '#evidence-panel-close');
       console.log('SOAK replay');
-      await page.select(
-        '.investigation-timeline-aircraft-select',
-        'recording-rendered-soak',
+      const replaySelectionDeadlineAt = Date.now() + 30_000;
+      await waitForReplayState(
+        'recording-option',
+        hasSoakRecordingOptionInPage,
+        replaySelectionDeadlineAt,
       );
-      await page.waitForFunction(
-        () =>
-          window.__godsEyeView.aircraftSource.getState().mode === 'recorded',
-      );
-      await page.evaluate(async (index) => {
-        const app = window.__godsEyeView;
-        const slider = document.querySelector(
-          '.investigation-timeline-slider-control',
+      let selectedRecordingValues;
+      try {
+        selectedRecordingValues = await page.select(
+          '.investigation-timeline-aircraft-select',
+          'recording-rendered-soak',
         );
-        slider.value = index % 2 ? slider.min : slider.max;
-        slider.dispatchEvent(new Event('input', { bubbles: true }));
-        await app.dataManager.setEnabled('flights', true);
-        await app.dataManager.refreshLayer('flights');
-        if (!(await app.aircraftSource.getSnapshot()).records.length)
-          throw new Error('Replay lost observations');
-      }, iteration);
-      await page.waitForFunction(
+      } catch (error) {
+        await replayStateFailure('recording-selection', error);
+      }
+      if (!selectedRecordingValues?.includes('recording-rendered-soak'))
+        await replayStateFailure(
+          'recording-selection',
+          new Error('Soak recording option was not selected'),
+        );
+      await waitForReplayState(
+        'recording-selection',
+        () =>
+          document.querySelector('.investigation-timeline-aircraft-select')
+            ?.value === 'recording-rendered-soak',
+        replaySelectionDeadlineAt,
+      );
+      await waitForReplayState(
+        'recording-load',
+        () => {
+          const source = window.__godsEyeView?.aircraftSource;
+          const state = source?.getState?.();
+          const timeline = source?.getTimeline?.();
+          return (
+            state?.mode === 'recorded' &&
+            state.recordingId === 'recording-rendered-soak' &&
+            Number.isFinite(state.recordCount) &&
+            state.recordCount > 0 &&
+            Array.isArray(timeline?.ticks) &&
+            timeline.ticks.length >= 2
+          );
+        },
+        replaySelectionDeadlineAt,
+      );
+      console.log('SOAK replay source loaded');
+      try {
+        await page.evaluate(seekRenderedSoakRecordingInPage, iteration);
+      } catch (error) {
+        await replayStateFailure('seek-source-readiness', error);
+      }
+      console.log('SOAK replay endpoint committed');
+      await waitForReplayState(
+        'seek-display-readiness',
         () =>
           window.__godsEyeView.dataManager.layers
             .get('flights')
             .module.getStats().count > 0,
       );
+      console.log('SOAK replay materialized');
       // Real proxy-shaped health, image delivery/decoding and automatic alternative.
       console.log('SOAK camera outage');
       cameraFailure = true;
@@ -837,6 +1777,9 @@ export async function createRenderedSoakDriver(
       await openWorkspace(page, id, {
         timeoutMs: RENDERED_WORKSPACE_TIMEOUT_MS,
       });
+      if (nativeWindowOwner)
+        nativeWindowEvidence.latestWorkspaceRestore =
+          await nativeWindowOwner.capture('workspace-restore-end-' + iteration);
       assert.deepEqual(errors, []);
       return {
         sourceToggles: 8,
@@ -861,8 +1804,289 @@ export async function createRenderedSoakDriver(
       environment: readHostEnvironment(),
       hardwareRenderingValidated: renderingEvidence.accelerationVerified,
       browserVersion: await browser.version(),
+      nativeResolution: nativeResolution
+        ? { observedDpr: nativeDpr, initial: initialNativeResolution }
+        : null,
+      ...(nativeWindowOwner
+        ? {
+            nativeWindowViewport: nativeWindowEvidence,
+            async captureNativeWindowEvidence(label) {
+              const evidence = await nativeWindowOwner.capture(label);
+              nativeWindowEvidence.latestCheckpoint = evidence;
+              return evidence;
+            },
+          }
+        : {}),
       runCycle: cycle,
-      metrics: () => page.metrics(),
+      async validateDatacenterSoakFixture() {
+        if (!datacenterFixtureValidationPromise)
+          datacenterFixtureValidationPromise = (async () => {
+            datacenterFixtureValidation.status = 'running';
+            try {
+              datacenterFixtureValidation.preloadRenderedFrameStart =
+                await page.evaluate(startSoakDatacenterPreflightWitnessInPage);
+              datacenterFixtureValidation.preloadCameraPose =
+                await page.evaluate(
+                  prepareSoakDatacenterFixtureViewInPage,
+                  soakLocation,
+                );
+              await page.evaluate(async () => {
+                const app = window.__godsEyeView;
+                if (app.dataManager.isEnabled('local-datacenters'))
+                  throw new Error(
+                    'Datacenter fixture preflight requires a disabled initial layer.',
+                  );
+                await app.dataManager.setEnabled('local-datacenters', true, {
+                  origin: 'programmatic',
+                });
+              });
+              try {
+                await page.waitForFunction(
+                  (frameStart) => {
+                    return (
+                      Number.isFinite(frameStart) &&
+                      window.__soakDatacenterRenderWitness?.renderedFrames >
+                        frameStart &&
+                      window.__soakDatacenterRenderWitness.enabled === true &&
+                      window.__soakDatacenterRenderWitness.computed === true &&
+                      window.__soakDatacenterRenderWitness.total > 0 &&
+                      window.__soakDatacenterRenderWitness.active > 0
+                    );
+                  },
+                  { timeout: 30_000 },
+                  datacenterFixtureValidation.preloadRenderedFrameStart,
+                );
+              } catch (error) {
+                const lastState = await page
+                  .evaluate(() => {
+                    const app = window.__godsEyeView;
+                    const module =
+                      app?.dataManager?.layers?.get(
+                        'local-datacenters',
+                      )?.module;
+                    return {
+                      enabled:
+                        app?.dataManager?.isEnabled?.('local-datacenters'),
+                      lod: module?.getLodDiagnostics?.() || null,
+                      renderedFrames: window.__soakRenderedFrames ?? null,
+                      renderWitness:
+                        window.__soakDatacenterRenderWitness ?? null,
+                    };
+                  })
+                  .catch(() => null);
+                if (lastState)
+                  lastState.cameraPose = await page
+                    .evaluate(readSoakDatacenterCameraPoseInPage)
+                    .catch(() => null);
+                datacenterFixtureValidation.preloadRenderedFrameEnd =
+                  lastState?.renderedFrames ?? null;
+                datacenterFixtureValidation.preloadFailureCameraPose =
+                  lastState?.cameraPose ?? null;
+                datacenterFixtureValidation.preloadRenderWitness =
+                  lastState?.renderWitness ?? null;
+                datacenterFixtureValidation.preloadRenderedFrameObserved =
+                  Number.isFinite(
+                    datacenterFixtureValidation.preloadRenderedFrameStart,
+                  ) &&
+                  lastState?.renderWitness?.renderedFrames >
+                    datacenterFixtureValidation.preloadRenderedFrameStart &&
+                  lastState?.renderWitness?.enabled === true &&
+                  lastState?.renderWitness?.computed === true &&
+                  lastState?.renderWitness?.total ===
+                    datacenterFixture.featureCount &&
+                  lastState?.renderWitness?.active > 0;
+                datacenterFixtureValidation.materializedFeatureCount =
+                  lastState?.lod?.total ?? null;
+                datacenterFixtureValidation.preloadEnabledState =
+                  evaluateSoakDatacenterEnabledState(
+                    {
+                      ...lastState,
+                      renderedFrameObserved:
+                        datacenterFixtureValidation.preloadRenderedFrameObserved,
+                    },
+                    datacenterFixture.featureCount,
+                  );
+                error.message +=
+                  '; bounded datacenter preflight state: ' +
+                  JSON.stringify({
+                    cameraPose: datacenterFixtureValidation.preloadCameraPose,
+                    failureCameraPose:
+                      datacenterFixtureValidation.preloadFailureCameraPose,
+                    frameStart:
+                      datacenterFixtureValidation.preloadRenderedFrameStart,
+                    frameEnd:
+                      datacenterFixtureValidation.preloadRenderedFrameEnd,
+                    enabledState:
+                      datacenterFixtureValidation.preloadEnabledState,
+                  });
+                throw error;
+              }
+              const diagnostics = await page.evaluate(() => {
+                const app = window.__godsEyeView;
+                const module =
+                  app.dataManager.layers.get('local-datacenters')?.module;
+                return {
+                  enabled: app.dataManager.isEnabled('local-datacenters'),
+                  lod: module?.getLodDiagnostics?.() || null,
+                  renderedFrames: window.__soakRenderedFrames ?? null,
+                  renderWitness: window.__soakDatacenterRenderWitness ?? null,
+                };
+              });
+              datacenterFixtureValidation.preloadRenderedFrameEnd =
+                diagnostics.renderedFrames;
+              datacenterFixtureValidation.preloadRenderWitness =
+                diagnostics.renderWitness;
+              datacenterFixtureValidation.preloadRenderedFrameObserved =
+                Number.isFinite(
+                  datacenterFixtureValidation.preloadRenderedFrameStart,
+                ) &&
+                diagnostics.renderWitness?.renderedFrames >
+                  datacenterFixtureValidation.preloadRenderedFrameStart &&
+                diagnostics.renderWitness?.enabled === true &&
+                diagnostics.renderWitness?.computed === true &&
+                diagnostics.renderWitness?.total ===
+                  datacenterFixture.featureCount &&
+                diagnostics.renderWitness?.active > 0;
+              datacenterFixtureValidation.materializedFeatureCount =
+                diagnostics.lod?.total ?? null;
+              datacenterFixtureValidation.preloadEnabledState =
+                evaluateSoakDatacenterEnabledState(
+                  {
+                    ...diagnostics,
+                    renderedFrameObserved:
+                      datacenterFixtureValidation.preloadRenderedFrameObserved,
+                  },
+                  datacenterFixture.featureCount,
+                );
+              datacenterFixtureValidation.preloadEnabledObserved =
+                datacenterFixtureValidation.preloadEnabledState.observed;
+              datacenterFixtureValidation.preloadDisabledRenderedFrameStart =
+                diagnostics.renderedFrames;
+              await page.evaluate(async () => {
+                const app = window.__godsEyeView;
+                await app.dataManager.setEnabled('local-datacenters', false, {
+                  origin: 'programmatic',
+                });
+                app.viewer.scene.requestRender();
+              });
+              await page.waitForFunction(
+                (frameStart) => {
+                  const witness = window.__soakDatacenterRenderWitness;
+                  return (
+                    Number.isFinite(frameStart) &&
+                    witness?.renderedFrames > frameStart &&
+                    witness.enabled === false &&
+                    witness.computed === false &&
+                    witness.total === 0 &&
+                    witness.active === 0
+                  );
+                },
+                { timeout: 30_000 },
+                datacenterFixtureValidation.preloadDisabledRenderedFrameStart,
+              );
+              const disabledWitness = await page.evaluate(
+                () => window.__soakDatacenterRenderWitness,
+              );
+              const disabledState = evaluateSoakDatacenterDisabledState(
+                disabledWitness,
+                datacenterFixtureValidation.preloadDisabledRenderedFrameStart,
+              );
+              datacenterFixtureValidation.preloadDisabledRenderedFrameEnd =
+                disabledState.renderedFrames;
+              datacenterFixtureValidation.preloadDisabledRenderWitness =
+                disabledWitness;
+              datacenterFixtureValidation.preloadDisabledRenderedFrameObserved =
+                disabledState.renderedFrameObserved;
+              datacenterFixtureValidation.disabledMaterializedFeatureCount =
+                disabledState.total;
+              datacenterFixtureValidation.disabledRenderableCount =
+                disabledState.active;
+              datacenterFixtureValidation.preloadDisabledObserved =
+                disabledState.observed;
+              assert.equal(
+                datacenterFixtureValidation.requestCount,
+                1,
+                'exactly one same-origin datacenter fixture response must be intercepted',
+              );
+              assert.equal(
+                datacenterFixtureValidation.preparedRequestCount,
+                1,
+                'exactly one datacenter fixture response must be prepared',
+              );
+              assert.equal(
+                datacenterFixtureValidation.fulfilledRequestCount,
+                1,
+                'the prepared datacenter fixture response must be fulfilled',
+              );
+              assert.equal(
+                datacenterFixtureValidation.responseStatus,
+                200,
+                'the fulfilled datacenter fixture response must be successful',
+              );
+              assert.equal(
+                datacenterFixtureValidation.bodySha256,
+                datacenterFixtureValidation.expectedBodySha256,
+                'the fulfilled response hash must match the prepared fixture',
+              );
+              assert.equal(
+                datacenterFixtureValidation.deliveredFeatureCount,
+                datacenterFixtureValidation.expectedFeatureCount,
+                'the fulfilled response population must match the prepared fixture',
+              );
+              assert.equal(
+                datacenterAssetRequests[0]?.fulfilled,
+                true,
+                'the bounded request history must prove fulfillment',
+              );
+              assert.equal(
+                diagnostics.lod?.total,
+                datacenterFixture.featureCount,
+                'the materialized datacenter population must equal the delivered fixture',
+              );
+              assert.equal(
+                datacenterFixtureValidation.preloadEnabledObserved,
+                true,
+                'fixture preflight must show at least one materialized feature in the declared camera view',
+              );
+              assert.equal(
+                datacenterFixtureValidation.preloadDisabledObserved,
+                true,
+                'fixture preflight must leave the layer disabled after materialization',
+              );
+              datacenterFixtureValidation.status = 'validated';
+            } catch (error) {
+              datacenterFixtureValidation.status = 'failed';
+              datacenterFixtureValidation.preloadFailureCameraPose = await page
+                .evaluate(readSoakDatacenterCameraPoseInPage)
+                .catch(() => null);
+              datacenterFixtureValidation.failureReason = `${error?.message || String(error)}; final fixture camera pose: ${JSON.stringify(datacenterFixtureValidation.preloadFailureCameraPose)}`;
+              throw error;
+            } finally {
+              await stopSoakDatacenterPreflightWitness(
+                page,
+                datacenterFixtureValidation,
+              );
+            }
+          })();
+        await datacenterFixtureValidationPromise;
+        return createSoakDatacenterFixtureReceipt(
+          datacenterFixtureValidation,
+          datacenterAssetRequests,
+        );
+      },
+      readDatacenterSoakFixtureReceipt() {
+        return createSoakDatacenterFixtureReceipt(
+          datacenterFixtureValidation,
+          datacenterAssetRequests,
+        );
+      },
+      async metrics() {
+        const consoleHandleOwnership = await assertSoakConsoleOwnership(page);
+        return {
+          ...(await page.metrics()),
+          consoleHandleOwnership,
+        };
+      },
       /**
        * Export the synthetic recording used by the soak as a portable bundle.
        * The rendered soak runs in an isolated browser context, so a share URL
@@ -886,6 +2110,7 @@ export async function createRenderedSoakDriver(
         return recording ? createRecordingBundle(recording) : null;
       },
       async retainedMetrics() {
+        const consoleHandleOwnership = await assertSoakConsoleOwnership(page);
         await session.send('HeapProfiler.collectGarbage');
         const application = await page.evaluate(() => {
           const app = window.__godsEyeView;
@@ -899,27 +2124,43 @@ export async function createRenderedSoakDriver(
               }
             : null;
         });
+        const nativeEvidence = nativeResolution
+          ? assertNativeResolutionEvidence(
+              await page.evaluate(readNativeResolutionEvidenceInPage),
+              nativeDpr,
+              'Retained soak checkpoint',
+              initialNativeResolution,
+            )
+          : null;
+        const nativeWindowCheckpoint = nativeWindowOwner
+          ? await nativeWindowOwner.capture('retained-soak-checkpoint')
+          : null;
         return {
           ...(await page.metrics()),
           ...(await session.send('Memory.getDOMCounters')),
           application,
+          consoleHandleOwnership,
           renderedFrames: previousFrames,
+          nativeResolution: nativeEvidence,
+          ...(nativeWindowOwner
+            ? { nativeWindowViewport: nativeWindowCheckpoint }
+            : {}),
           garbageCollection: {
             status: 'completed',
             method: 'HeapProfiler.collectGarbage',
           },
         };
       },
-      close: closeBrowser,
+      close: closeSoak,
     };
   } catch (error) {
     try {
-      error.browserClose = await closeBrowser();
+      error.browserClose = await closeSoak();
     } catch (cleanupError) {
       error.browserClose = cleanupError.browserClose || {
         closeCompleted: false,
       };
-      error.cleanupError = 'Application soak browser did not close normally.';
+      error.cleanupError = cleanupError;
     }
     throw error;
   }

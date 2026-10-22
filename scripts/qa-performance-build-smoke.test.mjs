@@ -4,7 +4,14 @@ import { EventEmitter } from 'node:events';
 import { createHash } from 'node:crypto';
 import vm from 'node:vm';
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
@@ -39,6 +46,7 @@ import {
   validateMapStreamingFaultControlDocument,
   validateMapSmokeLayerPopulation,
   readProviderCpuProfileIndexSet,
+  readReceiptedCesiumWorkerContract,
   validateAustinOperatingReadinessHistoryEnvelope,
   runBoundedChild,
   validateCaptureCliReport,
@@ -47,6 +55,7 @@ import {
   projectMapStreamingJourneyFailureForSmoke,
   projectMapStreamingJourneyValidationFailureForSmoke,
 } from './qa-performance-build-smoke.mjs';
+
 import { interceptFixtureSession } from './performance/fixtureInterception.mjs';
 import {
   getMapFixtureBuildProfileGoogleApiKey,
@@ -97,6 +106,56 @@ import {
   createShaderProgramAttributionEnvelope,
   earlyRendererDocumentHook,
 } from './performance/earlyCesiumRendererProbe.mjs';
+
+test('smoke reads legacy and digest-versioned Cesium bundles from their receipts', async () => {
+  const buildRoot = await mkdtemp(path.join(os.tmpdir(), 'gev-smoke-cesium-'));
+  const bundleBytes = Buffer.from(
+    `globalThis.CESIUM_WORKERS=atob("${Buffer.from('self.postMessage("ready");').toString('base64')}");`,
+  );
+  const digest = createHash('sha256').update(bundleBytes).digest('hex');
+  try {
+    for (const bundlePath of [
+      'cesium/Cesium.js',
+      `cesium/${digest}/Cesium.js`,
+    ]) {
+      const parent = bundlePath.slice(0, bundlePath.lastIndexOf('/'));
+      const workerPath = `${parent}/Workers/createGeometry.js`;
+      await mkdir(path.join(buildRoot, ...parent.split('/')), {
+        recursive: true,
+      });
+      await writeFile(
+        path.join(buildRoot, ...bundlePath.split('/')),
+        bundleBytes,
+      );
+      const receipt = {
+        assets: [
+          { path: bundlePath, bytes: bundleBytes.length, sha256: digest },
+          { path: workerPath, bytes: 1, sha256: '0'.repeat(64) },
+        ],
+      };
+      const contract = await readReceiptedCesiumWorkerContract({
+        buildRoot,
+        receipt,
+      });
+      assert.equal(contract.bundlePath, bundlePath);
+      assert.deepEqual(contract.allowedModuleIds, ['createGeometry']);
+      await assert.rejects(
+        readReceiptedCesiumWorkerContract({
+          buildRoot,
+          receipt: {
+            assets: [
+              { ...receipt.assets[0], sha256: '0'.repeat(64) },
+              receipt.assets[1],
+            ],
+          },
+        }),
+        /bytes do not match/,
+      );
+    }
+  } finally {
+    await rm(buildRoot, { recursive: true, force: true });
+  }
+});
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MAP_SMOKE_APP_ORIGIN = 'http://127.0.0.1:4173';
@@ -387,6 +446,37 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
       'dense-investigation',
     ]),
     { firstMotionCpuProfile: true, providerFixture: 'dense-investigation' },
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
+      '--capture-tracking-cpu-profile',
+      'enabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    { trackingCpuProfile: true, providerFixture: 'dense-investigation' },
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-tracking-cpu-profile',
+        'enabled',
+        '--capture-first-motion-cpu-profile',
+        'enabled',
+        '--provider-fixture',
+        'dense-investigation',
+      ]),
+    /cannot be combined/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-tracking-cpu-profile',
+        'enabled',
+        '--provider-fixture',
+        'infrastructure-dams',
+      ]),
+    /requires the dense investigation fixture/,
   );
   assert.deepEqual(
     parseSmokeArguments([
@@ -1065,7 +1155,7 @@ test('map smoke uses native-only preparation for both exact revisions', async ()
   );
 
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
+    id: 'austin-map-streaming-synthetic-v5',
     manifestSha256: 'a'.repeat(64),
   };
   const buildProfile = {
@@ -1149,6 +1239,16 @@ test('weather smoke uses a bounded phased diagnostic without changing the defaul
     seconds: 1,
     weatherPhaseDiagnostic: false,
   });
+  assert.deepEqual(smokeCaptureSchedule('dense-investigation', true), {
+    runs: 1,
+    warmupMs: 1000,
+    seconds: 1,
+    weatherPhaseDiagnostic: false,
+  });
+  assert.throws(
+    () => smokeCaptureSchedule('infrastructure-dams', true),
+    /requires the dense investigation fixture/,
+  );
 });
 
 test('outer smoke projects only validated CLI map-journey failure evidence', () => {
@@ -1493,7 +1593,7 @@ test('fault-control build projection uses the local build receipt asset and prof
   const appCommit = 'a'.repeat(40);
   const harnessCommit = 'b'.repeat(40);
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
+    id: 'austin-map-streaming-synthetic-v5',
     manifestSha256: 'c'.repeat(64),
   };
   const receipt = {
@@ -3856,6 +3956,55 @@ test('failed later profile window preserves the earlier ordered sidecar indexes'
       const malformed = await readProviderCpuProfileIndexSet(directory);
       assert.equal(malformed.invalidIndexCount, 1);
     }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('tracking profile sidecar binds the single selected-aircraft sample', async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-tracking-profile-index-set-'),
+  );
+  try {
+    const target = {
+      scenario: 'selected-aircraft-tracking',
+      run: 1,
+      captureOrdinal: 2,
+      documentRole: 'provider-sample-2',
+      documentId: 'document-2',
+    };
+    const profileBytes = Buffer.from('tracking-profile');
+    const fileName = 'provider-selected-aircraft-tracking-1-cpu-profile.json';
+    const indexPath = path.join(
+      directory,
+      'provider-selected-aircraft-tracking-1-cpu-profile-ref.json',
+    );
+    const profile = {
+      schema: 'gev-render-boundary-cpu-profile-ref/v1',
+      status: 'complete',
+      performanceAcceptanceEligible: false,
+      fileName,
+      sha256: createHash('sha256').update(profileBytes).digest('hex'),
+      byteLength: profileBytes.byteLength,
+      profilerErrors: [],
+      target,
+    };
+    const index = {
+      schema: 'gev-provider-sample-cpu-profile-index/v1',
+      performanceAcceptanceEligible: false,
+      target,
+      profile,
+    };
+    await writeFile(path.join(directory, fileName), profileBytes);
+    await writeFile(indexPath, `${JSON.stringify(index)}\n`);
+    const accepted = await readProviderCpuProfileIndexSet(directory, true);
+    assert.equal(accepted.status, 'all-targets-recorded');
+    assert.equal(accepted.profiles.length, 1);
+    assert.deepEqual(accepted.profiles[0].target, target);
+    await writeFile(path.join(directory, fileName), 'tampered-profile');
+    const rejected = await readProviderCpuProfileIndexSet(directory, true);
+    assert.equal(rejected.status, 'partial');
+    assert.equal(rejected.invalidIndexCount, 1);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

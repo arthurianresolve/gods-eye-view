@@ -105,12 +105,15 @@ export class AdaptiveQualityController {
     this.storage = storage;
     this.now = now;
     this.policy = new AdaptiveQualityPolicy();
+    this.scene = viewer?.scene || null;
     this.mode = 'manual';
     this.manualDensity = readDensity();
     this.lastFrameAt = null;
+    this.previousDemand = null;
     this._frame = () => this._onFrame();
     this._visibility = () => {
       this.lastFrameAt = null;
+      this.previousDemand = null;
       this.policy.resetWindow();
       this._publish();
     };
@@ -181,14 +184,23 @@ export class AdaptiveQualityController {
     }
     if (this.lastFrameAt == null) {
       this.lastFrameAt = now;
+      this.previousDemand = Boolean(this.scene?.requestRenderMode);
       return;
     }
-    const result = this.policy.observe(
-      now - this.lastFrameAt,
-      now,
-      this.readDensity(),
-    );
+    // Auto is eligible only for visible, consecutive continuous-demand frames.
+    // A request-render gap (including intentional 100–250 ms periodic gaps)
+    // starts a fresh run instead of being misclassified as GPU overload.
+    const interval = now - this.lastFrameAt;
+    const demand = Boolean(this.scene?.requestRenderMode);
+    if (demand || this.previousDemand === true) {
+      this.lastFrameAt = now;
+      this.previousDemand = demand;
+      this.policy.resetWindow();
+      return;
+    }
+    const result = this.policy.observe(interval, now, this.readDensity());
     this.lastFrameAt = now;
+    this.previousDemand = demand;
     if (this.mode === 'auto' && result) {
       this.applyDensity(result.densityPct, 'auto-profile');
       this._publish(result);

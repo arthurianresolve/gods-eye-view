@@ -1,0 +1,771 @@
+{
+  "schema": "gev-failed-qualification-review/v1",
+  "reviewedAt": "2026-10-19T23:37:46.318Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-production-repeat-guarded-190c5ab6-6025a88e",
+  "error": {
+    "name": "Error",
+    "message": "Debugger pause deadline exceeded.",
+    "pauseDiagnostics": {
+      "guardChecks": 10,
+      "guardSamples": [
+        {
+          "check": 1,
+          "elapsedMs": 1189.7754999999888,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 2,
+          "elapsedMs": 1590.218899999978,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 3,
+          "elapsedMs": 1986.649700000009,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 4,
+          "elapsedMs": 2490.3459999999614,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 5,
+          "elapsedMs": 2870.259699999995,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 6,
+          "elapsedMs": 3366.728999999992,
+          "detail": {
+            "phase": 0,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 7,
+          "elapsedMs": 3725.615599999961,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 8,
+          "elapsedMs": 4117.189299999969,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 9,
+          "elapsedMs": 4601.190100000007,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 10,
+          "elapsedMs": 4985.0218999999925,
+          "detail": {
+            "phase": 2,
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        }
+      ],
+      "guardSamplesOmitted": 0,
+      "pauseTimeoutMs": 5000,
+      "pauseObserved": false
+    },
+    "pauseCleanup": {
+      "resumed": false,
+      "disabled": true,
+      "detached": true
+    }
+  },
+  "rawSha256": "a1bff771831f81a663bf5875e0a880de0790b5894434a67f59e0c628f7224556",
+  "groups": [
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-visible",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-restored",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-02-candidate",
+      "state": "hud-visible",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-02-candidate",
+      "state": "hud-restored",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-03-candidate",
+      "state": "hud-visible",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-03-candidate",
+      "state": "hud-restored",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-04-baseline",
+      "state": "hud-visible",
+      "status": "failed",
+      "count": 0,
+      "identicalEncodedPngs": false,
+      "error": {
+        "name": "Error",
+        "message": "Debugger pause deadline exceeded.",
+        "pauseDiagnostics": {
+          "guardChecks": 10,
+          "guardSamples": [
+            {
+              "check": 1,
+              "elapsedMs": 1189.7754999999888,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 2,
+              "elapsedMs": 1590.218899999978,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 3,
+              "elapsedMs": 1986.649700000009,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 4,
+              "elapsedMs": 2490.3459999999614,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 5,
+              "elapsedMs": 2870.259699999995,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 6,
+              "elapsedMs": 3366.728999999992,
+              "detail": {
+                "phase": 0,
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 7,
+              "elapsedMs": 3725.615599999961,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 8,
+              "elapsedMs": 4117.189299999969,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 9,
+              "elapsedMs": 4601.190100000007,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": false,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            },
+            {
+              "check": 10,
+              "elapsedMs": 4985.0218999999925,
+              "detail": {
+                "phase": 2,
+                "reason": null,
+                "recordingVisible": true,
+                "summaryTypingComplete": true,
+                "summaryPresent": true,
+                "documentVisible": true,
+                "documentFocused": true,
+                "gazeReady": true,
+                "hudVisible": true,
+                "hudVisibility": "visible",
+                "hudDisplay": "block",
+                "hudOpacity": 1
+              }
+            }
+          ],
+          "guardSamplesOmitted": 0,
+          "pauseTimeoutMs": 5000,
+          "pauseObserved": false
+        },
+        "pauseCleanup": {
+          "resumed": false,
+          "disabled": true,
+          "detached": true
+        }
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "kind": "same-build-restoration",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-visible",
+        "path": "slot-01-baseline/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-restored",
+        "path": "slot-01-baseline/hud-restored-1.png"
+      },
+      "changedPixels": 7751,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      }
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-visible",
+        "path": "slot-01-baseline/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-02-candidate/hud-visible-1.png"
+      },
+      "changedPixels": 7055,
+      "maximumChannelDelta": 2,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      }
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-visible",
+        "path": "slot-01-baseline/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-03-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-03-candidate/hud-visible-1.png"
+      },
+      "changedPixels": 0,
+      "maximumChannelDelta": 0,
+      "bounds": null
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-restored",
+        "path": "slot-01-baseline/hud-restored-1.png"
+      },
+      "right": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-02-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 0,
+      "maximumChannelDelta": 0,
+      "bounds": null
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-restored",
+        "path": "slot-01-baseline/hud-restored-1.png"
+      },
+      "right": {
+        "slot": "slot-03-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-03-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 7751,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      }
+    },
+    {
+      "kind": "same-build-restoration",
+      "left": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-02-candidate/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-02-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 771,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 62,
+        "minY": 68,
+        "maxX": 149,
+        "maxY": 137
+      }
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-02-candidate/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-03-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-03-candidate/hud-visible-1.png"
+      },
+      "changedPixels": 7055,
+      "maximumChannelDelta": 2,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      }
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-02-candidate/hud-restored-1.png"
+      },
+      "right": {
+        "slot": "slot-03-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-03-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 7751,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      }
+    },
+    {
+      "kind": "same-build-restoration",
+      "left": {
+        "slot": "slot-03-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-03-candidate/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-03-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-03-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 0,
+      "maximumChannelDelta": 0,
+      "bounds": null
+    }
+  ],
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 338793,
+      "sha256": "a1bff771831f81a663bf5875e0a880de0790b5894434a67f59e0c628f7224556"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-production-repeat-guarded-190c5ab6-6025a88e.mjs",
+      "bytes": 30718,
+      "sha256": "cab9112a9c1aaef1f3b5e6df3700bf28f1d0e0ca06864781271169d047e7b95c"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-2.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-3.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-2.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-3.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-02-candidate/hud-restored-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-02-candidate/hud-restored-2.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-02-candidate/hud-restored-3.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-1.png",
+      "bytes": 1522722,
+      "sha256": "3dd96aa3fe8716a14d6637f9592da5162f0905b337dd05f47c4583b21147da3e"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-2.png",
+      "bytes": 1522722,
+      "sha256": "3dd96aa3fe8716a14d6637f9592da5162f0905b337dd05f47c4583b21147da3e"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-3.png",
+      "bytes": 1522722,
+      "sha256": "3dd96aa3fe8716a14d6637f9592da5162f0905b337dd05f47c4583b21147da3e"
+    },
+    {
+      "name": "slot-03-candidate/hud-restored-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate/hud-restored-2.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate/hud-restored-3.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate/hud-visible-1.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate/hud-visible-2.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    },
+    {
+      "name": "slot-03-candidate/hud-visible-3.png",
+      "bytes": 1522755,
+      "sha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+    }
+  ],
+  "scope": "All available raw files verified on VM105. Incomplete or input-mismatched attempt retained; no acceptance and no masks or threshold changes. Whole-image pixel comparisons, when present, describe only completed groups."
+}

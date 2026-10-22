@@ -8,31 +8,61 @@ export const ALLOCATION_TEST_FILES = Object.freeze([
   'src/overlays/worldOverlayAllocation.test.mjs',
 ]);
 export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
+  'scripts/performance/decorationCaptureProof.test.mjs',
+  'scripts/performance/decorationQuantization.test.mjs',
+  'scripts/performance/nativeWindowViewport.test.mjs',
+  'scripts/performance/nativeWindowGeometrySession.test.mjs',
+  'scripts/performance/settledIdleObservation.test.mjs',
+  'scripts/performance/settledIdleQualification.test.mjs',
+  'scripts/performance/repeatedFullImageControls.test.mjs',
+  'scripts/performance/runRepeatedVisualQualification.test.mjs',
+  'scripts/performance/visualPaintSignature.test.mjs',
+  'scripts/performance/canonicalPointerHistory.test.mjs',
+  'scripts/performance/fullExtentPointerSweep.test.mjs',
+  'scripts/performance/interactionEventTiming.test.mjs',
+  'scripts/performance/startupOperatingContract.test.mjs',
   'scripts/accessibilityFocusDiagnostics.test.mjs',
   'scripts/performance/cesiumDisabledInputInertia.test.mjs',
   'scripts/performance/cesiumTerrainCollisionTransform.test.mjs',
   'scripts/apply-cesium-patches.test.mjs',
+  'scripts/audit-bundle-chunks.test.mjs',
   'scripts/performance/motionBudget.test.mjs',
   'scripts/performance/captureIntegrity.test.mjs',
   'scripts/performance/captureDiagnosticsControl.test.mjs',
   'scripts/performance/captureFailureReport.test.mjs',
   'scripts/performance/hostedRendererBackend.test.mjs',
   'scripts/performance/pairedReport.test.mjs',
+  'scripts/performance/mapFrameCaptureHome.test.mjs',
   'scripts/performance/performanceMatrix.test.mjs',
   'scripts/performance/hostedSourceProvenance.test.mjs',
   'scripts/performance/hostedNavigationDiagnostics.test.mjs',
   'scripts/performance/hostedSoakSession.test.mjs',
   'scripts/performance/candidatePerformanceEvidence.test.mjs',
+  'scripts/performance/qualificationMetrics.test.mjs',
+  'scripts/performance/qualificationBuildIdentity.test.mjs',
+  'scripts/performance/visibleButtonFeedback.test.mjs',
   'scripts/performance/webglFrameDelivery.test.mjs',
   'scripts/performance/webglStartDelay.test.mjs',
   'scripts/performance/captureComparisonContract.test.mjs',
   'scripts/performance/buildProvenance.test.mjs',
   'scripts/performance/buildSmokeContract.test.mjs',
+  'scripts/performance/nativeSharpnessProfile.test.mjs',
+  'scripts/performance/finalVisualQualification.test.mjs',
+  'scripts/performance/visibleControlVariance.test.mjs',
+  'scripts/performance/idleCadenceDisposition.test.mjs',
+  'scripts/performance/austinOperatingRenderDemandDiagnostic.test.mjs',
   'scripts/qa-performance-build-smoke.test.mjs',
   'scripts/print-qa-evidence.test.mjs',
+  'scripts/qa-application-fixtures.test.mjs',
   'scripts/performance/captureBuildProvenance.test.mjs',
+  'scripts/performance/captureProducerCli.test.mjs',
+  'scripts/performance/framebufferPreservationDiagnostic.test.mjs',
   'scripts/performance/commonSceneObserver.test.mjs',
+  'scripts/performance/consoleMessageOwnership.test.mjs',
   'scripts/performance/startupDiagnostics.test.mjs',
+  'scripts/performance/startupAttribution.test.mjs',
+  'scripts/performance/startupCpuAttribution.test.mjs',
+  'scripts/performance/startupProviderFixtureDiagnostic.test.mjs',
   'scripts/performance/profileRecoveryPageOwnership.test.mjs',
   'scripts/performance/profileRecoveryBrowserVersion.test.mjs',
   'scripts/performance/productionFlightFixture.test.mjs',
@@ -40,16 +70,20 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/pairedRendererExperiment.test.mjs',
   'scripts/performance/shaderProgramAttributionArtifact.test.mjs',
   'scripts/performance/importFrameDiagnostics.test.mjs',
+  'scripts/performance/importStatusDiagnostics.test.mjs',
   'scripts/performance/importPointState.test.mjs',
   'scripts/performance/importPointRepresentationComparison.test.mjs',
   'scripts/performance/importPointRepresentationBenefit.test.mjs',
   'scripts/performance/profileRecoveryFixtureContract.test.mjs',
   'scripts/performance/importWorkspaceLifecycle.test.mjs',
+  'scripts/performance/browserReadinessGate.test.mjs',
+  'scripts/performance/rendererEvidence.test.mjs',
   'scripts/performance/browserShutdownControls.test.mjs',
   'scripts/performance/cesiumWorkerBlobContract.test.mjs',
   'scripts/performance/prewarmWorkerAuditBoundary.test.mjs',
   'scripts/performance/receiptOnlyWorkerAudit.test.mjs',
   'scripts/performance/receiptOnlyPageClose.test.mjs',
+  'scripts/performance/rawReceiptAssetMiddleware.test.mjs',
   'scripts/performance/missionRenderDemand.test.mjs',
   'scripts/performance/trafficRenderDemand.test.mjs',
   'scripts/fixtures/traffic-surface-readiness.test.mjs',
@@ -97,6 +131,13 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/austinOperatingComparisonContract.test.mjs',
   'scripts/performance/austinSatelliteSampledEpoch.test.mjs',
   'scripts/performance/weatherEffectsWorkloadFixture.test.mjs',
+  'scripts/performance/weatherInterleavedDiagnosticContract.test.mjs',
+  'scripts/performance/weatherIdleDiagnostic.test.mjs',
+  'scripts/performance/weatherIdleCadenceDisposition.test.mjs',
+  'scripts/performance/weatherVisibleWindProbe.test.mjs',
+  'scripts/performance/weatherBalancedQualification.test.mjs',
+  'scripts/performance/balancedStartupConfirmation.test.mjs',
+  'scripts/performance/startupObservationMethod.test.mjs',
   'scripts/run-unit-tests.test.mjs',
   'scripts/capture-scene-performance.test.mjs',
   'scripts/performance/captureRendererProbeRetirementIntegration.test.mjs',
@@ -113,6 +154,10 @@ export const PERFORMANCE_HARNESS_TEST_FILES = Object.freeze([
   'scripts/performance/providerSampleCpuProfileWindow.test.mjs',
   'scripts/performance/providerDocumentRetirement.test.mjs',
   'scripts/performance/windowsForegroundWindow.test.mjs',
+  'scripts/performance/runFinalVisualQualification.test.mjs',
+  'scripts/performance/visualPresentationBoundary.test.mjs',
+  'scripts/performance/debuggerPausedCapture.test.mjs',
+  'scripts/performance/captureBrowserTrace.test.mjs',
   'scripts/captureNoUndefConfig.test.mjs',
 ]);
 
@@ -141,7 +186,12 @@ export function assertNode24AllocationRuntime(version = process.versions.node) {
  * outside dependencies, build output and dot-directories, so adding a tree
  * without adding it here fails.
  */
-export const UNIT_TEST_ROOTS = Object.freeze(['src', 'server', 'scripts']);
+export const UNIT_TEST_ROOTS = Object.freeze([
+  'src',
+  'server',
+  'scripts',
+  'build',
+]);
 
 /** Discover repository unit tests in stable path order. */
 export function discoverUnitTestFiles(root = process.cwd()) {
@@ -188,6 +238,38 @@ export function allocationTestArgs(file) {
   return ['--expose-gc', '--test', '--test-concurrency=1', file];
 }
 
+/** Keep Windows CreateProcess arguments below its UTF-16 command-line limit. */
+export function parallelTestBatches(
+  files,
+  { platform = process.platform, maxCommandChars = 12_000 } = {},
+) {
+  if (files.length === 0) return [];
+  if (platform !== 'win32') return [files];
+  const prefixChars = process.execPath.length + ' --test'.length;
+  if (!Number.isInteger(maxCommandChars) || maxCommandChars <= prefixChars)
+    throw new RangeError('Invalid unit-test command-line budget.');
+  const batches = [];
+  let batch = [];
+  let chars = prefixChars;
+  for (const file of files) {
+    // Count the separating space and worst-case quotes around each path.
+    const fileChars = file.length + 3;
+    if (prefixChars + fileChars > maxCommandChars)
+      throw new RangeError(
+        `Unit-test path exceeds command-line budget: ${file}`,
+      );
+    if (chars + fileChars > maxCommandChars) {
+      batches.push(batch);
+      batch = [];
+      chars = prefixChars;
+    }
+    batch.push(file);
+    chars += fileChars;
+  }
+  if (batch.length) batches.push(batch);
+  return batches;
+}
+
 function runTests(args) {
   const result = spawnSync(process.execPath, args, {
     cwd: process.cwd(),
@@ -200,8 +282,13 @@ function runTests(args) {
 
 export function runUnitTests() {
   const plan = buildUnitTestPlan(discoverUnitTestFiles());
-  const parallelStatus = runTests(['--test', ...plan.parallel]);
-  if (parallelStatus !== 0) return parallelStatus;
+  const batches = parallelTestBatches(plan.parallel);
+  for (const [index, batch] of batches.entries()) {
+    if (batches.length > 1)
+      console.log(`[unit] Running batch ${index + 1}/${batches.length}`);
+    const parallelStatus = runTests(['--test', ...batch]);
+    if (parallelStatus !== 0) return parallelStatus;
+  }
 
   // The GC-bracketed budgets are calibrated on Node 24 and are meaningless on
   // other allocators. A contributor's suite must stay green on any supported

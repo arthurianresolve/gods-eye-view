@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { layoutRightPanelRail } from './ui/rightPanelRail.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const css = readStylesheet(path.join(ROOT, 'style.css'));
@@ -489,12 +490,40 @@ test('the full-width rail cannot inherit a height that overrides its floor', () 
   // over-constrained. It is safe only because the rail's layout pass switches
   // to a mobile mode at the SAME breakpoint and removes both the class and the
   // custom property. Pin that, or the exemption above is unearned.
-  const rail = fs.readFileSync(path.join(ROOT, 'src', 'ui', 'rightPanelRail.js'), 'utf8');
-  const gate = rail.indexOf("windowRef.matchMedia('(max-width: 720px)')");
-  assert.ok(gate > 0, 'the rail layout pass no longer keys off (max-width: 720px)');
-  const mobileBranch = rail.slice(gate, rail.indexOf("layoutMode = 'mobile'", gate) + 40);
-  assert.match(mobileBranch, /stack\.classList\.remove\('layout-focus'\)/);
-  assert.match(mobileBranch, /stack\.style\.removeProperty\('--right-stack-max-height'\)/);
+  for (const width of [600, 720]) {
+    const classes = new Set(['layout-focus']);
+    const properties = new Map([
+      ['--right-stack-safe-top', '300px'],
+      ['--right-stack-max-height', '400px'],
+    ]);
+    const stack = {
+      children: [],
+      dataset: {},
+      classList: {
+        contains: (name) => classes.has(name),
+        remove: (name) => classes.delete(name),
+        toggle: (name, enabled) => enabled ? classes.add(name) : classes.delete(name),
+      },
+      style: {
+        getPropertyValue: (name) => properties.get(name) || '',
+        removeProperty: (name) => properties.delete(name),
+      },
+    };
+    layoutRightPanelRail({
+      stack,
+      hud: { visible: true, variant: 'operator' },
+      windowRef: {
+        matchMedia(query) {
+          assert.equal(query, '(max-width: 720px)', 'layout and CSS must use the same mobile breakpoint');
+          return { matches: width <= 720 };
+        },
+      },
+    });
+    assert.equal(stack.dataset.layoutMode, 'mobile');
+    assert.equal(classes.has('layout-focus'), false, `focus height remains at ${width}px`);
+    assert.equal(properties.has('--right-stack-max-height'), false, `height cap remains at ${width}px`);
+    assert.equal(properties.has('--right-stack-safe-top'), false, `desktop top remains at ${width}px`);
+  }
 });
 
 test('right rail measurement cannot persist into a painted attribution layout', () => {

@@ -175,6 +175,9 @@ export function createRecordedAircraftSource({
       if (!selected || targetMs === null || !interval)
         return {
           records: [],
+          positionMode: 'recorded',
+          recordingId: selected?.id || null,
+          selectedTimeMs: targetMs,
           source: 'Local aircraft recording',
           coverage: 'No local aircraft recording selected',
           observedAtMs: null,
@@ -191,6 +194,8 @@ export function createRecordedAircraftSource({
       if (!selection)
         return {
           records: [],
+          positionMode: 'recorded',
+          recordingId: selected.id,
           source: `Local recording · ${selected.id}`,
           coverage: `No recorded aircraft coverage at ${new Date(targetMs).toISOString()}`,
           observedAtMs: null,
@@ -204,6 +209,8 @@ export function createRecordedAircraftSource({
       const { eligible, newest, stale } = selection;
       return {
         records: eligible.map(toFlightRecord),
+        positionMode: 'recorded',
+        recordingId: selected.id,
         source: `Local recording · ${selected.id}`,
         coverage: `Recorded region · ${new Date(selection.interval.from).toISOString()} to ${new Date(selection.interval.to).toISOString()}${selected.truncated ? ' · truncated' : ''}`,
         observedAtMs: newest,

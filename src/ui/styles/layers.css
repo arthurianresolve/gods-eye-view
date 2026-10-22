@@ -16,6 +16,12 @@
     bottom var(--transition-fast);
 }
 
+/* Lift only the allocation during synchronous intrinsic measurement. The
+   scheduler and world-overlay chrome observer do not watch this attribute. */
+#left-panel-stack[data-rail-measuring] > [data-panel-id]:not(.collapsed) {
+  --left-panel-allocated-height: initial !important;
+}
+
 #data-panel {
   --panel-expanded-width: 280px;
   position: fixed;

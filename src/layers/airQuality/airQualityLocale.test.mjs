@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The Air quality layer (AQHI) reads in the UI language: layer name, Weather
 // card (title, coverage, status, legend, risk) and its own failure text.
 import assert from 'node:assert/strict';

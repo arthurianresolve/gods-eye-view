@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assertCaptureIntegrity } from './captureIntegrity.mjs';
+import {
+  assertCaptureIntegrity,
+  deriveNativeSharpnessProfile,
+} from './captureIntegrity.mjs';
 import { createEntityFollowRoute } from './trackingRoute.mjs';
 
 const commit = 'a'.repeat(40);
@@ -77,6 +80,55 @@ test('matched samples pass and independent scenarios keep their own camera paths
     ).status,
     'passed',
   );
+});
+
+test('native comparison requires the observed profile on every boundary', () => {
+  const value = sample();
+  const profile = {
+    id: 'native-sharpness-v1',
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+    viewport: { width: 1440, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1440, height: 900 },
+  };
+  value.conditions.before.environment.nativeSharpnessProfile = profile;
+  value.conditions.after.environment.nativeSharpnessProfile =
+    structuredClone(profile);
+  assert.equal(
+    assertCaptureIntegrity([value], {
+      ...options,
+      requireNativeSharpnessProfile: true,
+    }).status,
+    'passed',
+  );
+  delete value.conditions.after.environment.nativeSharpnessProfile;
+  assert.throws(
+    () =>
+      assertCaptureIntegrity([value], {
+        ...options,
+        requireNativeSharpnessProfile: true,
+      }),
+    /native sharpness profile/,
+  );
+});
+
+test('report profile is derived from boundaries and never from an absent aggregate', () => {
+  const value = sample();
+  const profile = {
+    id: 'native-sharpness-v1',
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+    viewport: { width: 1440, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1440, height: 900 },
+  };
+  value.conditions.before.environment.nativeSharpnessProfile = profile;
+  value.conditions.after.environment.nativeSharpnessProfile =
+    structuredClone(profile);
+  assert.deepEqual(deriveNativeSharpnessProfile([value]), profile);
+  delete value.conditions.after.environment.nativeSharpnessProfile;
+  assert.throws(() => deriveNativeSharpnessProfile([value]), /missing/);
 });
 
 test('wrong builds, missing populations, changed settings and background samples are rejected', () => {

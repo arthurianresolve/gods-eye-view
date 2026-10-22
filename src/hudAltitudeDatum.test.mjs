@@ -58,16 +58,27 @@ const SFO_ELLIPSOIDAL_M = -15;
  * text sinks this test reads.
  */
 function installHudEnvironment() {
+  const listeners = new Map();
   const elements = new Map(
-    ['hud-alt', 'hud-summary', 'hud-mgrs', 'hud-latlon', 'hud-bottom-line', 'hud-gsd', 'hud-coll', 'hud-ona', 'hud-mode']
-      .map((id) => [id, { textContent: '' }]),
+    ['hud-alt', 'hud-summary', 'hud-mgrs', 'hud-latlon', 'hud-bottom-line', 'hud-gsd', 'hud-coll', 'hud-ona', 'hud-mode', 'hud-rec-dot', 'hud-timestamp']
+      .map((id) => [id, { textContent: '', style: {} }]),
   );
   const previousDocument = globalThis.document;
   globalThis.document = {
+    hidden: false,
     getElementById: (id) => elements.get(id) ?? null,
     querySelectorAll: () => [],
-    addEventListener() {},
-    removeEventListener() {},
+    addEventListener(type, listener) {
+      const set = listeners.get(type) || new Set();
+      set.add(listener);
+      listeners.set(type, set);
+    },
+    removeEventListener(type, listener) {
+      listeners.get(type)?.delete(listener);
+    },
+    dispatchEvent(event) {
+      for (const listener of listeners.get(event.type) || []) listener(event);
+    },
   };
   const viewer = {
     camera: {
@@ -83,6 +94,8 @@ function installHudEnvironment() {
   };
   return {
     elements,
+    listeners,
+    document: globalThis.document,
     viewer,
     restore() {
       if (previousDocument === undefined) delete globalThis.document;
@@ -245,6 +258,42 @@ test('the corrected readouts are the MSL datum, not a coincidence of the SFO sig
     assert.match(env.elements.get('hud-summary').textContent, /\| ALT 54M \|/);
   } finally {
     hud?.destroy();
+    env.restore();
+  }
+});
+
+test('REC blink advances while hidden and paints the current phase immediately on resume', () => {
+  const env = installHudEnvironment();
+  const previousSetInterval = globalThis.setInterval;
+  const previousClearInterval = globalThis.clearInterval;
+  const intervals = [];
+  globalThis.setInterval = (callback) => {
+    intervals.push(callback);
+    return intervals.length;
+  };
+  globalThis.clearInterval = () => {};
+  let hud;
+  try {
+    hud = new IntelHUD(env.viewer);
+    const blink = intervals[1];
+    assert.equal(typeof blink, 'function', 'HUD must own a REC blink timer');
+    const initial = hud._recBlinkState;
+    env.document.hidden = true;
+    blink();
+    assert.equal(hud._recBlinkState, !initial, 'hidden cadence must preserve phase');
+    assert.equal(env.elements.get('hud-rec-dot').style?.visibility, undefined);
+
+    env.document.hidden = false;
+    env.document.dispatchEvent({ type: 'visibilitychange' });
+    assert.equal(
+      env.elements.get('hud-rec-dot').style.visibility,
+      hud._recBlinkState ? 'visible' : 'hidden',
+      'resume must paint the phase accumulated while hidden',
+    );
+  } finally {
+    hud?.destroy();
+    globalThis.setInterval = previousSetInterval;
+    globalThis.clearInterval = previousClearInterval;
     env.restore();
   }
 });

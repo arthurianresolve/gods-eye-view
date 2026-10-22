@@ -1,0 +1,535 @@
+import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
+import test from 'node:test';
+import {
+  cleanupFixturePageDiagnostics,
+  flushFixturePageConsoleOwnership,
+  bootFixturePage,
+  assertPersistentWorkspace,
+  importFixtureGeometry,
+  isImportPreviewReadyForFixtureInPage,
+  isWorkspaceSaveCompleteForFixtureInPage,
+  prepareFixturePage,
+  readFixturePageDiagnostics,
+  showWorkspaceLibraryForFixtureInPage,
+} from './qa-application-fixtures.mjs';
+
+function importReadinessFixture() {
+  const elements = new Map([
+    ['[data-workspace-select]', { value: 'saved-investigation' }],
+    ['[data-status]', { dataset: { state: 'info' } }],
+    ['[data-import-review]', { hidden: false }],
+    ['[data-action="apply-import"]', { disabled: false }],
+    ['[data-import-summary]', { textContent: '1 accepted, 0 rejected.' }],
+  ]);
+  const root = { querySelector: (selector) => elements.get(selector) };
+  return { elements, scope: { document: { querySelector: () => root } } };
+}
+
+test('seed waits past a populated select until the original save publishes completion', () => {
+  const { elements, scope } = importReadinessFixture();
+  assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+  elements.get('[data-status]').dataset.state = 'saved';
+  assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), true);
+  for (const state of ['info', 'warning', 'error', 'conflict']) {
+    elements.get('[data-status]').dataset.state = state;
+    assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+  }
+  elements.get('[data-status]').dataset.state = 'saved';
+  elements.get('[data-workspace-select]').value = '';
+  assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+});
+
+test('replacement-file staging cannot reuse the preceding hidden preview summary', () => {
+  const { elements, scope } = importReadinessFixture();
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), true);
+  // Prior releases keep the text and enabled button while hiding the review
+  // and clearing the staged preview synchronously before awaiting File.text().
+  elements.get('[data-import-review]').hidden = true;
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  elements.get('[data-import-review]').hidden = false;
+  elements.get('[data-action="apply-import"]').disabled = true;
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  elements.get('[data-action="apply-import"]').disabled = false;
+  elements.get('[data-workspace-select]').value = '';
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  elements.get('[data-workspace-select]').value = 'saved-investigation';
+  elements.get('[data-import-summary]').textContent = '0 accepted, 1 rejected.';
+  assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+});
+
+test('readiness predicates refuse an absent or incomplete workspace panel', () => {
+  for (const root of [null, { querySelector: () => null }]) {
+    const scope = { document: { querySelector: () => root } };
+    assert.equal(isWorkspaceSaveCompleteForFixtureInPage(scope), false);
+    assert.equal(isImportPreviewReadyForFixtureInPage(scope), false);
+  }
+});
+
+class MockPage extends EventEmitter {
+  constructor(events = []) {
+    super();
+    this.events = events;
+  }
+
+  workers() {
+    return [];
+  }
+
+  setDefaultTimeout() {}
+
+  setDefaultNavigationTimeout() {}
+
+  async setViewport() {}
+
+  async createCDPSession() {
+    const session = new EventEmitter();
+    session.send = async () => {};
+    return session;
+  }
+
+  isClosed() {
+    return false;
+  }
+
+  async exposeFunction(name) {
+    this.events.push(`expose:${name}`);
+  }
+
+  async evaluateOnNewDocument() {
+    return { identifier: 'heartbeat-script' };
+  }
+
+  async evaluate() {
+    this.events.push('heartbeat-clear');
+  }
+
+  async removeScriptToEvaluateOnNewDocument(identifier) {
+    this.events.push(`remove-script:${identifier}`);
+  }
+
+  async removeExposedFunction(name) {
+    this.events.push(`remove-binding:${name}`);
+  }
+}
+
+test('bootFixturePage joins welcome URL once and preserves a base path and requested hash', async () => {
+  const cases = [
+    [
+      'http://127.0.0.1:4301',
+      'http://127.0.0.1:4301/?welcome=0#fixture=phase-2',
+    ],
+    [
+      'http://127.0.0.1:4301/',
+      'http://127.0.0.1:4301/?welcome=0#fixture=phase-2',
+    ],
+    [
+      'https://fixture.test/app/base/',
+      'https://fixture.test/app/base/?welcome=0#fixture=phase-2',
+    ],
+    [
+      'https://fixture.test/app/base',
+      'https://fixture.test/app/base/?welcome=0#fixture=phase-2',
+    ],
+  ];
+  for (const [base, expectedUrl] of cases) {
+    const navigations = [];
+    const page = {
+      async bringToFront() {},
+      async goto(url, options) {
+        navigations.push({ url, options });
+      },
+      async waitForFunction() {},
+      async evaluate() {},
+    };
+    await bootFixturePage(page, base, {
+      hash: '#fixture=phase-2',
+      applicationReadyTimeoutMs: 1_000,
+    });
+    assert.deepEqual(navigations, [
+      {
+        url: expectedUrl,
+        options: { waitUntil: 'domcontentloaded' },
+      },
+    ]);
+  }
+});
+
+function consoleMessage(type, text, handles = []) {
+  return {
+    type: () => type,
+    text: () => text,
+    args: () => handles,
+  };
+}
+
+async function prepareMockFixture(options = {}) {
+  const events = [];
+  const page = new MockPage(events);
+  const fixture = await prepareFixturePage(
+    { newPage: async () => page },
+    'https://fixture.test/',
+    { page, ...options },
+  );
+  return { ...fixture, events };
+}
+
+test('native-window fixture skips emulation only on its explicit opt-in path', async () => {
+  for (const nativeWindowViewport of [false, true]) {
+    const calls = [];
+    const page = new MockPage();
+    page.viewport = () => null;
+    page.setViewport = async (viewport) => calls.push(viewport);
+    await prepareFixturePage(null, 'https://fixture.test/', {
+      page,
+      nativeWindowViewport,
+    });
+    assert.deepEqual(
+      calls,
+      nativeWindowViewport ? [] : [{ width: 1440, height: 1000 }],
+    );
+    await cleanupFixturePageDiagnostics(page);
+  }
+  const page = new MockPage();
+  page.viewport = () => ({ width: 1440, height: 1000 });
+  await assert.rejects(
+    prepareFixturePage(null, 'https://fixture.test/', {
+      page,
+      nativeWindowViewport: true,
+    }),
+    /excludes viewport emulation/,
+  );
+  await cleanupFixturePageDiagnostics(page);
+});
+
+test('import fixture releases the document mutation root after the status wait', async () => {
+  const events = [];
+  const documentRoot = {
+    async dispose() {
+      events.push('document-root-dispose');
+    },
+  };
+  const page = {
+    async waitForSelector(selector, options) {
+      events.push('selector-wait');
+      assert.equal(selector, '.workspace-library [data-geo-file]');
+      assert.equal(options.visible, true);
+      return {
+        async dispose() {
+          events.push('handle-dispose');
+        },
+      };
+    },
+    async evaluate(operation) {
+      events.push(
+        operation === showWorkspaceLibraryForFixtureInPage
+          ? 'panel-open'
+          : 'import-stage',
+      );
+    },
+    async evaluateHandle(operation) {
+      assert.match(operation.toString(), /document/);
+      events.push('document-root-create');
+      return documentRoot;
+    },
+    async waitForFunction(_predicate, options = {}) {
+      if (options.polling === 'mutation') {
+        assert.equal(options.root, documentRoot);
+        events.push('status-mutation-wait');
+      }
+    },
+  };
+
+  await importFixtureGeometry(page, 'Persistent fixture', {
+    onProgress(phase) {
+      if (phase === 'import-control-wait:complete')
+        events.push('selector-phase-complete');
+    },
+  });
+
+  assert.deepEqual(events.slice(0, 5), [
+    'panel-open',
+    'selector-wait',
+    'handle-dispose',
+    'selector-phase-complete',
+    'import-stage',
+  ]);
+  assert.ok(
+    events.indexOf('document-root-create') <
+      events.indexOf('status-mutation-wait'),
+  );
+  assert.ok(
+    events.indexOf('status-mutation-wait') <
+      events.indexOf('document-root-dispose'),
+  );
+});
+
+test('persistent workspace verification waits for restored geometry before reading it', async () => {
+  const events = [];
+  const expected = {
+    id: 'saved-workspace',
+    sha256: 'asset-digest',
+    bundle: JSON.stringify({ workspace: 'saved-workspace' }),
+    settings: { 'gev:detection-allocation:v1': 'ELASTIC' },
+  };
+  let evaluateCount = 0;
+  const page = {
+    async waitForFunction(predicate, options = {}, id) {
+      if (id !== undefined) {
+        assert.equal(id, expected.id);
+        events.push('workspace-option-wait');
+        return;
+      }
+      assert.equal(options.timeout, 30_000);
+      assert.equal(options.polling, 50);
+      assert.match(predicate.toString(), /featureCount/);
+      events.push('renderer-readiness-wait');
+    },
+    async select(selector, id) {
+      assert.equal(selector, '.workspace-library [data-workspace-select]');
+      assert.equal(id, expected.id);
+      events.push('workspace-select');
+    },
+    async evaluate(_operation) {
+      evaluateCount += 1;
+      if (evaluateCount === 1) {
+        events.push('workspace-restore');
+        return;
+      }
+      events.push('persistent-state-read');
+      return {
+        saved: true,
+        version: 1,
+        sha256: expected.sha256,
+        bundle: expected.bundle,
+        drawn: 1,
+        settings: expected.settings,
+      };
+    },
+  };
+
+  const result = await assertPersistentWorkspace(page, expected);
+  assert.deepEqual(result, {
+    assetSha256: expected.sha256,
+    renderedFeatures: 1,
+    settingsMatch: true,
+    workspaceBundleMatches: true,
+  });
+  assert.deepEqual(events, [
+    'workspace-option-wait',
+    'workspace-select',
+    'workspace-restore',
+    'renderer-readiness-wait',
+    'persistent-state-read',
+  ]);
+});
+
+function workspaceDisclosureFixture({ open = false, collapsed = true } = {}) {
+  const calls = [];
+  const panel = {
+    classList: { contains: (name) => name === 'collapsed' && collapsed },
+  };
+  const root = {
+    open,
+    closest: (selector) => (selector === '#scene-panel' ? panel : null),
+  };
+  const scope = {
+    document: { querySelector: () => root },
+    __godsEyeView: {
+      styleManager: {
+        setPanelCollapsed(...args) {
+          calls.push(['panel', ...args]);
+          collapsed = args[1];
+        },
+      },
+      workspaceLibraryPanel: {
+        openLibrary() {
+          calls.push(['library']);
+          root.open = true;
+        },
+      },
+    },
+  };
+  return { scope, root, calls };
+}
+
+test('import setup opens closed workspace disclosures through application controls', () => {
+  const fixture = workspaceDisclosureFixture();
+  showWorkspaceLibraryForFixtureInPage(fixture.scope);
+  assert.deepEqual(fixture.calls, [
+    ['panel', 'scene-panel', false, { skipCapture: true }],
+    ['library'],
+  ]);
+  assert.equal(fixture.root.open, true);
+  showWorkspaceLibraryForFixtureInPage(fixture.scope);
+  assert.equal(
+    fixture.calls.length,
+    2,
+    'Already open disclosures need no additional writes or focus changes',
+  );
+});
+
+test('import setup reopens the panel even when the workspace disclosure stayed open', () => {
+  const fixture = workspaceDisclosureFixture({ open: true });
+  showWorkspaceLibraryForFixtureInPage(fixture.scope);
+  assert.deepEqual(fixture.calls, [
+    ['panel', 'scene-panel', false, { skipCapture: true }],
+  ]);
+});
+
+test('import setup fails explicitly for missing disclosure APIs and unavailable library', () => {
+  const fixture = workspaceDisclosureFixture();
+  delete fixture.scope.__godsEyeView.styleManager.setPanelCollapsed;
+  assert.throws(
+    () => showWorkspaceLibraryForFixtureInPage(fixture.scope),
+    /Scene panel disclosure API/,
+  );
+  assert.equal(fixture.root.open, false);
+  const missingLibrary = workspaceDisclosureFixture({ collapsed: false });
+  delete missingLibrary.scope.__godsEyeView.workspaceLibraryPanel.openLibrary;
+  assert.throws(
+    () => showWorkspaceLibraryForFixtureInPage(missingLibrary.scope),
+    /Workspace library disclosure API/,
+  );
+  assert.throws(
+    () =>
+      showWorkspaceLibraryForFixtureInPage({
+        document: { querySelector: () => null },
+      }),
+    /Workspace library is unavailable/,
+  );
+});
+
+test('opening disclosures never bypasses the visible import-control requirement', async () => {
+  const calls = [];
+  const page = {
+    async evaluate(operation) {
+      calls.push(
+        operation === showWorkspaceLibraryForFixtureInPage
+          ? 'panel-open'
+          : 'diagnostics',
+      );
+      return null;
+    },
+    async waitForSelector(selector, options) {
+      assert.equal(options.visible, true);
+      assert.equal(options.timeout, 123);
+      calls.push('visible-control-wait');
+      throw new Error('Control remained hidden');
+    },
+  };
+  await assert.rejects(
+    importFixtureGeometry(page, 'Fixture', { timeoutMs: 123 }),
+    /Control remained hidden; workspace\/import phase import-control-wait/,
+  );
+  assert.deepEqual(calls.slice(0, 2), ['panel-open', 'visible-control-wait']);
+});
+
+test('fixture console ownership defaults off and diagnostics remain unavailable', async () => {
+  const { page, interception } = await prepareMockFixture();
+  let disposeCalls = 0;
+  page.emit(
+    'console',
+    consoleMessage('log', 'ordinary message', [
+      { dispose: () => disposeCalls++ },
+    ]),
+  );
+
+  assert.equal(disposeCalls, 0);
+  assert.equal(readFixturePageDiagnostics(page).consoleHandleOwnership, null);
+  assert.equal(await flushFixturePageConsoleOwnership(page), null);
+
+  await cleanupFixturePageDiagnostics(page);
+  assert.equal(page.listenerCount('console'), 0);
+  await interception.releaseSession({ targetClosed: true });
+});
+
+test('opt-in fixture disposes handles for console early returns and drains on cleanup', async () => {
+  const { page, interception, events } = await prepareMockFixture({
+    exclusiveConsoleHandleOwnership: true,
+    startupDiagnostics: {
+      recordRendererPhase(marker) {
+        events.push(`renderer:${marker.phase}`);
+      },
+    },
+  });
+  const disposeHandle = (name) => ({
+    dispose() {
+      events.push(`${name}:dispose-start`);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          events.push(`${name}:dispose-done`);
+          resolve();
+        }, 5);
+      });
+    },
+  });
+  page.emit(
+    'console',
+    consoleMessage(
+      'info',
+      '__GEV_RECOVERY_WEBGL__{"phase":"query-start","elapsedMs":2}',
+      [disposeHandle('info')],
+    ),
+  );
+  page.emit(
+    'console',
+    consoleMessage('log', 'filtered message', [disposeHandle('log')]),
+  );
+
+  assert.deepEqual(events.slice(0, 4), [
+    'expose:__gevRecoveryHeartbeat',
+    'renderer:query-start',
+    'info:dispose-start',
+    'log:dispose-start',
+  ]);
+  const flushed = await flushFixturePageConsoleOwnership(page);
+  assert.deepEqual(flushed, {
+    disposed: 2,
+    skipped: 0,
+    pending: 0,
+    errors: 0,
+  });
+
+  page.emit(
+    'console',
+    consoleMessage('warn', 'warning detail', [disposeHandle('warn')]),
+  );
+  assert.deepEqual(readFixturePageDiagnostics(page).messages, [
+    'warning detail',
+  ]);
+
+  const cleanup = cleanupFixturePageDiagnostics(page);
+  assert.equal(page.listenerCount('console'), 0);
+  await cleanup;
+  assert.ok(events.includes('warn:dispose-done'));
+  assert.ok(events.includes('heartbeat-clear'));
+  assert.ok(events.includes('remove-binding:__gevRecoveryHeartbeat'));
+  assert.equal(readFixturePageDiagnostics(page).consoleHandleOwnership, null);
+  await interception.releaseSession({ targetClosed: true });
+});
+
+test('opt-in fixture skips console handles when another page listener shares them', async () => {
+  const { page, interception } = await prepareMockFixture({
+    exclusiveConsoleHandleOwnership: true,
+  });
+  let disposeCalls = 0;
+  page.on('console', () => {});
+  page.emit(
+    'console',
+    consoleMessage('error', 'shared message', [
+      { dispose: () => disposeCalls++ },
+    ]),
+  );
+
+  assert.deepEqual(await flushFixturePageConsoleOwnership(page), {
+    disposed: 0,
+    skipped: 1,
+    pending: 0,
+    errors: 0,
+  });
+  assert.equal(disposeCalls, 0);
+  await cleanupFixturePageDiagnostics(page);
+  assert.equal(page.listenerCount('console'), 1);
+  await interception.releaseSession({ targetClosed: true });
+});

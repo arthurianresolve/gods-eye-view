@@ -18,6 +18,10 @@ import * as Cesium from 'cesium';
 import { ShareLinkManager, decodeShareCreatedAtMs } from './sharelink.js';
 import { createDefaultLayerState } from './data/layerState.js';
 import { createView } from './view/index.js';
+import {
+  createWorkspaceDocument,
+  parseWorkspaceDocument,
+} from './workspaces/document.js';
 
 const uiSource = readShellSource();
 
@@ -794,6 +798,66 @@ test('workspace restoration carries saved detection settings instead of replacin
   await manager.applyView(createView({ camera: { lat: 1, lon: 2 } }));
   assert.equal(restored.detectionMode, 'OFF');
   assert.equal(restored.detectionDensity, 50);
+});
+
+test('saving, exporting, reopening and applying a workspace retains its visual settings', async () => {
+  const manager = makeManager();
+  try {
+    manager.onStyleChange('retro');
+    manager.setStyleParamStateProvider(() => ({
+      pixelation: 3,
+      distortion: 0.25,
+      instability: 0,
+    }));
+    const expected = {
+      bloom: true,
+      sharpen: true,
+      bloomIntensity: 84,
+      bloomVersion: 2,
+      sharpenIntensity: 65,
+      hudVariant: 'operator',
+      hudVisible: true,
+      detectionAllocation: 'WEIGHTED',
+      detectionFadePct: 7,
+      detectionOutsideOpacityPct: 1,
+      celestialRing: true,
+      scopeEnabled: false,
+      scopeFeatherPct: 11,
+      scopeTerminusPct: 97,
+      styleParams: { pixelation: 3, distortion: 0.25, instability: 0 },
+    };
+    manager.onToggleChange(true, true, {
+      ...expected,
+      celestialRingEnabled: true,
+      detectionMode: 'DENSE',
+      detectionDensity: 75,
+    });
+    const saved = createWorkspaceDocument({
+      id: 'visual-roundtrip',
+      title: 'Saved visual settings',
+      createdAt: 1,
+      view: manager.getCurrentView(),
+    });
+    const reopened = parseWorkspaceDocument(JSON.stringify(saved));
+    assert.equal(reopened.schemaVersion, 1);
+    assert.deepEqual(reopened.view.visual, expected);
+    let restored;
+    manager.applyState = async (state) => {
+      restored = state;
+    };
+    await manager.applyView(reopened.view);
+    for (const [key, value] of Object.entries(expected))
+      assert.deepEqual(restored[key], value, key);
+    assert.equal(restored.detectionMode, 'DENSE');
+    assert.equal(restored.detectionDensity, 75);
+    // Historical v1 documents still retain their historical restore defaults.
+    await manager.applyView(createView({ camera: { lat: 1, lon: 2 } }));
+    assert.equal(restored.sharpen, false);
+    assert.equal(restored.detectionFadePct, 16);
+    assert.equal(restored.scopeFeatherPct, 35);
+  } finally {
+    manager.destroy();
+  }
 });
 
 test('newer navigation suppresses delayed share camera while non-camera state still restores', async () => {

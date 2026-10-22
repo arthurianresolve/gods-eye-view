@@ -30,6 +30,16 @@ import {
 } from '../qa-performance-build-smoke.mjs';
 import { createMapStreamingFixtureDelivery } from './mapStreamingFixtureDelivery.mjs';
 import { createDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
+import { createObservedMapStreamingComparisonContract } from './captureComparisonContract.mjs';
+import {
+  validatePairedMapPerformanceReports,
+  validatePairedPerformanceReports,
+} from './pairedReport.mjs';
+import {
+  makeMapReport,
+  baselineCommit,
+  candidateCommit,
+} from './pairedReportTestFixtures.mjs';
 import {
   getMapFixtureBuildProfileGoogleApiKey,
   MAP_FIXTURE_BUILD_PROFILE_ID,
@@ -1287,6 +1297,79 @@ test('host journey polls a full 60-second page operation through short protocol 
   assert.equal(harness.frames.size, 0);
 });
 
+test('serialized native map journey retains full DPR through its deferred run', async () => {
+  for (const dpr of [2, 1.25]) {
+    const harness = createFakePage({ scheduleAtZero: false });
+    const window = harness.context.window;
+    const scene = window.__godsEyeView.viewer.scene;
+    window.devicePixelRatio = dpr;
+    scene.canvas.width = scene.context.drawingBufferWidth = Math.floor(
+      1440 * dpr,
+    );
+    scene.canvas.height = scene.context.drawingBufferHeight = Math.floor(
+      900 * dpr,
+    );
+    const result = await runNativeMapStreamingJourney(harness.page, {
+      durationMs: 60_000,
+      route: harness.route,
+      comparisonProfile: 'native-sharpness-v1',
+    });
+    assert.equal(
+      result.settingsBefore.nativeSharpnessProfile.viewport.dpr,
+      dpr,
+    );
+    assert.equal(
+      result.settingsBefore.nativeSharpnessProfile.drawingBuffer.width,
+      Math.floor(1440 * dpr),
+    );
+    assert.deepEqual(result.settingsAfter, result.settingsBefore);
+    assert.equal(result.transitions.length, 4);
+    assert.ok(
+      result.transitions.every(
+        ({ state }) =>
+          state.viewport.drawingBufferWidth === Math.floor(1440 * dpr),
+      ),
+    );
+    assert.equal(harness.listeners.size, 0);
+    assert.equal(harness.frames.size, 0);
+  }
+});
+
+test('native map journey rejects downscaled buffers and changing native settings', async () => {
+  for (const fault of ['downscale', 'dpr', 'sse', 'resolution', 'canvas']) {
+    const harness = createFakePage({ scheduleAtZero: false });
+    const window = harness.context.window;
+    const viewer = window.__godsEyeView.viewer;
+    const scene = viewer.scene;
+    window.devicePixelRatio = 2;
+    scene.canvas.width = scene.context.drawingBufferWidth =
+      fault === 'downscale' ? 1440 : 2880;
+    scene.canvas.height = scene.context.drawingBufferHeight =
+      fault === 'downscale' ? 900 : 1800;
+    const render = scene.requestRender;
+    let renders = 0;
+    scene.requestRender = () => {
+      if (++renders === 3) {
+        if (fault === 'dpr') window.devicePixelRatio = 1.25;
+        if (fault === 'sse') scene.globe.maximumScreenSpaceError = 2;
+        if (fault === 'resolution') viewer.resolutionScale = 0.5;
+        if (fault === 'canvas') scene.canvas.width = 1440;
+      }
+      render();
+    };
+    await assert.rejects(
+      runNativeMapStreamingJourney(harness.page, {
+        durationMs: 60_000,
+        route: harness.route,
+        comparisonProfile: 'native-sharpness-v1',
+      }),
+      /drawing buffer changed|native sharpness settings changed/,
+    );
+    assert.equal(harness.listeners.size, 0);
+    assert.equal(harness.frames.size, 0);
+  }
+});
+
 test('camera preparation cancels a pending startup flight before the route pose', async () => {
   const harness = createFakePage({ holdCameraPreparation: true });
   const operationId = 'map-camera-preparation-cancel';
@@ -1757,6 +1840,11 @@ test('strict smoke journey rejection retains bounded observed route and transiti
       fixtureId: 'austin-map-streaming-synthetic-v3',
       manifestSha256: 'd'.repeat(64),
     },
+    {
+      fixtureId: 'austin-map-streaming-synthetic-v4',
+      manifestSha256:
+        '0d739d9e4830faff2751d40945870eb7b56b9b76dc65e8cd64cb7deb5cb9b033',
+    },
   ]) {
     const historicalFailure = structuredClone(projectedHistoricalEnvelope);
     historicalFailure.fixtureId = fixtureId;
@@ -1816,6 +1904,7 @@ test('strict smoke journey rejection retains bounded observed route and transiti
     'austin-map-streaming-synthetic-v1',
     'austin-map-streaming-synthetic-v2',
     'austin-map-streaming-synthetic-v3',
+    'austin-map-streaming-synthetic-v4',
   ])
     await assert.rejects(
       runNativeMapJourneyForSmoke({
@@ -1825,7 +1914,7 @@ test('strict smoke journey rejection retains bounded observed route and transiti
         buildProfile: profile,
         mapStreamingCaptureModule,
       }),
-      /austin-map-streaming-synthetic-v4/,
+      /austin-map-streaming-synthetic-v5/,
       `Live smoke rejects historical ${historicalFixtureId} fixtures.`,
     );
   for (const [field, invalidValue] of [
@@ -3134,6 +3223,115 @@ test('map capture report binds real fixture hashes and acknowledged fixture deli
     timedFinalized.mapStreamingCapture.journeys.map(({ run }) => run),
     [1, 2, 3, 4, 5],
   );
+
+  // Exercise the real independent fixture validator before allowing different
+  // request inventories. No test-only bypass or caller-provided pass flag.
+  const extra = fixture.manifest.assets.find(
+    (asset) =>
+      asset.kind === 'webmercator-imagery-png' &&
+      !row.delivery.assets.some((delivered) => delivered.path === asset.path),
+  );
+  assert.ok(extra);
+  const extraOwner = structuredClone(row);
+  extraOwner.delivery.assets.push({
+    path: extra.path,
+    sha256: extra.sha256,
+    byteLength: extra.byteLength,
+    requests: 1,
+    fulfilledAckCount: 1,
+    cancelledCount: 0,
+  });
+  extraOwner.delivery.requestedCount++;
+  extraOwner.delivery.fulfilledAckCount++;
+  const extraFinalized = createFinalizedMapStreamingCaptureEvidence({
+    fixture,
+    journey,
+    journeys: timedFinalized.mapStreamingCapture.journeys,
+    profile,
+    documentDeliveries: [extraOwner],
+  });
+  const pairedReport = (commit, evidence) => {
+    const value = makeMapReport(commit);
+    value.workload.fixture = { id: fixture.id, sha256: fixture.manifestSha256 };
+    value.workload.mapStreamingCapture = structuredClone(
+      evidence.mapStreamingCapture,
+    );
+    for (const capturedJourney of value.workload.mapStreamingCapture.journeys)
+      for (const transition of capturedJourney.transitions.slice(1))
+        transition.settledAtMs = transition.actualStartMs + 20;
+    value.fixtureDelivery = value.workload.mapStreamingCapture.fixtureDelivery;
+    value.comparisonContract = createObservedMapStreamingComparisonContract({
+      fixture,
+      mapStreamingCapture: value.workload.mapStreamingCapture,
+      environment: value.environment,
+      workload: value.workload,
+    });
+    return value;
+  };
+  const paired = {
+    baseline: pairedReport(baselineCommit, timedFinalized),
+    candidate: pairedReport(candidateCommit, extraFinalized),
+    expectedAppCommits: {
+      baseline: baselineCommit,
+      candidate: candidateCommit,
+    },
+  };
+  const beforeComparison = JSON.stringify(paired);
+  assert.throws(
+    () => validatePairedPerformanceReports(paired),
+    /map comparison contracts differ/,
+  );
+  const accepted = await validatePairedMapPerformanceReports(paired);
+  assert.equal(accepted.status, 'comparable');
+  assert.equal(
+    accepted.fixtureDeliveryDiagnostics.assetInventoryComparison,
+    'independently-validated-pinned-manifest',
+  );
+  assert.deepEqual(
+    accepted.fixtureDeliveryDiagnostics.candidate.assetsOnlyInThisCapture,
+    [extra.path],
+  );
+  assert.equal(
+    JSON.stringify(paired),
+    beforeComparison,
+    'Raw evidence is never rewritten.',
+  );
+  for (const mutate of [
+    (value) => {
+      value.fixtureDelivery.assets[0].sha256 = '0'.repeat(64);
+    },
+    (value) => {
+      value.fixtureDelivery.assets[0].path = 'imagery/unknown.png';
+    },
+    (value) => {
+      value.fixtureDelivery.pendingCount = 1;
+    },
+    (value) => {
+      value.fixtureDelivery.errorObservationCount = 1;
+    },
+    (value) => {
+      value.manifestSha256 = '0'.repeat(64);
+    },
+    (value) => {
+      value.documentDeliveries[0].release.confirmed = false;
+    },
+    (value) => {
+      value.fixtureDelivery.assets.splice(0, 1);
+    },
+    (value) => {
+      value.journeys[0].initialState.photorealSelectedTiles = 0;
+    },
+    (value) => {
+      value.journeys[0].route.start.longitude = 0;
+    },
+    (value) => {
+      value.journeys[0].transitions[1].state.settings.resolutionScale = 0.5;
+    },
+  ]) {
+    const malformed = structuredClone(paired);
+    mutate(malformed.candidate.workload.mapStreamingCapture);
+    await assert.rejects(validatePairedMapPerformanceReports(malformed));
+  }
 
   const zeroCacheSettings = structuredClone(report);
   const settingsSnapshots = [

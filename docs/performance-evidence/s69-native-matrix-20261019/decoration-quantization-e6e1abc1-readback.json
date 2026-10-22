@@ -1,0 +1,209 @@
+{
+  "schema": "gev-prospective-decoration-visual-readback/v1",
+  "status": "passed",
+  "result": {
+    "path": "docs\\performance-evidence\\s69-native-matrix-20261019\\decoration-quantization-e6e1abc1-result.json",
+    "bytes": 10127,
+    "sha256": "58b2aa317ffaf7eb89af8977102340b89afb7246ec8924ba478972198ed37116"
+  },
+  "independentConsumer": {
+    "consumerCommit": "7ab0acac48ae619c6277cabb7edcda19ca6339a3",
+    "sourceSnapshot": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-consumer-7ab0acac-20261020/source",
+    "sourceProof": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/source-proof.json",
+      "bytes": 3488,
+      "sha256": "32118315e7175c66ea654e8b1c2ceb291eb83a3ff0ae3963730643dfeff4603a"
+    },
+    "helper": {
+      "path": "qa-artifacts/review-decoration-cohort-7ab0acac-vm-20261020.mjs",
+      "bytes": 3587,
+      "sha256": "6a414f66005526caa8c23bb0213cab852c554e14ce94ec0104f5b1058b9b108f"
+    },
+    "decoder": {
+      "name": "pngjs",
+      "version": "7.0.0",
+      "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+      "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+    },
+    "review": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/review.json",
+      "bytes": 36627,
+      "sha256": "ec7059880258eca533c4d0015f52920d80024ca1e72430bd75cd98a548e820d6"
+    },
+    "execution": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/execution.json",
+      "bytes": 276,
+      "sha256": "5e46c7d83330bd2373a824e279afc629ba6958c3c4524c5e098dd959c9b5bccb"
+    },
+    "log": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/consumer.log",
+      "bytes": 205,
+      "sha256": "956ea1f92e12a34801abb8d488885280e4b09be918ee5d68d09d553f6fc97502"
+    },
+    "completedAt": "2026-10-20T11:39:39.727Z",
+    "exitCode": 0,
+    "exactDeepEqualityWithWindowsResult": true,
+    "verifiedSourceFileCount": 16,
+    "verifiedArchiveFileCount": 38,
+    "decodedPngCount": 24,
+    "comparedAllUnorderedPairs": 60,
+    "browserOrGpuExecuted": false
+  },
+  "resources": {
+    "preflight": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/resource-preflight.json",
+      "bytes": 314,
+      "sha256": "bf207026394c883a74ec7e684b598f5c26f2a49f92dfea199889434d59068ed4"
+    },
+    "usage": {
+      "path": "qa-artifacts/visual-consumer-7ab0acac-20261020/resource-usage.txt",
+      "bytes": 877,
+      "sha256": "f2f69d5f9b48c765f9b09589f79a341826aeeabf5558c1ca3d801235159dfa15"
+    },
+    "preflightValues": {
+      "recordedAt": "2026-10-20T11:39:25.455Z",
+      "memAvailable": 1670168576,
+      "swapTotal": 2147479552,
+      "swapFree": 1315004416,
+      "diskFree": 31009656832,
+      "nodeMaxOldSpaceMiB": 256,
+      "minimumMemAvailable": 1073741824,
+      "minimumDiskFree": 536870912,
+      "lease": "root-authorized sole heavy VM consumer lease"
+    },
+    "maximumResidentSetKiB": 739928,
+    "elapsedSeconds": 14.3,
+    "swapOperations": 0,
+    "heavyVmLeaseReleasedAfterCompletion": true
+  },
+  "transfer": {
+    "receipt": {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac.vm-transfer.json",
+      "bytes": 7346,
+      "sha256": "6af64b6d1cb3300a61f1d64a166a80af9b5e636611d537970c0e664c60c165f9"
+    },
+    "manifestSha256": "6af64b6d1cb3300a61f1d64a166a80af9b5e636611d537970c0e664c60c165f9",
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/repeated-decoration-e6e1abc1-7ab0acac-complete-20261020",
+    "allFilesVerified": true,
+    "files": 38,
+    "bytes": 95766251,
+    "pngCount": 24,
+    "verifiedAt": "2026-10-20T11:38:03.842Z",
+    "transportAloneIsNotAcceptance": true
+  },
+  "observationFiles": [
+    {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/pair-1/baseline-observations.json",
+      "bytes": 4904678,
+      "sha256": "a1f5bd80fb3f5510b2572bdec4430679bbd29c6f4ebe0af8850165ccab7a562d"
+    },
+    {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/pair-1/candidate-observations.json",
+      "bytes": 4834423,
+      "sha256": "ca87af53b172035fb6d8775d1d884d76c86547af628f355c018e4bc103401ba1"
+    },
+    {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/pair-2/baseline-observations.json",
+      "bytes": 4899671,
+      "sha256": "23c9302ab96fd377ea082b3746e92067db8849eb676615532f4f2859cacd1f0e"
+    },
+    {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/pair-2/candidate-observations.json",
+      "bytes": 4826298,
+      "sha256": "c5ee142d9120c27310b649422582301100984b2d7d1e30dfe84cd7d4e0be4b24"
+    },
+    {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/pair-3/baseline-observations.json",
+      "bytes": 4880006,
+      "sha256": "c8a9adc632260c9986d0ff8f0a941f5574a9b34db8f614a89b60d6fea47364e5"
+    },
+    {
+      "path": "../gev-s61-evidence-19065997/repeated-decoration-e6e1abc1-7ab0acac/pair-3/candidate-observations.json",
+      "bytes": 4957353,
+      "sha256": "2b1aa91c7230c1554200fe0b2b2ec1a7193997b18bc04c48b93fc776de16a9aa"
+    }
+  ],
+  "sourceClosure": [
+    {
+      "path": "scripts/performance/runRepeatedVisualQualification.mjs",
+      "sha256": "043a88154efb5f399fbf4d8f8b4789244133f96eb708cb2639f039eb5e821c78",
+      "bytes": 3697
+    },
+    {
+      "path": "scripts/performance/repeatedVisualQualification.mjs",
+      "sha256": "8e2266f7c32e8dacd6ec8130bd3f1632344d6d960919d5a03c361b87b6c98ef3",
+      "bytes": 11641
+    },
+    {
+      "path": "scripts/performance/runFinalVisualQualification.mjs",
+      "sha256": "5528b867a802163adca7837a9b8721b6ad1b78a87af5fc5cbe8be4e8dcac6a04",
+      "bytes": 50796
+    },
+    {
+      "path": "scripts/performance/finalVisualQualificationState.mjs",
+      "sha256": "3b14fe627afb0d41f4bc473e89452ccca53c5bb441c848ba529b5788b2c42a75",
+      "bytes": 19573
+    },
+    {
+      "path": "scripts/performance/debuggerPausedCapture.mjs",
+      "sha256": "9e6ad46483762595459db8d3960655a090140416800ccbc15b82d44780fb3e5a",
+      "bytes": 13871
+    },
+    {
+      "path": "scripts/performance/finalVisualQualification.mjs",
+      "sha256": "63e7963229ad7abd1095411964a7d212e8dcd3c399546cad88fab02336ca1323",
+      "bytes": 28273
+    },
+    {
+      "path": "scripts/performance/fullExtentPointerSweep.mjs",
+      "sha256": "812dbba012597d745506f1be4be8197970c853415b64237acafc55197ec3b3c4",
+      "bytes": 24808
+    },
+    {
+      "path": "scripts/performance/canonicalPointerHistory.mjs",
+      "sha256": "f6fd20c728a993d308efc5bfba0644aad64138a4076b3060589049d224a6a527",
+      "bytes": 18427
+    },
+    {
+      "path": "scripts/performance/repeatedFullImageControls.mjs",
+      "sha256": "b10b92bedf1b90c2b33eb75252bfe824e5d7efadae1a47005796948a393de4c5",
+      "bytes": 3700
+    },
+    {
+      "path": "scripts/performance/buildProvenance.mjs",
+      "sha256": "8cf0f6e23b8f0942ebc5d5a22b7f7a9d59ca218da022fed2eeab2f5dc37dc7ce",
+      "bytes": 31403
+    },
+    {
+      "path": "src/logoGaze.js",
+      "sha256": "61c630088e7b3c0dfdb4734e4adc02a65f1b4e299fc46b1d002243f0ecf68284",
+      "bytes": 5400
+    },
+    {
+      "path": "scripts/performance/decorationQuantization.mjs",
+      "sha256": "c7a19cee15d59acfc31abc0130cedf744ec5d54b6bcad5494010b509f7e7034f",
+      "bytes": 18784
+    },
+    {
+      "path": "scripts/performance/decorationCaptureProof.mjs",
+      "sha256": "92102a58e73bdb4eec132d13cf626359a94ca3f131837bb373d59ea86816438a",
+      "bytes": 13036
+    },
+    {
+      "path": "docs/performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/calibration.json",
+      "sha256": "71a616958532389ee4d1ec32980ed007c07d32370fa13232e352702c6190ead6",
+      "bytes": 14998
+    },
+    {
+      "path": "docs/performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/header-reference.json",
+      "sha256": "f19ddbc58374693e711ec38ae2f476ce3f4377344489320c3b1088003a9114f0",
+      "bytes": 32883
+    },
+    {
+      "path": "docs/performance-evidence/s69-native-matrix-20261019/decoration-quantization-v1/policy.md",
+      "sha256": "0711caaee1e3ec6e15e153cff93c6fe2f3c0663eb1cd94143e1744f4d05f7439",
+      "bytes": 5734
+    }
+  ],
+  "historicalResultsSuperseded": false
+}

@@ -6,6 +6,18 @@ import {
 } from './buildProvenance.mjs';
 import { validateDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
 
+// Check between measured phases, without cancelling active requests or claiming
+// that delivery proves decoding/rendering. An invalid fixture must fail before
+// further repetitions, rather than surfacing only as an aggregate cleanup error.
+export function assertMapStreamingDeliveryHealthy(delivery) {
+  const summary = delivery.summary();
+  if (summary.errorObservationCount || summary.unexpectedFulfillmentCount) {
+    const reason = summary.errors?.[0]?.code || 'unexpected-fulfillment';
+    throw new Error(
+      `Map fixture delivery failed: ${reason} (${summary.errorObservationCount} errors).`,
+    );
+  }
+}
 export const MAP_STREAMING_DELIVERY_SCHEMA =
   'gev-map-streaming-fixture-delivery/v1';
 export const MAP_STREAMING_FAULT_DELIVERY_SCHEMA =

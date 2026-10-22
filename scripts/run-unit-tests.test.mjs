@@ -4,7 +4,11 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { discoverUnitTestFiles } from './run-unit-tests.mjs';
+import {
+  buildUnitTestPlan,
+  discoverUnitTestFiles,
+  parallelTestBatches,
+} from './run-unit-tests.mjs';
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -41,4 +45,31 @@ test('unit discovery recursively includes future nested server test files', () =
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('Windows batches cover every discovered test within the command-line budget', () => {
+  const files = buildUnitTestPlan(
+    discoverUnitTestFiles(repositoryRoot),
+  ).parallel;
+  const batches = parallelTestBatches(files, { platform: 'win32' });
+  assert.ok(batches.length > 1);
+  assert.deepEqual(batches.flat(), files);
+  for (const batch of batches) {
+    assert.ok(batch.length > 0);
+    assert.ok(
+      process.execPath.length +
+        ' --test'.length +
+        batch.reduce((chars, file) => chars + file.length + 3, 0) <=
+        12_000,
+    );
+  }
+  assert.deepEqual(parallelTestBatches(files, { platform: 'linux' }), [files]);
+});
+
+test('Windows batching rejects a single path too long for the budget', () => {
+  assert.throws(
+    () => parallelTestBatches(['a'.repeat(12_000)], { platform: 'win32' }),
+    /exceeds command-line budget/,
+  );
+  assert.deepEqual(parallelTestBatches([], { platform: 'win32' }), []);
 });

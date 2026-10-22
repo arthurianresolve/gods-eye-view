@@ -1,0 +1,76 @@
+{
+  "schema": "gev-windows-recovery-failure-summary/v1",
+  "status": "failed",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39387463474",
+  "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39387463474/job/118510629994",
+  "pullRequestHead": "220349dd9ffc87bd20aa00e2118e8439c31af1bc",
+  "testedMergeCommit": "d55c6d7b677c6ef9541b597a25e578851f6d0318",
+  "rawEvidenceSha256": "39e4ffe00ad4a56826860a9abe65901310abc072ec861d4b41b7f6c1de6cb709",
+  "environment": {
+    "platform": "win32",
+    "os": "10.0.26100",
+    "node": "v24.14.0",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "requestedRenderingBackend": "swiftshader-webgl-only",
+    "hardwareRenderingValidated": false
+  },
+  "failure": {
+    "check": "interrupted-update-retained-application",
+    "step": "owned-page-cleanup",
+    "error": "Graceful browser close did not complete."
+  },
+  "completedDataChecks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc"
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "failed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc"
+    }
+  ],
+  "failedCleanup": {
+    "pageCloseCompleted": true,
+    "openPagesBeforeBrowserClose": 0,
+    "browserCloseCompleted": false,
+    "closeStatus": "timed-out",
+    "closeElapsedMs": 10004.28879999998,
+    "effectiveCloseDeadlineMs": 10000,
+    "protocolCloseTrace": {
+      "scope": "owned-browser-close-only",
+      "browserCloseRequestSeen": true,
+      "browserCloseRequestElapsedMs": 0.13919999997597188,
+      "browserCloseAcknowledgementSeen": true,
+      "browserCloseAcknowledgementElapsedMs": 16.871799999993527,
+      "browserCloseAcknowledgementLate": false,
+      "browserCloseAcknowledgementError": false,
+      "browserDisconnected": true,
+      "browserDisconnectedElapsedMs": 22.752499999973224,
+      "malformedCloseMessage": false,
+      "protocolMessageCount": 2,
+      "protocolMessageOverflow": false,
+      "protocolObservationComplete": true
+    },
+    "processExit": {
+      "code": 0,
+      "signal": null,
+      "elapsedMs": 12850.239100000006
+    },
+    "processTreeSnapshotStatus": {
+      "status": "unavailable",
+      "reason": "process-snapshot-timeout"
+    },
+    "forceProcessStatus": "unconfirmed",
+    "forceProcessAttempted": true,
+    "forcedBrowserProcessTermination": false
+  },
+  "interpretation": "Settings and workspace checks passed before cleanup failed. The owned page was closed; Chrome acknowledged Browser.close and disconnected promptly but missed the bounded process-close deadline. Exit code zero was observed later, after a synchronous process-tree diagnostic timed out; that event timestamp does not establish the exact OS process-exit time. Forced termination was not confirmed. No timeout increase or successful-retry substitution is applied."
+}

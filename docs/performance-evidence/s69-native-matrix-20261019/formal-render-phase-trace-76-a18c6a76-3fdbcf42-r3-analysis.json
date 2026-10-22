@@ -1,0 +1,517 @@
+{
+  "schema": "gev-formal-materialized-render-trace-summary/v1",
+  "status": "diagnostic-only",
+  "stateTimingSemantics": "Every stateMs/stateDeltaMs value here and in referenced analysis is the frozen preRender readiness observation, not the exact logical-state transition or physical activation time. The callback-ordering caveat below is material.",
+  "acceptanceEligible": false,
+  "cohort": {
+    "application": {
+      "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+      "candidate": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f"
+    },
+    "qaCommit": "3fdbcf420c4bf5e4995503ef033b828221116698",
+    "control": "local-datacenters",
+    "actionsPerRole": 6,
+    "order": [
+      "baseline",
+      "candidate"
+    ],
+    "viewport": {
+      "width": 1280,
+      "height": 537,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "preflight": "Unmodified exported frozen formal collector, including its unmeasured eight-record enable/disable materialization before the first timed ON. These are first timed actions, not first-ever/network-cold activations.",
+    "trace": {
+      "categories": [
+        "devtools.timeline",
+        "toplevel",
+        "viz"
+      ],
+      "maximumBytesPerRole": 16777216,
+      "rafSentinels": 0
+    },
+    "outcomeRetries": 0
+  },
+  "evidence": {
+    "process": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\formal-render-phase-trace-76-a18c6a76-3fdbcf42-20261020-r3\\process.json",
+      "bytes": 8789769,
+      "sha256": "278f1d6de6cb9190ab8b4b5f0e7e9432cc042048b118509c7abc5361af974281"
+    },
+    "planSha256": "20cbbded5da7d8544b8375ceecc18653dcd70b8dd76b56db03d323ab3663a058",
+    "traces": {
+      "baseline": {
+        "bytes": 13153329,
+        "sha256": "3b80fd7c3d17cfc3d03ad8c86a4261cf3e22589bcbb7cd3887c5822afc2d802e",
+        "eventCount": 56005,
+        "clockOriginSpreadMs": 1.4901161193847656e-8
+      },
+      "candidate": {
+        "bytes": 14446607,
+        "sha256": "fcc40d7d8caef6b6fe60b083cfc975928a1eadee3c10419d1be529c18c365e1b",
+        "eventCount": 61146,
+        "clockOriginSpreadMs": 1.4901161193847656e-8
+      }
+    },
+    "reader": {
+      "path": "qa-artifacts/analyze-formal-render-phase-trace-a18c6a76-3fdbcf42-20261020.mjs",
+      "sha256": "f4fc4d9ff0307cbca721025bac7c45560f5ade2395f06925ca2798c3610bae21",
+      "output": "qa-artifacts/formal-render-phase-trace-76-a18c6a76-3fdbcf42-analysis-20261020-r2.json",
+      "outputSha256": "cd388d07f887fa9a3c657a075be4aa161f3657f6ff248bfcc9866849d2c2c085"
+    },
+    "sourceReader": {
+      "path": "qa-artifacts/extract-formal-trace-on-phases-a18c6a76-20261020.mjs",
+      "sha256": "b90e4dcf99de83a6d38234b45b530ee2472aa1d8cb62d559c6a24b5c45ec09c8",
+      "output": "qa-artifacts/formal-render-phase-trace-76-a18c6a76-3fdbcf42-on-source-proof-20261020-r2.json",
+      "outputSha256": "32419eb2c31e4c8803cbdeec07469f496d30e46170c0fde0ec81e3c5ff8e4f18"
+    },
+    "findings": {
+      "path": "qa-artifacts/formal-render-phase-trace-76-a18c6a76-3fdbcf42-findings-20261020.json",
+      "sha256": "cad0c39d5888cd5833f7a6193e742a581ed54bb28457334ad311abbbe6e79452"
+    },
+    "archive": {
+      "path": "/opt/gods-eye-view-validation/s61-s70-20261018/formal-render-phase-trace-76-a18c6a76-3fdbcf42-20261020-r3-complete",
+      "receipt": "qa-artifacts/formal-render-phase-r3-transfer-20261020.json",
+      "receiptSha256": "29787c3e1366cc81268fcc63dfa5ab6a8d951e6bc8c1c29e05c65821c40da5fc"
+    }
+  },
+  "comparativeTimings": {
+    "baseline": [
+      {
+        "id": "baseline-local-01",
+        "on": true,
+        "eventTimingReportedMs": 304,
+        "eventTimingTraceMs": 304.667,
+        "inputDelayMs": 13.290000000000873,
+        "handlerMs": 31.024999999999636,
+        "stateMs": 213.6000000089407,
+        "renderMs": 254.79999999701977,
+        "commitMs": 206.53699999701894,
+        "presentationMs": 304.60799999535084,
+        "commitToPresentationMs": 98.07099999999991
+      },
+      {
+        "id": "baseline-local-02",
+        "on": false,
+        "eventTimingReportedMs": 112,
+        "eventTimingTraceMs": 113.113,
+        "inputDelayMs": 0.9279999999998836,
+        "handlerMs": 5.527000000000044,
+        "stateMs": 13.700000002980232,
+        "renderMs": 15.299999997019768,
+        "commitMs": 28.21599999403952,
+        "presentationMs": 113.02099999785423,
+        "commitToPresentationMs": 84.80500000000029
+      },
+      {
+        "id": "baseline-local-03",
+        "on": true,
+        "eventTimingReportedMs": 144,
+        "eventTimingTraceMs": 145.363,
+        "inputDelayMs": 1.076999999999316,
+        "handlerMs": 6.299000000000888,
+        "stateMs": 82.40000000596046,
+        "renderMs": 182.09999999403954,
+        "commitMs": 78.36299999404036,
+        "presentationMs": 145.23899997770786,
+        "commitToPresentationMs": 66.87599999999838
+      },
+      {
+        "id": "baseline-local-04",
+        "on": false,
+        "eventTimingReportedMs": 96,
+        "eventTimingTraceMs": 95.626,
+        "inputDelayMs": 1.1149999999997817,
+        "handlerMs": 4.591999999998734,
+        "stateMs": 14,
+        "renderMs": 15.5,
+        "commitMs": 28.000999994039375,
+        "presentationMs": 95.55099999904633,
+        "commitToPresentationMs": 67.55000000000109
+      },
+      {
+        "id": "baseline-local-05",
+        "on": true,
+        "eventTimingReportedMs": 128,
+        "eventTimingTraceMs": 129.153,
+        "inputDelayMs": 0.808999999999287,
+        "handlerMs": 5.197000000000116,
+        "stateMs": 71.29999999701977,
+        "renderMs": 142.09999999403954,
+        "commitMs": 66.92599999403865,
+        "presentationMs": 129.16499999165535,
+        "commitToPresentationMs": 62.2390000000014
+      },
+      {
+        "id": "baseline-local-06",
+        "on": false,
+        "eventTimingReportedMs": 96,
+        "eventTimingTraceMs": 94.968,
+        "inputDelayMs": 0.9089999999996508,
+        "handlerMs": 4.724000000001979,
+        "stateMs": 13.200000002980232,
+        "renderMs": 14.700000002980232,
+        "commitMs": 23.873999991057644,
+        "presentationMs": 94.92099998891354,
+        "commitToPresentationMs": 71.0470000000023
+      }
+    ],
+    "candidate": [
+      {
+        "id": "candidate-local-01",
+        "on": true,
+        "eventTimingReportedMs": 256,
+        "eventTimingTraceMs": 256.24,
+        "inputDelayMs": 20.70299999999952,
+        "handlerMs": 15.282999999999447,
+        "stateMs": 420.20000000298023,
+        "renderMs": 449.70000000298023,
+        "commitMs": 113.98200000297948,
+        "presentationMs": 256.3349999934435,
+        "commitToPresentationMs": 142.35300000000097
+      },
+      {
+        "id": "candidate-local-02",
+        "on": false,
+        "eventTimingReportedMs": 128,
+        "eventTimingTraceMs": 127.129,
+        "inputDelayMs": 1.1980000000003201,
+        "handlerMs": 6.938000000000102,
+        "stateMs": 11.400000005960464,
+        "renderMs": 13.900000005960464,
+        "commitMs": 41.50899999702051,
+        "presentationMs": 127.17500001192093,
+        "commitToPresentationMs": 85.66599999999926
+      },
+      {
+        "id": "candidate-local-03",
+        "on": true,
+        "eventTimingReportedMs": 48,
+        "eventTimingTraceMs": 45.794,
+        "inputDelayMs": 0.8130000000001019,
+        "handlerMs": 1.4729999999999563,
+        "stateMs": 98.20000000298023,
+        "renderMs": 106.80000001192093,
+        "commitMs": 19.52700000297955,
+        "presentationMs": 45.761000007390976,
+        "commitToPresentationMs": 26.23400000000038
+      },
+      {
+        "id": "candidate-local-04",
+        "on": false,
+        "eventTimingReportedMs": 96,
+        "eventTimingTraceMs": 95.832,
+        "inputDelayMs": 1.379000000000815,
+        "handlerMs": 4.095999999999549,
+        "stateMs": 13.100000008940697,
+        "renderMs": 14.700000002980232,
+        "commitMs": 31.769000000000233,
+        "presentationMs": 95.81399999558926,
+        "commitToPresentationMs": 64.04500000000007
+      },
+      {
+        "id": "candidate-local-05",
+        "on": true,
+        "eventTimingReportedMs": 48,
+        "eventTimingTraceMs": 46.902,
+        "inputDelayMs": 0.7180000000007567,
+        "handlerMs": 1.2289999999993597,
+        "stateMs": 98.20000000298023,
+        "renderMs": 221.20000000298023,
+        "commitMs": 20.870999999999185,
+        "presentationMs": 46.83299998939037,
+        "commitToPresentationMs": 25.961999999999534
+      },
+      {
+        "id": "candidate-local-06",
+        "on": false,
+        "eventTimingReportedMs": 96,
+        "eventTimingTraceMs": 96.002,
+        "inputDelayMs": 0.8590000000003783,
+        "handlerMs": 2.936999999998079,
+        "stateMs": 13.399999991059303,
+        "renderMs": 14.799999997019768,
+        "commitMs": 24.694999991057557,
+        "presentationMs": 96.033999979496,
+        "commitToPresentationMs": 71.33900000000358
+      }
+    ]
+  },
+  "offAttribution": {
+    "pairs": [
+      {
+        "baseline": "baseline-local-02",
+        "candidate": "candidate-local-02",
+        "eventPresentationDeltaMs": 14.154000014066696,
+        "commitDeltaMs": 13.293000002980989,
+        "postCommitDeltaMs": 0.8609999999989668,
+        "precommitTaskUnionMs": [
+          17.379999993081583,
+          32.82399999773406
+        ],
+        "precommitStyleUnionMs": [
+          7.358999999998559,
+          16.999000000001615
+        ],
+        "postcommitStyleUnionMs": [
+          10.746000000001004,
+          16.88699998938864
+        ]
+      },
+      {
+        "baseline": "baseline-local-04",
+        "candidate": "candidate-local-04",
+        "eventPresentationDeltaMs": 0.2629999965429306,
+        "commitDeltaMs": 3.7680000059608574,
+        "postCommitDeltaMs": -3.5050000000010186,
+        "precommitTaskUnionMs": [
+          17.184000005128837,
+          20.82100000560422
+        ],
+        "precommitStyleUnionMs": [
+          6.949000000000524,
+          8.827000000001135
+        ],
+        "postcommitStyleUnionMs": [
+          18.820000000001528,
+          18.73400000000038
+        ]
+      },
+      {
+        "baseline": "baseline-local-06",
+        "candidate": "candidate-local-06",
+        "eventPresentationDeltaMs": 1.1129999905824661,
+        "commitDeltaMs": 0.8209999999999127,
+        "postCommitDeltaMs": 0.29200000000128057,
+        "precommitTaskUnionMs": [
+          13.614999996058032,
+          13.619000001184759
+        ],
+        "precommitStyleUnionMs": [
+          5.169999999998254,
+          5.525999999994383
+        ],
+        "postcommitStyleUnionMs": [
+          9.031999999999243,
+          14.949000000000524
+        ]
+      }
+    ],
+    "firstOffCallbacks": {
+      "baseline": [
+        {
+          "method": "left",
+          "startMs": 16.59399999678135,
+          "wallMs": 4.67,
+          "cpuMs": 4.665
+        },
+        {
+          "method": "right",
+          "startMs": 21.435999989509583,
+          "wallMs": 4.535,
+          "cpuMs": 4.506
+        },
+        {
+          "method": "left",
+          "startMs": 73.10699999332428,
+          "wallMs": 9.795,
+          "cpuMs": 9.761
+        }
+      ],
+      "candidate": [
+        {
+          "method": "left",
+          "startMs": 17.722000002861023,
+          "wallMs": 11.77,
+          "cpuMs": 11.711
+        },
+        {
+          "method": "right",
+          "startMs": 29.86200000345707,
+          "wallMs": 7.542,
+          "cpuMs": 7.512
+        },
+        {
+          "method": "left",
+          "startMs": 52.677000001072884,
+          "wallMs": 14.3,
+          "cpuMs": 14.184
+        },
+        {
+          "method": "left",
+          "startMs": 123.77800001204014,
+          "wallMs": 8.317,
+          "cpuMs": 7.95
+        }
+      ]
+    },
+    "interpretation": "First OFF candidate presentation is14.154ms later:13.293ms extra before commit and0.861ms extra after commit. Its left/right/second-left callbacks have11.770/7.542/14.300ms wall and11.711/7.512/14.184ms CPU, versus baseline4.670/4.535/9.795ms wall. This demonstrates extra main-thread rail/style work in the dominant relative delay interval. The shared postcommit tail is84.805/85.666ms; available Draw/Swap/presentation records do not uniquely assign that full tail to app, GPU or driver. Later OFFs are approximately96ms on both roles; prior formal136/160ms observations remain failures and are not replaced."
+  },
+  "onAttribution": {
+    "pairs": [
+      {
+        "baseline": "baseline-local-01",
+        "candidate": "candidate-local-01",
+        "ownedTimerInstallMs": 78.15299999713898,
+        "ownedTaskStartMs": 122.90199999511242,
+        "ownedTaskWallMs": 17.374,
+        "ownedTaskCpuMs": 16.739,
+        "ownedTaskQueueMs": 44.74899999797344,
+        "firstPostEnablePreRenderMs": [
+          67.5,
+          153.80000001192093
+        ],
+        "firstPostEnablePassWallMs": [
+          123.20000000298023,
+          227.69999998807907
+        ],
+        "postPassToStateMs": [
+          22.900000005960464,
+          38.70000000298023
+        ],
+        "stateDeltaMs": 206.59999999403954,
+        "nonOverlappingDecompositionMs": {
+          "start": 86.30000001192093,
+          "pass": 104.49999998509884,
+          "nextState": 15.799999997019768
+        }
+      },
+      {
+        "baseline": "baseline-local-03",
+        "candidate": "candidate-local-03",
+        "ownedTimerInstallMs": 13.643999993801117,
+        "ownedTaskStartMs": 19.700000017881393,
+        "ownedTaskWallMs": 4.277,
+        "ownedTaskCpuMs": 4.23,
+        "ownedTaskQueueMs": 6.0560000240802765,
+        "firstPostEnablePreRenderMs": [
+          14.200000002980232,
+          34.400000005960464
+        ],
+        "firstPostEnablePassWallMs": [
+          50.599999994039536,
+          49.900000005960464
+        ],
+        "postPassToStateMs": [
+          17.600000008940697,
+          13.899999991059303
+        ],
+        "stateDeltaMs": 15.799999997019768,
+        "nonOverlappingDecompositionMs": {
+          "start": 20.200000002980232,
+          "pass": -0.699999988079071,
+          "nextState": -3.7000000178813934
+        }
+      },
+      {
+        "baseline": "baseline-local-05",
+        "candidate": "candidate-local-05",
+        "ownedTimerInstallMs": 14.675999999046326,
+        "ownedTaskStartMs": 21.04399999976158,
+        "ownedTaskWallMs": 2.988,
+        "ownedTaskCpuMs": 2.976,
+        "ownedTaskQueueMs": 6.368000000715256,
+        "firstPostEnablePreRenderMs": [
+          14,
+          36.6000000089407
+        ],
+        "firstPostEnablePassWallMs": [
+          40.5,
+          44.599999994039536
+        ],
+        "postPassToStateMs": [
+          16.799999997019768,
+          17
+        ],
+        "stateDeltaMs": 26.900000005960464,
+        "nonOverlappingDecompositionMs": {
+          "start": 22.600000008940697,
+          "pass": 4.0999999940395355,
+          "nextState": 0.20000000298023224
+        }
+      }
+    ],
+    "interpretation": "The three candidate timers are installed by the exact visibilityPaint callback. Warm ON moves its first post-enable natural render pass20.2/22.6ms later; its ready-at-preRender witness is15.8/26.9ms later. First timed ON has both a later pass and substantially greater elapsed time inside that pass; its largest Cesium FunctionCall is231.077ms wall/29.087ms CPU versus baseline136.991/47.142. This locates waiting/in-render work, not an individual GPU, driver, worker, shader or sampleHeight cause."
+  },
+  "sourceAnchors": {
+    "asset": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\single-raf-feedback-a18c6a76-vm\\visual-assets\\standard\\assets\\index-DgWz230w.js",
+      "sha256": "642c0f9ef1090fc4ad61bc6e5f34b2e30026011591ca05e7674af03046bc9dfe"
+    },
+    "callbacks": [
+      {
+        "line": 503,
+        "column": 110980,
+        "method": "_scheduleLeftPanelLayout"
+      },
+      {
+        "line": 503,
+        "column": 108028,
+        "method": "_scheduleRightPanelLayout"
+      }
+    ],
+    "files": [
+      {
+        "file": "src/ui/panelLayoutController.js",
+        "leftScheduler": 425,
+        "leftCallback": 429,
+        "rightScheduler": 290,
+        "rightCallback": 294
+      },
+      {
+        "file": "src/ui/leftPanelRail.js",
+        "naturalMeasurementMarker": 170,
+        "diagnosticDatasetWrites": 298
+      },
+      {
+        "file": "src/ui/layerPanel.js",
+        "rowControlHiddenAssignment": 559
+      },
+      {
+        "file": "src/data/visibilityPaint.js",
+        "rafCallback": 44,
+        "ownedTask": 52,
+        "rafRequest": 63
+      },
+      {
+        "file": "src/data/localGeojsonCore.js",
+        "releaseRecords": 549,
+        "lodComputedBeforeGrounding": 1174,
+        "groundingWalk": 1183,
+        "preRenderRegistration": 1289
+      },
+      {
+        "file": "scripts/qa-qualification-metrics-capture.mjs",
+        "readFrameState": 487,
+        "stateWitness": 929,
+        "earlyPostRenderReturn": 990,
+        "postRenderReread": 1009
+      }
+    ]
+  },
+  "readinessOrderingCaveat": {
+    "demonstrated": true,
+    "description": "QA preRender is registered before the newly enabled layer listener. It retains matched=false on the first enabled frame; onRender returns before rereading postRender state when that preRender match is false. Thus that first frame postRender-ready state is not retained by the primary observer. StateAtMs is a later preRender observation, not the exact instant logical metadata became ready. The layer sets computed=true before its grounding walk. Same ordering across roles does not imply equal frame cadence or observation lag.",
+    "retainedField": "frameNumberAtState matches the later preRender/postRender pair; trace phase numbers identify the preceding post-enable pass",
+    "contract": "The frozen gate is the declared natural preRender/postRender-ready pair. Baseline and candidate use the same predicate/reset fields. No gate, raw result or historical failure is changed.",
+    "recommendation": "Do not label all135vs89ms formal state delta as physical activation/data-update cost. Any alternative endpoint would require a prospectively versioned contract and corresponding proof; this report does not implement one."
+  },
+  "recommendation": {
+    "runtime": "Prioritize demonstrated equal-value DOM/dataset work and independently proven rail dependency reduction. Root/Astra own those fixes. Keep source/sampleHeight ownership and quality unchanged.",
+    "onBudget": "One RAF plus an owned task demonstrably moves enable work into a later rendering opportunity. Removing it would discard the mechanism associated with the warm native acknowledgment improvement; adding yields worsens readiness. Make no further unmeasured scheduler patch. Measure the concrete rail candidate against its a18 parent, then use the unchanged formal20 against76 if warranted.",
+    "nextCapture": "One bounded six-action-per-role parent/new diagnostic can omit trace, phase and mutation observers while preserving the exact formal materialization, source/native-window/settings/population proofs and drains. All results stay diagnostic; only a complete lean20 cohort can satisfy formal gates."
+  },
+  "limits": [
+    "Six actions per role and tracing/passive/mutation observer overhead cannot establish acceptance or explain every formal outlier.",
+    "Same-name span union removes internal nesting. Task, FunctionCall, style, layout and paint spans overlap; never sum those categories. Thread CPU exists only where supplied; wall minus CPU is not a GPU/driver attribution.",
+    "Trace clicks are joined by exact interactionId. Raw trace and DOM timestamps differ by up to0.124ms; that encoding difference is retained and is not an acceptance tolerance.",
+    "AnimationFrame::Presentation agrees with the raw trace EventTiming endpoint; this is browser presentation evidence, not an independent physical-monitor photon timestamp.",
+    "No forced render, additional RAF loop, depth-query wrapper, cache, detail/population/resolution change or runtime edit was made."
+  ],
+  "runtimeEdited": false,
+  "gpuRerun": false
+}

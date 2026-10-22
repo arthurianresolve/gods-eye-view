@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { syncRadioPanelPlacement } from './radioPanelPlacement.js';
+import {
+  isRadioPanelPlacementCurrent,
+  syncRadioPanelPlacement,
+} from './radioPanelPlacement.js';
 
 function node() {
   return {
@@ -63,9 +66,13 @@ test('all themes keep the same Radio controls nested in Context', () => {
     documentElement: { dataset: {} },
     getElementById: (id) => nodes[id],
   };
+  const beforeProbe = [panel.moves, dock.moves, mini.moves];
+  assert.equal(isRadioPanelPlacementCurrent(doc), false);
+  assert.deepEqual([panel.moves, dock.moves, mini.moves], beforeProbe);
   for (let cycle = 0; cycle < 3; cycle++) {
     doc.documentElement.dataset.uiTheme = 'cyber';
     syncRadioPanelPlacement(doc);
+    assert.equal(isRadioPanelPlacementCurrent(doc), true);
     assert.equal(panel.parentElement, body);
     assert.deepEqual(contextHeader.children, [dock, contextCollapse]);
     assert.equal(mini.parentElement, dock);
@@ -92,9 +99,20 @@ test('all themes keep the same Radio controls nested in Context', () => {
   assert.equal(panel.parentElement, body);
   assert.deepEqual(contextHeader.children, [dock, contextCollapse]);
   assert.equal(mini.parentElement, dock);
+  for (const item of [panel, dock, mini]) {
+    rail.append(item);
+    assert.equal(isRadioPanelPlacementCurrent(doc), false);
+    syncRadioPanelPlacement(doc);
+    assert.equal(isRadioPanelPlacementCurrent(doc), true);
+  }
 });
 
 test('placement is inert before the complete shell exists', () => {
+  assert.equal(isRadioPanelPlacementCurrent(null), true);
+  assert.equal(
+    isRadioPanelPlacementCurrent({ getElementById: () => null }),
+    true,
+  );
   assert.doesNotThrow(() => syncRadioPanelPlacement(null));
   assert.doesNotThrow(() =>
     syncRadioPanelPlacement({

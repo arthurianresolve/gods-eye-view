@@ -1,0 +1,18 @@
+{
+  "schema": "gev-weather-idle-cadence-disposition/v1",
+  "metric": "idle.frameIntervalMs.p95",
+  "scenario": "idle",
+  "workloadId": "austin-weather-effects-phased-v2",
+  "baselineAppSha": "76cc760b384da27e7cfc848a76f317112574826a",
+  "candidateAppSha": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "captureHarnessCommit": "6025a88eb84218f5b460116192557e41248eccfa",
+  "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "controlDiagnostic": {
+    "path": "../weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready/control.json",
+    "sha256": "1b10dcc4504ff364b5f8fdb8249c28281e1aa7698d9a56d43d17669ed0e7353f"
+  },
+  "candidateDiagnostic": {
+    "path": "../weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready/candidate.json",
+    "sha256": "d8d8a1515d14b956c9e94980b4bff0494d1e9943e907bdbdf896dc96429c9b00"
+  }
+}

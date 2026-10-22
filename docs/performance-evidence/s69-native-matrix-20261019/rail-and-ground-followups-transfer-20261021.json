@@ -1,0 +1,11 @@
+{
+  "status": "all-files-independently-verified",
+  "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/rail-and-ground-followups-20261021",
+  "fileCount": 58,
+  "totalBytes": 12632054,
+  "manifestSha256": "fef035fa59bd80b2f30446cc00709fb107ec7dc1bbcbdf1cf37c003326053272",
+  "completedAt": "2026-10-21T03:23:35.295Z",
+  "rawModified": false,
+  "productionChanged": false,
+  "acceptanceEligible": false
+}

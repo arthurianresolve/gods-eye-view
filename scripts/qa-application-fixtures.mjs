@@ -6,11 +6,22 @@ import { createFixtureNetworkProbe } from './performance/fixtureNetworkProbe.mjs
 import { PROFILE_RECOVERY_WORKSPACE_ASSET_TEXT } from './performance/profileRecoveryFixtureContract.mjs';
 import { clickAndWaitForWorkspaceOpen } from './performance/workspaceOpenProbe.mjs';
 import {
+  cleanupExclusiveConsoleMessageHandleOwner,
+  createExclusiveConsoleMessageHandleOwner,
+  readConsoleMessageHandleOwnership,
+} from './performance/consoleMessageOwnership.mjs';
+import {
   cleanupStartupHeartbeat,
   installStartupHeartbeat,
   parseWebglDiagnosticMarker,
   sanitizeDiagnosticText,
 } from './performance/startupDiagnostics.mjs';
+import {
+  installImportStatusDiagnosticsInPage,
+  markImportStatusWaitReferenceInPage,
+  withImportStatusDiagnostics,
+  withImportStatusWaitRoot,
+} from './performance/importStatusDiagnostics.mjs';
 
 const fixtureDiagnostics = new WeakMap();
 
@@ -51,9 +62,11 @@ export async function prepareFixturePage(
   {
     respond,
     viewport = { width: 1440, height: 1000 },
+    nativeWindowViewport = false,
     startupDiagnostics = null,
     page: existingPage = null,
     onFulfilled = null,
+    exclusiveConsoleHandleOwnership = false,
   } = {},
 ) {
   const page = existingPage || (await browser.newPage());
@@ -65,24 +78,35 @@ export async function prepareFixturePage(
     startupMessages,
     startupDiagnostics,
     listeners: [],
+    consoleHandleOwner: exclusiveConsoleHandleOwnership
+      ? createExclusiveConsoleMessageHandleOwner(page)
+      : null,
   };
   fixtureDiagnostics.set(page, pageDiagnostics);
-  page.on('console', (message) => {
-    if (startupDiagnostics && message.type() === 'info') {
-      const marker = parseWebglDiagnosticMarker(message.text());
-      if (marker) startupDiagnostics.recordRendererPhase(marker);
-      if (marker) return;
+  const onConsole = (message) => {
+    try {
+      if (startupDiagnostics && message.type() === 'info') {
+        const marker = parseWebglDiagnosticMarker(message.text());
+        if (marker) startupDiagnostics.recordRendererPhase(marker);
+        if (marker) return;
+      }
+      if (!['error', 'warn'].includes(message.type())) return;
+      // Local fixture evidence only: strip URL values and bound diagnostics.
+      startupMessages.push(
+        message
+          .text()
+          .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
+          .slice(0, 500),
+      );
+      if (startupMessages.length > 12) startupMessages.shift();
+    } finally {
+      pageDiagnostics.consoleHandleOwner?.disposeMessageArgsIfExclusive(
+        message,
+      );
     }
-    if (!['error', 'warn'].includes(message.type())) return;
-    // Local fixture evidence only: strip URL values and bound diagnostics.
-    startupMessages.push(
-      message
-        .text()
-        .replace(/https?:\/\/[^\s"'<>]+/g, '[url]')
-        .slice(0, 500),
-    );
-    if (startupMessages.length > 12) startupMessages.shift();
-  });
+  };
+  pageDiagnostics.consoleListener = onConsole;
+  page.on('console', onConsole);
   page.on('pageerror', (error) => errors.push(error.message));
   if (startupDiagnostics) {
     const onResponse = (response) => {
@@ -116,7 +140,13 @@ export async function prepareFixturePage(
   }
   page.setDefaultTimeout(30000);
   page.setDefaultNavigationTimeout(90000);
-  await page.setViewport(viewport);
+  if (nativeWindowViewport)
+    assert.equal(
+      page.viewport(),
+      null,
+      'Native window fixture excludes viewport emulation',
+    );
+  else await page.setViewport(viewport);
   const onError = (error) => {
     if (
       !page.isClosed() &&
@@ -146,15 +176,41 @@ export async function prepareFixturePage(
 export async function cleanupFixturePageDiagnostics(page) {
   const diagnostics = fixtureDiagnostics.get(page);
   if (!diagnostics) return;
-  for (const [event, listener] of diagnostics.listeners)
-    page.off(event, listener);
-  if (diagnostics.startupDiagnostics)
-    await cleanupStartupHeartbeat(
-      page,
-      diagnostics.heartbeatScriptIdentifier,
-      1000,
-    );
-  fixtureDiagnostics.delete(page);
+  let cleanupError = null;
+  try {
+    for (const [event, listener] of diagnostics.listeners)
+      page.off(event, listener);
+    if (diagnostics.consoleHandleOwner)
+      await cleanupExclusiveConsoleMessageHandleOwner(
+        page,
+        diagnostics.consoleListener,
+        diagnostics.consoleHandleOwner,
+      );
+    else page.off('console', diagnostics.consoleListener);
+  } catch (error) {
+    cleanupError = error;
+  }
+  try {
+    if (diagnostics.startupDiagnostics)
+      await cleanupStartupHeartbeat(
+        page,
+        diagnostics.heartbeatScriptIdentifier,
+        1000,
+      );
+  } catch (error) {
+    cleanupError ||= error;
+  } finally {
+    fixtureDiagnostics.delete(page);
+  }
+  if (cleanupError) throw cleanupError;
+}
+
+export async function flushFixturePageConsoleOwnership(
+  page,
+  { timeoutMs = 5000 } = {},
+) {
+  const owner = fixtureDiagnostics.get(page)?.consoleHandleOwner;
+  return owner ? owner.drain({ timeoutMs }) : null;
 }
 
 export function readFixturePageDiagnostics(page) {
@@ -165,8 +221,11 @@ export function readFixturePageDiagnostics(page) {
           .slice(-8)
           .map((error) => sanitizeDiagnosticText(error, 240)),
         messages: diagnostics.startupMessages.slice(-12),
+        consoleHandleOwnership: readConsoleMessageHandleOwnership(
+          diagnostics.consoleHandleOwner,
+        ),
       }
-    : { errors: [], messages: [] };
+    : { errors: [], messages: [], consoleHandleOwnership: null };
 }
 
 /** Bounded, URL-free state for a named workspace/import wait failure. */
@@ -202,12 +261,25 @@ export function collectWorkspaceImportDiagnostics(input) {
   const importLayer = safeCall(() => app?.importedGeometryLayer?.getState());
   return {
     phase: String(phase).slice(0, 80),
+    importStatusProgress: safeCall(() =>
+      scope.__gevImportStatusDiagnostics?.snapshot(),
+    ),
     document: {
       readyState: scope.document.readyState,
       visibility: scope.document.visibilityState,
       focused: safeCall(() => scope.document.hasFocus()),
     },
     workspace: {
+      libraryOpen: typeof root?.open === 'boolean' ? root.open : null,
+      scenePanelCollapsed: safeCall(() =>
+        root?.closest('#scene-panel')?.classList.contains('collapsed'),
+      ),
+      importControlPresent: Boolean(root?.querySelector('[data-geo-file]')),
+      importControlHasLayout: safeCall(() =>
+        Boolean(
+          root?.querySelector('[data-geo-file]')?.getClientRects().length,
+        ),
+      ),
       status: text('[data-status]'),
       errorCode:
         root?.querySelector('[data-status]')?.dataset?.errorCode || null,
@@ -394,11 +466,7 @@ export async function runWorkspaceFixturePhase(
 export async function bootFixturePage(
   page,
   base,
-  {
-    onProgress = () => {},
-    hash = '',
-    applicationReadyTimeoutMs = 90_000,
-  } = {},
+  { onProgress = () => {}, hash = '', applicationReadyTimeoutMs = 90_000 } = {},
 ) {
   if (
     !Number.isFinite(applicationReadyTimeoutMs) ||
@@ -414,8 +482,12 @@ export async function bootFixturePage(
   // before navigation; this is a no-op for headless callers.
   await page.bringToFront?.();
   onProgress('navigation');
+  const navigationUrl = new URL(base);
+  navigationUrl.pathname = `${navigationUrl.pathname.replace(/\/+$/, '')}/`;
+  navigationUrl.searchParams.set('welcome', '0');
+  navigationUrl.hash = hash;
   try {
-    await page.goto(base + '/?welcome=0' + hash, {
+    await page.goto(navigationUrl.href, {
       // The standalone entry point has a large ESM graph. A dev-server
       // navigation can receive the document while Chromium is still
       // compiling/evaluating that graph, so the application-state gate below
@@ -549,6 +621,28 @@ export async function openWorkspace(
   );
 }
 
+// A workspace restore may collapse its panel. Open the real disclosures before
+// requiring a visible import control; programmatic save/open clicks alone do
+// not expose controls inside the library's closed <details> element.
+export function showWorkspaceLibraryForFixtureInPage(scope = window) {
+  const root = scope.document.querySelector('.workspace-library');
+  if (!root) throw new Error('Workspace library is unavailable');
+  const app = scope.__godsEyeView;
+  const panel = root.closest('#scene-panel');
+  if (panel?.classList.contains('collapsed')) {
+    if (typeof app?.styleManager?.setPanelCollapsed !== 'function')
+      throw new Error('Scene panel disclosure API is unavailable');
+    app.styleManager.setPanelCollapsed('scene-panel', false, {
+      skipCapture: true,
+    });
+  }
+  if (!root.open) {
+    if (typeof app?.workspaceLibraryPanel?.openLibrary !== 'function')
+      throw new Error('Workspace library disclosure API is unavailable');
+    app.workspaceLibraryPanel.openLibrary();
+  }
+}
+
 export async function importFixtureGeometry(
   page,
   name = 'Persistent fixture',
@@ -557,12 +651,23 @@ export async function importFixtureGeometry(
   const phaseOptions = { onProgress };
   await runWorkspaceFixturePhase(
     page,
+    'import-panel-open',
+    () => page.evaluate(showWorkspaceLibraryForFixtureInPage),
+    phaseOptions,
+  );
+  await runWorkspaceFixturePhase(
+    page,
     'import-control-wait',
-    () =>
-      page.waitForSelector('.workspace-library [data-geo-file]', {
-        visible: true,
-        timeout: timeoutMs,
-      }),
+    async () => {
+      const control = await page.waitForSelector(
+        '.workspace-library [data-geo-file]',
+        {
+          visible: true,
+          timeout: timeoutMs,
+        },
+      );
+      await control?.dispose();
+    },
     phaseOptions,
   );
   await runWorkspaceFixturePhase(
@@ -604,56 +709,102 @@ export async function importFixtureGeometry(
     'import-preview-wait',
     () =>
       page.waitForFunction(
-        () =>
-          document
-            .querySelector('.workspace-library [data-import-summary]')
-            ?.textContent.includes('1 accepted'),
-        // Timer polling continues when a headed page is occluded or hidden;
-        // the predicate is application state, not a rendered-frame condition.
+        isImportPreviewReadyForFixtureInPage,
+        // This is application state, so poll by timer instead of animation frame.
         { timeout: timeoutMs, polling: 50 },
       ),
     phaseOptions,
   );
-  await runWorkspaceFixturePhase(
+  await withImportStatusDiagnostics(
     page,
-    'import-apply-click',
-    () => clickControl(page, '.workspace-library [data-action="apply-import"]'),
-    phaseOptions,
-  );
-  await runWorkspaceFixturePhase(
-    page,
-    'import-apply-status-wait',
     () =>
-      page.waitForFunction(
-        () =>
-          document
-            .querySelector('.workspace-library [data-import-status]')
-            ?.textContent.includes('Imported 1 features'),
-        { timeout: timeoutMs, polling: 50 },
+      runWorkspaceFixturePhase(
+        page,
+        'import-status-observer-install',
+        () => page.evaluate(installImportStatusDiagnosticsInPage),
+        phaseOptions,
       ),
-    phaseOptions,
+    async (ownerToken) => {
+      await runWorkspaceFixturePhase(
+        page,
+        'import-apply-click',
+        () =>
+          clickControl(page, '.workspace-library [data-action="apply-import"]'),
+        phaseOptions,
+      );
+      await runWorkspaceFixturePhase(
+        page,
+        'import-apply-status-wait',
+        async () => {
+          const documentRoot = await page.evaluateHandle(() => document);
+          return withImportStatusWaitRoot(documentRoot, async () => {
+            // Record the browser-clock reference first. It precedes Puppeteer's
+            // host-side wait timer, so the resulting comparison is conservative.
+            await page.evaluate(
+              markImportStatusWaitReferenceInPage,
+              ownerToken,
+              timeoutMs,
+            );
+            return await page.waitForFunction(
+              () =>
+                document
+                  .querySelector('.workspace-library [data-import-status]')
+                  ?.textContent.includes('Imported 1 features'),
+              { timeout: timeoutMs, polling: 'mutation', root: documentRoot },
+            );
+          });
+        },
+        phaseOptions,
+      );
+      await runWorkspaceFixturePhase(
+        page,
+        'import-layer-state-wait',
+        () =>
+          page.waitForFunction(
+            () =>
+              window.__godsEyeView.importedGeometryLayer.getState()
+                .featureCount >= 1,
+            { timeout: timeoutMs, polling: 50 },
+          ),
+        phaseOptions,
+      );
+    },
   );
-  await runWorkspaceFixturePhase(
-    page,
-    'import-layer-state-wait',
-    () =>
-      page.waitForFunction(
-        () =>
-          window.__godsEyeView.importedGeometryLayer.getState().featureCount >=
-          1,
-        { timeout: timeoutMs, polling: 50 },
-      ),
-    phaseOptions,
+}
+
+// Replacing a file hides its old review immediately, but older installations
+// retain the previous summary text while File.text() and previewing are pending.
+// Waiting for the text alone can click Apply against a null/stale preview.
+export function isImportPreviewReadyForFixtureInPage(scope = window) {
+  const root = scope.document.querySelector('.workspace-library');
+  return Boolean(
+    root?.querySelector('[data-workspace-select]')?.value &&
+    root.querySelector('[data-import-review]')?.hidden === false &&
+    root.querySelector('[data-action="apply-import"]')?.disabled === false &&
+    root
+      .querySelector('[data-import-summary]')
+      ?.textContent.includes('1 accepted'),
+  );
+}
+
+// The select is populated partway through refresh(), before getWorkspace()
+// resolves and before save() publishes completion. Do not stage an import in
+// that intermediate state. These are public UI state checks on both releases.
+export function isWorkspaceSaveCompleteForFixtureInPage(scope = window) {
+  const root = scope.document.querySelector('.workspace-library');
+  return Boolean(
+    root?.querySelector('[data-workspace-select]')?.value &&
+    root.querySelector('[data-status]')?.dataset.state === 'saved',
   );
 }
 
 export async function seedPersistentWorkspace(page) {
   await clickControl(page, '.workspace-library [data-action="save-as"]');
-  await page.waitForFunction(
-    () =>
-      document.querySelector('.workspace-library [data-workspace-select]')
-        .value,
-    { polling: 50 },
+  await runWorkspaceFixturePhase(page, 'workspace-save-complete-wait', () =>
+    page.waitForFunction(isWorkspaceSaveCompleteForFixtureInPage, {
+      timeout: 30_000,
+      polling: 50,
+    }),
   );
   await importFixtureGeometry(page);
   return page.evaluate(async (workspaceAssetText) => {
@@ -691,6 +842,12 @@ export async function seedPersistentWorkspace(page) {
 
 export async function assertPersistentWorkspace(page, expected) {
   await openWorkspace(page, expected.id);
+  await page.waitForFunction(
+    () =>
+      window.__godsEyeView?.importedGeometryLayer?.getState?.()?.featureCount >=
+      1,
+    { timeout: 30_000, polling: 50 },
+  );
   const actual = await page.evaluate(async (id) => {
     const app = window.__godsEyeView;
     const record = await app.workspaceLibraryPanel.library.getWorkspace(id);

@@ -1,0 +1,75 @@
+{
+  "schema": "gev-empty-whiteboard-focused-validation/v1",
+  "status": "passed",
+  "runtime": "v24.16.0",
+  "source": [
+    {
+      "file": "src/annotations/screenAnnotationRenderer.js",
+      "sha256": "6307d94774849d9fd54b090e6a9feb20873bb55c0c80717ef921b4add5b0c4fc"
+    },
+    {
+      "file": "src/annotations/screenAnnotationRenderer.test.mjs",
+      "sha256": "546ab611b336bef23f28e305ac571ced188751ecfbd8e346ff58a2b3881c668e"
+    },
+    {
+      "file": "src/annotations/hybridAnnotationRenderer.test.mjs",
+      "sha256": "f912e27cee3b37fa8157df5baf6741d102c205c73473797ee71c38a964eaaa27"
+    }
+  ],
+  "sourceUnchanged": true,
+  "checks": [
+    {
+      "name": "focused",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "--import",
+        "./qa-artifacts/windows-visual-dependencies.mjs",
+        "--test",
+        "--test-concurrency=1",
+        "src/annotations/screenAnnotationRenderer.test.mjs",
+        "src/annotations/hybridAnnotationRenderer.test.mjs"
+      ],
+      "startedAt": "2026-10-20T15:22:48.994Z",
+      "endedAt": "2026-10-20T15:22:54.099Z",
+      "exitCode": 0,
+      "signal": null,
+      "logSha256": "de313ff6c64242d0695f73256685438b8378413ae790fa8136f308f4781d5117"
+    },
+    {
+      "name": "runtime-format",
+      "executable": "C:\\Program Files\\nodejs\\node.exe",
+      "args": [
+        "../gev-dev/node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "src/annotations/screenAnnotationRenderer.js"
+      ],
+      "startedAt": "2026-10-20T15:22:54.100Z",
+      "endedAt": "2026-10-20T15:22:54.435Z",
+      "exitCode": 0,
+      "signal": null,
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "name": "whitespace",
+      "executable": "git",
+      "args": [
+        "diff",
+        "--check",
+        "--",
+        "src/annotations/screenAnnotationRenderer.js",
+        "src/annotations/screenAnnotationRenderer.test.mjs",
+        "src/annotations/hybridAnnotationRenderer.test.mjs"
+      ],
+      "startedAt": "2026-10-20T15:22:54.437Z",
+      "endedAt": "2026-10-20T15:22:54.495Z",
+      "exitCode": 0,
+      "signal": null,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope": "Node-only screen/hybrid behavior, runtime formatting and scoped whitespace; no browser, GPU, VM or performance benefit validation.",
+  "earlierAttempt": {
+    "command": "node --test --test-concurrency=1 src/annotations/screenAnnotationRenderer.test.mjs src/annotations/hybridAnnotationRenderer.test.mjs",
+    "result": "Dependency resolution failed before test execution: local sparse node_modules/cesium/index.js missing. Existing windows-visual-dependencies.mjs resolves unchanged shared dependencies; no install or application change."
+  }
+}

@@ -72,6 +72,7 @@ function controllerFixture(initialDensity = 50) {
   let frame;
   const viewer = {
     scene: {
+      requestRenderMode: false,
       postRender: {
         addEventListener(listener) {
           frame = listener;
@@ -108,6 +109,7 @@ function controllerFixture(initialDensity = 50) {
       frame?.();
     },
     listeners,
+    scene: viewer.scene,
   };
 }
 
@@ -158,6 +160,38 @@ test('hidden tabs suspend Auto samples and reset elapsed frame timing', () => {
   assert.equal(f.controller.policy.samples.length, 0);
   f.frame(50_032);
   assert.equal(f.controller.policy.samples.length, 1);
+  f.controller.destroy();
+});
+
+test('Auto keeps slow continuous frames but ignores request-render gaps', () => {
+  const f = controllerFixture(50);
+  f.controller.setMode('auto', { persist: false });
+  f.frame(0);
+  for (let time = 150; time <= 14_850; time += 150) f.frame(time);
+  assert.equal(f.density, 25);
+  f.controller.setMode('manual', { persist: false });
+  f.controller.setMode('auto', { persist: false });
+  f.scene.requestRenderMode = true;
+  f.frame(3_000);
+  f.frame(3_150);
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.controller.destroy();
+});
+
+test('Auto excludes the first frame after demand mode returns to continuous mode', () => {
+  const f = controllerFixture(75);
+  f.controller.setMode('auto', { persist: false });
+  f.scene.requestRenderMode = true;
+  f.frame(0);
+  f.frame(150);
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.scene.requestRenderMode = false;
+  f.frame(300); // transition boundary is excluded
+  assert.equal(f.controller.policy.samples.length, 0);
+  f.frame(450); // subsequent continuous frame is eligible
+  assert.equal(f.controller.policy.samples.length, 1);
+  f.controller.setMode('manual', { persist: false });
+  assert.equal(f.density, 75);
   f.controller.destroy();
 });
 

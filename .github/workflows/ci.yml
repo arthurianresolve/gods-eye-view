@@ -88,6 +88,10 @@ on:
         description: Sample first two idle and first scripted-motion windows (diagnostic only)
         type: boolean
         default: false
+      capture_tracking_cpu_profile:
+        description: Sample one selected-aircraft tracking window (diagnostic only)
+        type: boolean
+        default: false
       capture_depth_pick_attribution:
         description: Record bounded caller-tagged depth-pick attribution in the dense capture (diagnostic only)
         type: boolean
@@ -107,7 +111,7 @@ on:
       shutdown_runner:
         description: Free standard hosted OS for isolated shutdown or profile-recovery diagnostics
         type: choice
-        options: [windows-latest, macos-latest, ubuntu-latest]
+        options: [windows-latest, macos-latest, macos-15-intel, ubuntu-latest]
         default: windows-latest
       shutdown_renderer:
         description: Match recovery renderer defaults, or explicitly isolate SwiftShader WebGL
@@ -344,7 +348,9 @@ jobs:
       matrix:
         # Keep the legacy mode name; its default remains Windows. The selected
         # OS also permits whole-application follow-up to the shutdown controls.
-        os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && format('["{0}"]', inputs.shutdown_runner || 'windows-latest') || '["windows-latest","macos-latest","ubuntu-latest"]') }}
+        # Pin the free standard Intel image: the arm64 latest pool repeatedly
+        # failed to acquire a runner. This is functional recovery, not GPU evidence.
+        os: ${{ fromJSON(inputs.validation_mode == 'windows-profile-recovery' && format('["{0}"]', inputs.shutdown_runner || 'windows-latest') || '["windows-latest","macos-15-intel","ubuntu-latest"]') }}
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
       # Exercise recovery with a deterministic software renderer on GPU-less bots.
@@ -352,7 +358,7 @@ jobs:
       GEV_QA_SOFTWARE_RENDERING: '1'
       # Windows and macOS recovery use the measured WebGL-only SwiftShader path.
       # Linux retains its existing full-driver software renderer.
-      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (matrix.os == 'windows-latest' || matrix.os == 'macos-latest' || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_renderer == 'swiftshader-webgl-only')) && '1' || '0' }}
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (matrix.os == 'windows-latest' || startsWith(matrix.os, 'macos-') || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_renderer == 'swiftshader-webgl-only')) && '1' || '0' }}
       GEV_QA_PROFILE_RECOVERY_SHUTDOWN_DIAGNOSTICS: ${{ (matrix.os == 'windows-latest' || (inputs.validation_mode == 'windows-profile-recovery' && inputs.shutdown_diagnostics)) && '1' || '0' }}
     steps:
       - name: Check out source
@@ -424,7 +430,7 @@ jobs:
     env:
       PUPPETEER_SKIP_DOWNLOAD: '1'
       GEV_QA_SOFTWARE_RENDERING: '1'
-      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (inputs.shutdown_runner == 'windows-latest' || inputs.shutdown_runner == 'macos-latest' || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
+      GEV_QA_SWIFTSHADER_WEBGL_ONLY: ${{ (inputs.shutdown_runner == 'windows-latest' || startsWith(inputs.shutdown_runner, 'macos-') || inputs.shutdown_runner == '' || inputs.shutdown_renderer == 'swiftshader-webgl-only') && '1' || '0' }}
     steps:
       - name: Check out immutable diagnostic source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -493,6 +499,7 @@ jobs:
           CAPTURE_RENDERER_BACKEND: ${{ inputs.capture_renderer_backend || 'swiftshader' }}
           CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
           CAPTURE_FIRST_MOTION_CPU_PROFILE: ${{ inputs.capture_first_motion_cpu_profile && 'enabled' || 'disabled' }}
+          CAPTURE_TRACKING_CPU_PROFILE: ${{ inputs.capture_tracking_cpu_profile && 'enabled' || 'disabled' }}
           CAPTURE_DEPTH_PICK_ATTRIBUTION: ${{ inputs.capture_depth_pick_attribution && 'enabled' || 'disabled' }}
           CAPTURE_SHADER_PROGRAM_ATTRIBUTION: ${{ inputs.capture_shader_program_attribution && 'enabled' || 'disabled' }}
           CAPTURE_DELAY_NEGATIVE_CONTROL: ${{ inputs.capture_delay_negative_control && 'enabled' || 'disabled' }}
@@ -504,6 +511,7 @@ jobs:
           --capture-renderer-backend "$CAPTURE_RENDERER_BACKEND"
           --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
           --capture-first-motion-cpu-profile "$CAPTURE_FIRST_MOTION_CPU_PROFILE"
+          --capture-tracking-cpu-profile "$CAPTURE_TRACKING_CPU_PROFILE"
           --capture-depth-pick-attribution "$CAPTURE_DEPTH_PICK_ATTRIBUTION"
           --capture-shader-program-attribution "$CAPTURE_SHADER_PROGRAM_ATTRIBUTION"
           --capture-delay-negative-control "$CAPTURE_DELAY_NEGATIVE_CONTROL"

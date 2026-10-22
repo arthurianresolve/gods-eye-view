@@ -1,0 +1,53 @@
+{
+  "schema": "gev-independent-native-window-diagnostic-readback/v1",
+  "status": "verified",
+  "rawArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-diagnostic-c373d91b-3360f672-complete-20261020",
+  "auditArchive": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-c373d91b-3360f672-independent-audit-20261020",
+  "generatorSha256": "6208d8ef2b57c27b5464620bd8f07c11b5c78f2cf7606b9c99c51dcb9b46862b",
+  "reviewSha256": "dd8045175b1684aac7799e78337975d0addd5b9d42e30ee0157151ba08f4e6e9",
+  "vmRecomputedReviewSha256": "dd8045175b1684aac7799e78337975d0addd5b9d42e30ee0157151ba08f4e6e9",
+  "rawFiles": [
+    {
+      "name": "plan.json",
+      "bytes": 6217,
+      "sha256": "a6ac2ae06a45056fb4d3cf94662db2bce314bb9b35a1e25cf6f4f212aeaa3942"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1653477,
+      "sha256": "508c803bc1e5b957afb3d2d4a6f8613edee5d6ac401f5deed744675e7bfe6326"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 22480,
+      "sha256": "942015e1786371b5cebdb23cd30f22efa0263412a578b87ea2681fde837006fe"
+    },
+    {
+      "name": "attribution.mjs",
+      "bytes": 9458,
+      "sha256": "427a62d2c7ccd623f661b58e84e2c2122b037f519460921c399628f114529172"
+    },
+    {
+      "name": "event-timing.mjs",
+      "bytes": 2554,
+      "sha256": "71ccff8c4c67c21e9f8f913a3365866cbb83d006d29dd73a6649b17da60bce03"
+    },
+    {
+      "name": "action-isolation.mjs",
+      "bytes": 17934,
+      "sha256": "943ce81f1847e8d79bdb215b0ab566ec1c306b03ab16791496ad6894422441da"
+    }
+  ],
+  "rawTotalBytes": 1712120,
+  "nativeHelperSha256": "f2bff4cdc5aa4cd9ecaa57edda1687d68e2f4f15a8ff924655e7e287b3fbfdd2",
+  "sourceInputsMatched": true,
+  "derivedNativeCheckpoints": 20,
+  "isolatedActions": 16,
+  "allOnGeometryEqual": true,
+  "allOffGeometryEqual": true,
+  "allQueryTuplesEqual": true,
+  "criteriaChanged": false,
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false
+}

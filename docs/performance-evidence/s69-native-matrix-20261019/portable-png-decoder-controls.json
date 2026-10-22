@@ -1,0 +1,65 @@
+{
+  "schema": "gev-independent-png-decoder-review/v1",
+  "reviewedAt": "2026-10-19T14:40:48.674Z",
+  "status": "passed",
+  "acceptanceEligible": false,
+  "decoder": {
+    "name": "pngjs",
+    "version": "7.0.0",
+    "license": "MIT",
+    "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be"
+  },
+  "helperSha256": "db4612b0927bd82d502de8344f3241b3dd180e57b60a779e21eb82988af91770",
+  "testSha256": "b040bf18d9246d50eb55f7eb29561aba0d9865c072e9492262d0a2748892b0a9",
+  "controls": [
+    {
+      "node": "v24.16.0",
+      "source": "controls-v24.16.0.json",
+      "sha256": "6ec1cc3960a15dda6a3664deb6e803f7250abf95584d2c70218c8db261e8eff3",
+      "status": "passed",
+      "positiveStatus": "passed",
+      "negativeStatus": "failed",
+      "currentDifferentPixels": [0, 8, 0, 8]
+    },
+    {
+      "node": "v26.11.0",
+      "source": "controls-v26.11.0.json",
+      "sha256": "73c7b812b8f17bbda2fda6b8351b0ba7b924c6d626564e65b27869da786b30d0",
+      "status": "passed",
+      "positiveStatus": "passed",
+      "negativeStatus": "failed",
+      "currentDifferentPixels": [0, 8, 0, 8]
+    }
+  ],
+  "archive": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/portable-pngjs-7.0.0",
+    "files": [
+      {
+        "name": "receipt.json",
+        "bytes": 5036,
+        "sha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+      },
+      {
+        "name": "controls-v24.16.0.json",
+        "bytes": 13471,
+        "sha256": "6ec1cc3960a15dda6a3664deb6e803f7250abf95584d2c70218c8db261e8eff3"
+      },
+      {
+        "name": "controls-v26.11.0.json",
+        "bytes": 13471,
+        "sha256": "73c7b812b8f17bbda2fda6b8351b0ba7b924c6d626564e65b27869da786b30d0"
+      },
+      {
+        "name": "test-portable-png-review-vm.mjs",
+        "bytes": 2580,
+        "sha256": "b040bf18d9246d50eb55f7eb29561aba0d9865c072e9492262d0a2748892b0a9"
+      },
+      {
+        "name": "portable-png-review.mjs",
+        "bytes": 5777,
+        "sha256": "db4612b0927bd82d502de8344f3241b3dd180e57b60a779e21eb82988af91770"
+      }
+    ]
+  },
+  "scope": "Independent original-PNG decoding on VM105. Existing accepted control passes and the current visual failure remains failed under the unchanged pixel policy. No screenshot, application, acceptance tolerance, VM CPU configuration or production service was changed."
+}

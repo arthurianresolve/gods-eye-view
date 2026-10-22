@@ -1,0 +1,65 @@
+{
+  "schema": "gev-within-build-visual-diagnostic/v1",
+  "createdAt": "2026-10-19T17:57:20.802Z",
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "b3c49b19fea88ca82d801f7a86c62a9f827da874"
+  },
+  "producerCommit": "aa400dfec20f8e4e10261c7e5d172c687a38ddf3",
+  "sourceSha256": "0d2b4d8acfeca6d54770964f174a7dcb8dacfcb0b1493a503c481ed0e7967c05",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "scope": "Within-build, whole-image comparisons of existing captures. The logo region is reported for localization only, not masked or exempted from acceptance.",
+  "results": [
+    {
+      "role": "baseline",
+      "from": "still-settled",
+      "to": "hud-visible",
+      "changedPixels": 0,
+      "logoChangedPixels": 0,
+      "outsideLogoPixels": 0,
+      "maxDelta": 0,
+      "bounds": null
+    },
+    {
+      "role": "baseline",
+      "from": "hud-visible",
+      "to": "hud-restored",
+      "changedPixels": 7218,
+      "logoChangedPixels": 7218,
+      "outsideLogoPixels": 0,
+      "maxDelta": 6,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 223,
+        "maxY": 198
+      }
+    },
+    {
+      "role": "candidate",
+      "from": "still-settled",
+      "to": "hud-visible",
+      "changedPixels": 0,
+      "logoChangedPixels": 0,
+      "outsideLogoPixels": 0,
+      "maxDelta": 0,
+      "bounds": null
+    },
+    {
+      "role": "candidate",
+      "from": "hud-visible",
+      "to": "hud-restored",
+      "changedPixels": 8,
+      "logoChangedPixels": 0,
+      "outsideLogoPixels": 8,
+      "maxDelta": 7,
+      "bounds": {
+        "minX": 2149,
+        "minY": 1005,
+        "maxX": 2372,
+        "maxY": 1007
+      }
+    }
+  ]
+}

@@ -10,6 +10,7 @@ import {
   assertInitialRecoveryPage,
   assertOwnedRecoveryPage,
   captureOwnedBrowserProcessTree,
+  captureOwnedBrowserProcessTreeAsync,
   closeOwnedRecoveryPage,
   closeRecoveryBrowser,
   createOwnedProcessTreePowerShellCommand,
@@ -981,9 +982,50 @@ test('owned page closes before browser close and leaves zero open pages', async 
     close: async () => order.push('browser-close'),
   };
   const outcome = await closeOwnedRecoveryPage(owned, browser);
-  assert.deepEqual(outcome, { closeCompleted: true, openPageCount: 0 });
+  assert.equal(outcome.closeCompleted, true);
+  assert.equal(outcome.openPageCount, 0);
+  assert.equal(outcome.closeObservation.status, 'completed');
+  assert.equal(outcome.closeObservation.errorName, null);
+  assert.equal(
+    outcome.closeObservation.lateSettlement.status,
+    'not-applicable',
+  );
+  assert.equal(outcome.closeObservation.pageInventory.status, 'completed');
+  assert.equal(outcome.closeObservation.pageInventory.errorName, null);
+  assert.equal(
+    Number.isFinite(outcome.closeObservation.pageInventory.elapsedMs),
+    true,
+  );
   await browser.close();
   assert.deepEqual(order, ['page-close', 'browser-close']);
+});
+
+test('owned-page close rejection is distinguished without retaining its message', async () => {
+  const owned = {
+    isClosed: () => false,
+    close: async () => {
+      throw Object.assign(new Error('sensitive close details'), {
+        name: 'ProtocolError',
+      });
+    },
+  };
+  let pageInventoryCalls = 0;
+  const outcome = await closeOwnedRecoveryPage(owned, {
+    pages: async () => {
+      pageInventoryCalls += 1;
+      return [];
+    },
+  });
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.openPageCount, null);
+  assert.equal(outcome.closeObservation.status, 'rejected');
+  assert.equal(outcome.closeObservation.errorName, 'ProtocolError');
+  assert.equal(
+    outcome.closeObservation.lateSettlement.status,
+    'not-applicable',
+  );
+  assert.equal(pageInventoryCalls, 0);
+  assert.equal(JSON.stringify(outcome).includes('sensitive'), false);
 });
 
 test('wedged owned-page close is bounded and reported as incomplete', async (t) => {
@@ -1009,7 +1051,45 @@ test('wedged owned-page close is bounded and reported as incomplete', async (t) 
     'the declared deadline must settle the operation',
   );
   const outcome = await pending;
-  assert.deepEqual(outcome, { closeCompleted: false, openPageCount: null });
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.openPageCount, null);
+  assert.equal(outcome.closeObservation.status, 'timed-out');
+  assert.equal(outcome.closeObservation.lateSettlement.status, 'pending');
+});
+
+test('late owned-page close completion remains a failed pre-browser-close stage', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let finishClose;
+  let now = 0;
+  const owned = {
+    isClosed: () => false,
+    close: () => new Promise((resolve) => (finishClose = resolve)),
+  };
+  let pageInventoryCalls = 0;
+  const pending = closeOwnedRecoveryPage(
+    owned,
+    {
+      pages: async () => {
+        pageInventoryCalls += 1;
+        return [];
+      },
+    },
+    20,
+    { now: () => now },
+  );
+  await new Promise(setImmediate);
+  now = 20;
+  t.mock.timers.tick(20);
+  await new Promise(setImmediate);
+  const outcome = await pending;
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.closeObservation.status, 'timed-out');
+  assert.equal(outcome.closeObservation.elapsedMs, 20);
+  assert.equal(outcome.closeObservation.lateSettlement.status, 'pending');
+  finishClose();
+  await new Promise(setImmediate);
+  assert.equal(outcome.closeObservation.lateSettlement.status, 'completed');
+  assert.equal(pageInventoryCalls, 0);
 });
 
 test('a passed workspace check still fails when cleanup leaves a page open', () => {
@@ -1221,6 +1301,82 @@ test('Windows process tree capture is bounded and omits command lines', () => {
     }),
     { status: 'unavailable', reason: 'process-list-invalid' },
   );
+});
+
+test('async Windows process tree capture resolves callbacks and fails closed on timeout, overflow and malformed output', async () => {
+  const valid = JSON.stringify({
+    rows: [{ pid: 1234, ppid: 1, image: 'chrome.exe', category: 'browser' }],
+    truncated: false,
+  });
+  let invocation;
+  const available = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      execFile: (executable, args, options, callback) => {
+        invocation = { executable, args, options };
+        queueMicrotask(() => callback(null, valid));
+        return new EventEmitter();
+      },
+    },
+  );
+  assert.equal(available.status, 'available');
+  assert.equal(invocation.executable, 'powershell.exe');
+  assert.equal(invocation.options.timeout, 1500);
+  assert.equal(available.rows[0].category, 'browser');
+
+  let helperKilled = false;
+  const timedOut = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      timeoutMs: 5,
+      execFile: () => {
+        const helper = new EventEmitter();
+        helper.kill = () => {
+          helperKilled = true;
+        };
+        return helper;
+      },
+    },
+  );
+  assert.deepEqual(timedOut, {
+    status: 'unavailable',
+    reason: 'process-snapshot-timeout',
+  });
+  assert.equal(helperKilled, true);
+
+  const overflow = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      execFile: (_executable, _args, _options, callback) => {
+        const error = new Error('bounded output');
+        error.code = 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER';
+        queueMicrotask(() => callback(error));
+        return new EventEmitter();
+      },
+    },
+  );
+  assert.deepEqual(overflow, {
+    status: 'unavailable',
+    reason: 'process-list-overflow',
+  });
+
+  const malformed = await captureOwnedBrowserProcessTreeAsync(
+    fakeBrowserProcess(),
+    {
+      platform: 'win32',
+      execFile: (_executable, _args, _options, callback) => {
+        queueMicrotask(() => callback(null, '{bad json'));
+        return new EventEmitter();
+      },
+    },
+  );
+  assert.deepEqual(malformed, {
+    status: 'unavailable',
+    reason: 'process-list-invalid',
+  });
 });
 
 test(
@@ -1885,6 +2041,48 @@ test('shutdown diagnostic errors do not prevent forced cleanup or alter failed c
   );
   assert.equal(JSON.stringify(outcome).includes('private data'), false);
   assert.equal(JSON.stringify(outcome).includes('process path'), false);
+});
+
+test('async process snapshot lets a browser exit settle before owned force cleanup', async () => {
+  const child = fakeBrowserProcess();
+  const browser = new EventEmitter();
+  let forceCalled = false;
+  browser.process = () => child;
+  browser.isConnected = () => true;
+  browser.targets = () => [];
+  browser.close = () => {
+    browser.emit('disconnected');
+    return new Promise(() => {});
+  };
+
+  const outcome = await closeRecoveryBrowser(browser, {
+    timeoutMs: 10,
+    postDisconnectExitTimeoutMs: 0,
+    shutdownDiagnostics: {
+      processTreeSnapshot: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 25));
+        child.exitCode = 0;
+        child.emit('exit', 0, null);
+        return { status: 'unavailable', reason: 'process-snapshot-timeout' };
+      },
+    },
+    forceProcess: async () => {
+      forceCalled = true;
+      return { attempted: true, confirmed: false };
+    },
+  });
+
+  assert.equal(outcome.closeCompleted, false);
+  assert.equal(outcome.forcedProcessTermination, false);
+  assert.equal(forceCalled, false);
+  assert.equal(outcome.observation.processExit.code, 0);
+  assert.equal(outcome.observation.forceProcessStatus, 'already-exited');
+  assert.equal(
+    outcome.observation.shutdownDiagnostics.processTreeBeforeForce.reason,
+    'process-snapshot-timeout',
+  );
+  assert.equal(browser.listenerCount('disconnected'), 0);
+  assert.equal(child.listenerCount('exit'), 0);
 });
 
 test('timeout target inventory is captured when the browser has not disconnected', async () => {

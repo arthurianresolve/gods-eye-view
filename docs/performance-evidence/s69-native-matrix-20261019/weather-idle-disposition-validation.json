@@ -1,0 +1,68 @@
+{
+  "schema": "gev-weather-idle-disposition-validation/v1",
+  "status": "failed",
+  "startedAt": "2026-10-19T23:12:55.180Z",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 325339,
+      "sha256": "8710bbfc1717ad71060977813f8af7a7d50fdd9b61c3e73bff48edee36a651a0",
+      "submittedSha256": "8710bbfc1717ad71060977813f8af7a7d50fdd9b61c3e73bff48edee36a651a0"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "bytes": 27022,
+      "sha256": "3a848ec2fffb627931f724fd23fb5d07ab865e157b7d76f3f9c4c0c66f0710cf",
+      "submittedSha256": "5e96b674bffeb6cffe7ebefefa7715e4df24d97feafc3ddfe0d81d079805f91b"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.mjs",
+      "bytes": 37271,
+      "sha256": "52c24553d1df68bac45bc878023272429aa1dd3382ec0daf8bb1a3c1f811aae4",
+      "submittedSha256": "5cc10eb239170dc73117457036095e8ac682dd71338aa60ef02ab81797107ea7"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.test.mjs",
+      "bytes": 41966,
+      "sha256": "12351c29b686705c896d899e3da468deb7b562c1d6af7295855bbb1811a286c5",
+      "submittedSha256": "12351c29b686705c896d899e3da468deb7b562c1d6af7295855bbb1811a286c5"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "bytes": 12426,
+      "sha256": "4528e87366ab43cc955a515bf5b7c17b857be0c88e4f8bab017eb00294dc8d12",
+      "submittedSha256": "4528e87366ab43cc955a515bf5b7c17b857be0c88e4f8bab017eb00294dc8d12"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.mjs",
+      "bytes": 31144,
+      "sha256": "7d312167ea5c00724d051a745e66acce579017c8637140896ff94dec238f3b6a",
+      "submittedSha256": "f9e78045c6fd30a41555bbffd79530aaa97ec521fc8a3a8588f0766eceef6c08"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.test.mjs",
+      "bytes": 29313,
+      "sha256": "4fb930d668d8676311d50a338cfb8c673381c18e4db4459f5f7b4948415e108d",
+      "submittedSha256": "4c192858a4a8b47666da800da107c0dd14b40dad67683d4c5cdd23a628d9b7c0"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "3de1d32793e34853855a8447d9d88cb6ec217a417d6300e46a26e4104b43e91a",
+      "summary": "scripts/capture-scene-performance.mjs 529ms (unchanged)\nscripts/performance/weatherIdleDiagnostic.mjs 41ms\nscripts/performance/candidatePerformanceEvidence.mjs 48ms\nscripts/performance/candidatePerformanceEvidence.test.mjs 63ms (unchanged)\nscripts/run-unit-tests.mjs 11ms (unchanged)\nscripts/performance/weatherIdleCadenceDisposition.mjs 61ms\nscripts/performance/weatherIdleCadenceDisposition.test.mjs 40ms\n"
+    },
+    {
+      "label": "node24",
+      "code": 1,
+      "signal": null,
+      "sha256": "86de645213bbd78913b1dc4851a04ec5d84be294967290e38d0cf9f79897447d",
+      "summary": "used visible-wind phase witness is invalid.\n        at reject (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.mjs:26:9)\n        at phase (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.mjs:381:7)\n        at assertWindProbe (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.mjs:383:3)\n        at assertIdleSample (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.mjs:659:3)\n        at validateWeatherIdleCadenceDisposition (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.mjs:740:19)\n        at file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.test.mjs:796:7\n        at getActual (node:assert:611:5)\n        at strict.throws (node:assert:759:24)\n        at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.test.mjs:794:10)\n        at Test.runInAsyncScope (node:async_hooks:227:14),\n    expected: /source\\/build provenance/,\n    operator: 'throws',\n    diff: 'simple'\n  }\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "error": "stic report fail closed (0.424448ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.024495ms)\n✔ unit runner serializes only GC-bracketed allocation microbenchmarks (1.808077ms)\n✔ the runner discovers every test file in the repository (28.910805ms)\n✔ allocation runtime calibration is explicit and pinned to Node 24 (0.234222ms)\n✔ npm test stays green on every supported engine, not only the calibrated one (0.553568ms)\nℹ tests 119\nℹ suites 0\nℹ pass 115\nℹ fail 4\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9780.465232\n\n✖ failing tests:\n\ntest at scripts/capture-scene-performance.test.mjs:443:1\n✖ timed samples reacquire foreground after warmup and before measurement (5.050679ms)\n  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\n  \n    assert.ok(\n  \n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/capture-scene-performance.test.mjs:460:1",
+  "completedAt": "2026-10-19T23:13:05.905Z"
+}

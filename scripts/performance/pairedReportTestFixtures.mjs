@@ -149,6 +149,7 @@ export function makeReport(
   }
   return {
     schema: 'gev-performance-capture/v1',
+    graphics: { browserVersion: 'Chrome/152.0.7977.75' },
     url: 'http://localhost:4173/austin',
     source: {
       appCommit: commit,
@@ -268,9 +269,13 @@ export function makeReport(
 }
 
 /** Build a paired fixture from the registered five-run map-streaming contract. */
-export function makeMapReport(commit, readinessMs = 20) {
+export function makeMapReport(
+  commit,
+  readinessMs = 20,
+  { includeFrames = false, motionP95 } = {},
+) {
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v4',
+    id: 'austin-map-streaming-synthetic-v5',
     manifestSha256: 'f'.repeat(64),
   };
   const route = {
@@ -393,6 +398,21 @@ export function makeMapReport(commit, readinessMs = 20) {
   report.environment = environment;
   report.workload = workload;
   report.captures = [];
+  if (includeFrames) {
+    const frames = makeReport(commit, motionP95).captures.filter(
+      (sample) => sample.scenario !== 'selected-aircraft-tracking',
+    );
+    report.environment.layers = [];
+    for (const sample of frames)
+      for (const point of [sample.conditions.before, sample.conditions.after])
+        point.environment.layers = [];
+    Object.assign(workload, {
+      scenarios: ['idle', 'scripted-motion'],
+      populationStableAcrossSamples: true,
+      cameraPathStableAcrossSamples: true,
+    });
+    report.captures = frames;
+  }
   return report;
 }
 

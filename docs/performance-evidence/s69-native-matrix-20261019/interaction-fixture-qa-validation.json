@@ -1,0 +1,72 @@
+{
+  "schema": "gev-interaction-fixture-qa-validation/v1",
+  "startedAt": "2026-10-19T18:13:48.611Z",
+  "baseCommit": "aa400dfec20f8e4e10261c7e5d172c687a38ddf3",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "sha256": "bba45fe299bc37c67383cd646571c229bba23aa6b77bc1efde09c3828a4fca3f"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.mjs",
+      "sha256": "4be334b9c02c76f6a3ef3258db8f050100228bba3a01a0fcf5b279c4f659c6dd"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "sha256": "c3a31049536bd4334adfe28ade501af9f33bb2fd0635020f1dbeca84b1b24f92"
+    },
+    {
+      "name": "scripts/qa-rendered-soak-driver.mjs",
+      "sha256": "fe73c9ca4dcb92b0798101d0a70c6c0d561c4b9da1959eb16ab7a46d79140d98"
+    },
+    {
+      "name": "scripts/qa-mixed-use-soak.mjs",
+      "sha256": "8dff78b370559f56dd4cef9deb904896240f1f747d84575e35ae301473c378a9"
+    },
+    {
+      "name": "scripts/qa-mixed-use-soak.test.mjs",
+      "sha256": "e623036df89fe454d59fb5e4d458b485f58319ae3271a46f40eb9773daf2b1fd"
+    }
+  ],
+  "tests": [
+    "scripts/performance/qualificationMetrics.test.mjs",
+    "scripts/qa-mixed-use-soak.test.mjs"
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "eeebb8c27fec186d722c9456a9553d4c572bcaf0581ef5b3e195e19b45291b2f",
+      "summary": [
+        "ℹ tests 69",
+        "ℹ pass 69",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 493.85049"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "71488a4932293328d135aa8aa842bdf87e157193b2b546904045f9a2172f3702",
+      "summary": [
+        "ℹ tests 69",
+        "ℹ pass 69",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 466.348261"
+      ]
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-interaction-fixture-review-20261019",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "priorValidationPreservedAt": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019",
+  "scope": "QA observer and mixed-use fixture contract only. No runtime, renderer, visual settings, or performance-threshold change. Historical full-catalog captures are not relabeled as the bounded eight-record fixture.",
+  "completedAt": "2026-10-19T18:13:50.326Z"
+}

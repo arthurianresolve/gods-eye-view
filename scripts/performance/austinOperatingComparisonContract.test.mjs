@@ -434,6 +434,7 @@ function asPairedReport(input, commit, p95Offset = 0) {
     renderer: 'Test Renderer',
     vendor: 'Test Vendor',
   };
+  report.graphics.browserVersion = 'Chrome/140.0.7339.80';
   const documentOwners = [
     { documentRole: 'startup-1', documentId: 'startup-document-1' },
     { documentRole: 'main-setup', documentId: 'main-measured-document' },
@@ -568,6 +569,7 @@ test('candidate coverage consumes the actual Austin producer contract and reject
       report.environment.renderer = 'Intel UHD 620';
       report.environment.vendor = 'Intel';
       report.graphics = {
+        ...report.graphics,
         featureStatus: { webgl: 'enabled', webgl2: 'enabled' },
         devices: [{ vendor: 'Intel', device: 'UHD 620', driver: '31.0' }],
       };

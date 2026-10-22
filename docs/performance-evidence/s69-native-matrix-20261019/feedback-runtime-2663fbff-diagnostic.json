@@ -1,0 +1,107 @@
+{
+  "schema": "gev-enable-only-feedback-diagnostic/v1",
+  "status": "completed-diagnostic-only",
+  "acceptanceEligible": false,
+  "candidateCommit": "2663fbff9aa64644e8a2897a98398c7a8e75dfa7",
+  "producerCommit": "42fae51d5a3b7621a8b2cea07433fe8a8f834d02",
+  "rawSha256": "2064aba39e88e62948c86d112a7d51c8c8045fe856757313234e66e6298fb388",
+  "planSha256": "07246d39e57583c35efdfc598b176f358fd6a05057d790683c4321d7fc9d923c",
+  "storage": "VM105 validation task/local-toggle-feedback-2663fbff-42fae51d-complete-20261020",
+  "scope": "Two fresh candidate-only browsers, four alternating trusted actions each. Every result retained; no baseline recapture, outcome retry, physical-paint measurement, or acceptance assertion.",
+  "rows": [
+    {
+      "slot": 1,
+      "enabled": true,
+      "intentAcceptedMs": 10.599999994039536,
+      "firstRafWitnessMs": 81.59999999403954,
+      "secondRafWitnessMs": 165,
+      "feedbackState": "transition",
+      "fullStateMs": 685.2999999970198,
+      "fullRenderedMs": 726.6999999880791,
+      "depthQueryCount": 8
+    },
+    {
+      "slot": 1,
+      "enabled": false,
+      "intentAcceptedMs": 9.299999997019768,
+      "firstRafWitnessMs": 103.09999999403954,
+      "secondRafWitnessMs": 189,
+      "feedbackState": "settled",
+      "fullStateMs": 98.09999999403954,
+      "fullRenderedMs": 102.70000000298023,
+      "depthQueryCount": 0
+    },
+    {
+      "slot": 1,
+      "enabled": true,
+      "intentAcceptedMs": 5.700000002980232,
+      "firstRafWitnessMs": 132.09999999403954,
+      "secondRafWitnessMs": 196.5,
+      "feedbackState": "transition",
+      "fullStateMs": 549,
+      "fullRenderedMs": 556.2999999970198,
+      "depthQueryCount": 8
+    },
+    {
+      "slot": 1,
+      "enabled": false,
+      "intentAcceptedMs": 16.600000008940697,
+      "firstRafWitnessMs": 37,
+      "secondRafWitnessMs": 71.6000000089407,
+      "feedbackState": "settled",
+      "fullStateMs": 34.20000000298023,
+      "fullRenderedMs": 36.79999999701977,
+      "depthQueryCount": 0
+    },
+    {
+      "slot": 2,
+      "enabled": true,
+      "intentAcceptedMs": 13.299999997019768,
+      "firstRafWitnessMs": 109.29999999701977,
+      "secondRafWitnessMs": 243.90000000596046,
+      "feedbackState": "transition",
+      "fullStateMs": 860.5,
+      "fullRenderedMs": 897.9000000059605,
+      "depthQueryCount": 8
+    },
+    {
+      "slot": 2,
+      "enabled": false,
+      "intentAcceptedMs": 9.199999988079071,
+      "firstRafWitnessMs": 51,
+      "secondRafWitnessMs": 255.5,
+      "feedbackState": "settled",
+      "fullStateMs": 37.099999994039536,
+      "fullRenderedMs": 41.8999999910593,
+      "depthQueryCount": 0
+    },
+    {
+      "slot": 2,
+      "enabled": true,
+      "intentAcceptedMs": 2.7000000029802322,
+      "firstRafWitnessMs": 118.30000001192093,
+      "secondRafWitnessMs": 209.70000000298023,
+      "feedbackState": "transition",
+      "fullStateMs": 671.1000000089407,
+      "fullRenderedMs": 688.9000000059605,
+      "depthQueryCount": 8
+    },
+    {
+      "slot": 2,
+      "enabled": false,
+      "intentAcceptedMs": 6.200000002980232,
+      "firstRafWitnessMs": 76.70000000298023,
+      "secondRafWitnessMs": 207.1000000089407,
+      "feedbackState": "settled",
+      "fullStateMs": 71.40000000596046,
+      "fullRenderedMs": 76,
+      "depthQueryCount": 0
+    }
+  ],
+  "interpretation": [
+    "All enables expose a real transition before expensive depth queries. Disables proceed promptly and do not await the enabling presentation yield.",
+    "The four disable full-render observations range from 36.8 to 102.7 ms; this bounded diagnostic verifies the previous delay mechanism is absent, not a run-level regression pass.",
+    "Seven of eight second-RAF witnesses still exceed 100 ms. Native local-control qualification remains open; this diagnostic does not clear the frozen190 failure.",
+    "The second-RAF witness measures scheduling and state consistency, not a physical presentation timestamp. Supplemental browser Event Timing is separate evidence."
+  ]
+}

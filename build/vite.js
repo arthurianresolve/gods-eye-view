@@ -4,6 +4,11 @@ import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { panelBuildPlugin } from './panel.js';
 import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
+import { BROWSER_HEADERS } from './securityHeaders.js';
+import {
+  assetDistributionPlugin,
+  computeCesiumDistributionDigestSync,
+} from './assetDistribution.js';
 
 /**
  * Content-Security-Policy for every document the dev/preview server serves.
@@ -18,35 +23,7 @@ import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
  * checks against script-src (the dev server loads them by URL instead).
  * Widen any other directive only for a real violation.
  */
-export const BROWSER_CSP = [
-  "default-src 'self'",
-  // The Bhote Koshi event's embedded media: the YouTube player API, the
-  // Facebook video SDK and X's post widget (src/data/bhoteKoshiEmbeddedMedia.js);
-  // and the Maps JavaScript API that Street Level's Google Street View runs on.
-  "script-src 'self' 'unsafe-eval' blob: https://www.youtube.com https://connect.facebook.net https://platform.twitter.com https://maps.googleapis.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
-  "media-src 'self' blob: https:",
-  "connect-src 'self' blob: data: https: wss: ws:",
-  "worker-src 'self' blob:",
-  "child-src 'self' blob:",
-  // The same media's players and posts, which load in frames.
-  "frame-src 'self' blob: https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com https://platform.twitter.com",
-  "manifest-src 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join('; ');
-
-/** Response headers shared by the dev and preview servers. */
-export const BROWSER_HEADERS = Object.freeze({
-  'X-Frame-Options': 'DENY',
-  'Content-Security-Policy': BROWSER_CSP,
-  // Responses are only ever used as the type the server declares.
-  'X-Content-Type-Options': 'nosniff',
-});
+export const BROWSER_CSP = BROWSER_HEADERS['Content-Security-Policy'];
 
 /** API routes return data, not documents, including on direct navigation. */
 export const API_CSP = "default-src 'none'; sandbox";
@@ -111,7 +88,21 @@ export function createBrowserViteConfig({
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
   command,
+  root = process.cwd(),
 } = {}) {
+  let cesiumBaseUrl = '/cesium/';
+  let cesiumDigest = null;
+  if (command === 'build') {
+    try {
+      cesiumDigest = computeCesiumDistributionDigestSync({ root });
+      cesiumBaseUrl = `/${cesiumDigest.path}/`;
+    } catch (error) {
+      throw new Error(
+        'Cannot digest the patched Cesium distribution before build. Run npm ci and apply the pinned Cesium patches in this checkout.',
+        { cause: error },
+      );
+    }
+  }
   return {
     plugins: [
       // First, so even refused API requests carry the API response policy.
@@ -119,11 +110,14 @@ export function createBrowserViteConfig({
       // Next, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
       cesiumDependencyIdentityPlugin(),
-      cesium(),
+      cesium({ cesiumBaseUrl }),
       applicationHtmlPlugin(),
       ...plugins,
       embedFramingPlugin(),
       panelBuildPlugin(),
+      ...(command === 'build'
+        ? [assetDistributionPlugin({ cesiumDigest: cesiumDigest.digest })]
+        : []),
     ],
     ...(publicDir === undefined ? {} : { publicDir }),
     // A production build must not clean the dependency cache a running dev
@@ -160,7 +154,10 @@ export function createBrowserViteConfig({
     },
     // The preview server serves the same documents, so it carries the same
     // framing + CSP hardening (one constant, no drift).
-    preview: { headers: BROWSER_HEADERS },
+    preview: {
+      allowedHosts: [...allowedHosts],
+      headers: BROWSER_HEADERS,
+    },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),

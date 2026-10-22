@@ -1,0 +1,134 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-19T20:07:05.799Z",
+  "row": "infrastructure-datacenters",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 288.09999999403954,
+        "candidateMedianP95Ms": 276.79999999701977,
+        "changePct": -3.922249218067876,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "failed",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 3413,
+    "candidateMedianMs": 4697,
+    "baselineInitialSettleMedianMs": 4429,
+    "candidateInitialSettleMedianMs": 5609,
+    "initialSettleChangePct": 26.64258297584105,
+    "initialSettleRegressionOver10Pct": true,
+    "baselineRunsMs": [
+      4955,
+      3228,
+      5264,
+      3413,
+      3212
+    ],
+    "candidateRunsMs": [
+      6195,
+      4721,
+      4112,
+      4697,
+      3776
+    ],
+    "changePct": 37.620861412247294,
+    "regressionOver10Pct": true,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6707,
+      "sha256": "bb6477984503eca6828ebf1a9c645a2430ca17ae79ca945d1c1b7a8dd659d23f"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3938,
+      "sha256": "061fc7f779843e521bc85eaf769877a59011a894a2d3c02d5688da0628f72d08"
+    },
+    {
+      "name": "infrastructure-datacenters-baseline.json",
+      "bytes": 371047,
+      "sha256": "271923de1fb46c23ba800e468d6fe9e444796910ab58f88753228122a27705c4"
+    },
+    {
+      "name": "infrastructure-datacenters-candidate.json",
+      "bytes": 372046,
+      "sha256": "65d24bb9eb6d0d6106fef52487d81170e68e7ce169236d86ad42a6f48aea8f06"
+    },
+    {
+      "name": "infrastructure-datacenters-baseline.json.log",
+      "bytes": 690,
+      "sha256": "8c02517c083fb2d319c7befe0b647a07bc160f77f8eaf6fb6e747a63cd203a38"
+    },
+    {
+      "name": "infrastructure-datacenters-baseline.json.invocation.json",
+      "bytes": 2475,
+      "sha256": "78d3ff4aa9b0c2db5987b579eb10f9ae2da93b7037d25065bd7773b5c9fd999d"
+    },
+    {
+      "name": "infrastructure-datacenters-candidate.json.log",
+      "bytes": 691,
+      "sha256": "829912b23e97ef206ffa51769311a95f799b2c4019ee62ab7ed80a3232c00657"
+    },
+    {
+      "name": "infrastructure-datacenters-candidate.json.invocation.json",
+      "bytes": 2485,
+      "sha256": "2f235a331538f30fad90c85d896d85101cf9ef9a01a11a6ad0c4c2dac5bd4e15"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-datacenters-b3c49b19-native155",
+  "productionChanged": false
+}

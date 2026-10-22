@@ -1,4 +1,5 @@
 import { cancelCameraArrival } from './cameraArrival.js';
+import { waitForVisibilityPaint } from './visibilityPaint.js';
 
 import { beginCpuTiming, endCpuTiming } from '../performance/cpuTimings.js';
 
@@ -667,6 +668,7 @@ export class LayerLifecycle {
       intentEpoch = null,
       suppressWillChangeNotification = false,
       beforeEnableParams = null,
+      immediateTeardown = false,
     } = {},
   ) {
     const desiredState = Boolean(targetEnabled);
@@ -738,6 +740,35 @@ export class LayerLifecycle {
       requestedChange,
       desiredState ? 'enabling' : 'disabling',
     );
+    // Give direct user requests a rendering opportunity for their truthful
+    // busy status before geometry preparation or teardown invalidates the
+    // scene. Bulk clear and rollback retain immediate ordered teardown.
+    // The same intent owns cancellation during this wait and the later work.
+    if (origin === 'user' && (desiredState || !immediateTeardown)) {
+      this._setVisibilityIntentPhase(entry, intentEpoch, 'presentation');
+      await waitForVisibilityPaint({
+        signal,
+        documentRef: this.viewer?.container?.ownerDocument,
+      });
+    }
+    if (signal?.aborted || isSuperseded()) {
+      // No lifecycle work has started, so cancellation restores presentation
+      // without enabling/disabling untouched resources. A newer intent retains
+      // its own transitional presentation through the existing adoption lane.
+      settleLifecycle();
+      this._publishActivity({ type: 'status' });
+      this._notifyListeners({
+        ...requestedChange,
+        type: 'visibility-cancelled',
+        ...this._visibilityCancellationMetadata(
+          entry,
+          intentEpoch,
+          signal,
+          'presentation',
+        ),
+      });
+      return false;
+    }
     if (!desiredState) {
       // Disable
       this._invalidateRefresh(layerId, entry, 'layer-disabled');
@@ -1101,6 +1132,7 @@ export class LayerLifecycle {
       notificationToken = null,
       notifyWillChangeBeforeEffective = false,
       beforeEnableParams = null,
+      immediateTeardown = false,
     } = {},
   ) {
     const entry = this.layers.get(layerId);
@@ -1330,6 +1362,7 @@ export class LayerLifecycle {
                 targetEnabled: !desiredState,
                 notificationToken,
                 intentEpoch,
+                immediateTeardown: true,
               });
             } finally {
               if (entry.activeVisibilityIntent === compensationIntent) {
@@ -1407,6 +1440,7 @@ export class LayerLifecycle {
           intentEpoch,
           suppressWillChangeNotification: notifyWillChangeBeforeEffective,
           beforeEnableParams,
+          immediateTeardown,
         });
       } finally {
         signal?.removeEventListener('abort', forwardCallerAbort);
@@ -1604,10 +1638,11 @@ export class LayerLifecycle {
         }
         try {
           const clearIntentEpoch = entry.visibilityIntentEpoch + 1;
-          const result = await this.setEnabled(layerId, false, {
+          const result = await this._setEnabledWithIntent(layerId, false, {
             origin,
+            immediateTeardown: true,
             ...(notificationToken ? { notificationToken } : {}),
-          });
+          }).promise;
           attempts.set(layerId, {
             result,
             superseded: entry.visibilityIntentEpoch !== clearIntentEpoch,

@@ -755,9 +755,14 @@ export function observeWeatherEffectsLayerState() {
                 ? params.product.slice(0, 32)
                 : null,
             infrared:
-              typeof params?.infrared === 'string'
-                ? params.infrared.slice(0, 24)
-                : null,
+              Number.isFinite(params?.infrared) &&
+              params.infrared >= 0 &&
+              params.infrared <= 100
+                ? params.infrared
+                : typeof params?.infrared === 'string' &&
+                    ['filtered', 'full'].includes(params.infrared)
+                  ? params.infrared
+                  : null,
           }
         : {}),
       ...(id === 'wind'
@@ -942,6 +947,7 @@ export function createWeatherEffectsFixtureLifecycle({
   timelinePreflight,
   workload,
   phaseObservationsBySample,
+  diagnosticIdleOnly = false,
 }) {
   if (fixture?.schema !== 'gev-weather-effects-fixture/v2')
     throw new TypeError('A registered weather-effects fixture is required.');
@@ -958,9 +964,16 @@ export function createWeatherEffectsFixtureLifecycle({
     ),
     'Weather startup, ordered history, and latest reset must match the fixture timeline.',
   );
+  assert.equal(typeof diagnosticIdleOnly, 'boolean');
+  if (diagnosticIdleOnly) {
+    assert.equal(workload?.warmupMs, 30_000);
+    assert.equal(workload?.durationPerSampleMs, 60_000);
+    assert.equal(workload?.runsPerScenario, 1);
+  }
   assert.ok(
     Array.isArray(phaseObservationsBySample) &&
-      phaseObservationsBySample.length === workload?.runsPerScenario * 2,
+      phaseObservationsBySample.length ===
+        workload?.runsPerScenario * (diagnosticIdleOnly ? 1 : 2),
     'Observed weather phase runs are incomplete.',
   );
   for (const observations of phaseObservationsBySample)
@@ -968,6 +981,13 @@ export function createWeatherEffectsFixtureLifecycle({
       durationMs: workload?.durationPerSampleMs,
     });
   return {
+    ...(diagnosticIdleOnly
+      ? {
+          diagnosticOnly: true,
+          performanceAcceptanceEligible: false,
+          measuredScenarios: ['idle'],
+        }
+      : {}),
     scope:
       'one measured app document; bundled deterministic manifests, time-indexed imagery tiles and GFS grid are fulfilled only for exact same-origin GET routes; every 60-second capture selects the three pinned source phases through application timeline controls at fixed measurement-relative offsets',
     fixedHarnessClock:
@@ -1262,21 +1282,66 @@ export async function prepareWeatherEffectsTimelineInPage({
   const satelliteParams = productLayers[1]?.getParams?.();
   const radarParams = productLayers[0]?.getParams?.();
   const lightningParams = productLayers[2]?.getParams?.();
-  if (
+  // This callback is serialized into the page; keep the compatibility adapter
+  // self-contained, and leave the runtime parameters unchanged.
+  const satelliteInfrared =
+    satelliteParams?.infrared === 'filtered' ||
+    satelliteParams?.infrared === 100
+      ? 'filtered'
+      : null;
+  const productObservations = productStats.map((stats) => ({
+    observedAt:
+      typeof stats?.observedAt === 'string'
+        ? stats.observedAt.slice(0, 64)
+        : null,
+  }));
+  const mismatch =
     !wind ||
     typeof wind.model !== 'string' ||
     wind.model.toLowerCase() !== 'gfs' ||
     wind.overlay !== 'speed' ||
     wind.paused !== false ||
     satelliteParams?.product !== 'clouds-regional' ||
-    satelliteParams?.infrared !== 'filtered' ||
+    satelliteInfrared !== 'filtered' ||
     radarParams?.opacity !== 'strong' ||
     lightningParams?.opacity !== 'strong' ||
-    productStats.some((stats) => !timeline.includes(stats?.observedAt))
-  )
+    productStats.some((stats) => !timeline.includes(stats?.observedAt));
+  if (mismatch) {
+    const observed = {
+      wind: {
+        model: typeof wind?.model === 'string' ? wind.model.slice(0, 16) : null,
+        overlay:
+          typeof wind?.overlay === 'string' ? wind.overlay.slice(0, 16) : null,
+        paused: typeof wind?.paused === 'boolean' ? wind.paused : null,
+      },
+      satellite: {
+        product:
+          typeof satelliteParams?.product === 'string'
+            ? satelliteParams.product.slice(0, 32)
+            : null,
+        infrared: Number.isFinite(satelliteParams?.infrared)
+          ? satelliteParams.infrared
+          : typeof satelliteParams?.infrared === 'string'
+            ? satelliteParams.infrared.slice(0, 32)
+            : null,
+      },
+      radarOpacity:
+        typeof radarParams?.opacity === 'string'
+          ? radarParams.opacity.slice(0, 16)
+          : null,
+      lightningOpacity:
+        typeof lightningParams?.opacity === 'string'
+          ? lightningParams.opacity.slice(0, 16)
+          : null,
+      productObservations,
+      expectedTimeline: timeline
+        .slice(0, 12)
+        .map((time) => String(time).slice(0, 64)),
+    };
     throw new Error(
-      'Weather history or wind playback state did not match the fixture.',
+      `Weather history or wind playback state did not match the fixture: ${JSON.stringify(observed)}.`,
     );
+  }
   return {
     schema: 'gev-weather-history-preflight/v1',
     fixtureSha256,
@@ -1303,7 +1368,7 @@ export async function prepareWeatherEffectsTimelineInPage({
       displayedAtStart: reset.times,
       visualState: {
         satelliteProduct: satelliteParams.product,
-        satelliteInfrared: satelliteParams.infrared,
+        satelliteInfrared,
         radarOpacity: radarParams.opacity,
         lightningOpacity: lightningParams.opacity,
         windModel: wind.model.toLowerCase(),
@@ -1355,6 +1420,86 @@ export async function selectWeatherEffectsPhaseInPage({
   const readClock = () =>
     app.dataManager.layers.get('weather-radar')?.module?.getDiagnostics?.()
       ?.clock;
+  let dispatchedAtElapsedMs = null;
+  let dispatchCompletedAtElapsedMs = null;
+  const boundedWeatherPhaseContext = (observedAtElapsedMs, deadlineAtMs) => {
+    const clock = readClock();
+    const boundedTime = (value) =>
+      typeof value === 'string' &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)
+        ? value
+        : null;
+    const boundedPhaseId = (value) =>
+      typeof value === 'string' &&
+      /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(value)
+        ? value
+        : null;
+    const boundedSlider = (value) =>
+      typeof value === 'string' && /^\d{1,8}$/.test(value) ? value : null;
+    const boundedCount = (value) =>
+      Number.isSafeInteger(value) && value >= 0 && value <= 10_000_000
+        ? value
+        : null;
+    const boundedBoolean = (value) =>
+      typeof value === 'boolean' ? value : null;
+    return JSON.stringify({
+      expectedSourceTimes: Array(3).fill(boundedTime(phase.sourceTime)),
+      observedSourceTimes: sourceObservationTimes.map(boundedTime),
+      elapsedMs: Number.isFinite(observedAtElapsedMs)
+        ? observedAtElapsedMs
+        : null,
+      phase: {
+        id: boundedPhaseId(phase.id),
+        offsetMs: Number.isFinite(phase.offsetMs) ? phase.offsetMs : null,
+      },
+      deadline: {
+        elapsedMs: Number.isFinite(deadlineAtMs - startedAt)
+          ? deadlineAtMs - startedAt
+          : null,
+        absoluteMs: Number.isFinite(deadlineAtMs) ? deadlineAtMs : null,
+      },
+      clock: {
+        mode: ['history', 'latest'].includes(clock?.mode) ? clock.mode : null,
+        target: boundedTime(clock?.target),
+        playing: typeof clock?.playing === 'boolean' ? clock.playing : null,
+      },
+      slider: {
+        value: boundedSlider(slider.value),
+        max: boundedSlider(slider.max),
+      },
+      transition: {
+        dispatchedAtElapsedMs,
+        dispatchCompletedAtElapsedMs,
+        globeTilesLoaded: boundedBoolean(app.viewer?.scene?.globe?.tilesLoaded),
+        layers: ['weather-radar', 'weather-satellite', 'weather-lightning'].map(
+          (id) => {
+            const diagnostics = app.dataManager.layers
+              .get(id)
+              ?.module?.getDiagnostics?.();
+            return {
+              id,
+              loading: boundedBoolean(diagnostics?.loading),
+              hidden: boundedBoolean(diagnostics?.hidden),
+              time: boundedTime(diagnostics?.time),
+              pendingTiles: boundedCount(diagnostics?.pendingTiles),
+              deferredTiles: boundedCount(diagnostics?.deferredTiles),
+              loadedTiles: boundedCount(diagnostics?.loadedTiles),
+              imageryCount: boundedCount(diagnostics?.imageryCount),
+              hasError:
+                diagnostics && 'error' in diagnostics
+                  ? Boolean(diagnostics.error)
+                  : null,
+            };
+          },
+        ),
+      },
+      fixtureSha256:
+        typeof fixtureSha256 === 'string' &&
+        /^[a-f0-9]{64}$/.test(fixtureSha256)
+          ? fixtureSha256
+          : null,
+    });
+  };
   const assertMeasurementOwner = () => {
     if (window.__gevWeatherMeasurementStartedAt !== startedAt)
       throw new Error(
@@ -1369,12 +1514,20 @@ export async function selectWeatherEffectsPhaseInPage({
       setTimeout(resolve, targetElapsedMs - performance.now()),
     );
   assertMeasurementOwner();
-  if (Number(slider.max) !== 2)
-    throw new Error('Weather timeline no longer has the three pinned phases.');
-  slider.value = String(phase.timelineIndex);
-  slider.dispatchEvent(new Event('change', { bubbles: true }));
   const deadline = targetElapsedMs + maximumLatenessMs;
   let sourceObservationTimes = readTimes();
+  if (Number(slider.max) !== 2)
+    throw new Error(
+      `Weather timeline no longer has the three pinned phases. context=${boundedWeatherPhaseContext(
+        performance.now() - startedAt,
+        deadline,
+      )}`,
+    );
+  slider.value = String(phase.timelineIndex);
+  dispatchedAtElapsedMs = performance.now() - startedAt;
+  slider.dispatchEvent(new Event('change', { bubbles: true }));
+  dispatchCompletedAtElapsedMs = performance.now() - startedAt;
+  sourceObservationTimes = readTimes();
   while (
     !sourceObservationTimes.every((time) => time === phase.sourceTime) &&
     performance.now() < deadline
@@ -1395,7 +1548,12 @@ export async function selectWeatherEffectsPhaseInPage({
     clock?.target !== phase.sourceTime ||
     clock?.playing !== false
   )
-    throw new Error(`Weather phase ${phase.id} was missing, late or wrong.`);
+    throw new Error(
+      `Weather phase ${phase.id} was missing, late or wrong. context=${boundedWeatherPhaseContext(
+        observedAtElapsedMs,
+        deadline,
+      )}`,
+    );
   return {
     id: phase.id,
     expectedSourceTime: phase.sourceTime,

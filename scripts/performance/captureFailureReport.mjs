@@ -46,6 +46,145 @@ function safeText(value, limit = 512) {
     .slice(0, limit);
 }
 
+/** Preserve the bounded weather-phase context when the generic message is compacted. */
+export function extractBoundedWeatherPhaseContext(message) {
+  const text = String(message ?? '');
+  const prefix = text.match(
+    /^Weather phase [A-Za-z0-9][A-Za-z0-9._-]{0,63} was missing, late or wrong\. context=|^Weather timeline no longer has the three pinned phases\. context=/,
+  );
+  if (!prefix) return null;
+  const payload = text.slice(prefix[0].length);
+  if (payload.length > 4096) return null;
+  try {
+    const value = JSON.parse(payload);
+    if (!value || typeof value !== 'object' || Array.isArray(value))
+      return null;
+    const boundedTime = (entry) =>
+      typeof entry === 'string' &&
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(entry)
+        ? entry
+        : null;
+    const boundedTimes = (entry) =>
+      Array.isArray(entry) && entry.length === 3
+        ? entry.map((time) => boundedTime(time))
+        : null;
+    const result = {
+      expectedSourceTimes: boundedTimes(value.expectedSourceTimes),
+      observedSourceTimes: boundedTimes(value.observedSourceTimes),
+      elapsedMs: Number.isFinite(value.elapsedMs) ? value.elapsedMs : null,
+      phase:
+        value.phase && typeof value.phase === 'object'
+          ? {
+              id:
+                typeof value.phase.id === 'string' &&
+                /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(value.phase.id)
+                  ? value.phase.id
+                  : null,
+              offsetMs: Number.isFinite(value.phase.offsetMs)
+                ? value.phase.offsetMs
+                : null,
+            }
+          : null,
+      deadline:
+        value.deadline && typeof value.deadline === 'object'
+          ? {
+              elapsedMs: Number.isFinite(value.deadline.elapsedMs)
+                ? value.deadline.elapsedMs
+                : null,
+              absoluteMs: Number.isFinite(value.deadline.absoluteMs)
+                ? value.deadline.absoluteMs
+                : null,
+            }
+          : null,
+      clock:
+        value.clock && typeof value.clock === 'object'
+          ? {
+              mode: ['history', 'latest'].includes(value.clock.mode)
+                ? value.clock.mode
+                : null,
+              target: boundedTime(value.clock.target),
+              playing:
+                typeof value.clock.playing === 'boolean'
+                  ? value.clock.playing
+                  : null,
+            }
+          : null,
+      slider:
+        value.slider && typeof value.slider === 'object'
+          ? {
+              value:
+                typeof value.slider.value === 'string' &&
+                /^\d{1,8}$/.test(value.slider.value)
+                  ? value.slider.value
+                  : null,
+              max:
+                typeof value.slider.max === 'string' &&
+                /^\d{1,8}$/.test(value.slider.max)
+                  ? value.slider.max
+                  : null,
+            }
+          : null,
+      fixtureSha256:
+        typeof value.fixtureSha256 === 'string' &&
+        /^[a-f0-9]{64}$/.test(value.fixtureSha256)
+          ? value.fixtureSha256
+          : null,
+    };
+    if (
+      !result.expectedSourceTimes ||
+      !result.observedSourceTimes ||
+      !result.phase ||
+      !result.deadline ||
+      !result.clock ||
+      !result.slider ||
+      !result.fixtureSha256
+    )
+      return null;
+    if (value.transition && typeof value.transition === 'object') {
+      const boundedCount = (entry) =>
+        Number.isSafeInteger(entry) && entry >= 0 && entry <= 10_000_000
+          ? entry
+          : null;
+      const boundedBoolean = (entry) =>
+        typeof entry === 'boolean' ? entry : null;
+      const ids = ['weather-radar', 'weather-satellite', 'weather-lightning'];
+      result.transition = {
+        dispatchedAtElapsedMs: Number.isFinite(
+          value.transition.dispatchedAtElapsedMs,
+        )
+          ? value.transition.dispatchedAtElapsedMs
+          : null,
+        dispatchCompletedAtElapsedMs: Number.isFinite(
+          value.transition.dispatchCompletedAtElapsedMs,
+        )
+          ? value.transition.dispatchCompletedAtElapsedMs
+          : null,
+        globeTilesLoaded: boundedBoolean(value.transition.globeTilesLoaded),
+        layers: ids.map((id, index) => {
+          const entry = Array.isArray(value.transition.layers)
+            ? value.transition.layers[index]
+            : null;
+          const layer = entry?.id === id ? entry : null;
+          return {
+            id,
+            loading: boundedBoolean(layer?.loading),
+            hidden: boundedBoolean(layer?.hidden),
+            time: boundedTime(layer?.time),
+            pendingTiles: boundedCount(layer?.pendingTiles),
+            deferredTiles: boundedCount(layer?.deferredTiles),
+            loadedTiles: boundedCount(layer?.loadedTiles),
+            imageryCount: boundedCount(layer?.imageryCount),
+            hasError: boundedBoolean(layer?.hasError),
+          };
+        }),
+      };
+    }
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 function boundedValue(value, depth = 0, seen = new WeakSet(), state = null) {
   if (value === null || typeof value === 'boolean') return value;
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
@@ -78,6 +217,46 @@ function boundedValue(value, depth = 0, seen = new WeakSet(), state = null) {
     if (bounded !== undefined) output[key] = bounded;
   }
   return output;
+}
+
+const FOREGROUND_DIAGNOSTIC_KEYS = [
+  'schema',
+  'category',
+  'runnerExited',
+  'runnerTimedOut',
+  'runnerKilled',
+  'runnerExitCode',
+  'runnerSignal',
+  'runnerErrorCode',
+  'browserPid',
+  'windowHandleAvailable',
+  'windowHandleSource',
+  'handlePollAttempts',
+  'inputAttached',
+  'showWindowAccepted',
+  'bringWindowToTopAccepted',
+  'setForegroundAccepted',
+  'foregroundConfirmed',
+  'foregroundPid',
+  'foregroundProcessName',
+  'desktopState',
+  'status',
+];
+
+/** Preserve only the bounded, non-secret foreground activation contract. */
+export function sanitizeForegroundActivationDiagnostic(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const output = {};
+  for (const key of FOREGROUND_DIAGNOSTIC_KEYS) {
+    if (!Object.hasOwn(value, key)) continue;
+    const entry = value[key];
+    if (entry === null) output[key] = null;
+    else if (typeof entry === 'boolean') output[key] = entry;
+    else if (Number.isSafeInteger(entry)) output[key] = entry;
+    else if (typeof entry === 'string' && entry.length <= 128)
+      output[key] = safeText(entry, 128);
+  }
+  return Object.keys(output).length ? output : null;
 }
 
 /** Return the same redacted, depth- and collection-bounded projection used by
@@ -182,6 +361,9 @@ export function createCaptureFailureReport({
   fixtureDelivery = null,
   fixtureInterceptionErrors = [],
 } = {}) {
+  const weatherPhaseContext = extractBoundedWeatherPhaseContext(
+    error?.message || error,
+  );
   const boundedState = { truncated: false };
   if (
     Array.isArray(fixtureInterceptionErrors) &&
@@ -224,7 +406,19 @@ export function createCaptureFailureReport({
       scenario: scenario ? safeText(scenario, 80) : null,
       run: Number.isInteger(run) ? run : null,
       message: safeText(error?.message || error || 'Capture failed.', 512),
+      ...(weatherPhaseContext
+        ? {
+            weatherPhaseContext,
+          }
+        : {}),
       operator: errorOperator ? safeText(errorOperator, 32) : null,
+      ...(sanitizeForegroundActivationDiagnostic(error?.foregroundActivation)
+        ? {
+            foregroundActivation: sanitizeForegroundActivationDiagnostic(
+              error.foregroundActivation,
+            ),
+          }
+        : {}),
       actual: boundedValue(errorActual, 0, new WeakSet(), boundedState),
       expected: boundedValue(errorExpected, 0, new WeakSet(), boundedState),
     },

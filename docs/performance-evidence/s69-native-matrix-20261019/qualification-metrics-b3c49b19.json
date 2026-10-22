@@ -1,0 +1,75 @@
+{
+  "schema": "gev-independent-qualification-metrics-review/v1",
+  "reviewedAt": "2026-10-19T16:54:15.283Z",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "correctnessControlCommit": "3141ffe3ebbaa162f4927827c2b473ecbc12cd22",
+  "captureProducerCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "cb3a7c1889b9ebc9411470ffc9a6b2f3228a87cd",
+  "captureStatus": "failed",
+  "captureFailure": "Expected values to be strictly equal:\n\n5 !== 4\n; Expected values to be strictly equal:\n\n5 !== 4\n",
+  "processCode": 1,
+  "metrics": {
+    "schema": "gev-qualification-metrics/v1",
+    "status": "failed",
+    "acceptanceEligible": false,
+    "metrics": {
+      "coldStartup": {
+        "status": "failed",
+        "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+        "baselineMedianMs": 3737,
+        "candidateMedianMs": 4289,
+        "baselineInitialSettleMedianMs": 4671,
+        "candidateInitialSettleMedianMs": 5217,
+        "initialSettleChangePct": 11.689145793192036,
+        "initialSettleRegressionOver10Pct": true,
+        "baselineRunsMs": [5870, 3737, 4116, 3203, 3282],
+        "candidateRunsMs": [4289, 3700, 3885, 4372, 4441],
+        "changePct": 14.771206850414773,
+        "regressionOver10Pct": true,
+        "thresholdPct": 10
+      },
+      "localControl": {
+        "status": "failed",
+        "reason": "Interaction capture failed."
+      },
+      "loadedReplaySeek": {
+        "status": "failed",
+        "reason": "Interaction capture failed."
+      },
+      "sampledPeakHeap": {
+        "status": "failed",
+        "reason": "Expected values to be strictly equal:\n\n5 !== 4\n; Expected values to be strictly equal:\n\n5 !== 4\n"
+      }
+    }
+  },
+  "files": [
+    {
+      "name": "capture.json",
+      "bytes": 139879,
+      "sha256": "a98948f32ae35ff91ab3d2d81b9f9e8b9e25018056f7f1c19b3afc23b18407c4"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1599,
+      "sha256": "39e750f6bede2fa0ea753f2ca78924f20e8a642aa73c244166febfb608d98ace"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 3062,
+      "sha256": "adfe9de68df2c7d3863071f8bacbedd2f89ffb942da063852d472b06f62dd595"
+    },
+    {
+      "name": "baseline.json",
+      "bytes": 370487,
+      "sha256": "57a4b51e76cd4d576e9a24374c4b7726815e8ed48a590119712aaa811a83aa5c"
+    },
+    {
+      "name": "candidate.json",
+      "bytes": 371130,
+      "sha256": "cb8d5a1c639bc103d2ac8378839be482e6d386315e42cef889c9b2579187d02d"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-metrics-b3c49b19-evidence",
+  "scope": "Recorded-pose correctness control versus candidate: twenty local controls, twenty loaded replay seeks, and six sampled-heap cycles per build. This is separate from the original-baseline workload comparisons and final forced-GC soak. The source captures also expose startup observations; all original values and flags are retained.",
+  "productionChanged": false
+}

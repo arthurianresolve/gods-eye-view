@@ -1,0 +1,2030 @@
+{
+  "schema": "gev-final-visual-pixel-localization/v1",
+  "reviewedAt": "2026-10-20T00:46:21.422Z",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841"
+  },
+  "producerCommit": "25cab4fd4db58e2432c8845131578c9df7dff526",
+  "rawSha256": "1e7cc4cfefb760eaf340bcfb2237dcef2f28e64a708119aac515ea983ba89bba",
+  "pairs": [
+    {
+      "label": "still-settled",
+      "leftFile": "still-settled-baseline-attempt-1.png",
+      "rightFile": "still-settled-candidate-attempt-1.png",
+      "width": 2880,
+      "height": 1800,
+      "leftPixelSha256": "83af16fd283ac5f3198267c598c0a46d07bc4e0d93d28e26e60c15f67d589c08",
+      "rightPixelSha256": "fa707e5722be4bf29bc33f654be0dc50b096bc0cf406f8cd2b54200fd70fb90e",
+      "maximumChannelDelta": 103,
+      "thresholds": [
+        {
+          "minDelta": 1,
+          "count": 78,
+          "minX": 2758,
+          "minY": 1081,
+          "maxX": 2769,
+          "maxY": 1091
+        },
+        {
+          "minDelta": 3,
+          "count": 74,
+          "minX": 2758,
+          "minY": 1082,
+          "maxX": 2769,
+          "maxY": 1091
+        },
+        {
+          "minDelta": 10,
+          "count": 74,
+          "minX": 2758,
+          "minY": 1082,
+          "maxX": 2769,
+          "maxY": 1091
+        },
+        {
+          "minDelta": 32,
+          "count": 64,
+          "minX": 2758,
+          "minY": 1083,
+          "maxX": 2769,
+          "maxY": 1091
+        },
+        {
+          "minDelta": 64,
+          "count": 56,
+          "minX": 2758,
+          "minY": 1084,
+          "maxX": 2769,
+          "maxY": 1091
+        }
+      ]
+    },
+    {
+      "label": "hud-visible",
+      "leftFile": "hud-visible-baseline-attempt-1.png",
+      "rightFile": "hud-visible-candidate-attempt-1.png",
+      "width": 2880,
+      "height": 1800,
+      "leftPixelSha256": "f49ffe9ae46cba4a0712c7939e2aa5ff3e5e66456c89c620c56abd4ed82eb7d5",
+      "rightPixelSha256": "83af16fd283ac5f3198267c598c0a46d07bc4e0d93d28e26e60c15f67d589c08",
+      "maximumChannelDelta": 7,
+      "thresholds": [
+        {
+          "minDelta": 1,
+          "count": 8,
+          "minX": 2149,
+          "minY": 1005,
+          "maxX": 2372,
+          "maxY": 1007
+        },
+        {
+          "minDelta": 3,
+          "count": 6,
+          "minX": 2149,
+          "minY": 1005,
+          "maxX": 2372,
+          "maxY": 1006
+        },
+        {
+          "minDelta": 10,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 32,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 64,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        }
+      ]
+    },
+    {
+      "label": "hud-hidden",
+      "leftFile": "hud-hidden-baseline-attempt-1.png",
+      "rightFile": "hud-hidden-candidate-attempt-1.png",
+      "width": 2880,
+      "height": 1800,
+      "leftPixelSha256": "8ec7777041a0fa4d113f979bef1064b7b4bd408e0a9852bccdd8c8f193c30db8",
+      "rightPixelSha256": "8ec7777041a0fa4d113f979bef1064b7b4bd408e0a9852bccdd8c8f193c30db8",
+      "maximumChannelDelta": 0,
+      "thresholds": [
+        {
+          "minDelta": 1,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 3,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 10,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 32,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 64,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        }
+      ]
+    },
+    {
+      "label": "hud-restored",
+      "leftFile": "hud-restored-baseline-attempt-1.png",
+      "rightFile": "hud-restored-candidate-attempt-1.png",
+      "width": 2880,
+      "height": 1800,
+      "leftPixelSha256": "d099f53be0846f35f001d212effe751b9251dda719dda4e7c40a66a922fdf11a",
+      "rightPixelSha256": "00b0aa4be746e94f75d291a56a28ddf602c2265a3f0de03dc8367de131888e75",
+      "maximumChannelDelta": 103,
+      "thresholds": [
+        {
+          "minDelta": 1,
+          "count": 764,
+          "minX": 62,
+          "minY": 68,
+          "maxX": 149,
+          "maxY": 137
+        },
+        {
+          "minDelta": 3,
+          "count": 136,
+          "minX": 97,
+          "minY": 74,
+          "maxX": 142,
+          "maxY": 121
+        },
+        {
+          "minDelta": 10,
+          "count": 77,
+          "minX": 97,
+          "minY": 74,
+          "maxX": 141,
+          "maxY": 121
+        },
+        {
+          "minDelta": 32,
+          "count": 36,
+          "minX": 97,
+          "minY": 83,
+          "maxX": 141,
+          "maxY": 104
+        },
+        {
+          "minDelta": 64,
+          "count": 2,
+          "minX": 114,
+          "minY": 89,
+          "maxX": 120,
+          "maxY": 104
+        }
+      ]
+    },
+    {
+      "label": "baseline-visible-vs-restored",
+      "leftFile": "hud-visible-baseline-attempt-1.png",
+      "rightFile": "hud-restored-baseline-attempt-1.png",
+      "width": 2880,
+      "height": 1800,
+      "leftPixelSha256": "f49ffe9ae46cba4a0712c7939e2aa5ff3e5e66456c89c620c56abd4ed82eb7d5",
+      "rightPixelSha256": "d099f53be0846f35f001d212effe751b9251dda719dda4e7c40a66a922fdf11a",
+      "maximumChannelDelta": 7,
+      "thresholds": [
+        {
+          "minDelta": 1,
+          "count": 7226,
+          "minX": 24,
+          "minY": 0,
+          "maxX": 2372,
+          "maxY": 1007
+        },
+        {
+          "minDelta": 3,
+          "count": 8,
+          "minX": 125,
+          "minY": 107,
+          "maxX": 2372,
+          "maxY": 1006
+        },
+        {
+          "minDelta": 10,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 32,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        },
+        {
+          "minDelta": 64,
+          "count": 0,
+          "minX": 2880,
+          "minY": 1800,
+          "maxX": -1,
+          "maxY": -1
+        }
+      ]
+    },
+    {
+      "label": "candidate-visible-vs-restored",
+      "leftFile": "hud-visible-candidate-attempt-1.png",
+      "rightFile": "hud-restored-candidate-attempt-1.png",
+      "width": 2880,
+      "height": 1800,
+      "leftPixelSha256": "83af16fd283ac5f3198267c598c0a46d07bc4e0d93d28e26e60c15f67d589c08",
+      "rightPixelSha256": "00b0aa4be746e94f75d291a56a28ddf602c2265a3f0de03dc8367de131888e75",
+      "maximumChannelDelta": 103,
+      "thresholds": [
+        {
+          "minDelta": 1,
+          "count": 7751,
+          "minX": 24,
+          "minY": 0,
+          "maxX": 223,
+          "maxY": 198
+        },
+        {
+          "minDelta": 3,
+          "count": 139,
+          "minX": 97,
+          "minY": 74,
+          "maxX": 142,
+          "maxY": 121
+        },
+        {
+          "minDelta": 10,
+          "count": 77,
+          "minX": 97,
+          "minY": 74,
+          "maxX": 141,
+          "maxY": 121
+        },
+        {
+          "minDelta": 32,
+          "count": 36,
+          "minX": 97,
+          "minY": 83,
+          "maxX": 141,
+          "maxY": 104
+        },
+        {
+          "minDelta": 64,
+          "count": 2,
+          "minX": 114,
+          "minY": 89,
+          "maxX": 120,
+          "maxY": 104
+        }
+      ]
+    }
+  ],
+  "timing": [
+    {
+      "role": "baseline",
+      "state": "still-settled",
+      "checks": 1,
+      "debuggerEnableDurationMs": 678.3971999999994,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 678.7869999999966,
+        "hostPauseObservedAtMs": 806.1814999999988,
+        "hostEvaluationDurationMs": 127.39450000000215,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "baseline",
+      "state": "hud-visible",
+      "checks": 8,
+      "debuggerEnableDurationMs": 67.26610000000073,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 2664.092700000001,
+        "hostPauseObservedAtMs": 3037.3225000000093,
+        "hostEvaluationDurationMs": 373.22980000000825,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [
+        {
+          "check": 1,
+          "elapsedMs": 332.3043000000034,
+          "hostEvaluationStartedAtMs": 67.41150000000198,
+          "hostEvaluationCompletedAtMs": 332.3043000000034,
+          "hostEvaluationDurationMs": 264.89280000000144,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 133,
+            "observation": {
+              "pageReadStartedAtMs": 19914.20000000298,
+              "pageReadCompletedAtMs": 20172.20000000298,
+              "pageReadDurationMs": 258,
+              "pixelReadDurationMs": 255.3999999910593
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 2,
+          "elapsedMs": 712.0459000000046,
+          "hostEvaluationStartedAtMs": 386.3348000000042,
+          "hostEvaluationCompletedAtMs": 712.0459000000046,
+          "hostEvaluationDurationMs": 325.71110000000044,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 136,
+            "observation": {
+              "pageReadStartedAtMs": 20236.5,
+              "pageReadCompletedAtMs": 20551.29999999702,
+              "pageReadDurationMs": 314.79999999701977,
+              "pixelReadDurationMs": 311.79999999701977
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 3,
+          "elapsedMs": 1207.1588000000047,
+          "hostEvaluationStartedAtMs": 777.1563999999998,
+          "hostEvaluationCompletedAtMs": 1207.1588000000047,
+          "hostEvaluationDurationMs": 430.00240000000485,
+          "detail": {
+            "phase": 0,
+            "frameNumber": 140,
+            "observation": {
+              "pageReadStartedAtMs": 20646.40000000596,
+              "pageReadCompletedAtMs": 21048.60000000894,
+              "pageReadDurationMs": 402.20000000298023,
+              "pixelReadDurationMs": 400.59999999403954
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 4,
+          "elapsedMs": 1548.3798000000024,
+          "hostEvaluationStartedAtMs": 1263.8654000000024,
+          "hostEvaluationCompletedAtMs": 1548.3798000000024,
+          "hostEvaluationDurationMs": 284.5144,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 143,
+            "observation": {
+              "pageReadStartedAtMs": 21112.29999999702,
+              "pageReadCompletedAtMs": 21388.70000000298,
+              "pageReadDurationMs": 276.40000000596046,
+              "pixelReadDurationMs": 274.09999999403954
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 5,
+          "elapsedMs": 1837.7930000000051,
+          "hostEvaluationStartedAtMs": 1607.0535000000018,
+          "hostEvaluationCompletedAtMs": 1837.7930000000051,
+          "hostEvaluationDurationMs": 230.73950000000332,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 145,
+            "observation": {
+              "pageReadStartedAtMs": 21503,
+              "pageReadCompletedAtMs": 21679.40000000596,
+              "pageReadDurationMs": 176.40000000596046,
+              "pixelReadDurationMs": 174.59999999403954
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 6,
+          "elapsedMs": 2169.8102,
+          "hostEvaluationStartedAtMs": 1892.0692000000054,
+          "hostEvaluationCompletedAtMs": 2169.8102,
+          "hostEvaluationDurationMs": 277.74099999999453,
+          "detail": {
+            "phase": 0,
+            "frameNumber": 148,
+            "observation": {
+              "pageReadStartedAtMs": 21745.79999999702,
+              "pageReadCompletedAtMs": 22011.5,
+              "pageReadDurationMs": 265.70000000298023,
+              "pixelReadDurationMs": 262.29999999701977
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 7,
+          "elapsedMs": 2608.975600000005,
+          "hostEvaluationStartedAtMs": 2220.918900000004,
+          "hostEvaluationCompletedAtMs": 2608.975600000005,
+          "hostEvaluationDurationMs": 388.056700000001,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 152,
+            "observation": {
+              "pageReadStartedAtMs": 22074.5,
+              "pageReadCompletedAtMs": 22450.70000000298,
+              "pageReadDurationMs": 376.20000000298023,
+              "pixelReadDurationMs": 374.3999999910593
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        }
+      ],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "baseline",
+      "state": "hud-hidden",
+      "checks": 1,
+      "debuggerEnableDurationMs": 73.58580000000075,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 73.67389999999432,
+        "hostPauseObservedAtMs": 343.4554999999964,
+        "hostEvaluationDurationMs": 269.7816000000021,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "baseline",
+      "state": "hud-restored",
+      "checks": 5,
+      "debuggerEnableDurationMs": 82.7097999999969,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 1371.6935999999987,
+        "hostPauseObservedAtMs": 1740.555800000002,
+        "hostEvaluationDurationMs": 368.8622000000032,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [
+        {
+          "check": 1,
+          "elapsedMs": 334.28970000000845,
+          "hostEvaluationStartedAtMs": 82.8587000000116,
+          "hostEvaluationCompletedAtMs": 334.28970000000845,
+          "hostEvaluationDurationMs": 251.43099999999686,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 193,
+            "observation": {
+              "pageReadStartedAtMs": 27559.10000000894,
+              "pageReadCompletedAtMs": 27806.79999999702,
+              "pageReadDurationMs": 247.69999998807907,
+              "pixelReadDurationMs": 245
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 2,
+          "elapsedMs": 593.8657000000094,
+          "hostEvaluationStartedAtMs": 390.83150000000023,
+          "hostEvaluationCompletedAtMs": 593.8657000000094,
+          "hostEvaluationDurationMs": 203.03420000000915,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 195,
+            "observation": {
+              "pageReadStartedAtMs": 27870,
+              "pageReadCompletedAtMs": 28066.40000000596,
+              "pageReadDurationMs": 196.40000000596046,
+              "pixelReadDurationMs": 193.69999998807907
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 3,
+          "elapsedMs": 938.7024999999994,
+          "hostEvaluationStartedAtMs": 654.5862000000052,
+          "hostEvaluationCompletedAtMs": 938.7024999999994,
+          "hostEvaluationDurationMs": 284.1162999999942,
+          "detail": {
+            "phase": 0,
+            "frameNumber": 198,
+            "observation": {
+              "pageReadStartedAtMs": 28134.29999999702,
+              "pageReadCompletedAtMs": 28411.20000000298,
+              "pageReadDurationMs": 276.90000000596046,
+              "pixelReadDurationMs": 275.1000000089407
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        },
+        {
+          "check": 4,
+          "elapsedMs": 1312.4472999999998,
+          "hostEvaluationStartedAtMs": 998.3421999999991,
+          "hostEvaluationCompletedAtMs": 1312.4472999999998,
+          "hostEvaluationDurationMs": 314.1051000000007,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 201,
+            "observation": {
+              "pageReadStartedAtMs": 28477.70000000298,
+              "pageReadCompletedAtMs": 28785,
+              "pageReadDurationMs": 307.29999999701977,
+              "pixelReadDurationMs": 303.20000000298023
+            },
+            "reason": null,
+            "recordingVisible": false,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        }
+      ],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "candidate",
+      "state": "still-settled",
+      "checks": 1,
+      "debuggerEnableDurationMs": 604.0043000000005,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 604.0467999999964,
+        "hostPauseObservedAtMs": 647.8280999999988,
+        "hostEvaluationDurationMs": 43.781300000002375,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "candidate",
+      "state": "hud-visible",
+      "checks": 1,
+      "debuggerEnableDurationMs": 44.00260000000708,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 44.0564999999915,
+        "hostPauseObservedAtMs": 122.47359999999753,
+        "hostEvaluationDurationMs": 78.41710000000603,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "candidate",
+      "state": "hud-hidden",
+      "checks": 1,
+      "debuggerEnableDurationMs": 71.61439999999129,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 71.66800000000512,
+        "hostPauseObservedAtMs": 241.06590000000142,
+        "hostEvaluationDurationMs": 169.3978999999963,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    },
+    {
+      "role": "candidate",
+      "state": "hud-restored",
+      "checks": 2,
+      "debuggerEnableDurationMs": 27.663999999989755,
+      "finalEvaluation": {
+        "hostEvaluationStartedAtMs": 303.21050000000105,
+        "hostPauseObservedAtMs": 355.5289000000048,
+        "hostEvaluationDurationMs": 52.31840000000375,
+        "interruptedByDebuggerPause": true
+      },
+      "samples": [
+        {
+          "check": 1,
+          "elapsedMs": 244.6771000000008,
+          "hostEvaluationStartedAtMs": 27.7045000000071,
+          "hostEvaluationCompletedAtMs": 244.6771000000008,
+          "hostEvaluationDurationMs": 216.9725999999937,
+          "detail": {
+            "phase": 2,
+            "frameNumber": 111,
+            "observation": {
+              "pageReadStartedAtMs": 19494.39999999106,
+              "pageReadCompletedAtMs": 19707.20000000298,
+              "pageReadDurationMs": 212.80000001192093,
+              "pixelReadDurationMs": 211.70000000298023
+            },
+            "reason": null,
+            "recordingVisible": true,
+            "summaryTypingComplete": true,
+            "summaryPresent": true,
+            "documentVisible": true,
+            "documentFocused": true,
+            "gazeReady": true,
+            "hudVisible": true,
+            "hudVisibility": "visible",
+            "hudDisplay": "block",
+            "hudOpacity": 1
+          }
+        }
+      ],
+      "pauseCleanup": {
+        "resumed": true,
+        "disabled": true,
+        "detached": true
+      }
+    }
+  ],
+  "gaze": [
+    {
+      "state": "still-settled",
+      "equal": true,
+      "sides": {
+        "baseline": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 2,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 497.3984375,
+              "right": 1187.875,
+              "bottom": 516.8984375,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        },
+        "candidate": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 2,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 497.3984375,
+              "right": 1187.875,
+              "bottom": 516.8984375,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        }
+      }
+    },
+    {
+      "state": "hud-visible",
+      "equal": true,
+      "sides": {
+        "baseline": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 4,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 497.3984375,
+              "right": 1187.875,
+              "bottom": 516.8984375,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        },
+        "candidate": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 4,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 497.3984375,
+              "right": 1187.875,
+              "bottom": 516.8984375,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        }
+      }
+    },
+    {
+      "state": "hud-hidden",
+      "equal": true,
+      "sides": {
+        "baseline": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 6,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 465,
+              "right": 1187.875,
+              "bottom": 484.5,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        },
+        "candidate": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 6,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 465,
+              "right": 1187.875,
+              "bottom": 484.5,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        }
+      }
+    },
+    {
+      "state": "hud-restored",
+      "equal": true,
+      "sides": {
+        "baseline": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 8,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 497.3984375,
+              "right": 1187.875,
+              "bottom": 516.8984375,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        },
+        "candidate": {
+          "status": "ready",
+          "reducedMotion": false,
+          "pointerMoveSequence": 8,
+          "resetSequence": 0,
+          "expected": {
+            "pointer": {
+              "x": 1,
+              "y": 1
+            },
+            "logos": [
+              {
+                "id": "",
+                "key": "logo-0",
+                "rect": {
+                  "left": 36,
+                  "top": 32,
+                  "width": 52,
+                  "height": 34.8828125
+                },
+                "transform": "translate(-6.48 -5.15)"
+              }
+            ]
+          },
+          "logos": [
+            {
+              "id": "",
+              "key": "logo-0",
+              "rect": {
+                "left": 36,
+                "top": 32,
+                "width": 52,
+                "height": 34.8828125
+              },
+              "mode": "inline-svg",
+              "image": null,
+              "globeTransform": "translate(-6.48 -5.15)",
+              "cageTransform": "translate(-6.48 -5.15)",
+              "style": {
+                "transform": "none",
+                "filter": "drop-shadow(rgba(0, 246, 255, 0.5) 0px 0px 12px)",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "globeStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              },
+              "cageStyle": {
+                "transform": "matrix(1, 0, 0, 1, -6.48, -5.15)",
+                "filter": "none",
+                "transitionProperty": "all",
+                "transitionDuration": "0s",
+                "transitionDelay": "0s",
+                "animationName": "none",
+                "animationDuration": "0s"
+              }
+            }
+          ],
+          "activeAnimations": [],
+          "animationOverflow": false,
+          "titleStyle": {
+            "filter": "none",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none",
+            "animationDuration": "0s"
+          },
+          "cctvEffects": [
+            {
+              "id": "cctv-panel",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-panel-inner",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "blur(24px) saturate(1.4)",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            },
+            {
+              "id": "cctv-cyber-panel-body",
+              "present": true,
+              "filter": "none",
+              "backdropFilter": "none",
+              "transitionProperty": "all",
+              "transitionDuration": "0s",
+              "transitionDelay": "0s",
+              "animationName": "none",
+              "animationDuration": "0s"
+            }
+          ],
+          "sourceBadge": {
+            "rect": {
+              "left": 1073,
+              "top": 497.3984375,
+              "right": 1187.875,
+              "bottom": 516.8984375,
+              "width": 114.875,
+              "height": 19.5
+            },
+            "filter": "none",
+            "backdropFilter": "none",
+            "borderRadius": "999px",
+            "transitionProperty": "all",
+            "transitionDuration": "0s",
+            "animationName": "none"
+          }
+        }
+      }
+    }
+  ],
+  "teardown": {
+    "baseline": {
+      "browserClosed": true,
+      "pageClose": {
+        "closeCompleted": true,
+        "openPageCount": 0
+      },
+      "browserClose": {
+        "closeCompleted": true,
+        "forcedProcessTermination": false,
+        "observation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "effectiveCloseDeadlineMs": 5000,
+          "postDisconnectExitTimeoutMs": 5000,
+          "postDisconnectExitWaitAttempted": false,
+          "closeStartHostMs": 72840.1155,
+          "closeSettledHostMs": 73892.6436,
+          "closeElapsedMs": 1052.528099999996,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 1003.0457000000024
+          },
+          "protocolCloseTrace": null,
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null
+        }
+      },
+      "errors": [],
+      "interceptionDrain": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      },
+      "interceptionRelease": {
+        "schema": "gev-fixture-interception-release/v1",
+        "interception": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true
+      }
+    },
+    "candidate": {
+      "browserClosed": true,
+      "pageClose": {
+        "closeCompleted": true,
+        "openPageCount": 0
+      },
+      "browserClose": {
+        "closeCompleted": true,
+        "forcedProcessTermination": false,
+        "observation": {
+          "closeStatus": "completed",
+          "closeDeadlineMs": 5000,
+          "effectiveCloseDeadlineMs": 5000,
+          "postDisconnectExitTimeoutMs": 5000,
+          "postDisconnectExitWaitAttempted": false,
+          "closeStartHostMs": 96229.331,
+          "closeSettledHostMs": 96908.5824,
+          "closeElapsedMs": 679.2513999999937,
+          "timingOrigins": {
+            "closeElapsedMs": "browser.close invocation",
+            "processExitElapsedMs": "closeRecoveryBrowser entry"
+          },
+          "closeRejectionName": null,
+          "processExitedBeforeClose": false,
+          "processExit": {
+            "code": 0,
+            "signal": null,
+            "elapsedMs": 629.3365999999951
+          },
+          "protocolCloseTrace": null,
+          "forceProcessStatus": "not-needed",
+          "forceProcessAttempted": false,
+          "forceProcessCallbackInvoked": false,
+          "forceProcessElapsedMs": null
+        }
+      },
+      "errors": [],
+      "interceptionDrain": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      },
+      "interceptionRelease": {
+        "schema": "gev-fixture-interception-release/v1",
+        "interception": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true
+      }
+    }
+  },
+  "decoder": {
+    "name": "pngjs",
+    "version": "7.0.0",
+    "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+    "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+  },
+  "scope": "Independent decoding of all eight original unmasked PNGs. Delta levels localize differences only; they introduce no acceptance tolerance or mask. Guard timing and DOM gaze are observations, not an attribution of causality."
+}

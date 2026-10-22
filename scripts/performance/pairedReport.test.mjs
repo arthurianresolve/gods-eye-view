@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validatePairedPerformanceReports } from './pairedReport.mjs';
+import {
+  validatePairedPerformanceReports,
+  validatePairedSettledIdleReports,
+} from './pairedReport.mjs';
 import { evaluateMotionFrameBudget } from './motionBudget.mjs';
-import { createObservedInfrastructureComparisonContract } from './captureComparisonContract.mjs';
+import {
+  createObservedInfrastructureComparisonContract,
+  SETTLED_IDLE_ONLY_INELIGIBLE_REASON,
+} from './captureComparisonContract.mjs';
 
 import {
   baselineCommit,
@@ -31,6 +37,46 @@ function validate(
     },
   });
 }
+
+test('paired reports bind a distinct capture producer while preserving builder identity', () => {
+  const pair = () =>
+    [makeReport(baselineCommit), makeReport(candidateCommit)].map((report) => {
+      const builder = report.source.harnessCommit;
+      report.source.harnessCommit = 'd'.repeat(40);
+      report.source.buildHarnessCommit = builder;
+      report.source.buildProvenance.captureProducerCommit =
+        report.source.harnessCommit;
+      report.source.buildProvenance.buildHarnessCommit = builder;
+      return report;
+    });
+  assert.equal(validate(...pair()).status, 'comparable');
+  for (const invalid of [null, '', 'bad']) {
+    for (const field of ['captureProducerCommit', 'buildHarnessCommit']) {
+      const reports = pair();
+      reports[1].source.buildProvenance[field] = invalid;
+      assert.throws(
+        () => validate(...reports),
+        /producer SHA|build harness SHA/,
+      );
+    }
+    const reports = pair();
+    reports[1].source.buildHarnessCommit = invalid;
+    assert.throws(() => validate(...reports), /source build harness SHA/);
+  }
+  const missingProducer = pair();
+  delete missingProducer[1].source.buildProvenance.captureProducerCommit;
+  assert.throws(() => validate(...missingProducer), /producer SHA mismatch/);
+  const differentBuilders = pair();
+  differentBuilders[1].source.buildProvenance.harnessCommit = 'e'.repeat(40);
+  differentBuilders[1].source.buildProvenance.buildHarnessCommit = 'e'.repeat(
+    40,
+  );
+  differentBuilders[1].source.buildHarnessCommit = 'e'.repeat(40);
+  assert.throws(
+    () => validate(...differentBuilders),
+    /Build harness revisions must match/,
+  );
+});
 
 test('valid paired reports calculate scenario medians, objective and regressions separately', () => {
   const result = validate();
@@ -62,6 +108,77 @@ test('valid paired reports calculate scenario medians, objective and regressions
   );
   const regressedResult = validate(makeReport(baselineCommit), regressed);
   assert.deepEqual(regressedResult.regressionsOver10Pct, ['scripted-motion']);
+});
+
+test('paired reports distinguish full Chrome patch versions with identical reduced user agents', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const report of [baseline, candidate]) {
+    report.environment.userAgent = 'Mozilla/5.0 Chrome/155.0.0.0';
+    report.comparisonContract.browser.version = '155.0.0.0';
+    report.graphics.browserVersion = 'Chrome/155.0.8059.84';
+  }
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+  candidate.graphics.browserVersion = 'Chrome/155.0.8059.85';
+  assert.throws(
+    () => validate(baseline, candidate),
+    /Full browser products differ/,
+  );
+  baseline.graphics.browserVersion = candidate.graphics.browserVersion;
+  assert.equal(validate(baseline, candidate).status, 'comparable');
+});
+
+test('paired reports leave missing or reduced-only full browser identity unavailable', () => {
+  for (const side of ['baseline', 'candidate']) {
+    for (const product of [
+      undefined,
+      null,
+      '',
+      'Chrome/155.0.0.0',
+      'Chrome/155',
+    ]) {
+      const pair = {
+        baseline: makeReport(baselineCommit),
+        candidate: makeReport(candidateCommit),
+      };
+      if (product === undefined) delete pair[side].graphics;
+      else pair[side].graphics.browserVersion = product;
+      assert.throws(
+        () => validate(pair.baseline, pair.candidate),
+        (error) => {
+          assert.equal(error.code, 'ERR_FULL_BROWSER_IDENTITY_UNAVAILABLE');
+          assert.equal(error.evidenceStatus, 'unavailable');
+          assert.match(error.message, new RegExp(`^${side}:`));
+          return true;
+        },
+      );
+    }
+  }
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  for (const report of [baseline, candidate])
+    report.graphics.browserVersion = 'Chrome/155.0.8059.85';
+  assert.throws(() => validate(baseline, candidate), /observed user agent/);
+});
+
+test('native comparison cannot bypass profile evidence by stripping fields', () => {
+  const baseline = makeReport(baselineCommit);
+  const candidate = makeReport(candidateCommit);
+  baseline.comparisonProfile = 'native-sharpness-v1';
+  candidate.comparisonProfile = 'native-sharpness-v1';
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+        expectedComparisonProfile: 'native-sharpness-v1',
+      }),
+    /missing native sharpness profile/,
+  );
 });
 
 test('paired renderer evidence ignores only one-time query duration', () => {
@@ -132,7 +249,7 @@ test('paired reports reject absent, mismatched or drifting build provenance', ()
   wrongHarness.source.buildProvenance.harnessCommit = 'd'.repeat(40);
   assert.throws(
     () => validate(base, wrongHarness),
-    /receipt harness SHA mismatch/,
+    /capture producer SHA mismatch/,
   );
 
   const changedAssets = makeReport(candidateCommit);
@@ -221,6 +338,118 @@ test('five-run map streaming contracts compare transition readiness and reject i
         },
       }),
     /five runs|Map timed journey run ids|map capture evidence|journeys.length/,
+  );
+});
+
+test('map frame samples expose motion regressions independently of switching readiness', () => {
+  const base = makeMapReport(baselineCommit, 20, {
+    includeFrames: true,
+    motionP95: [40, 40, 40, 40, 40],
+  });
+  const next = makeMapReport(candidateCommit, 15, {
+    includeFrames: true,
+    motionP95: [50, 50, 50, 50, 50],
+  });
+  const result = validate(base, next);
+  assert.equal(result.mapStreaming.frameCaptureCoverage, 'validated');
+  assert.equal(result.scenarios['map-streaming-route'].changePct, -25);
+  assert.equal(result.scenarios['scripted-motion'].changePct, 25);
+  assert.equal(result.scenarios.idle.status, 'unavailable');
+  assert.deepEqual(result.regressionsOver10Pct, ['scripted-motion']);
+  assert.equal(
+    validate(makeMapReport(baselineCommit), makeMapReport(candidateCommit))
+      .mapStreaming.frameCaptureCoverage,
+    'not-collected',
+  );
+});
+
+test('map frame evidence rejects incomplete, altered and unmatched samples', () => {
+  const pair = () =>
+    [baselineCommit, candidateCommit].map((commit) =>
+      makeMapReport(commit, 20, { includeFrames: true }),
+    );
+  const invalid = [
+    [
+      (r) => {
+        r.captures.pop();
+      },
+      /exactly five runs/,
+    ],
+    [
+      (r) => {
+        r.captures[1].run = 1;
+      },
+      /duplicate run ids/,
+    ],
+    [
+      (r) => {
+        r.captures = [];
+      },
+      /declared map frame captures are missing/,
+    ],
+    [
+      (r) => {
+        r.captures = {};
+      },
+      /must be an array/,
+    ],
+    [
+      (r) => {
+        r.captures[5].frameIntervalMs.p95 = null;
+      },
+      /moving\/tracking p95/,
+    ],
+    [
+      (r) => {
+        r.captures[5].foregroundThroughout = false;
+      },
+      /foreground/,
+    ],
+    [
+      (r) => {
+        r.captures[5].durationMs = 59000;
+      },
+      /shorter than 60/,
+    ],
+    [
+      (r) => {
+        for (const sample of r.captures)
+          sample.cameraPath.start.position.x += 100;
+      },
+      /routes differ/,
+    ],
+    [
+      (r) => {
+        for (const sample of r.captures)
+          for (const point of [
+            sample.conditions.before,
+            sample.conditions.after,
+          ])
+            point.settings.resolutionScale = 0.5;
+      },
+      /conditions differ/,
+    ],
+    [
+      (r) => {
+        r.captures[0].conditions.after.environment.appCommit = 'f'.repeat(40);
+      },
+      /wrong application commit/,
+    ],
+    [
+      (r) => {
+        r.workload.scenarios = ['scripted-motion'];
+      },
+      /map frame scenarios/,
+    ],
+  ];
+  for (const [mutate, error] of invalid) {
+    const reports = pair();
+    mutate(reports[1]);
+    assert.throws(() => validate(...reports), error);
+  }
+  assert.throws(
+    () => validate(pair()[0], makeMapReport(candidateCommit)),
+    /coverage differs/,
   );
 });
 
@@ -723,4 +952,279 @@ test('idle zero-frame windows remain explicitly unavailable', () => {
     changePct: null,
     regressionOver10Pct: false,
   });
+});
+
+test('infrastructure keeps undefined intervals separate from measured settled frame budgets', () => {
+  const pair = [baselineCommit, candidateCommit].map((commit) =>
+    makeInfrastructureReport(commit, 'infrastructure-datacenters'),
+  );
+  const unknown = validate(...pair).scenarios.idle;
+  assert.equal(unknown.status, 'unavailable');
+  assert.equal(unknown.settledFrameBudget.status, 'unavailable');
+  for (const report of pair) {
+    for (const sample of report.captures.filter(
+      (capture) => capture.scenario === 'idle',
+    )) {
+      sample.renderedFrameCount = 0;
+      sample.settledIdleObservation = {
+        schema: 'gev-settled-idle-observation/v1',
+        diagnosticOnly: false,
+        durationMs: 60_000,
+        completedFrameOffsetsMs: [],
+        framesOmitted: 0,
+        cleanupConfirmed: true,
+        settlement: {
+          tileProgressObserved: true,
+          settledBeforeMs: 2_000,
+          initialTilesLoaded: true,
+          finalTilesLoaded: true,
+          tilesLoadedThroughout: true,
+          requestRenderModeThroughout: true,
+          cameraUnchanged: true,
+          nonzeroTileProgressEvents: 0,
+        },
+      };
+    }
+  }
+  const qualified = validate(...pair).scenarios.idle;
+  assert.equal(
+    qualified.status,
+    'unavailable',
+    'An absent interval is never invented',
+  );
+  assert.equal(qualified.settledFrameBudget.status, 'passed');
+  pair[1].captures.find(
+    (sample) => sample.scenario === 'idle',
+  ).settledIdleObservation.diagnosticOnly = true;
+  assert.throws(
+    () => validate(...pair),
+    /Diagnostic idle evidence cannot qualify/,
+  );
+});
+
+function makeScopedIdlePair() {
+  return [baselineCommit, candidateCommit].map((commit) => {
+    const report = makeInfrastructureReport(commit, 'infrastructure-cables');
+    report.workload.scenarios = ['idle'];
+    report.workload.settledIdleOnly = true;
+    report.captures = report.captures.filter(
+      (sample) => sample.scenario === 'idle',
+    );
+    report.comparisonEligible = false;
+    report.comparisonReadiness = {
+      status: 'not-ready',
+      reasons: [SETTLED_IDLE_ONLY_INELIGIBLE_REASON],
+    };
+    report.comparisonProfile = 'native-sharpness-v1';
+    report.environment.hardwareEligible = true;
+    const profile = {
+      id: 'native-sharpness-v1',
+      useBrowserRecommendedResolution: false,
+      resolutionScale: 1,
+      maximumScreenSpaceError: 1,
+      viewport: structuredClone(report.environment.viewport),
+      drawingBuffer: structuredClone(report.environment.drawingBuffer),
+    };
+    report.environment.nativeSharpnessProfile = structuredClone(profile);
+    for (const sample of report.captures) {
+      for (const phase of ['before', 'after'])
+        sample.conditions[phase].environment.nativeSharpnessProfile =
+          structuredClone(profile);
+      sample.renderedFrameCount = 0;
+      sample.settledIdleObservation = {
+        schema: 'gev-settled-idle-observation/v1',
+        diagnosticOnly: false,
+        durationMs: 60_000,
+        completedFrameOffsetsMs: [],
+        framesOmitted: 0,
+        cleanupConfirmed: true,
+        settlement: {
+          tileProgressObserved: true,
+          settledBeforeMs: 2_000,
+          initialTilesLoaded: true,
+          finalTilesLoaded: true,
+          tilesLoadedThroughout: true,
+          requestRenderModeThroughout: true,
+          cameraUnchanged: true,
+          nonzeroTileProgressEvents: 0,
+        },
+      };
+    }
+    report.comparisonContract = createObservedInfrastructureComparisonContract({
+      fixture: report.workload.fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment: report.environment,
+      captures: report.captures,
+      scenarios: report.workload.scenarios,
+      workload: report.workload,
+      settledIdleOnly: true,
+    });
+    return report;
+  });
+}
+
+function validateScopedIdle([baseline, candidate] = makeScopedIdlePair()) {
+  return validatePairedSettledIdleReports({
+    baseline,
+    candidate,
+    expectedAppCommits: {
+      baseline: baselineCommit,
+      candidate: candidateCommit,
+    },
+    expectedComparisonProfile: 'native-sharpness-v1',
+  });
+}
+
+test('scoped native cable idle passes without inventing motion, startup or interval evidence', () => {
+  const result = validateScopedIdle();
+  assert.equal(result.status, 'passed');
+  assert.deepEqual(result.resolvedScenarios, ['idle']);
+  assert.equal(result.motionAssessed, false);
+  assert.equal(result.startupAssessed, false);
+  assert.equal(result.fullPairedPerformanceAssessed, false);
+  assert.equal(Object.hasOwn(result, 'scenarios'), false);
+  const pair = makeScopedIdlePair();
+  assert.throws(() => validate(...pair), /scoped idle evidence/);
+  for (const report of pair) report.comparisonEligible = true;
+  assert.throws(() => validate(...pair), /scoped idle evidence/);
+  assert.throws(() => validateScopedIdle(pair));
+});
+
+test('scoped cable idle refuses incomplete, diagnostic, foreign or altered native evidence', () => {
+  const mutations = [
+    (report) => {
+      report.workload.settledIdleOnly = false;
+    },
+    (report) => {
+      report.comparisonContract.qualificationMode = null;
+    },
+    (report) => {
+      report.comparisonContract.workloadId = 'infrastructure-dams';
+    },
+    (report) => {
+      report.comparisonReadiness.reasons.push(
+        'diagnostic-frame-trace-instrumentation-is-ineligible-for-comparison',
+      );
+    },
+    (report) => {
+      report.captures.pop();
+    },
+    (report) => {
+      report.captures[1].run = 1;
+    },
+    (report) => {
+      report.workload.warmupMs = 0;
+    },
+    (report) => {
+      report.workload.durationPerSampleMs = 10_000;
+    },
+    (report) => {
+      report.captures[0].durationMs = 59_999;
+    },
+    (report) => {
+      report.captures[0].foregroundThroughout = false;
+    },
+    (report) => {
+      report.captures[0].conditions.after.focused = false;
+    },
+    (report) => {
+      report.environment.hardwareEligible = false;
+    },
+    (report) => {
+      delete report.captures[0].conditions.after.environment
+        .nativeSharpnessProfile;
+    },
+    (report) => {
+      report.environment.nativeSharpnessProfile.resolutionScale = 0.5;
+    },
+    (report) => {
+      report.fixtureDelivery.assets[0].sha256 = '0'.repeat(64);
+    },
+    (report) => {
+      report.source.appCommit = 'f'.repeat(40);
+    },
+    (report) => {
+      report.source.harnessDirtyWorktree = true;
+    },
+    (report) => {
+      report.source.buildProvenance.after.receiptSha256 = 'f'.repeat(64);
+    },
+    (report) => {
+      report.captures[0].settledIdleObservation.diagnosticOnly = true;
+    },
+  ];
+  for (const [index, mutate] of mutations.entries()) {
+    const pair = makeScopedIdlePair();
+    mutate(pair[1]);
+    assert.throws(
+      () => validateScopedIdle(pair),
+      `mutation ${index} must be rejected`,
+    );
+  }
+  const pair = makeScopedIdlePair();
+  assert.throws(
+    () =>
+      validatePairedSettledIdleReports({
+        baseline: pair[0],
+        candidate: pair[1],
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+      }),
+    /native sharpness/,
+  );
+});
+
+test('scoped idle preserves loading unavailability and fails a completed render burst', () => {
+  const loading = makeScopedIdlePair();
+  loading[1].captures[0].settledIdleObservation.settlement.initialTilesLoaded = false;
+  assert.equal(validateScopedIdle(loading).status, 'unavailable');
+  const burst = makeScopedIdlePair();
+  const sample = burst[1].captures[0];
+  sample.renderedFrameCount = 3;
+  sample.frameCount = 2;
+  sample.frameIntervalMs = { p50: 100, p95: 100, max: 100, samples: 2 };
+  sample.settledIdleObservation.completedFrameOffsetsMs = [100, 200, 300];
+  const result = validateScopedIdle(burst);
+  assert.equal(result.status, 'failed');
+  assert.deepEqual(result.resolvedScenarios, []);
+});
+
+test('native map comparison requires profile evidence at every journey boundary', () => {
+  const baseline = makeMapReport(baselineCommit);
+  const candidate = makeMapReport(candidateCommit);
+  const profile = {
+    id: 'native-sharpness-v1',
+    useBrowserRecommendedResolution: false,
+    resolutionScale: 1,
+    maximumScreenSpaceError: 1,
+    viewport: { width: 800, height: 600, dpr: 1.25 },
+    drawingBuffer: { width: 1000, height: 750 },
+  };
+  for (const report of [baseline, candidate]) {
+    report.comparisonProfile = 'native-sharpness-v1';
+    report.environment.nativeSharpnessProfile = structuredClone(profile);
+    for (const capture of report.captures || [])
+      for (const phase of ['before', 'after']) {
+        capture.conditions ||= {};
+        capture.conditions[phase] ||= {};
+        capture.conditions[phase].environment = {
+          nativeSharpnessProfile: structuredClone(profile),
+        };
+      }
+  }
+  assert.throws(
+    () =>
+      validatePairedPerformanceReports({
+        baseline,
+        candidate,
+        expectedAppCommits: {
+          baseline: baselineCommit,
+          candidate: candidateCommit,
+        },
+        expectedComparisonProfile: 'native-sharpness-v1',
+      }),
+    /map journey .* missing native sharpness profile/,
+  );
 });

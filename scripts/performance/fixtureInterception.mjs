@@ -133,8 +133,44 @@ export async function interceptFixtureSession(
   base,
   respond,
   onError,
-  { onFulfilled, getErrorContext, onBeforeContinue } = {},
+  { onFulfilled, getErrorContext, onBeforeContinue, urlPatterns } = {},
 ) {
+  // A diagnostic that replaces only map providers must not pause/block fonts,
+  // application assets or unrelated live traffic. Existing fixtures keep '*'.
+  let patterns = [{ urlPattern: '*' }];
+  if (urlPatterns !== undefined) {
+    if (
+      !Array.isArray(urlPatterns) ||
+      urlPatterns.length < 1 ||
+      urlPatterns.length > 8 ||
+      new Set(urlPatterns).size !== urlPatterns.length
+    )
+      throw new TypeError(
+        'Fixture URL patterns need 1–8 distinct HTTPS origins.',
+      );
+    patterns = urlPatterns.map((urlPattern) => {
+      let parsed;
+      if (typeof urlPattern === 'string' && urlPattern.endsWith('/*')) {
+        try {
+          parsed = new URL(urlPattern.slice(0, -1));
+        } catch {
+          // Reject before installing the listener or enabling interception.
+        }
+      }
+      if (
+        !parsed ||
+        parsed.protocol !== 'https:' ||
+        parsed.hostname.includes('*') ||
+        parsed.username ||
+        parsed.password ||
+        urlPattern !== `${parsed.origin}/*`
+      )
+        throw new TypeError(
+          'Fixture URL patterns must be exact HTTPS origin/* strings.',
+        );
+      return { urlPattern };
+    });
+  }
   let acceptingRequests = true;
   let listenerRemovalConfirmed = false;
   let listenerRemovalVerification = null;
@@ -285,7 +321,7 @@ export async function interceptFixtureSession(
   };
   client.on('Fetch.requestPaused', listener);
   try {
-    await client.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
+    await client.send('Fetch.enable', { patterns });
   } catch (error) {
     acceptingRequests = false;
     try {

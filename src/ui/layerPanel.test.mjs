@@ -3,6 +3,389 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
+async function trackedToggleButton() {
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const writes = [];
+  const fixture = railFixture((property) => writes.push(property));
+  const button = fixture.document.createElement('button');
+  button.className = 'data-toggle-btn';
+  writes.length = 0;
+  return { button, writes };
+}
+
+test('toggle reconciliation preserves lifecycle, feed and accessible states without repeat DOM writes', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { button, writes } = await trackedToggleButton();
+  const base = { id: 'reconcile-fixture', name: 'Fixture feed', stats: {} };
+  for (const state of [
+    { enabled: false, lifecycleState: 'disabled', text: 'OFF', feed: 'off' },
+    {
+      enabled: false,
+      lifecycleState: 'enabling',
+      text: 'ENABLING',
+      feed: 'enabling',
+      busy: true,
+    },
+    { enabled: true, lifecycleState: 'enabled', text: 'ON', feed: 'nominal' },
+    {
+      enabled: true,
+      lifecycleState: 'disabling',
+      text: 'DISABLING',
+      feed: 'disabling',
+      busy: true,
+    },
+    { enabled: false, lifecycleState: 'disabled', text: 'OFF', feed: 'off' },
+    {
+      enabled: true,
+      lifecycleState: 'enabled',
+      lifecycleUncertain: true,
+      text: 'UNCERTAIN',
+      feed: 'uncertain',
+    },
+    {
+      enabled: true,
+      lifecycleState: 'enabled',
+      stats: { partial: true },
+      text: 'PARTIAL',
+      feed: 'partial',
+    },
+    {
+      enabled: false,
+      lifecycleState: 'disabled',
+      stats: { sourceUnavailable: true, error: 'First failure' },
+      text: 'UNAVAILABLE',
+      feed: 'unavailable',
+      unavailable: true,
+    },
+    {
+      enabled: true,
+      lifecycleState: 'enabled',
+      stats: { sourceUnavailable: true, error: 'First failure' },
+      text: 'UNAVAILABLE',
+      feed: 'unavailable',
+      unavailable: true,
+    },
+    { enabled: false, lifecycleState: 'disabled', text: 'OFF', feed: 'off' },
+  ]) {
+    const layer = { ...base, ...state };
+    writes.length = 0;
+    LayerPanel.prototype._syncToggleButton(button, layer);
+    assert.equal(button.textContent, state.text);
+    assert.equal(button.dataset.feedState, state.feed);
+    assert.equal(button.disabled, false, 'busy controls retain keyboard focus');
+    assert.equal(button.classList.contains('active'), state.enabled);
+    assert.equal(
+      button.classList.contains('transitioning'),
+      Boolean(state.busy),
+    );
+    assert.equal(
+      button.classList.contains('enabling'),
+      state.feed === 'enabling',
+    );
+    assert.equal(
+      button.classList.contains('disabling'),
+      state.feed === 'disabling',
+    );
+    assert.equal(
+      button.classList.contains('lifecycle-uncertain'),
+      state.feed === 'uncertain',
+    );
+    assert.equal(
+      button.classList.contains('feed-partial'),
+      state.feed === 'partial',
+    );
+    assert.equal(
+      button.classList.contains('feed-unavailable'),
+      state.feed === 'unavailable',
+    );
+    assert.equal(button.getAttribute('aria-busy'), String(Boolean(state.busy)));
+    assert.equal(
+      button.getAttribute('aria-disabled'),
+      String(Boolean(state.busy || (state.unavailable && !state.enabled))),
+    );
+    assert.equal(button.title, state.unavailable ? 'First failure' : '');
+    assert.equal(
+      button.getAttribute('aria-label'),
+      `Fixture feed: ${state.text}${state.unavailable ? '. First failure' : ''}`,
+    );
+    assert.ok(writes.length > 0, 'a changed presentation must still update');
+    writes.length = 0;
+    for (let repeat = 0; repeat < 3; repeat++)
+      LayerPanel.prototype._syncToggleButton(button, layer);
+    assert.deepEqual(
+      writes,
+      [],
+      `unchanged ${state.feed} presentation must emit no DOM writes`,
+    );
+  }
+});
+
+test('toggle reconciliation updates changed guidance and repairs externally changed DOM values', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { button, writes } = await trackedToggleButton();
+  const layer = {
+    id: 'reconcile-fixture',
+    name: 'Fixture feed',
+    enabled: false,
+    stats: { sourceUnavailable: true, error: 'First failure' },
+  };
+  LayerPanel.prototype._syncToggleButton(button, layer);
+  layer.stats.error = 'Second failure';
+  writes.length = 0;
+  LayerPanel.prototype._syncToggleButton(button, layer);
+  assert.equal(button.title, 'Second failure');
+  assert.equal(
+    button.getAttribute('aria-label'),
+    'Fixture feed: UNAVAILABLE. Second failure',
+  );
+  assert.equal(
+    writes.filter((property) => property === 'textContent').length,
+    0,
+    'guidance changes do not replace identical chip text',
+  );
+  assert.equal(writes.filter((property) => property === 'title').length, 1);
+  assert.equal(writes.filter((property) => property === 'attribute').length, 1);
+  button.dataset.feedState = 'stale-dom';
+  button.textContent = 'STALE DOM';
+  button.title = 'Stale guidance';
+  button.disabled = true;
+  button.setAttribute('aria-disabled', 'false');
+  button.setAttribute('aria-busy', 'true');
+  button.setAttribute('aria-label', 'Stale accessible name');
+  button.classList.toggle('feed-unavailable', false);
+  LayerPanel.prototype._syncToggleButton(button, layer);
+  assert.equal(button.dataset.feedState, 'unavailable');
+  assert.equal(button.textContent, 'UNAVAILABLE');
+  assert.equal(button.title, 'Second failure');
+  assert.equal(button.disabled, false);
+  assert.equal(button.getAttribute('aria-disabled'), 'true');
+  assert.equal(button.getAttribute('aria-busy'), 'false');
+  assert.equal(
+    button.getAttribute('aria-label'),
+    'Fixture feed: UNAVAILABLE. Second failure',
+  );
+  assert.equal(button.classList.contains('feed-unavailable'), true);
+  writes.length = 0;
+  LayerPanel.prototype._syncToggleButton(button, layer);
+  assert.deepEqual(writes, []);
+});
+
+test('toggle reconciliation applies a changed language before becoming quiet again', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { getLocale, prepareLocale, setLocale, t } =
+    await import('../i18n/index.js');
+  const previousLocale = getLocale();
+  const { button, writes } = await trackedToggleButton();
+  const layer = {
+    id: 'reconcile-fixture',
+    name: 'Fixture feed',
+    enabled: true,
+    stats: {},
+  };
+  try {
+    setLocale('en');
+    LayerPanel.prototype._syncToggleButton(button, layer);
+    const englishText = button.textContent;
+    await prepareLocale('ru');
+    writes.length = 0;
+    LayerPanel.prototype._syncToggleButton(button, layer);
+    assert.notEqual(button.textContent, englishText);
+    assert.equal(button.textContent, t('ON'));
+    assert.ok(button.getAttribute('aria-label').includes(t('ON')));
+    assert.equal(
+      button.dataset.feedState,
+      'nominal',
+      'machine state is independent of language',
+    );
+    assert.equal(
+      writes.filter((property) => property === 'textContent').length,
+      1,
+    );
+    writes.length = 0;
+    LayerPanel.prototype._syncToggleButton(button, layer);
+    assert.deepEqual(writes, []);
+    setLocale('en');
+    LayerPanel.prototype._syncToggleButton(button, layer);
+    assert.equal(button.textContent, englishText);
+  } finally {
+    setLocale(previousLocale);
+  }
+});
+
+test('full panel refresh still visits every row and mutates only a changed toggle', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const first = await trackedToggleButton();
+  const second = await trackedToggleButton();
+  const layers = ['first', 'second'].map((id) => ({
+    id,
+    name: id,
+    enabled: false,
+    stats: {},
+  }));
+  let reads = 0;
+  const panel = new LayerPanel({
+    getLayers: () => {
+      reads++;
+      return layers;
+    },
+  });
+  const buttons = new Map([
+    ['first', first.button],
+    ['second', second.button],
+  ]);
+  panel._toggleContainer = {
+    querySelector(selector) {
+      const id = selector.match(/data-layer-id="([^"]+)"/)?.[1];
+      return {
+        querySelector: (childSelector) =>
+          childSelector === '.data-toggle-btn' ? buttons.get(id) : null,
+      };
+    },
+  };
+  panel._refreshWeatherPanel = () => {};
+  panel._refreshTogglePanel();
+  first.writes.length = 0;
+  second.writes.length = 0;
+  panel._refreshTogglePanel();
+  panel._refreshTogglePanel();
+  assert.equal(
+    reads,
+    3,
+    'unchanged refreshes still inspect current layer state',
+  );
+  assert.deepEqual(first.writes, []);
+  assert.deepEqual(second.writes, []);
+  layers[1].enabled = true;
+  panel._refreshTogglePanel();
+  assert.deepEqual(first.writes, [], 'unchanged sibling rows remain untouched');
+  assert.equal(second.button.textContent, 'ON');
+  assert.equal(
+    second.writes.filter((property) => property === 'textContent').length,
+    1,
+  );
+  second.writes.length = 0;
+  panel._refreshTogglePanel();
+  assert.deepEqual(second.writes, []);
+});
+
+test('row controls update their content and visibility without repeating the hidden write', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const f = railFixture();
+  const container = f.document.createElement('div');
+  const hiddenWrites = [];
+  let hidden = container.hidden;
+  Object.defineProperty(container, 'hidden', {
+    get: () => hidden,
+    set(value) {
+      hiddenWrites.push(value);
+      hidden = value;
+    },
+  });
+  let controls = {};
+  let reads = 0;
+  const panel = new LayerPanel({
+    getRowControls: () => {
+      reads++;
+      return controls;
+    },
+  });
+  const layer = { id: 'controls-fixture', enabled: true };
+  const previousDocument = globalThis.document;
+  globalThis.document = f.document;
+  try {
+    const states = [
+      { controls: {}, hidden: true },
+      {
+        controls: { chips: [{ id: 'mode', label: 'First mode' }] },
+        hidden: false,
+      },
+      {
+        controls: { chips: [{ id: 'mode', label: 'Second mode' }] },
+        hidden: false,
+      },
+      {
+        controls: { legend: [{ label: 'Coverage', color: '#abcdef' }] },
+        hidden: false,
+      },
+      { controls: { info: 'Current information' }, hidden: false },
+      { controls: {}, hidden: true },
+    ];
+    for (const state of states) {
+      controls = state.controls;
+      const previouslyHidden = container.hidden;
+      hiddenWrites.length = 0;
+      panel._syncRowControls(container, layer);
+      assert.equal(container.hidden, state.hidden);
+      assert.deepEqual(
+        hiddenWrites,
+        previouslyHidden === state.hidden ? [] : [state.hidden],
+      );
+      if (controls.chips)
+        assert.equal(
+          container.querySelector('.data-toggle-chip').textContent,
+          controls.chips[0].label,
+        );
+      if (controls.legend)
+        assert.equal(
+          container.querySelector('.data-toggle-legend-item').children[1]
+            .textContent,
+          'Coverage',
+        );
+      if (controls.info)
+        assert.equal(
+          container.querySelector('.data-toggle-controls-info').textContent,
+          controls.info,
+        );
+      const beforeReads = reads;
+      hiddenWrites.length = 0;
+      for (let repeat = 0; repeat < 3; repeat++)
+        panel._syncRowControls(container, layer);
+      assert.equal(
+        reads - beforeReads,
+        3,
+        'every refresh still reads current controls',
+      );
+      assert.deepEqual(hiddenWrites, []);
+    }
+  } finally {
+    globalThis.document = previousDocument;
+  }
+});
+
+test('row controls repair externally changed visibility and honor live enabled state', async () => {
+  const { LayerPanel } = await import('./layerPanel.js');
+  const { railFixture } = await import('./railTestFixture.mjs');
+  const f = railFixture();
+  const container = f.document.createElement('div');
+  const writes = [];
+  let hidden = false;
+  Object.defineProperty(container, 'hidden', {
+    get: () => hidden,
+    set(value) {
+      writes.push(value);
+      hidden = value;
+    },
+  });
+  const panel = new LayerPanel({
+    getRowControls: () => ({ chips: [{ id: 'mode', label: 'Mode' }] }),
+  });
+  const layer = { id: 'controls-fixture', enabled: true };
+  for (const enabled of [true, false, true]) {
+    layer.enabled = enabled;
+    panel._syncRowControls(container, layer);
+    assert.equal(container.hidden, !enabled);
+    container.hidden = enabled;
+    writes.length = 0;
+    panel._syncRowControls(container, layer);
+    assert.equal(container.hidden, !enabled);
+    assert.deepEqual(writes, [!enabled]);
+    writes.length = 0;
+    panel._syncRowControls(container, layer);
+    assert.deepEqual(writes, []);
+  }
+});
+
 test('panel presentation places Transit between Street Traffic and Bike Share in Movement', () => {
   const source = readFileSync(
     new URL('./layerPanel.js', import.meta.url),

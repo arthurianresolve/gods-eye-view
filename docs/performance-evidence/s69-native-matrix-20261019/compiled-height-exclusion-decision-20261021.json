@@ -1,0 +1,121 @@
+{
+  "schema": "gev-compiled-height-exclusion-decision/v1",
+  "status": "mechanism-confirmed-latency-not-improved",
+  "createdAt": "2026-10-21T03:06:39.541Z",
+  "candidate": "54fa045b3005e586e76ec3e5de5db9aa6ee94f40",
+  "baseline": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+  "qa": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "raw": {
+    "firstAttempt": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\height-exclusion-short-ec0-54fa045b-20261021\\result.json",
+      "sha256": "5ac6e5092ed5ff69dbdb6cd9a07f6fbe940653bcb3e9da9a001a47e55448dc95",
+      "bytes": 691733,
+      "planSha256": "16d01cb7cabd4bc265261d19d76c444a31097155a92d3520e6da247226dcc336"
+    },
+    "short": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\height-exclusion-short-ec0-54fa045b-20261021-r2\\result.json",
+      "sha256": "eb3f395b4064529297accfb95d3341e677e13081821119833386add4721b5dcb",
+      "bytes": 1380133,
+      "planSha256": "fd56dce6997e7afe1e8375779cf82f291a51e9ad36fffdd4b318cc8c1aed2193"
+    },
+    "oldInstrumentedBaseline": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\ground-readback-passes-20261021\\result.json",
+      "sha256": "dc0f6402ef2da7cf05944f0e49a5100066e8f27142d0c3b9f639bde083c9432b",
+      "bytes": 713410,
+      "planSha256": "66ddc1d2621f854db9863c3ebfafdd0fb0be15d46283b35929f3aba95ae0b786"
+    },
+    "compiledInstrumented": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\compiled-height-mechanism-54fa045b-20261021\\result.json",
+      "sha256": "dd1c3edd875cdd4650d7c44385555e40df5b872559f6c71095f7cb8b23880e69",
+      "bytes": 703723,
+      "planSha256": "8eec8a0c859725576997dd8fa069d49dd7197da993555c721b7466624580e068"
+    }
+  },
+  "mechanism": {
+    "queries": 24,
+    "exactResults": true,
+    "offscreenPassesPerQuery": {
+      "baseline": 2,
+      "candidate": 1
+    },
+    "readPixelsPerQuery": {
+      "baseline": 4,
+      "candidate": 2
+    }
+  },
+  "timings": [
+    {
+      "role": "baseline",
+      "nativeMs": [
+        224,
+        80,
+        48,
+        96,
+        48,
+        96
+      ],
+      "readinessMs": [
+        394.89999997615814,
+        11.699999988079071,
+        78,
+        12.900000005960464,
+        79.40000000596046,
+        12.399999976158142
+      ],
+      "completedFrameMs": [
+        398.2999999821186,
+        13.800000011920929,
+        80.10000002384186,
+        14.699999988079071,
+        81.2000000178814,
+        13.899999976158142
+      ],
+      "baselineReused": true
+    },
+    {
+      "role": "candidate",
+      "nativeMs": [
+        296,
+        120,
+        64,
+        96,
+        48,
+        96
+      ],
+      "readinessMs": [
+        378.60000002384186,
+        19.69999998807907,
+        95,
+        13.700000017881393,
+        68.80000001192093,
+        14.400000005960464
+      ],
+      "completedFrameMs": [
+        382.7000000178814,
+        23.299999982118607,
+        99.2000000178814,
+        15.5,
+        70.60000002384186,
+        15.900000005960464
+      ],
+      "baselineReused": false
+    }
+  ],
+  "automatic": {
+    "node24Focused": 115,
+    "node26Focused": 115,
+    "imports": "passed",
+    "packageBoundaries": "passed",
+    "standardBuild": "passed"
+  },
+  "decision": "Keep the candidate isolated. The pinned bridge removes the redundant excluded-marker pass but the uninstrumented six-action sample does not establish repeatable latency benefit. No formal20-action, broad visual, retention or deployment acceptance. Do not merge merely because operation counts improved. Next measure the independently accepted public rail rounding correction, whose full-build latency has not yet been acquired.",
+  "limitations": [
+    "The earlier baseline counter run had the declared initialization-only comment/two-frame setup; only query identities/outcomes/pass counts are compared across those diagnostic runs, never their timings.",
+    "Short R2 retains every complete R1 baseline action and its verified cleanup/assets; candidate preflight alone changed to a clean checkout of identical source. Failed R1 is preserved.",
+    "Neither diagnostic timings nor six uninstrumented actions constitute the formal20-sample acceptance cohort.",
+    "The adapter depends on isolated pinned Cesium internals and has not been accepted for production."
+  ],
+  "productionChanged": false,
+  "adopted": false,
+  "acceptanceEligible": false
+}

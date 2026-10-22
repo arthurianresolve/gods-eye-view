@@ -32,6 +32,7 @@ export function layoutLeftPanelRail({
   onRetry,
   collapsedHeights,
   onAligned,
+  measureIntrinsicHeights,
   getComputedStyle = (element) => windowRef.getComputedStyle(element),
 }) {
   if (!stack) return;
@@ -52,13 +53,20 @@ export function layoutLeftPanelRail({
   if (windowRef.matchMedia('(max-width: 720px)').matches) {
     stack.classList.remove('layout-focus');
     stack.classList.remove('layout-tail');
-    stack.style.removeProperty('--left-stack-safe-top');
-    stack.style.removeProperty('--left-stack-safe-bottom');
-    stack.style.removeProperty('--left-stack-centered-height');
-    stack.dataset.layoutMode = 'mobile';
+    for (const property of [
+      '--left-stack-safe-top',
+      '--left-stack-safe-bottom',
+      '--left-stack-centered-height',
+    ])
+      if (stack.style.getPropertyValue(property))
+        stack.style.removeProperty(property);
+    if (stack.dataset.layoutMode !== 'mobile')
+      stack.dataset.layoutMode = 'mobile';
     for (const panel of panels) {
-      panel.removeAttribute('aria-hidden');
-      panel.style.removeProperty('--left-panel-allocated-height');
+      if (panel.getAttribute('aria-hidden') != null)
+        panel.removeAttribute('aria-hidden');
+      if (panel.style.getPropertyValue('--left-panel-allocated-height'))
+        panel.style.removeProperty('--left-panel-allocated-height');
     }
     return;
   }
@@ -148,28 +156,42 @@ export function layoutLeftPanelRail({
         ),
       ]
     : expandedPanelsInDomOrder;
-  // Clear the prior pass before reading intrinsic heights. The allocated
-  // outer height and the inner scroller otherwise feed their constrained
-  // size back into the next HUD-mode calculation.
-  for (const panel of expandedPanels) {
-    panel.style.removeProperty('--left-panel-allocated-height');
-  }
-  const availableHeight = Math.max(0, safeBottom - safeTop);
-  const naturalExpandedHeights = expandedPanels.map((panel) =>
-    measurePanelNaturalHeight(panel, getComputedStyle),
-  );
-  const naturalExpandedHeight = naturalExpandedHeights.reduce(
-    (sum, height) => sum + height,
-    0,
-  );
+  // The measurement override changes expanded allocations only. Read the gap
+  // and collapsed siblings while the constrained layout is already current,
+  // so restoring that override does not force another synchronous layout.
+  const rowGap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   const siblingHeight = panels.reduce((total, panel) => {
     if (!panel.classList.contains('collapsed')) return total;
     const measured = collapsedHeights.get(panel.id);
     return total + (measured || panel.getBoundingClientRect().height || 0);
   }, 0);
+  // Lift allocations only for this synchronous measurement. Keep the stored
+  // properties intact: removing and restoring an unchanged allocation wakes
+  // the world-overlay chrome observer and schedules unnecessary rendering.
+  let naturalExpandedHeights = [];
+  if (expandedPanels.length) {
+    const measure = () =>
+      expandedPanels.map((panel) =>
+        measurePanelNaturalHeight(panel, getComputedStyle),
+      );
+    if (measureIntrinsicHeights) {
+      naturalExpandedHeights = measureIntrinsicHeights(measure);
+    } else {
+      stack.setAttribute('data-rail-measuring', '');
+      try {
+        naturalExpandedHeights = measure();
+      } finally {
+        stack.removeAttribute('data-rail-measuring');
+      }
+    }
+  }
+  const availableHeight = Math.max(0, safeBottom - safeTop);
+  const naturalExpandedHeight = naturalExpandedHeights.reduce(
+    (sum, height) => sum + height,
+    0,
+  );
   let requiredHeight = siblingHeight;
 
-  const rowGap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   if (expandedPanels.length) {
     requiredHeight += naturalExpandedHeight;
     requiredHeight += rowGap * Math.max(0, panels.length - 1);
@@ -249,46 +271,53 @@ export function layoutLeftPanelRail({
     onRetry();
     return;
   }
-  if (stack.style.getPropertyValue('--left-stack-safe-top') !== topValue) {
+  const topChanged =
+    stack.style.getPropertyValue('--left-stack-safe-top') !== topValue;
+  const bottomChanged =
+    stack.style.getPropertyValue('--left-stack-safe-bottom') !== bottomValue;
+  const corridorChanged =
+    topChanged ||
+    bottomChanged ||
+    wasFocused !== shouldFocus ||
+    wasTail !== shouldTail ||
+    stack.dataset.layoutMode === undefined ||
+    stack.dataset.layoutMode === 'mobile';
+  if (topChanged) {
     stack.style.setProperty('--left-stack-safe-top', topValue);
   }
-  if (
-    stack.style.getPropertyValue('--left-stack-safe-bottom') !== bottomValue
-  ) {
+  if (bottomChanged) {
     stack.style.setProperty('--left-stack-safe-bottom', bottomValue);
   }
-  stack.style.removeProperty('--left-stack-centered-height');
+  if (stack.style.getPropertyValue('--left-stack-centered-height'))
+    stack.style.removeProperty('--left-stack-centered-height');
   for (const panel of panels)
-    panel.style.removeProperty('--left-panel-allocated-height');
+    if (
+      !expandedPanels.includes(panel) &&
+      panel.style.getPropertyValue('--left-panel-allocated-height')
+    )
+      panel.style.removeProperty('--left-panel-allocated-height');
   expandedPanels.forEach((panel, index) => {
-    panel.style.setProperty(
-      '--left-panel-allocated-height',
-      `${allocatedExpandedHeights[index].toFixed(1)}px`,
-    );
+    const next = `${allocatedExpandedHeights[index].toFixed(1)}px`;
+    if (panel.style.getPropertyValue('--left-panel-allocated-height') !== next)
+      panel.style.setProperty('--left-panel-allocated-height', next);
   });
 
   stack.classList.toggle('layout-focus', shouldFocus);
   stack.classList.toggle('layout-tail', shouldTail);
-  stack.dataset.layoutMode = shouldFocus
-    ? 'focus'
-    : shouldTail
-      ? 'tail'
-      : 'normal';
-  stack.dataset.safeTopPct = topPct.toFixed(2);
-  stack.dataset.safeBottomPct = (100 - bottomPct).toFixed(2);
-  stack.dataset.availableHeightPct = (
-    (availableHeight / viewportHeight) *
-    100
-  ).toFixed(2);
-  stack.dataset.requiredHeightPct = (
-    (requiredHeight / viewportHeight) *
-    100
-  ).toFixed(2);
-  stack.dataset.tailAvailableHeightPct = (
-    (tailAvailableHeight / viewportHeight) *
-    100
-  ).toFixed(2);
-  stack.dataset.expandedCount = String(expandedPanels.length);
+  const metadata = {
+    layoutMode: shouldFocus ? 'focus' : shouldTail ? 'tail' : 'normal',
+    safeTopPct: topPct.toFixed(2),
+    safeBottomPct: (100 - bottomPct).toFixed(2),
+    availableHeightPct: ((availableHeight / viewportHeight) * 100).toFixed(2),
+    requiredHeightPct: ((requiredHeight / viewportHeight) * 100).toFixed(2),
+    tailAvailableHeightPct: (
+      (tailAvailableHeight / viewportHeight) *
+      100
+    ).toFixed(2),
+    expandedCount: String(expandedPanels.length),
+  };
+  for (const [key, value] of Object.entries(metadata))
+    if (stack.dataset[key] !== value) stack.dataset[key] = value;
 
   // Cockpit Display/Radio live in the opposite margin and no longer borrow
   // this corridor: the left accordion's top is solved against left-lane
@@ -297,10 +326,13 @@ export function layoutLeftPanelRail({
 
   for (const panel of panels) {
     const hiddenSibling = shouldFocus && panel.classList.contains('collapsed');
-    if (hiddenSibling) panel.setAttribute('aria-hidden', 'true');
-    else panel.removeAttribute('aria-hidden');
+    if (hiddenSibling) {
+      if (panel.getAttribute('aria-hidden') !== 'true')
+        panel.setAttribute('aria-hidden', 'true');
+    } else if (panel.getAttribute('aria-hidden') != null)
+      panel.removeAttribute('aria-hidden');
   }
   // The right controls share this top baseline; update them after the left
   // accordion commits an HUD-variant or obstacle-driven position change.
-  onAligned();
+  if (corridorChanged) onAligned();
 }

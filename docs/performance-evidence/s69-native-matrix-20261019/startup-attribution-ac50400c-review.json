@@ -1,0 +1,1349 @@
+{
+  "schema": "gev-startup-attribution-independent-review/v1",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "reviewedAt": "2026-10-19T20:47:49.443Z",
+  "sourceStatus": "diagnostics-complete",
+  "producerCommit": "ac50400cb47c982039e8710ea7ff8972e7da239f",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "planSha256": "5aad4c2309043519040e5758c10c1e513135430f9c9e9ad6908c2f2bb9b30e4e",
+  "files": [
+    {
+      "name": "dense-investigation-01.json",
+      "bytes": 11171,
+      "sha256": "62282bab537ff7a1173faa40d2dcffd00ef2811981cf545cec961e08bf5c57d5"
+    },
+    {
+      "name": "dense-investigation-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "faeeb3b0a8731ebb2a23513c819bfe273ac0470edaa0492312948677af2a4655"
+    },
+    {
+      "name": "dense-investigation-01.json.invocation.json",
+      "bytes": 2641,
+      "sha256": "f6130f9d1a66a351bd31485f1d851cd35886d37e0ec9b6f5e22ed4ddca519f37"
+    },
+    {
+      "name": "dense-investigation-01.json.log",
+      "bytes": 274,
+      "sha256": "511a18c0eb79f9d3521adb7a11a6d3a88bdbe0e755a795e0b5e800cd6a6fcefe"
+    },
+    {
+      "name": "dense-investigation-02.json",
+      "bytes": 11189,
+      "sha256": "82fd4456a18b40f07b150b0bd10af04f62ec8d347f1eb395cf32e4fa5fa8d228"
+    },
+    {
+      "name": "dense-investigation-02.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "21ef47fed5ba0c0426161ad0ed6204995e1c7b919b094468be14542193411589"
+    },
+    {
+      "name": "dense-investigation-02.json.invocation.json",
+      "bytes": 2646,
+      "sha256": "06409ee22bf5289787a71ee3779591d5008893f63639bf138a8323a156f1b689"
+    },
+    {
+      "name": "dense-investigation-02.json.log",
+      "bytes": 274,
+      "sha256": "727715329b1191233b6ef79bcfaa806e0c0f2866f4c33d98143f8e8b51a09f80"
+    },
+    {
+      "name": "dense-investigation-03.json",
+      "bytes": 11153,
+      "sha256": "72e5cbecea03bdea2c202d1e4e75385d6b834047359638cfe777568bb8a3c745"
+    },
+    {
+      "name": "dense-investigation-03.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "e5e2f35b0cc6f667e81275190524053ed60f06be8d13d26cf0c23ee6c88434ad"
+    },
+    {
+      "name": "dense-investigation-03.json.invocation.json",
+      "bytes": 2646,
+      "sha256": "3fa5f8beb6f9f697342049c885bafb5e65be63bcd48666689f37f66d358fca47"
+    },
+    {
+      "name": "dense-investigation-03.json.log",
+      "bytes": 274,
+      "sha256": "1249555e4ba8b3651524e2df89a8c2f2d70cf86d4a9fbeae4350b710f8683d23"
+    },
+    {
+      "name": "dense-investigation-04.json",
+      "bytes": 11171,
+      "sha256": "cc99bc024b5b7b43dfa893c121aa40f431f3f65b6a2eab9dc5f625ff69d0f357"
+    },
+    {
+      "name": "dense-investigation-04.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "f764bb993bdf4d90b7152768e190dd5679be8bf726be137746587557d77da448"
+    },
+    {
+      "name": "dense-investigation-04.json.invocation.json",
+      "bytes": 2641,
+      "sha256": "99718b991676a8f9d0d8f8e4c2a792adeaabf14d44e8ad086cb328db0b8fbcc9"
+    },
+    {
+      "name": "dense-investigation-04.json.log",
+      "bytes": 274,
+      "sha256": "7d34edee2db2edbd9278ecbb2a91bd1cf277f445eeaf4901adfa9968cb1d5903"
+    },
+    {
+      "name": "launch-notes.json",
+      "bytes": 588,
+      "sha256": "41fcba20128db245bbb89cc96a2409f5afe04b8a2b577fe64145f08997c5bbe4"
+    },
+    {
+      "name": "operating-view-01.json",
+      "bytes": 11212,
+      "sha256": "6ad89b9526d4a8bf378646058768f0264e813e2a06173d3cb38a390baa6e88cd"
+    },
+    {
+      "name": "operating-view-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "3ea26dd8f905dc7d6f99a7179f9d150ab83bac2bf690b70fc40327acc7f10cd5"
+    },
+    {
+      "name": "operating-view-01.json.invocation.json",
+      "bytes": 2599,
+      "sha256": "02a1bff0eab2fad1769bfd6ad9418cca4f5e0b5d2bdbc84cc2dcf20d130232b1"
+    },
+    {
+      "name": "operating-view-01.json.log",
+      "bytes": 269,
+      "sha256": "aca23abff593fd74f8c4dc3712e5498596bcb8df6162baf0ca3b1ae49ff9d1da"
+    },
+    {
+      "name": "operating-view-02.json",
+      "bytes": 11201,
+      "sha256": "81ef439a0f5d306291d565cef25a7e986e3fd8a51c104a93a383870b948eceab"
+    },
+    {
+      "name": "operating-view-02.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "60a49e1bac0630175aaf2aa05e958311911b5d0e551d0d60f63667cf15336e5b"
+    },
+    {
+      "name": "operating-view-02.json.invocation.json",
+      "bytes": 2604,
+      "sha256": "feaae8458aec4c8302bb0417db00a51380d373afd9a5348ecd8423f8d20962d9"
+    },
+    {
+      "name": "operating-view-02.json.log",
+      "bytes": 269,
+      "sha256": "60fefa58e21cbce8d34953fca068e90d62b64f69b49fc505189245a5c14ca43e"
+    },
+    {
+      "name": "operating-view-03.json",
+      "bytes": 11167,
+      "sha256": "6475019d51688a34bd36ffbdce1752f6399f0755bbeef4ead0611f028331c582"
+    },
+    {
+      "name": "operating-view-03.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "f86b34ea9ac4879c5eb211564cd6e121b5833ed2a4e79061b75ee3f4f33270ba"
+    },
+    {
+      "name": "operating-view-03.json.invocation.json",
+      "bytes": 2604,
+      "sha256": "7f8d52fa6024434c5743d83bc89cc968df68275e22a79f0ce9f071f206ecb9c7"
+    },
+    {
+      "name": "operating-view-03.json.log",
+      "bytes": 269,
+      "sha256": "513b7ab46ff46e4a70c9872e8197733b6644f8393ff5d62d6bba5e57cc3d7974"
+    },
+    {
+      "name": "operating-view-04.json",
+      "bytes": 11261,
+      "sha256": "a1c121747be530f78999b68e2598d61c9129fab42f243bd39d0fb70cbc9de3d8"
+    },
+    {
+      "name": "operating-view-04.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "9ad242b65855172431e29c31c32b5f4dd00ae08894cb16df47be35fc6de6c415"
+    },
+    {
+      "name": "operating-view-04.json.invocation.json",
+      "bytes": 2599,
+      "sha256": "2acf8fc2dfc5839ccb6575bcd78d55eb77d2bcc9d4def765e544f413579a9673"
+    },
+    {
+      "name": "operating-view-04.json.log",
+      "bytes": 269,
+      "sha256": "7810244da7e74c8715db80efc2b8b9fe5e8dd4ede0edbaba9e96c6a3c21ced1d"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 3344,
+      "sha256": "5aad4c2309043519040e5758c10c1e513135430f9c9e9ad6908c2f2bb9b30e4e"
+    },
+    {
+      "name": "process.json",
+      "bytes": 5407,
+      "sha256": "c15689c123cffeda462f4b265b529971f2d53f81f238f05abe72da77c1c0aee7"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 6936,
+      "sha256": "7d1b608f152326fdf7c8263c0aa97a4cd6a36401b237a2300f633f1cd560735e"
+    }
+  ],
+  "results": [
+    {
+      "id": "operating-view-01",
+      "role": "control",
+      "row": "operating-view",
+      "status": "diagnostic-only",
+      "appReadyMs": 4462,
+      "initialSettleMs": 5351,
+      "phaseMs": {
+        "navigation": 2279,
+        "foreground": 2164,
+        "viewerWait": 17,
+        "diagnosticsDisable": 2,
+        "loaderWait": 880
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3057.800000011921,
+        "responseStart": 27.200000002980232,
+        "domInteractive": 1392.2000000029802,
+        "domContentLoadedEventEnd": 2257.6000000089407,
+        "loadEventEnd": 3057.800000011921,
+        "domComplete": 3057.7000000029802
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 39,
+          "summarizedEntryCount": 39,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 9,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 15,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 271.29999999701977,
+              "latestResponseEndMs": 3525
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 12,
+              "latestResponseEndMs": 2269.2000000029802
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 32.400000005960464,
+              "latestResponseEndMs": 78.90000000596046
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.5,
+              "latestResponseEndMs": 2810
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 2.5999999940395355,
+              "latestResponseEndMs": 3066.7000000029802
+            },
+            "osm": {
+              "count": 5,
+              "durationAvailableCount": 5,
+              "maxDurationMs": 7.600000008940697,
+              "latestResponseEndMs": 4574.100000008941
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 98.6000000089407,
+              "latestResponseEndMs": 4500.100000008941
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 39,
+            "maxMs": 271.29999999701977
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5874624,
+            "zeroOrUnavailableCount": 9
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5865624,
+            "zeroOrUnavailableCount": 9
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "operating-view-02",
+      "role": "candidate",
+      "row": "operating-view",
+      "status": "diagnostic-only",
+      "appReadyMs": 6010,
+      "initialSettleMs": 6719,
+      "phaseMs": {
+        "navigation": 2763,
+        "foreground": 2349,
+        "viewerWait": 849,
+        "diagnosticsDisable": 49,
+        "loaderWait": 686
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3850.5,
+        "responseStart": 34.29999999701977,
+        "domInteractive": 1867.2000000029802,
+        "domContentLoadedEventEnd": 2747.4000000059605,
+        "loadEventEnd": 3850.5,
+        "domComplete": 3850.5
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 45,
+          "summarizedEntryCount": 45,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 15,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 21,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 253.79999999701977,
+              "latestResponseEndMs": 4338.0999999940395
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 7,
+              "latestResponseEndMs": 2753.7000000029802
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 41.5,
+              "latestResponseEndMs": 98.40000000596046
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 2.2000000029802322,
+              "latestResponseEndMs": 3510.5
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 4.299999997019768,
+              "latestResponseEndMs": 3869.7000000029802
+            },
+            "osm": {
+              "count": 11,
+              "durationAvailableCount": 11,
+              "maxDurationMs": 5.299999997019768,
+              "latestResponseEndMs": 6683.9000000059605
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 114.6000000089407,
+              "latestResponseEndMs": 5642.70000000298
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 45,
+            "maxMs": 253.79999999701977
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5735243,
+            "zeroOrUnavailableCount": 15
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5726243,
+            "zeroOrUnavailableCount": 15
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "operating-view-03",
+      "role": "candidate",
+      "row": "operating-view",
+      "status": "diagnostic-only",
+      "appReadyMs": 4758,
+      "initialSettleMs": 5549,
+      "phaseMs": {
+        "navigation": 2605,
+        "foreground": 2069,
+        "viewerWait": 80,
+        "diagnosticsDisable": 4,
+        "loaderWait": 774
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3362,
+        "responseStart": 42.29999999701977,
+        "domInteractive": 1715.0999999940395,
+        "domContentLoadedEventEnd": 2595.2999999970198,
+        "loadEventEnd": 3362,
+        "domComplete": 3361.8999999910593
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 39,
+          "summarizedEntryCount": 39,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 9,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 15,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 495.5,
+              "latestResponseEndMs": 3748
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 7.200000002980232,
+              "latestResponseEndMs": 2602.2999999970198
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 27.100000008940697,
+              "latestResponseEndMs": 102.70000000298023
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.4000000059604645,
+              "latestResponseEndMs": 3087.2000000029802
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 6.4000000059604645,
+              "latestResponseEndMs": 3338.2000000029802
+            },
+            "osm": {
+              "count": 5,
+              "durationAvailableCount": 5,
+              "maxDurationMs": 3,
+              "latestResponseEndMs": 4700.5
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 269,
+              "latestResponseEndMs": 4814.0999999940395
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 39,
+            "maxMs": 495.5
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5735243,
+            "zeroOrUnavailableCount": 9
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5726243,
+            "zeroOrUnavailableCount": 9
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "operating-view-04",
+      "role": "control",
+      "row": "operating-view",
+      "status": "diagnostic-only",
+      "appReadyMs": 5379,
+      "initialSettleMs": 6109,
+      "phaseMs": {
+        "navigation": 2854,
+        "foreground": 1899,
+        "viewerWait": 621,
+        "diagnosticsDisable": 5,
+        "loaderWait": 723
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3695.0999999940395,
+        "responseStart": 30.599999994039536,
+        "domInteractive": 1869.7000000029802,
+        "domContentLoadedEventEnd": 2838.7999999970198,
+        "loadEventEnd": 3695.0999999940395,
+        "domComplete": 3695.0999999940395
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 43,
+          "summarizedEntryCount": 43,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 13,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 19,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 368.29999999701977,
+              "latestResponseEndMs": 4227.79999999702
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 5.799999997019768,
+              "latestResponseEndMs": 2844.2999999970198
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 33.5,
+              "latestResponseEndMs": 91.79999999701977
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.7999999970197678,
+              "latestResponseEndMs": 3398.7999999970198
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 2.7000000029802322,
+              "latestResponseEndMs": 3659.7000000029802
+            },
+            "osm": {
+              "count": 9,
+              "durationAvailableCount": 9,
+              "maxDurationMs": 19.099999994039536,
+              "latestResponseEndMs": 6091.399999991059
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 125.19999998807907,
+              "latestResponseEndMs": 5015.29999999702
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 43,
+            "maxMs": 368.29999999701977
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5874624,
+            "zeroOrUnavailableCount": 13
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5865624,
+            "zeroOrUnavailableCount": 13
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "dense-investigation-01",
+      "role": "control",
+      "row": "dense-investigation",
+      "status": "diagnostic-only",
+      "appReadyMs": 4480,
+      "initialSettleMs": 5278,
+      "phaseMs": {
+        "navigation": 2163,
+        "foreground": 1826,
+        "viewerWait": 487,
+        "diagnosticsDisable": 4,
+        "loaderWait": 784
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3099.800000011921,
+        "responseStart": 43,
+        "domInteractive": 1750.4000000059605,
+        "domContentLoadedEventEnd": 2147.1000000089407,
+        "loadEventEnd": 3099.800000011921,
+        "domComplete": 3099.800000011921
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 43,
+          "summarizedEntryCount": 43,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 13,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 19,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 312,
+              "latestResponseEndMs": 3444.7000000029802
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 8.200000002980232,
+              "latestResponseEndMs": 2154.800000011921
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 25.80000001192093,
+              "latestResponseEndMs": 93.40000000596046
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.6000000089406967,
+              "latestResponseEndMs": 2693.800000011921
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 5.0999999940395355,
+              "latestResponseEndMs": 3110.7000000029802
+            },
+            "osm": {
+              "count": 9,
+              "durationAvailableCount": 9,
+              "maxDurationMs": 12.5,
+              "latestResponseEndMs": 5257.300000011921
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 131.09999999403954,
+              "latestResponseEndMs": 4473.5
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 43,
+            "maxMs": 312
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5874624,
+            "zeroOrUnavailableCount": 13
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5865624,
+            "zeroOrUnavailableCount": 13
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "dense-investigation-02",
+      "role": "candidate",
+      "row": "dense-investigation",
+      "status": "diagnostic-only",
+      "appReadyMs": 4426,
+      "initialSettleMs": 5158,
+      "phaseMs": {
+        "navigation": 2280,
+        "foreground": 2087,
+        "viewerWait": 57,
+        "diagnosticsDisable": 2,
+        "loaderWait": 703
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3002.2000000029802,
+        "responseStart": 37.29999999701977,
+        "domInteractive": 1545,
+        "domContentLoadedEventEnd": 2264.2999999970198,
+        "loadEventEnd": 3002.2000000029802,
+        "domComplete": 3002.2000000029802
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 39,
+          "summarizedEntryCount": 39,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 9,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 15,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 288.20000000298023,
+              "latestResponseEndMs": 3349.5
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 6.799999997019768,
+              "latestResponseEndMs": 2270.4000000059605
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 35,
+              "latestResponseEndMs": 93.1000000089407
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.5999999940395355,
+              "latestResponseEndMs": 2779.2999999970198
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 5.899999991059303,
+              "latestResponseEndMs": 3015.7999999970198
+            },
+            "osm": {
+              "count": 5,
+              "durationAvailableCount": 5,
+              "maxDurationMs": 4.100000008940697,
+              "latestResponseEndMs": 4390.20000000298
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 134.20000000298023,
+              "latestResponseEndMs": 4428.5
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 39,
+            "maxMs": 288.20000000298023
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5735243,
+            "zeroOrUnavailableCount": 9
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5726243,
+            "zeroOrUnavailableCount": 9
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "dense-investigation-03",
+      "role": "candidate",
+      "row": "dense-investigation",
+      "status": "diagnostic-only",
+      "appReadyMs": 5564,
+      "initialSettleMs": 6388,
+      "phaseMs": {
+        "navigation": 2960,
+        "foreground": 1943,
+        "viewerWait": 614,
+        "diagnosticsDisable": 46,
+        "loaderWait": 803
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3793,
+        "responseStart": 49.400000005960464,
+        "domInteractive": 1857.7000000029802,
+        "domContentLoadedEventEnd": 2939.2999999970198,
+        "loadEventEnd": 3793,
+        "domComplete": 3792.5999999940395
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 43,
+          "summarizedEntryCount": 43,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 13,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 19,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 276.3999999910593,
+              "latestResponseEndMs": 4241.9000000059605
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 8.899999991059303,
+              "latestResponseEndMs": 2947.5999999940395
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 32.5,
+              "latestResponseEndMs": 117.59999999403954
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.5999999940395355,
+              "latestResponseEndMs": 3497
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 5.299999997019768,
+              "latestResponseEndMs": 3806
+            },
+            "osm": {
+              "count": 9,
+              "durationAvailableCount": 9,
+              "maxDurationMs": 11,
+              "latestResponseEndMs": 6352.5
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 108.70000000298023,
+              "latestResponseEndMs": 5451.4000000059605
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 43,
+            "maxMs": 276.3999999910593
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5735243,
+            "zeroOrUnavailableCount": 13
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5726243,
+            "zeroOrUnavailableCount": 13
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "dense-investigation-04",
+      "role": "control",
+      "row": "dense-investigation",
+      "status": "diagnostic-only",
+      "appReadyMs": 4079,
+      "initialSettleMs": 4909,
+      "phaseMs": {
+        "navigation": 2144,
+        "foreground": 1635,
+        "viewerWait": 298,
+        "diagnosticsDisable": 2,
+        "loaderWait": 824
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 2868.199999988079,
+        "responseStart": 38.79999999701977,
+        "domInteractive": 1393.8999999910593,
+        "domContentLoadedEventEnd": 2129.5,
+        "loadEventEnd": 2868.199999988079,
+        "domComplete": 2868.199999988079
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 39,
+          "summarizedEntryCount": 39,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 30,
+            "crossOrigin": 9,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 7,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 15,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 261,
+              "latestResponseEndMs": 3308.0999999940395
+            },
+            "tokenApi": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 5.300000011920929,
+              "latestResponseEndMs": 2134.5
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 31,
+              "latestResponseEndMs": 91.3999999910593
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 2.3999999910593033,
+              "latestResponseEndMs": 2587.199999988079
+            },
+            "reearth": {
+              "count": 1,
+              "durationAvailableCount": 1,
+              "maxDurationMs": 1.7999999970197678,
+              "latestResponseEndMs": 2845.7999999970198
+            },
+            "osm": {
+              "count": 5,
+              "durationAvailableCount": 5,
+              "maxDurationMs": 4.4000000059604645,
+              "latestResponseEndMs": 4046.5999999940395
+            },
+            "otherSameOrigin": {
+              "count": 14,
+              "durationAvailableCount": 14,
+              "maxDurationMs": 149.70000000298023,
+              "latestResponseEndMs": 4117.0999999940395
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 39,
+            "maxMs": 261
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5874624,
+            "zeroOrUnavailableCount": 9
+          },
+          "encodedBodySize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5865624,
+            "zeroOrUnavailableCount": 9
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "osm",
+          "status": "ready",
+          "switchOrigin": "automatic",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    }
+  ],
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-attribution-b3c49b19-ac50400c",
+  "scope": "Independent source/hash/identity checks and phase projection. Does not substitute for startup acceptance or clear any failed measurement."
+}

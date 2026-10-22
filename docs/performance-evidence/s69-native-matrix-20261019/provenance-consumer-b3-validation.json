@@ -1,0 +1,101 @@
+{
+  "schema": "gev-provenance-consumer-validation/v1",
+  "checkedAt": "2026-10-19T19:02:09.683Z",
+  "status": "passed",
+  "scope": "Exact-b3 CI and signed-release evidence only; no GPU or full acceptance claim.",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/final-provenance-review-b3-20261019",
+  "reviewSha256": "865eafe4e36dc22c65da0e480d17d9c23d48dcb8a969635628f706a4250e6224",
+  "helperSha256": "2a666327db84e4fb43b8ced26307139dd7950eb5d39c5c1e580a9b7bb30d1545",
+  "checks": [
+    {
+      "name": "exact-b3-ci",
+      "status": "measured",
+      "repository": "arthurianresolve/gods-eye-view",
+      "runs": [
+        {
+          "kind": "standard",
+          "runId": 39282844432,
+          "workflow": "CI",
+          "rawSha256": "e932a5dc77b3aea76142480dc55b92636dae4a4f3f5edf22e2643132cc45fe88",
+          "passedJobs": [
+            "Install and update recovery (macos-latest)",
+            "Install and update recovery (ubuntu-latest)",
+            "Install and update recovery (windows-latest)",
+            "Node 24.14.0",
+            "Node 26.x",
+            "Street Level browser gate",
+            "Windows onboarding"
+          ],
+          "skippedJobs": [
+            "60-minute rendered application soak",
+            "Aircraft tracking regression",
+            "Baseline-compatible performance build smoke",
+            "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+            "Free hosted Mac accelerated retention diagnostic",
+            "Free hosted Mac rendering diagnostic",
+            "Isolated CCTV lifecycle",
+            "Isolated import and workspace lifecycle",
+            "Isolated mission render-demand correctness",
+            "Isolated rendered mixed-use smoke",
+            "Isolated terrain and picking lifecycle",
+            "Native WebGL probe (${{ matrix.os }})"
+          ]
+        },
+        {
+          "kind": "tracking",
+          "runId": 39280015189,
+          "workflow": "CI",
+          "rawSha256": "9d9d89a6ee0fbe2525df412fe14ba58d6a65ec715263868d084bdf83f5ed8949",
+          "passedJobs": ["Aircraft tracking regression"],
+          "skippedJobs": [
+            "60-minute rendered application soak",
+            "Baseline-compatible performance build smoke",
+            "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+            "Free hosted Mac accelerated retention diagnostic",
+            "Free hosted Mac rendering diagnostic",
+            "Install and update recovery (${{ matrix.os }})",
+            "Isolated CCTV lifecycle",
+            "Isolated import and workspace lifecycle",
+            "Isolated mission render-demand correctness",
+            "Isolated rendered mixed-use smoke",
+            "Isolated terrain and picking lifecycle",
+            "Native WebGL probe (${{ matrix.os }})",
+            "Node ${{ matrix.node }}",
+            "Street Level browser gate",
+            "Windows onboarding"
+          ]
+        },
+        {
+          "kind": "release",
+          "runId": 39280010153,
+          "workflow": "Versioned release",
+          "rawSha256": "32843993bdff63570cbe4233b74f3f08840bd99a6c9fb36b071cd4cf19886ea5",
+          "passedJobs": ["Build and verify release artifact"],
+          "skippedJobs": []
+        }
+      ],
+      "note": "This establishes the recorded exact-b3 CI jobs only; native GPU, visual, retention, and acceptance-gated release promotion are separate gates."
+    },
+    {
+      "name": "signed-release-artifact",
+      "status": "measured",
+      "repository": "arthurianresolve/gods-eye-view",
+      "runId": 39280010153,
+      "archiveSha256": "1f4b358ab24655305469573c060ad9a9ca9cef4b909f04a9d173e189ef549924",
+      "releaseManifestSha256": "9d2f968498cffd51abde6c6cd787309df7ff3f994b1c3dbb519032f1658074e9",
+      "verifiedManifestFiles": 2126,
+      "attestation": {
+        "workflow": "arthurianresolve/gods-eye-view/.github/workflows/release.yml",
+        "hostedRunner": true,
+        "sourceCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874"
+      },
+      "verificationRecordSha256": "670b7cb11be6e5d08aa8a123982f132b43b0cc3214b0a522e6aa29b97dbc5df3",
+      "productionHostChecks": 16,
+      "publicationStatus": "not-published-or-activated"
+    }
+  ],
+  "remainingGateCount": 8,
+  "overall": "NOT_ACCEPTED",
+  "productionChanged": false
+}

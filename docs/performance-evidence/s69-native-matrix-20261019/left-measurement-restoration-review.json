@@ -1,0 +1,288 @@
+{
+  "schema": "gev-left-measurement-restoration-review/v1",
+  "observedAt": "2026-10-20T12:10:01.891Z",
+  "disposition": "reject attribute-only continuity exemption; require natural-layout visibility reproof",
+  "scope": "Isolated headless Chrome DOM reproduction, not application performance, hardware qualification or proof of the earlier formal failure cause.",
+  "browser": "Chrome/155.0.8059.84",
+  "sourceStyles": [
+    {
+      "path": "src/ui/styles/layers.css",
+      "sha256": "4e903d76ceaebd252b12127a19f3ea0e299caf1b0968290a012d9da106ed48c8"
+    },
+    {
+      "path": "src/ui/styles/scenes.css",
+      "sha256": "5fd717e3d9cd4ffc539601f7ac1257617e3dc39dcf2a77edb5d0b0e575c929bc"
+    },
+    {
+      "path": "src/ui/styles/panel-surfaces.css",
+      "sha256": "c8c6bae6567ca060aedeceb35bae4c4819c88e2f96b721af0bcbe8ecadc186b0"
+    },
+    {
+      "path": "src/ui/styles/cyber.css",
+      "sha256": "350bafa9b2653f1ac9fb4a10e2a3bb196fdbfc7ee4c68196cbd545c2406e9f2c"
+    }
+  ],
+  "configuration": {
+    "viewport": {
+      "width": 1280,
+      "height": 537,
+      "deviceScaleFactor": 2
+    },
+    "rows": 35,
+    "targetRow": 30,
+    "requestedScrollTop": 900,
+    "panelAllocatedHeight": 200,
+    "mechanisms": [
+      "source-owned measurement marker",
+      "inline allocation removal/restoration"
+    ],
+    "layouts": ["focus", "tail"],
+    "themes": ["tactical", "cyber"],
+    "overflowAnchor": ["auto", "none"],
+    "note": "overflow-anchor:none is an explicit diagnostic condition, not a claim that the production page configured it. Production CSS is combined with fixed fixture rows and root sizing variables."
+  },
+  "result": {
+    "normalCount": 16,
+    "normalStableCount": 8,
+    "initiallyVisible": 16,
+    "negativeCount": 16,
+    "negativeDetectedCount": 16
+  },
+  "failures": [
+    {
+      "mechanism": "marker",
+      "anchor": "none",
+      "layout": "focus",
+      "theme": "tactical",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 640,
+        "nextFrame": 640
+      },
+      "targetTop": {
+        "before": 112,
+        "restored": 372,
+        "nextFrame": 372
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": false,
+        "nextFrame": false
+      }
+    },
+    {
+      "mechanism": "marker",
+      "anchor": "none",
+      "layout": "focus",
+      "theme": "cyber",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 856,
+        "nextFrame": 856
+      },
+      "targetTop": {
+        "before": 131,
+        "restored": 175,
+        "nextFrame": 175
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": true,
+        "nextFrame": true
+      }
+    },
+    {
+      "mechanism": "marker",
+      "anchor": "none",
+      "layout": "tail",
+      "theme": "tactical",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 640,
+        "nextFrame": 640
+      },
+      "targetTop": {
+        "before": 112,
+        "restored": 372,
+        "nextFrame": 372
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": false,
+        "nextFrame": false
+      }
+    },
+    {
+      "mechanism": "marker",
+      "anchor": "none",
+      "layout": "tail",
+      "theme": "cyber",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 856,
+        "nextFrame": 856
+      },
+      "targetTop": {
+        "before": 131,
+        "restored": 175,
+        "nextFrame": 175
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": true,
+        "nextFrame": true
+      }
+    },
+    {
+      "mechanism": "inline-allocation",
+      "anchor": "none",
+      "layout": "focus",
+      "theme": "tactical",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 640,
+        "nextFrame": 640
+      },
+      "targetTop": {
+        "before": 112,
+        "restored": 372,
+        "nextFrame": 372
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": false,
+        "nextFrame": false
+      }
+    },
+    {
+      "mechanism": "inline-allocation",
+      "anchor": "none",
+      "layout": "focus",
+      "theme": "cyber",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 856,
+        "nextFrame": 856
+      },
+      "targetTop": {
+        "before": 131,
+        "restored": 175,
+        "nextFrame": 175
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": true,
+        "nextFrame": true
+      }
+    },
+    {
+      "mechanism": "inline-allocation",
+      "anchor": "none",
+      "layout": "tail",
+      "theme": "tactical",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 640,
+        "nextFrame": 640
+      },
+      "targetTop": {
+        "before": 112,
+        "restored": 372,
+        "nextFrame": 372
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": false,
+        "nextFrame": false
+      }
+    },
+    {
+      "mechanism": "inline-allocation",
+      "anchor": "none",
+      "layout": "tail",
+      "theme": "cyber",
+      "negative": false,
+      "scrollTop": {
+        "before": 900,
+        "restored": 856,
+        "nextFrame": 856
+      },
+      "targetTop": {
+        "before": 131,
+        "restored": 175,
+        "nextFrame": 175
+      },
+      "targetCenterVisible": {
+        "before": true,
+        "restored": true,
+        "nextFrame": true
+      }
+    }
+  ],
+  "interpretation": [
+    "All 16 ordinary cases began with the target center visible. Eight cases restored exact geometry/offsets; eight disabled-anchoring cases retained displacement despite restored style attributes.",
+    "All 16 deliberately persistent scroll changes were detected. Four ordinary tactical cases left the target outside its scroll clip; four cyber cases moved it while keeping its center visible.",
+    "The initial auto-anchoring reproduction passed. That does not justify a general exemption for matching attributes because restored style and restored visible geometry are distinct.",
+    "The uncommitted attribute-only v3 QA draft and its passing unit tests are intermediate evidence, not an accepted proof policy. Historical formal v2 reports remain failed.",
+    "No runtime change or additional performance claim follows from this DOM reproduction."
+  ],
+  "evidence": [
+    {
+      "path": "qa-artifacts/left-restoration-matrix-20261020.json",
+      "bytes": 46733,
+      "sha256": "35f969bb1973778dfad87141fa02946de4af9e96d3b0204a3f0667d1dc84ee8f"
+    },
+    {
+      "path": "qa-artifacts/reproduce-left-restoration-matrix-20261020.mjs",
+      "bytes": 5482,
+      "sha256": "ef02a9cdccd72bf3196138b2916d0a99f1e6b37fe487be662f09788631762969"
+    },
+    {
+      "path": "qa-artifacts/left-measurement-scroll-reproduction-20261020.json",
+      "bytes": 3714,
+      "sha256": "3cb2619935bae2b7d3e89750120ab31f3d6c91d12bb9fd1a6f7785d079918683"
+    },
+    {
+      "path": "qa-artifacts/left-measurement-scroll-clamp-reproduction-20261020.json",
+      "bytes": 3723,
+      "sha256": "e6061c47c7c451cae20619863b81f41708606bea232ce6a0bf5c6207d6bf657e"
+    }
+  ],
+  "cleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 2043.0334,
+      "closeSettledHostMs": 2204.8846,
+      "closeElapsedMs": 161.85119999999984,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 137.37329999999997
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-configured",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

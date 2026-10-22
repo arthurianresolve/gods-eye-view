@@ -1,7 +1,17 @@
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -434,65 +444,183 @@ function loadIifeText(text, filename, documentTarget) {
   return sandbox.Cesium;
 }
 
+function relocateSourceImports(bytes, realPath) {
+  const source = bytes.toString('utf8');
+  const imports = [...source.matchAll(/^import .+$/gm)];
+  let relocated = 0;
+  const output = source.replace(
+    /^import ([^\r\n]+) from "(\.[^"\r\n]+)";$/gm,
+    (_match, binding, specifier) => {
+      relocated++;
+      return `import ${binding} from ${JSON.stringify(new URL(specifier, pathToFileURL(realPath)).href)};`;
+    },
+  );
+  assert.ok(
+    imports.length > 0,
+    'source fixture needs its pinned dependency imports',
+  );
+  assert.equal(relocated, imports.length, 'unsupported source fixture import');
+  assert.doesNotMatch(
+    source,
+    /\bimport\s*\(/,
+    'unsupported dynamic source fixture import',
+  );
+  return output;
+}
+
+async function withStockDistributionFile(realPath, stockBytes, kind, run) {
+  // Never create transient siblings in installed dependencies: other test
+  // processes snapshot that immutable tree concurrently. Absolute source
+  // imports preserve the installed Engine classes' identity and module bytes
+  // below the import declarations; bundled CJS resolves its installed packages.
+  const temporaryParent = realpathSync(os.tmpdir());
+  const directory = mkdtempSync(
+    path.join(temporaryParent, 'gev-inertia-stock-'),
+  );
+  const temporaryPath = path.join(
+    directory,
+    kind === 'source' ? 'stock.mjs' : `stock${path.extname(realPath)}`,
+  );
+  try {
+    if (kind === 'cjs')
+      symlinkSync(
+        path.join(ROOT, 'node_modules'),
+        path.join(directory, 'node_modules'),
+        'junction',
+      );
+    writeFileSync(
+      temporaryPath,
+      kind === 'source'
+        ? relocateSourceImports(stockBytes, realPath)
+        : stockBytes,
+      { flag: 'wx' },
+    );
+    return await run(temporaryPath);
+  } finally {
+    const target = path.resolve(directory);
+    assert.equal(path.dirname(target), temporaryParent);
+    assert.match(path.basename(target), /^gev-inertia-stock-[A-Za-z0-9]+$/);
+    assert.equal(
+      realpathSync(target),
+      target,
+      'Owned fixture must not redirect',
+    );
+    rmSync(target, { recursive: true, force: true });
+  }
+}
+
 async function withDistribution(entry, kind, run) {
   const realPath = distributionFile(entry.relativePath);
   const installedBytes = readFileSync(realPath);
   const patchedBytes = recoverInertiaStage(entry.relativePath, installedBytes);
   const stockBytes = recoverStock(entry, patchedBytes);
-  const temporaryPath = path.join(
-    path.dirname(realPath),
-    `inertia-stock-${process.pid}-${randomUUID()}${path.extname(realPath)}`,
-  );
   const documentTarget = Object.assign(new EventTargetLite(), {
     onmousewheel: undefined,
   });
-  writeFileSync(temporaryPath, stockBytes, { flag: 'wx' });
-  try {
-    delete globalThis.document;
-    delete globalThis.window;
-    let stockNamespace;
-    let patchedNamespace;
-    let stockController;
-    let patchedController;
-    if (kind === 'source') {
-      stockNamespace = Engine;
-      patchedNamespace = Engine;
-      stockController = (
-        await import(
-          `${pathToFileURL(temporaryPath).href}?stock=${randomUUID()}`
-        )
-      ).default;
-      patchedController = (
-        await import(`${pathToFileURL(realPath).href}?patched=${randomUUID()}`)
-      ).default;
-    } else if (kind === 'cjs') {
-      stockNamespace = require(temporaryPath);
-      patchedNamespace = require(realPath);
-      stockController = stockNamespace.ScreenSpaceCameraController;
-      patchedController = patchedNamespace.ScreenSpaceCameraController;
-    } else {
-      stockNamespace = loadIife(temporaryPath, documentTarget);
-      patchedNamespace = loadIifeText(
-        patchedBytes.toString('utf8'),
-        realPath,
+  return withStockDistributionFile(
+    realPath,
+    stockBytes,
+    kind,
+    async (temporaryPath) => {
+      delete globalThis.document;
+      delete globalThis.window;
+      let stockNamespace;
+      let patchedNamespace;
+      let stockController;
+      let patchedController;
+      if (kind === 'source') {
+        stockNamespace = Engine;
+        patchedNamespace = Engine;
+        stockController = (
+          await import(
+            `${pathToFileURL(temporaryPath).href}?stock=${randomUUID()}`
+          )
+        ).default;
+        patchedController = (
+          await import(
+            `${pathToFileURL(realPath).href}?patched=${randomUUID()}`
+          )
+        ).default;
+      } else if (kind === 'cjs') {
+        stockNamespace = require(temporaryPath);
+        patchedNamespace = require(realPath);
+        stockController = stockNamespace.ScreenSpaceCameraController;
+        patchedController = patchedNamespace.ScreenSpaceCameraController;
+      } else {
+        stockNamespace = loadIife(temporaryPath, documentTarget);
+        patchedNamespace = loadIifeText(
+          patchedBytes.toString('utf8'),
+          realPath,
+          documentTarget,
+        );
+        stockController = stockNamespace.ScreenSpaceCameraController;
+        patchedController = patchedNamespace.ScreenSpaceCameraController;
+      }
+      assert.equal(typeof stockController, 'function');
+      assert.equal(typeof patchedController, 'function');
+      await run({
+        stockNamespace,
+        patchedNamespace,
+        stockController,
+        patchedController,
         documentTarget,
-      );
-      stockController = stockNamespace.ScreenSpaceCameraController;
-      patchedController = patchedNamespace.ScreenSpaceCameraController;
-    }
-    assert.equal(typeof stockController, 'function');
-    assert.equal(typeof patchedController, 'function');
-    await run({
-      stockNamespace,
-      patchedNamespace,
-      stockController,
-      patchedController,
-      documentTarget,
-    });
-  } finally {
-    rmSync(temporaryPath, { force: true });
-  }
+      });
+    },
+  );
 }
+
+test('stock distribution fixtures keep shared dependency trees immutable and clean up on callback failure', async () => {
+  const entry = MANIFEST.files.find((item) =>
+    item.relativePath.startsWith('@cesium/engine/Source/'),
+  );
+  const realPath = distributionFile(entry.relativePath);
+  const before = readdirSync(path.dirname(realPath)).sort();
+  const bytes = recoverStock(
+    entry,
+    recoverInertiaStage(entry.relativePath, readFileSync(realPath)),
+  );
+  const failure = new Error('controlled fixture failure');
+  let ownedDirectory;
+  await assert.rejects(
+    withStockDistributionFile(
+      realPath,
+      bytes,
+      'source',
+      async (temporaryPath) => {
+        ownedDirectory = path.dirname(temporaryPath);
+        assert.notEqual(ownedDirectory, path.dirname(realPath));
+        assert.deepEqual(readdirSync(path.dirname(realPath)).sort(), before);
+        const source = bytes.toString('utf8');
+        const copied = readFileSync(temporaryPath, 'utf8');
+        assert.equal(
+          copied.slice(copied.indexOf('/**')),
+          source.slice(source.indexOf('/**')),
+        );
+        assert.doesNotMatch(copied, /^import .+ from "\./m);
+        const namespace = await import(pathToFileURL(temporaryPath).href);
+        assert.equal(typeof namespace.default, 'function');
+        throw failure;
+      },
+    ),
+    (error) => error === failure,
+  );
+  assert.equal(existsSync(ownedDirectory), false);
+  assert.deepEqual(readdirSync(path.dirname(realPath)).sort(), before);
+});
+
+test('stock source relocation rejects unsupported imports instead of silently changing dependency resolution', () => {
+  const realPath = distributionFile(
+    '@cesium/engine/Source/Scene/ScreenSpaceCameraController.js',
+  );
+  for (const source of [
+    'import Thing from "package";\nexport default Thing;',
+    'import Thing from "./Thing.js";\nexport default import("./Later.js");',
+  ])
+    assert.throws(
+      () => relocateSourceImports(Buffer.from(source), realPath),
+      /unsupported/,
+    );
+});
 
 function runTransitionSequence(namespace, Controller, documentTarget) {
   setControlledTime();

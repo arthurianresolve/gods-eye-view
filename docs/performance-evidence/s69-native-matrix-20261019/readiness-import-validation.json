@@ -1,0 +1,78 @@
+{
+  "schema": "gev-readiness-import-validation/v1",
+  "startedAt": "2026-10-19T17:20:00.739Z",
+  "baseCommit": "dc3a85e561d6e20f7d36739d424910542a16a0d4",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/performance/visualPresentationBoundary.mjs",
+      "sha256": "1e2e6e750a6b2a482a77f2b5ae0721e5c7dfc72567bffe993dfbe4eaaf4e5201"
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.test.mjs",
+      "sha256": "8785343d3e6e8729cb3fe3c1a4c62f21b4765f10723c37648caa2e6d6ce4c809"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualificationState.mjs",
+      "sha256": "c79f2b5b3ed7cb8eb9eccebffff44f4618b1bd0d5fc8487dafecf449212bc256"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.mjs",
+      "sha256": "6c4d4842de246747753378cf29aa58b6fb876b28e0bd89ff53dba582993c30b1"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "sha256": "01ab4044f4aee2b541ea3ae74c3a7cbc83a3464b0df50200eaa957476d68365e"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.mjs",
+      "sha256": "0633166919888a2f865b7df1028c82b067ba91aa6286541c3eda196cacb358fe"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualification.test.mjs",
+      "sha256": "4ab981bbd76c2b23557183948d9fc7c740b564ee4ef4456f8db3d225fd15b0e9"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.mjs",
+      "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.test.mjs",
+      "sha256": "32a576ae4b7d9d23f0e8d09a7fdab0ef3d9d2d5cce516a483f273def0979a783"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "144d816a7c70a23e5030e14ecf7fff0c597f354d47c1f1850cae76eceb0b8099",
+      "summary": [
+        "ℹ tests 28",
+        "ℹ pass 28",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 279.092369"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "0177f8f9a99bbfba8ac8d02cf0375cab4910991818eac26d373efa06eb1b2d3c",
+      "summary": [
+        "ℹ tests 28",
+        "ℹ pass 28",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 281.620019"
+      ]
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019",
+  "scope": "QA only: settled gaze/CCTV presentation evidence; disclose Workspace before requiring visible import control. No runtime, renderer, quality, capture pixel-policy, or performance threshold change. Sharp PNG decoding is separately tested on Windows; these VM tests do not claim it.",
+  "completedAt": "2026-10-19T17:20:01.956Z"
+}

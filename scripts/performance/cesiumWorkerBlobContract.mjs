@@ -31,7 +31,9 @@ export function summarizeWorkerAuditBoundary({
       (values) =>
         !Array.isArray(values) ||
         values.length > 256 ||
-        values.some((value) => typeof value !== 'string' || value.length > 4096),
+        values.some(
+          (value) => typeof value !== 'string' || value.length > 4096,
+        ),
     )
   )
     throw new TypeError('Worker audit boundary inputs exceed their bounds.');
@@ -124,6 +126,36 @@ function validateRelativePath(value) {
   return value;
 }
 
+const CESIUM_LEGACY_BUNDLE_PATH = 'cesium/Cesium.js';
+const CESIUM_DIGEST_BUNDLE_PATH = /^cesium\/[a-f0-9]{64}\/Cesium\.js$/;
+
+/** Resolve the one Cesium bundle owned by a verified build receipt. */
+export function resolveCesiumBundlePath(assets) {
+  if (!Array.isArray(assets) || assets.length < 1)
+    throw new Error('Cesium receipt asset list is invalid.');
+  const cesiumBundlePaths = assets
+    .map((asset) => asset?.path)
+    .filter(
+      (assetPath) =>
+        assetPath === CESIUM_LEGACY_BUNDLE_PATH ||
+        (typeof assetPath === 'string' &&
+          assetPath.startsWith('cesium/') &&
+          assetPath.endsWith('/Cesium.js')),
+    );
+  const malformed = cesiumBundlePaths.filter(
+    (assetPath) =>
+      assetPath !== CESIUM_LEGACY_BUNDLE_PATH &&
+      !CESIUM_DIGEST_BUNDLE_PATH.test(assetPath),
+  );
+  if (malformed.length)
+    throw new Error('Cesium receipt contains a malformed digest bundle path.');
+  const unique = [...new Set(cesiumBundlePaths)];
+  if (unique.length !== 1)
+    throw new Error(
+      'Cesium bundle path is absent or ambiguous in the receipt.',
+    );
+  return unique[0];
+}
 /** Derive the worker source and module names from receipt-backed Cesium assets. */
 export function deriveCesiumEmbeddedWorkerContract({
   bundlePath,

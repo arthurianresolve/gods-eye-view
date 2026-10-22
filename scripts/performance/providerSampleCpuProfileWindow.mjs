@@ -1,5 +1,12 @@
 /** Own one opt-in CPU profile over an existing provider-fixture sample. */
-export function isProviderSampleCpuProfileTarget(scenario, run) {
+export function isProviderSampleCpuProfileTarget(
+  scenario,
+  run,
+  mode = 'first-motion',
+) {
+  if (mode === 'tracking')
+    return scenario === 'selected-aircraft-tracking' && run === 1;
+  if (mode !== 'first-motion') return false;
   return (
     (scenario === 'idle' && (run === 1 || run === 2)) ||
     (scenario === 'scripted-motion' && run === 1)
@@ -24,6 +31,7 @@ export function createProviderSampleCpuProfileWindow({
   artifactDirectory,
   targetScenario,
   targetRun,
+  mode = 'first-motion',
   documentRole,
   documentId,
   captureOrdinal,
@@ -38,7 +46,7 @@ export function createProviderSampleCpuProfileWindow({
   if (typeof profileRunner !== 'function')
     throw new TypeError('A bounded CPU profile runner is required.');
   if (
-    !isProviderSampleCpuProfileTarget(targetScenario, targetRun) ||
+    !isProviderSampleCpuProfileTarget(targetScenario, targetRun, mode) ||
     !Number.isSafeInteger(targetRun) ||
     targetRun < 1 ||
     !Number.isSafeInteger(captureOrdinal) ||
@@ -52,10 +60,7 @@ export function createProviderSampleCpuProfileWindow({
   )
     throw new TypeError('Provider CPU profile target identity is invalid.');
 
-  const key =
-    targetScenario === 'idle'
-      ? `provider-idle-${targetRun}`
-      : `provider-scripted-motion-${targetRun}`;
+  const key = `provider-${targetScenario}-${targetRun}`;
   const record = {
     schema: 'gev-provider-sample-cpu-profile-window/v1',
     enabled: true,

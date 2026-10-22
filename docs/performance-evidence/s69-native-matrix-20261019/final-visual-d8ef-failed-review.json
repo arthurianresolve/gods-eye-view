@@ -1,0 +1,273 @@
+{
+  "schema": "gev-failed-visual-review/v1",
+  "reviewedAt": "2026-10-19T14:15:23.522Z",
+  "status": "failed",
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "d8ef90024db6e6f1c96b5645c24b85586f9e337a"
+  },
+  "captureProducer": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "policy": "matched-visible-control-variance-v1",
+  "failedCriterion": "hud-visible decoded rendered pixels changed",
+  "diagnosis": [
+    {
+      "state": "still-settled",
+      "files": [
+        {
+          "name": "still-settled-baseline-attempt-1.png",
+          "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+        },
+        {
+          "name": "still-settled-candidate-attempt-1.png",
+          "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+        }
+      ],
+      "differentPixels": 0,
+      "maxChannelDelta": 0,
+      "bounds": null,
+      "firstDifferences": []
+    },
+    {
+      "state": "hud-visible",
+      "files": [
+        {
+          "name": "hud-visible-baseline-attempt-1.png",
+          "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+        },
+        {
+          "name": "hud-visible-candidate-attempt-1.png",
+          "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+        }
+      ],
+      "differentPixels": 8,
+      "maxChannelDelta": 7,
+      "bounds": {
+        "minX": 2149,
+        "minY": 1005,
+        "maxX": 2372,
+        "maxY": 1007
+      },
+      "firstDifferences": [
+        {
+          "x": 2150,
+          "y": 1005,
+          "baseline": [7, 56, 108, 255],
+          "candidate": [7, 61, 112, 255]
+        },
+        {
+          "x": 2371,
+          "y": 1005,
+          "baseline": [7, 58, 92, 255],
+          "candidate": [7, 65, 98, 255]
+        },
+        {
+          "x": 2149,
+          "y": 1006,
+          "baseline": [6, 79, 129, 255],
+          "candidate": [6, 83, 134, 255]
+        },
+        {
+          "x": 2150,
+          "y": 1006,
+          "baseline": [8, 27, 81, 255],
+          "candidate": [8, 31, 83, 255]
+        },
+        {
+          "x": 2371,
+          "y": 1006,
+          "baseline": [8, 29, 62, 255],
+          "candidate": [8, 34, 66, 255]
+        },
+        {
+          "x": 2372,
+          "y": 1006,
+          "baseline": [6, 81, 117, 255],
+          "candidate": [6, 85, 121, 255]
+        },
+        {
+          "x": 2149,
+          "y": 1007,
+          "baseline": [7, 53, 105, 255],
+          "candidate": [7, 55, 107, 255]
+        },
+        {
+          "x": 2372,
+          "y": 1007,
+          "baseline": [7, 56, 90, 255],
+          "candidate": [7, 58, 92, 255]
+        }
+      ]
+    },
+    {
+      "state": "hud-hidden",
+      "files": [
+        {
+          "name": "hud-hidden-baseline-attempt-1.png",
+          "sha256": "9caafc21b13a5d01222689822048f8a67dc8a5b76e18893d98a5b739f09f3877"
+        },
+        {
+          "name": "hud-hidden-candidate-attempt-1.png",
+          "sha256": "9caafc21b13a5d01222689822048f8a67dc8a5b76e18893d98a5b739f09f3877"
+        }
+      ],
+      "differentPixels": 0,
+      "maxChannelDelta": 0,
+      "bounds": null,
+      "firstDifferences": []
+    },
+    {
+      "state": "hud-restored",
+      "files": [
+        {
+          "name": "hud-restored-baseline-attempt-1.png",
+          "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+        },
+        {
+          "name": "hud-restored-candidate-attempt-1.png",
+          "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+        }
+      ],
+      "differentPixels": 8,
+      "maxChannelDelta": 7,
+      "bounds": {
+        "minX": 2149,
+        "minY": 1005,
+        "maxX": 2372,
+        "maxY": 1007
+      },
+      "firstDifferences": [
+        {
+          "x": 2150,
+          "y": 1005,
+          "baseline": [7, 56, 108, 255],
+          "candidate": [7, 61, 112, 255]
+        },
+        {
+          "x": 2371,
+          "y": 1005,
+          "baseline": [7, 58, 92, 255],
+          "candidate": [7, 65, 98, 255]
+        },
+        {
+          "x": 2149,
+          "y": 1006,
+          "baseline": [6, 79, 129, 255],
+          "candidate": [6, 83, 134, 255]
+        },
+        {
+          "x": 2150,
+          "y": 1006,
+          "baseline": [8, 27, 81, 255],
+          "candidate": [8, 31, 83, 255]
+        },
+        {
+          "x": 2371,
+          "y": 1006,
+          "baseline": [8, 29, 62, 255],
+          "candidate": [8, 34, 66, 255]
+        },
+        {
+          "x": 2372,
+          "y": 1006,
+          "baseline": [6, 81, 117, 255],
+          "candidate": [6, 85, 121, 255]
+        },
+        {
+          "x": 2149,
+          "y": 1007,
+          "baseline": [7, 53, 105, 255],
+          "candidate": [7, 55, 107, 255]
+        },
+        {
+          "x": 2372,
+          "y": 1007,
+          "baseline": [7, 56, 90, 255],
+          "candidate": [7, 58, 92, 255]
+        }
+      ]
+    }
+  ],
+  "archive": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-d8ef9002-failed-20261019",
+    "status": "verified",
+    "fileCount": 15,
+    "files": [
+      {
+        "name": "baseline-observations.json",
+        "bytes": 136034,
+        "sha256": "e373c185c6680c868e1c384e26d362efdfdc52a6795a7d49042ba74376e3300c"
+      },
+      {
+        "name": "candidate-observations.json",
+        "bytes": 98357,
+        "sha256": "a174a68f75edc43c8bef13a6a3330aae791598d37db7ff470e9e0fef3bc1064d"
+      },
+      {
+        "name": "final-visual-qualification-partial.json",
+        "bytes": 251095,
+        "sha256": "ff49eadb19c5a628135448e3d5e096a0358ca7e6cabb382f51624ff697c77c01"
+      },
+      {
+        "name": "final-visual-qualification.json",
+        "bytes": 216151,
+        "sha256": "6afde7ac0524918fbd630eed297589b9cab2497c91d51b0cda3876810078a007"
+      },
+      {
+        "name": "hud-hidden-baseline-attempt-1.png",
+        "bytes": 1430681,
+        "sha256": "9caafc21b13a5d01222689822048f8a67dc8a5b76e18893d98a5b739f09f3877"
+      },
+      {
+        "name": "hud-hidden-candidate-attempt-1.png",
+        "bytes": 1430681,
+        "sha256": "9caafc21b13a5d01222689822048f8a67dc8a5b76e18893d98a5b739f09f3877"
+      },
+      {
+        "name": "hud-restored-baseline-attempt-1.png",
+        "bytes": 1522577,
+        "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+      },
+      {
+        "name": "hud-restored-candidate-attempt-1.png",
+        "bytes": 1522397,
+        "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+      },
+      {
+        "name": "hud-visible-baseline-attempt-1.png",
+        "bytes": 1522577,
+        "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+      },
+      {
+        "name": "hud-visible-candidate-attempt-1.png",
+        "bytes": 1522397,
+        "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+      },
+      {
+        "name": "pixel-difference-diagnosis.json",
+        "bytes": 6669,
+        "sha256": "0c7239e73dd9a56770225c3c0330b82ee09b3c4fde342ab499492e8898692084"
+      },
+      {
+        "name": "still-settled-baseline-attempt-1.png",
+        "bytes": 1522397,
+        "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+      },
+      {
+        "name": "still-settled-candidate-attempt-1.png",
+        "bytes": 1522397,
+        "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+      },
+      {
+        "name": "final-visual-d8ef9002-process.json",
+        "bytes": 1699,
+        "sha256": "5164dc7133669d37c7d452f938dec27ef29c7a824bab105a7a1f785d744b121d"
+      },
+      {
+        "name": "final-visual-d8ef9002-deps-fixed-process.json",
+        "bytes": 1710,
+        "sha256": "1073117c3239956c4756e34e48b3ea4dd747fe184cc9f92a78896d169eaf3de6"
+      }
+    ]
+  },
+  "scope": "Original pixel comparison failed. Eight camera-status-badge corner pixels differ in the HUD-visible and restored states, maximum channel delta7/255. Initial still and hidden state are byte-identical. Cause unresolved; no mask, image edit, threshold change or passing qualification is inferred."
+}

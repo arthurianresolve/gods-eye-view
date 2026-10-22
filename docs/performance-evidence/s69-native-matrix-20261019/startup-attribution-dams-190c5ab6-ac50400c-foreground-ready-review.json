@@ -1,0 +1,708 @@
+{
+  "schema": "gev-startup-attribution-independent-review/v1",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "reviewedAt": "2026-10-19T23:31:36.737Z",
+  "sourceStatus": "diagnostics-complete",
+  "producerCommit": "ac50400cb47c982039e8710ea7ff8972e7da239f",
+  "applicationCandidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "planSha256": "f5ce7c95938ea56047b25da4f97d19dbb0be82b9531d26dd0b8e06813d459a0d",
+  "files": [
+    {
+      "name": "infrastructure-dams-01.json",
+      "bytes": 11183,
+      "sha256": "edc44ec33455789374c4177fcdeef8952d114c0d8af9606d56332a1ee3610209"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "0bbc65f8b90b7e895c4b51b4b8739c604593875c8199b55b1198dbb69c2b6dbc"
+    },
+    {
+      "name": "infrastructure-dams-01.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "5f6fa3138fab03e357fa04e94f47d9e9041008b13c85af3282d599f710556a86"
+    },
+    {
+      "name": "infrastructure-dams-01.json.invocation.json",
+      "bytes": 2685,
+      "sha256": "2eed32faeefebe7ef7489d9d51e7494eb4d3c7d6e24914a0caf7c9fa60c19469"
+    },
+    {
+      "name": "infrastructure-dams-01.json.log",
+      "bytes": 296,
+      "sha256": "7914a9d94abb9c941a479689f797a672693f3b0676f3d8468acd43205bca8853"
+    },
+    {
+      "name": "infrastructure-dams-02.json",
+      "bytes": 11158,
+      "sha256": "e3db5ad08d0eb8423bce1836594bba2296a03587eb61201f8a0df0f1a7990746"
+    },
+    {
+      "name": "infrastructure-dams-02.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "a52fa800c10d434fae96693c9adba423615e25048fff05f9199f673e90cff11b"
+    },
+    {
+      "name": "infrastructure-dams-02.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "d1e94a5007a9586056b7d5f432d2cb299caf62f3fbfd43d3166ca7b5d9601992"
+    },
+    {
+      "name": "infrastructure-dams-02.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "e9f55eafaf43722e60a9a088e26f9105e94be284109ab95b3c895cec39bc7492"
+    },
+    {
+      "name": "infrastructure-dams-02.json.log",
+      "bytes": 296,
+      "sha256": "17c1b9f0ff6027a562982731944a86a42706dac44446cad22a7e719346bcfdad"
+    },
+    {
+      "name": "infrastructure-dams-03.json",
+      "bytes": 11149,
+      "sha256": "e699b38c4818737522912e760310bb519e9f1c67785b9e094f3a3f676f13bf2b"
+    },
+    {
+      "name": "infrastructure-dams-03.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "eb83e665178070d318b80753f24c046892d428b9e62fc8171a9042a41ad163cd"
+    },
+    {
+      "name": "infrastructure-dams-03.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "560f3495b58b0fa57e8bbc10dcd9040229ccd2e84efba6402e068ac44b474f80"
+    },
+    {
+      "name": "infrastructure-dams-03.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "eccc79346d7ee0c4f55c229be9a9f6e918dde6625543cd03ac4abb79fcd3fbe0"
+    },
+    {
+      "name": "infrastructure-dams-03.json.log",
+      "bytes": 296,
+      "sha256": "62255095cade7997083d243131e3384637f2eb5205b7b9ba01156739e78f6f24"
+    },
+    {
+      "name": "infrastructure-dams-04.json",
+      "bytes": 11136,
+      "sha256": "d06f16e05516d3a903d974cdc24e929bcd8d4aec4706808fa39885e1afaddc2c"
+    },
+    {
+      "name": "infrastructure-dams-04.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "b563f98a1404e239ecc14db9fc424eeb392bf0269fc03ec8050a70feeac42a2c"
+    },
+    {
+      "name": "infrastructure-dams-04.json.browser.pid.ready.foreground.json",
+      "bytes": 190,
+      "sha256": "a19046c37d0c44ebadcd5f65d7ee49dbaec303a2d198ed85ce28011e2e65aaac"
+    },
+    {
+      "name": "infrastructure-dams-04.json.invocation.json",
+      "bytes": 2685,
+      "sha256": "0ee02fe587a2fad3ce04f4daa808f3cd80916083fed62d98193d198d1762ee6c"
+    },
+    {
+      "name": "infrastructure-dams-04.json.log",
+      "bytes": 296,
+      "sha256": "8484f305432e0f90edd4f33a68a40aca68ba9e628a39c5e5cd1d09517acaa4b0"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 1923,
+      "sha256": "f5ce7c95938ea56047b25da4f97d19dbb0be82b9531d26dd0b8e06813d459a0d"
+    },
+    {
+      "name": "process.json",
+      "bytes": 2883,
+      "sha256": "fa40a785fb858116b10ba86ae9949ff4dab1ab939721f4a0c41a5fe63ce45a53"
+    },
+    {
+      "name": "capture-wrapper.mjs",
+      "bytes": 9041,
+      "sha256": "a4badf16c44f91af426d55ef9d4a1f5b07f95f4c4a7cf6d9f18883b160c56dd8"
+    }
+  ],
+  "results": [
+    {
+      "id": "infrastructure-dams-01",
+      "role": "control",
+      "row": "infrastructure-dams",
+      "status": "diagnostic-only",
+      "appReadyMs": 3826,
+      "initialSettleMs": 4692,
+      "phaseMs": {
+        "navigation": 1436,
+        "foreground": 849,
+        "viewerWait": 1292,
+        "diagnosticsDisable": 249,
+        "loaderWait": 859
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 2170.2000000029802,
+        "responseStart": 31.900000005960464,
+        "domInteractive": 1081.9000000059605,
+        "domContentLoadedEventEnd": 1414.6000000089407,
+        "loadEventEnd": 2170.2000000029802,
+        "domComplete": 2170.1000000089407
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 39,
+          "summarizedEntryCount": 39,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 27,
+            "crossOrigin": 12,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 4,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 18,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 300.8999999910593,
+              "latestResponseEndMs": 2583.300000011921
+            },
+            "tokenApi": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 146,
+              "latestResponseEndMs": 210.20000000298023
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 6,
+              "durationAvailableCount": 6,
+              "maxDurationMs": 159.29999999701977,
+              "latestResponseEndMs": 3315.300000011921
+            },
+            "reearth": {
+              "count": 4,
+              "durationAvailableCount": 4,
+              "maxDurationMs": 142.40000000596046,
+              "latestResponseEndMs": 4658.300000011921
+            },
+            "osm": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "otherSameOrigin": {
+              "count": 12,
+              "durationAvailableCount": 12,
+              "maxDurationMs": 144.70000000298023,
+              "latestResponseEndMs": 3551.800000011921
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 39,
+            "maxMs": 300.8999999910593
+          },
+          "transferSize": {
+            "availableCount": 29,
+            "knownPositiveBytes": 5875755,
+            "zeroOrUnavailableCount": 10
+          },
+          "encodedBodySize": {
+            "availableCount": 28,
+            "knownPositiveBytes": 5867055,
+            "zeroOrUnavailableCount": 11
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "esri-imagery",
+          "status": "ready",
+          "switchOrigin": "manual",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "infrastructure-dams-02",
+      "role": "candidate",
+      "row": "infrastructure-dams",
+      "status": "diagnostic-only",
+      "appReadyMs": 4777,
+      "initialSettleMs": 5748,
+      "phaseMs": {
+        "navigation": 2286,
+        "foreground": 948,
+        "viewerWait": 1202,
+        "diagnosticsDisable": 341,
+        "loaderWait": 960
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3131.800000011921,
+        "responseStart": 17.700000002980232,
+        "domInteractive": 1549.2000000029802,
+        "domContentLoadedEventEnd": 2267,
+        "loadEventEnd": 3131.800000011921,
+        "domComplete": 3131.7000000029802
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 43,
+          "summarizedEntryCount": 43,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 28,
+            "crossOrigin": 15,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 5,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 21,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 274.69999998807907,
+              "latestResponseEndMs": 3591.9000000059605
+            },
+            "tokenApi": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 151.70000000298023,
+              "latestResponseEndMs": 194.30000001192093
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 6,
+              "durationAvailableCount": 6,
+              "maxDurationMs": 129.29999999701977,
+              "latestResponseEndMs": 4191.70000000298
+            },
+            "reearth": {
+              "count": 7,
+              "durationAvailableCount": 7,
+              "maxDurationMs": 109,
+              "latestResponseEndMs": 5656.800000011921
+            },
+            "osm": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "otherSameOrigin": {
+              "count": 13,
+              "durationAvailableCount": 13,
+              "maxDurationMs": 120.70000000298023,
+              "latestResponseEndMs": 4366
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 43,
+            "maxMs": 274.69999998807907
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5737667,
+            "zeroOrUnavailableCount": 13
+          },
+          "encodedBodySize": {
+            "availableCount": 29,
+            "knownPositiveBytes": 5728667,
+            "zeroOrUnavailableCount": 14
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "esri-imagery",
+          "status": "ready",
+          "switchOrigin": "manual",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "infrastructure-dams-03",
+      "role": "candidate",
+      "row": "infrastructure-dams",
+      "status": "diagnostic-only",
+      "appReadyMs": 5457,
+      "initialSettleMs": 6359,
+      "phaseMs": {
+        "navigation": 2411,
+        "foreground": 1052,
+        "viewerWait": 1866,
+        "diagnosticsDisable": 128,
+        "loaderWait": 877
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3362.2999999970198,
+        "responseStart": 26.399999991059303,
+        "domInteractive": 1584.7999999970198,
+        "domContentLoadedEventEnd": 2390.0999999940395,
+        "loadEventEnd": 3362.2999999970198,
+        "domComplete": 3362.0999999940395
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 44,
+          "summarizedEntryCount": 44,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 28,
+            "crossOrigin": 16,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 5,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 22,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 266.5,
+              "latestResponseEndMs": 3936.5
+            },
+            "tokenApi": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 183.09999999403954,
+              "latestResponseEndMs": 231.8999999910593
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 6,
+              "durationAvailableCount": 6,
+              "maxDurationMs": 173.70000000298023,
+              "latestResponseEndMs": 4481.899999991059
+            },
+            "reearth": {
+              "count": 8,
+              "durationAvailableCount": 8,
+              "maxDurationMs": 133,
+              "latestResponseEndMs": 6338.20000000298
+            },
+            "osm": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "otherSameOrigin": {
+              "count": 13,
+              "durationAvailableCount": 13,
+              "maxDurationMs": 144.79999999701977,
+              "latestResponseEndMs": 5237.899999991059
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 44,
+            "maxMs": 266.5
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5737667,
+            "zeroOrUnavailableCount": 14
+          },
+          "encodedBodySize": {
+            "availableCount": 29,
+            "knownPositiveBytes": 5728667,
+            "zeroOrUnavailableCount": 15
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "esri-imagery",
+          "status": "ready",
+          "switchOrigin": "manual",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    },
+    {
+      "id": "infrastructure-dams-04",
+      "role": "control",
+      "row": "infrastructure-dams",
+      "status": "diagnostic-only",
+      "appReadyMs": 5447,
+      "initialSettleMs": 6438,
+      "phaseMs": {
+        "navigation": 2701,
+        "foreground": 1050,
+        "viewerWait": 1559,
+        "diagnosticsDisable": 137,
+        "loaderWait": 977
+      },
+      "navigationTiming": {
+        "startTime": 0,
+        "duration": 3588.5,
+        "responseStart": 22.600000008940697,
+        "domInteractive": 1741,
+        "domContentLoadedEventEnd": 2675.6000000089407,
+        "loadEventEnd": 3588.5,
+        "domComplete": 3588.4000000059605
+      },
+      "pageState": {
+        "locale": "en",
+        "navigatorLanguages": [
+          "en-GB",
+          "en-US",
+          "en"
+        ],
+        "omittedNavigatorLanguageCount": 0,
+        "enabledLayerIds": [],
+        "omittedEnabledLayerIdCount": 0,
+        "resourceTimingSummary": {
+          "source": "performance-resource-timing",
+          "coverage": "bounded-retained-resource-entries-only",
+          "sizeInterpretation": "zero-may-mean-tao-restricted-or-cached",
+          "limit": 256,
+          "entryCount": 42,
+          "summarizedEntryCount": 42,
+          "omittedEntryCount": 0,
+          "truncated": false,
+          "bufferCapacity": null,
+          "droppedEntryCount": null,
+          "originCounts": {
+            "sameOrigin": 28,
+            "crossOrigin": 14,
+            "unavailable": 0
+          },
+          "initiatorCounts": {
+            "css": 2,
+            "fetch": 5,
+            "img": 5,
+            "link": 4,
+            "script": 3,
+            "xmlhttprequest": 20,
+            "other": 3
+          },
+          "providerClasses": {
+            "sameOriginAssets": {
+              "count": 15,
+              "durationAvailableCount": 15,
+              "maxDurationMs": 322.70000000298023,
+              "latestResponseEndMs": 4147.4000000059605
+            },
+            "tokenApi": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "google": {
+              "count": 2,
+              "durationAvailableCount": 2,
+              "maxDurationMs": 199,
+              "latestResponseEndMs": 262.30000001192093
+            },
+            "cesium": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "esri": {
+              "count": 6,
+              "durationAvailableCount": 6,
+              "maxDurationMs": 110.20000000298023,
+              "latestResponseEndMs": 5093.300000011921
+            },
+            "reearth": {
+              "count": 6,
+              "durationAvailableCount": 6,
+              "maxDurationMs": 134.59999999403954,
+              "latestResponseEndMs": 6398.9000000059605
+            },
+            "osm": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "otherSameOrigin": {
+              "count": 13,
+              "durationAvailableCount": 13,
+              "maxDurationMs": 130.8999999910593,
+              "latestResponseEndMs": 5224
+            },
+            "otherCrossOrigin": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            },
+            "unknown": {
+              "count": 0,
+              "durationAvailableCount": 0,
+              "maxDurationMs": null,
+              "latestResponseEndMs": null
+            }
+          },
+          "duration": {
+            "availableCount": 42,
+            "maxMs": 322.70000000298023
+          },
+          "transferSize": {
+            "availableCount": 30,
+            "knownPositiveBytes": 5876134,
+            "zeroOrUnavailableCount": 12
+          },
+          "encodedBodySize": {
+            "availableCount": 29,
+            "knownPositiveBytes": 5867134,
+            "zeroOrUnavailableCount": 13
+          }
+        },
+        "mapIdentity": {
+          "activeStackId": "esri-imagery",
+          "status": "ready",
+          "switchOrigin": "manual",
+          "globeShown": true,
+          "terrainProviderKind": "other"
+        }
+      }
+    }
+  ],
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-attribution-dams-190c5ab6-ac50400c-foreground-ready",
+  "scope": "Independent source/hash/identity checks and phase projection. Does not substitute for startup acceptance or clear any failed measurement."
+}

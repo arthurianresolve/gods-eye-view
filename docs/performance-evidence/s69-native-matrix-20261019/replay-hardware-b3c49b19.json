@@ -1,0 +1,196 @@
+{
+  "schema": "gev-recorded-pose-hardware-verification-review/v1",
+  "reviewedAt": "2026-10-19T15:59:18.439Z",
+  "status": "functional-check-passed",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "producerCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "nativeResolution": {
+    "observedDpr": 2,
+    "initial": {
+      "devicePixelRatio": 2,
+      "canvas": {
+        "clientWidth": 1440,
+        "clientHeight": 1000,
+        "width": 2880,
+        "height": 2000
+      },
+      "sceneDrawingBuffer": {
+        "width": 2880,
+        "height": 2000
+      },
+      "resolutionScale": 1,
+      "useBrowserRecommendedResolution": false,
+      "maximumScreenSpaceError": 1
+    }
+  },
+  "protocol": {
+    "roles": ["candidate"],
+    "keySequence": ["Home", "End", "Home", "End"],
+    "trackedKeySequence": ["Home", "End", "Home", "End"],
+    "sampleWaitsMs": [500, 2000],
+    "maximumFrameWaitMs": 10000
+  },
+  "trackedWitness": "Cesium 1.138 DataSourceDisplay.getBoundingSphere, pinned internal read-only visualization bounds API. Unlike walking public primitive collections, this traverses the entity clustering owner. State DONE=0 is required. No entity, collection or pixels are modified.",
+  "checks": {
+    "fleetRenderedPositions": 8,
+    "trackedRenderedPositions": 8,
+    "trackingRelease": "passed",
+    "foreground": "passed",
+    "browserCleanup": "passed"
+  },
+  "attempts": [
+    {
+      "name": "replay-position-b3c49b19-verification",
+      "startedAt": "2026-10-19T15:48:09.792Z",
+      "completedAt": "2026-10-19T15:48:45.062Z",
+      "status": "diagnostic-failed",
+      "error": "entity?.gevVisualPosition?.getValue is not a function",
+      "samples": 8,
+      "rawSha256": "8c9900a0f09038955ca46aff3bbd0ce19afbc668fa8e37522f5b9571a86baa1f",
+      "scriptSha256": "c68f08fc00e64e1bd9589e9e18d7728914368119be62d51e537db994168ca669",
+      "normalBrowserCleanup": true
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v2",
+      "startedAt": "2026-10-19T15:49:26.616Z",
+      "completedAt": "2026-10-19T15:49:45.862Z",
+      "status": "diagnostic-failed",
+      "error": "Foreground helper returned unconfirmed evidence.",
+      "samples": 0,
+      "rawSha256": "16dfde27966f15245b503e26fb80d99ef2caaa1f7ae95df382181a1e6e42d86c",
+      "scriptSha256": "72ac7c3c94d734d8950f54d9f4122c1a123849cf0ced29c8522c055deafa5d82",
+      "normalBrowserCleanup": true
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v3",
+      "startedAt": "2026-10-19T15:51:27.039Z",
+      "completedAt": "2026-10-19T15:51:44.142Z",
+      "status": "diagnostic-failed",
+      "error": "Foreground helper returned unconfirmed evidence.",
+      "samples": 0,
+      "rawSha256": "4e52b3c990643d309d27c7b6c1c413ebbf8fa7c845a0224fed5a5f73e1c47322",
+      "scriptSha256": "8fee574389d816da0b936eaf98f6cc39258d94fadecfca0361b87a131061072a",
+      "normalBrowserCleanup": true
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v4",
+      "startedAt": "2026-10-19T15:53:18.257Z",
+      "completedAt": "2026-10-19T15:54:17.671Z",
+      "status": "diagnostic-failed",
+      "error": "Every fleet and tracked pose must match its selected recorded observation\n\nfalse !== true\n",
+      "samples": 16,
+      "rawSha256": "bcc7d31cab369a42b7f2f4ceec3fc6587259870a71910912e0253a03e58efbf2",
+      "scriptSha256": "0ae4605534630fbd7ab77ac5e589af6ad92a21d0d371cb913a587c2edc863c0a",
+      "normalBrowserCleanup": true
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v5",
+      "startedAt": "2026-10-19T15:55:10.819Z",
+      "completedAt": "2026-10-19T15:56:03.723Z",
+      "status": "diagnostic-completed",
+      "error": null,
+      "samples": 16,
+      "rawSha256": "4d6069e656a96f9a79332e3cb3ce801f850e3a3df82dfae7e5afeaf8c6747242",
+      "scriptSha256": "ccc293d96e972b3d08fc2bdb4213bbe975eec4cbd6832e7dfd73160be98c7342",
+      "normalBrowserCleanup": true
+    }
+  ],
+  "files": [
+    {
+      "name": "replay-position-b3c49b19-verification/protocol.json",
+      "bytes": 900,
+      "sha256": "b2146ffdfade7ad4b47f934ceadde62027e5277199228b1366fddd0986f68f23"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification/result.json",
+      "bytes": 18139,
+      "sha256": "8c9900a0f09038955ca46aff3bbd0ce19afbc668fa8e37522f5b9571a86baa1f"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification/source.mjs",
+      "bytes": 12930,
+      "sha256": "c68f08fc00e64e1bd9589e9e18d7728914368119be62d51e537db994168ca669"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v2/protocol.json",
+      "bytes": 900,
+      "sha256": "facf8ee22da0e1eb01b983285348d7bd5a43413fde29c1ad09d9e58c475ea3d3"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v2/result.json",
+      "bytes": 3709,
+      "sha256": "16dfde27966f15245b503e26fb80d99ef2caaa1f7ae95df382181a1e6e42d86c"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v2/source.mjs",
+      "bytes": 13259,
+      "sha256": "72ac7c3c94d734d8950f54d9f4122c1a123849cf0ced29c8522c055deafa5d82"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v3/protocol.json",
+      "bytes": 900,
+      "sha256": "62400dde7023414623768c8380ec7092bcbf78753df225520bdf4046aee1ed4d"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v3/result.json",
+      "bytes": 3742,
+      "sha256": "4e52b3c990643d309d27c7b6c1c413ebbf8fa7c845a0224fed5a5f73e1c47322"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v3/source.mjs",
+      "bytes": 13339,
+      "sha256": "8fee574389d816da0b936eaf98f6cc39258d94fadecfca0361b87a131061072a"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v4/candidate-synthetic-recording.json",
+      "bytes": 3686,
+      "sha256": "81ef3f80ad5c2edf973b7bf75a7a915684dae726855848e06c631308557d8baf"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v4/protocol.json",
+      "bytes": 900,
+      "sha256": "ed81dc2137c420726bf7ac35d1eb90e5733b230a3d7977309cd3c437b965e10b"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v4/result.json",
+      "bytes": 34186,
+      "sha256": "bcc7d31cab369a42b7f2f4ceec3fc6587259870a71910912e0253a03e58efbf2"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v4/source.mjs",
+      "bytes": 14682,
+      "sha256": "0ae4605534630fbd7ab77ac5e589af6ad92a21d0d371cb913a587c2edc863c0a"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v5/candidate-synthetic-recording.json",
+      "bytes": 3686,
+      "sha256": "a6cf39720bab2ddb3f48b41744a560b4d1e718beb50cf1f9c2e4b9d5d1aa16a3"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v5/protocol.json",
+      "bytes": 1186,
+      "sha256": "45e06af3e2cad795ee6148abca876ea835ce3c5809c572e52ee25593e2cda9d7"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v5/result.json",
+      "bytes": 36052,
+      "sha256": "4d6069e656a96f9a79332e3cb3ce801f850e3a3df82dfae7e5afeaf8c6747242"
+    },
+    {
+      "name": "replay-position-b3c49b19-verification-v5/source.mjs",
+      "bytes": 15789,
+      "sha256": "ccc293d96e972b3d08fc2bdb4213bbe975eec4cbd6832e7dfd73160be98c7342"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/replay-verification-b3c49b19-20261019",
+  "scope": "Moving synthetic aircraft, forward and backward paused seeks. Fleet billboard positions and pinned-engine completed tracked visualization bounds match selected observations. Not a latency, full visual-equivalence, performance, retention, or real-provider acceptance result.",
+  "priorNegativeControl": "replay-position-d8ef-review.json",
+  "automaticRegressionEvidence": "replay-runtime-tests-b3c49b19.json",
+  "productionChanged": false
+}

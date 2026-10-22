@@ -1,0 +1,187 @@
+{
+  "schema": "gev-render-phase-diagnostic-summary/v1",
+  "acceptanceEligible": false,
+  "runtimeChanged": false,
+  "productionChanged": false,
+  "thresholdsChanged": false,
+  "rawStorage": "/opt/gods-eye-view-validation/s61-s70-20261018/render-phase-trace-c373d91b-42fae51d-complete-20261020",
+  "analysisStorage": "/opt/gods-eye-view-validation/s61-s70-20261018/render-phase-trace-c373d91b-20261020-analysis",
+  "analysisSha256": "5b822ee8ae078d4a522535d5c2f506457db0d9cbfc16099d2b6051b55ec9a093",
+  "rawSha256": "6c88c04e71ba9f958e3b7a7dc02b902d5057b3e1cc37d8230b426bb9182aa727",
+  "planSha256": "fb39699687ca7d0f72740ab4c5a278ccd8040261ebcb2cc47c762154e40950a6",
+  "producerCommit": "42fae51d5a3b7621a8b2cea07433fe8a8f834d02",
+  "files": [
+    {
+      "name": "action-isolation.mjs",
+      "bytes": 17934,
+      "sha256": "943ce81f1847e8d79bdb215b0ab566ec1c306b03ab16791496ad6894422441da"
+    },
+    {
+      "name": "attribution.mjs",
+      "bytes": 9458,
+      "sha256": "427a62d2c7ccd623f661b58e84e2c2122b037f519460921c399628f114529172"
+    },
+    {
+      "name": "browser-trace.mjs",
+      "bytes": 12376,
+      "sha256": "a8825eff2cc3af9e34c94b717c0e98ec7084e59313698972fc3be9bf40208484"
+    },
+    {
+      "name": "event-timing.mjs",
+      "bytes": 2554,
+      "sha256": "71ccff8c4c67c21e9f8f913a3365866cbb83d006d29dd73a6649b17da60bce03"
+    },
+    {
+      "name": "plan.json",
+      "bytes": 5009,
+      "sha256": "fb39699687ca7d0f72740ab4c5a278ccd8040261ebcb2cc47c762154e40950a6"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1199975,
+      "sha256": "6c88c04e71ba9f958e3b7a7dc02b902d5057b3e1cc37d8230b426bb9182aa727"
+    },
+    {
+      "name": "render-phases.mjs",
+      "bytes": 11554,
+      "sha256": "d2fd15332d19c9e1867b83182821e679929e80057ed55c6c7b8af9f23ddf2796"
+    },
+    {
+      "name": "trace-baseline.json",
+      "bytes": 5083403,
+      "sha256": "a814f42cb1b2b355eb1796ee091c9d8a9ebd82f0044b45fb5ce8dd646bd4ae97"
+    },
+    {
+      "name": "trace-candidate.json",
+      "bytes": 5102539,
+      "sha256": "6d66d869ac87db881f915d30b97565cb97b2378c3b695546e5c21d0d43cd9698"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 21891,
+      "sha256": "f2e8bb97588d90b886b4bf61a320d74653d8970369b74d24fc4c1d0ea3e7a7fb"
+    }
+  ],
+  "protocol": {
+    "actionCount": 4,
+    "order": [
+      "baseline-cold-enable",
+      "baseline-first-disable",
+      "candidate-cold-enable",
+      "candidate-first-disable"
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 2000
+    },
+    "traceCategories": [
+      "devtools.timeline",
+      "toplevel",
+      "viz"
+    ],
+    "supplementalRafsPerAction": 4,
+    "applicationRenderRequestsAdded": 0,
+    "outcomeBasedRetries": 0,
+    "latencyMeasurements": "diagnostic-only"
+  },
+  "samples": [
+    {
+      "sampleId": "1-baseline-1",
+      "role": "baseline",
+      "applicationCommit": "8c14b106eb064f63eab193c1af06bb8b7480cb55",
+      "enabled": true,
+      "fullStateMs": 432.09999999403954,
+      "fullRenderMs": 479.70000000298023,
+      "firstPreRenderMs": 174.09999999403954,
+      "firstPostRenderMs": 407.70000000298023,
+      "diagnosticTwoRafFeedbackMs": 408.5,
+      "traceEventTimingDurationMs": 211.696,
+      "browserEventTimingDurationMs": 208,
+      "inputDelayMs": 16.60399999999936,
+      "processingMs": 6.07799999999952,
+      "commitFinishMs": 98.09599999403872,
+      "presentationMs": 211.72799999404015,
+      "commitToPresentationMs": 113.63200000000143,
+      "matchedTracePresentationDifferenceMs": 6.078977321521961e-9
+    },
+    {
+      "sampleId": "1-baseline-2",
+      "role": "baseline",
+      "applicationCommit": "8c14b106eb064f63eab193c1af06bb8b7480cb55",
+      "enabled": false,
+      "fullStateMs": 12.099999994039536,
+      "fullRenderMs": 14,
+      "firstPreRenderMs": 12.099999994039536,
+      "firstPostRenderMs": 14.099999994039536,
+      "diagnosticTwoRafFeedbackMs": 51,
+      "traceEventTimingDurationMs": 128.147,
+      "browserEventTimingDurationMs": 128,
+      "inputDelayMs": 0.9610000000011496,
+      "processingMs": 3.661000000000058,
+      "commitFinishMs": 23.824999991058576,
+      "presentationMs": 128.04499999105974,
+      "commitToPresentationMs": 104.22000000000116,
+      "matchedTracePresentationDifferenceMs": -4.171909040451283e-9
+    },
+    {
+      "sampleId": "2-candidate-1",
+      "role": "candidate",
+      "applicationCommit": "c373d91b89a74d25e22ca87db925eee0d425b1ea",
+      "enabled": true,
+      "fullStateMs": 721.5999999940395,
+      "fullRenderMs": 757.2000000029802,
+      "firstPreRenderMs": 319,
+      "firstPostRenderMs": 662.3999999910593,
+      "diagnosticTwoRafFeedbackMs": 220.8999999910593,
+      "traceEventTimingDurationMs": 355.396,
+      "browserEventTimingDurationMs": 352,
+      "inputDelayMs": 13.649000000001251,
+      "processingMs": 10.370999999999185,
+      "commitFinishMs": 156.13700000000063,
+      "presentationMs": 355.4459999999999,
+      "commitToPresentationMs": 199.3089999999993,
+      "matchedTracePresentationDifferenceMs": -5.125286861584755e-9
+    },
+    {
+      "sampleId": "2-candidate-2",
+      "role": "candidate",
+      "applicationCommit": "c373d91b89a74d25e22ca87db925eee0d425b1ea",
+      "enabled": false,
+      "fullStateMs": 23.400000005960464,
+      "fullRenderMs": 30.299999997019768,
+      "firstPreRenderMs": 23.900000005960464,
+      "firstPostRenderMs": 30.5,
+      "diagnosticTwoRafFeedbackMs": 79.79999999701977,
+      "traceEventTimingDurationMs": 236.024,
+      "browserEventTimingDurationMs": 240,
+      "inputDelayMs": 3.190999999998894,
+      "processingMs": 12.97400000000016,
+      "commitFinishMs": 68.91400000595968,
+      "presentationMs": 236.08900000596077,
+      "commitToPresentationMs": 167.1750000000011,
+      "matchedTracePresentationDifferenceMs": 1.0489543456060346e-8
+    }
+  ],
+  "observations": [
+    "All four phase actions are observed with no dropped entries and all owned RAFs/listeners disposed. All traces completed with no reported data loss/truncation. Phase-recorder cumulative direct work is1.4-3.4ms/action, maximum single recorded callback0.6ms; tracing and other attribution overhead remain separate.",
+    "Data-source readiness does not gate the observed Scene frames: candidate renders while ready=true and canAnimate=false. Its first two post-input update pairs have no preRender while the enable task has not yet made the layer visible.",
+    "Candidate cold enable has first two RAF timestamps105.5/205.5ms after input; first natural grounding render begins319ms, eight queries total337ms, then a later rendered frame establishes full readiness757.2ms. Baseline first grounding render begins174.1ms and queries total228.4ms, with full readiness479.7ms. This diagnostic does not demonstrate a safe latency improvement.",
+    "Most of the candidate cold handler-end to first-tick interval is not covered by traced main-renderer task spans. The first BeginMainFrame task starts107.387ms after input. The trace does not support blaming that interval on a long DataSourceDisplay.update or an application callback continuously occupying the renderer thread.",
+    "Candidate OFF reaches preRender23.9ms/postRender30.5ms with no height queries. Later left/right rail callbacks36.054-53.802ms and53.804-64.441ms precede document paint65.867ms and commitFinish68.914ms. They contribute to this later commit delay, not to the earlier historical preRender gap.",
+    "Chrome EventTiming ends match explicit AnimationFrame::Presentation timestamps: baseline/candidate cold211.728/355.446ms; OFF128.045/236.089ms relative to primary input timestamps. Candidate OFF commit-to-presentation167.175ms is substantial after Cesium has finished its first frame; the selected trace alone does not identify a specific GPU command, queue owner, compositor policy or raster operation as its unique cause.",
+    "The primary two-RAF UI witness and full-render witness are distinct from presentation. All four EventTiming durations exceed100ms in this traced diagnostic, including the faster firstOFF render. No threshold, readiness definition or quality criterion is changed."
+  ],
+  "limitations": [
+    "The historical 95.3/107.2 ms first-disable full-render delay did not recur in this traced run and remains preserved in the prior report.",
+    "Instrumentation changes the workload; these four actions are not the twenty-sample acceptance cohort.",
+    "Direct recorder work excludes tracing, other observers, dispatch, scheduling and report serialization; it is not total instrumentation overhead.",
+    "PerformanceObserver Event Timing durations are privacy-quantized browser API observations; the separately named trace durations are unrounded trace values. Neither is an independent photometric measurement.",
+    "The viewport exceeds the currently observed 2560 by 1440 physical display. These fixtures preserve native DPR but do not establish full visible-window coverage.",
+    "No measured post-commit delay is assigned uniquely to the graphics driver or oversized viewport."
+  ]
+}

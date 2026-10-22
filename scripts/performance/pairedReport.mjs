@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   assertCaptureIntegrity,
   comparableCaptureConditions,
+  deriveNativeSharpnessProfile,
 } from './captureIntegrity.mjs';
 import { assertRouteDescriptorsEquivalent } from './routeEquivalence.mjs';
 import { assertObservedTrackingRoute } from './productionFlightFixture.mjs';
@@ -12,6 +13,7 @@ import {
   createObservedMapStreamingComparisonContract,
   createObservedInfrastructureComparisonContract,
   createObservedWeatherEffectsComparisonContract,
+  SETTLED_IDLE_ONLY_INELIGIBLE_REASON,
 } from './captureComparisonContract.mjs';
 import {
   AUSTIN_OPERATING_LAYER_COUNTS,
@@ -28,11 +30,44 @@ import {
   INFRASTRUCTURE_WORKLOAD_IDS,
 } from './infrastructureWorkloadContract.mjs';
 import { MAP_STREAMING_WORKLOAD_ID } from './mapStreamingWorkloadContract.mjs';
+import {
+  assertNativeSharpnessProfile,
+  NATIVE_SHARPNESS_PROFILE_ID,
+} from './nativeSharpnessProfile.mjs';
+import { WEATHER_BALANCED_SHARD_INELIGIBLE_REASON } from './weatherInterleavedDiagnosticContract.mjs';
+import { assessSettledIdlePair } from './settledIdleQualification.mjs';
 
 const CAPTURE_SCHEMA = 'gev-performance-capture/v1';
 const COMPARISON_SCHEMA = 'gev-performance-comparison-contract/v1';
 const SHA1 = /^[a-f0-9]{40}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
+const FULL_BROWSER_PRODUCT =
+  /^(?:Headless)?Chrome\/([1-9]\d{0,3})\.\d{1,4}\.[1-9]\d{0,5}\.\d{1,6}$/;
+
+function observedFullBrowserProduct(report, side) {
+  const product = report?.graphics?.browserVersion;
+  const match =
+    typeof product === 'string' && product.match(FULL_BROWSER_PRODUCT);
+  if (!match)
+    throw Object.assign(
+      new Error(
+        `${side}: full browser identity is unavailable; observed graphics.browserVersion is required`,
+      ),
+      {
+        code: 'ERR_FULL_BROWSER_IDENTITY_UNAVAILABLE',
+        evidenceStatus: 'unavailable',
+      },
+    );
+  const userAgentMajor = report.environment?.userAgent?.match(
+    /(?:Headless)?Chrome\/(\d+)\./,
+  )?.[1];
+  assert.equal(
+    match[1],
+    userAgentMajor,
+    `${side}: full browser product differs from the observed user agent`,
+  );
+  return product;
+}
 const canonical = (value) => {
   if (Array.isArray(value)) return value.map(canonical);
   if (!value || typeof value !== 'object') return value;
@@ -441,10 +476,15 @@ function validateAustinSamplePopulationBindings(report, contract, label) {
   }
 }
 
-function validateFixtureDelivery(report, contract, label) {
+function validateFixtureDelivery(
+  report,
+  contract,
+  label,
+  { weatherQualificationShard = false, settledIdleOnly = false } = {},
+) {
   assert.equal(
     report.comparisonEligible,
-    true,
+    weatherQualificationShard || settledIdleOnly ? false : true,
     `${label}: capture is not marked comparison-eligible`,
   );
   const delivery = report.fixtureDelivery;
@@ -887,7 +927,52 @@ function validateMapStreamingReport(
   return {
     contract,
     mapRuns: contract.timing.runs,
+    frameCaptures: validateMapFrameCaptures(
+      report,
+      side,
+      expectedAppCommit,
+      contract,
+    ),
     buildRecipe,
+  };
+}
+
+// Historical journey-only reports remain readable, but supplied frame samples
+// must pass the same integrity and matching checks as other workloads.
+function validateMapFrameCaptures(report, side, expectedAppCommit, contract) {
+  assert.ok(
+    report.captures == null || Array.isArray(report.captures),
+    `${side}: map frame captures must be an array`,
+  );
+  const declared = report.workload.scenarios;
+  if (!declared && !report.captures?.length) return null;
+  equal(
+    declared,
+    ['idle', 'scripted-motion'],
+    `${side}: map frame scenarios must include idle and scripted-motion`,
+  );
+  assert.ok(
+    Array.isArray(report.captures) && report.captures.length,
+    `${side}: declared map frame captures are missing`,
+  );
+  const frameContract = {
+    ...contract,
+    fixture: report.workload.fixture,
+    routes: Object.fromEntries(
+      declared.map((scenario) => [
+        scenario,
+        report.captures.find((sample) => sample.scenario === scenario)
+          ?.cameraPath,
+      ]),
+    ),
+  };
+  return {
+    byScenario: validateFrameCaptures(
+      report,
+      side,
+      expectedAppCommit,
+      frameContract,
+    ),
   };
 }
 
@@ -963,11 +1048,48 @@ function validateBuildProvenance(source, side) {
     source.appCommit,
     `${side}: receipt app SHA mismatch`,
   );
-  assert.equal(
-    provenance.harnessCommit,
-    source.harnessCommit,
-    `${side}: receipt harness SHA mismatch`,
+  assert.match(
+    provenance.harnessCommit || '',
+    SHA1,
+    `${side}: receipt harness SHA missing`,
   );
+  const producerCommit = Object.hasOwn(provenance, 'captureProducerCommit')
+    ? provenance.captureProducerCommit
+    : provenance.harnessCommit;
+  assert.match(
+    producerCommit || '',
+    SHA1,
+    `${side}: capture producer SHA missing`,
+  );
+  assert.equal(
+    producerCommit,
+    source.harnessCommit,
+    `${side}: capture producer SHA mismatch`,
+  );
+  if (Object.hasOwn(provenance, 'buildHarnessCommit')) {
+    assert.match(
+      provenance.buildHarnessCommit || '',
+      SHA1,
+      `${side}: build harness SHA malformed`,
+    );
+    assert.equal(
+      provenance.buildHarnessCommit,
+      provenance.harnessCommit,
+      `${side}: build harness SHA mismatch`,
+    );
+  }
+  if (Object.hasOwn(source, 'buildHarnessCommit')) {
+    assert.match(
+      source.buildHarnessCommit || '',
+      SHA1,
+      `${side}: source build harness SHA malformed`,
+    );
+    assert.equal(
+      source.buildHarnessCommit,
+      provenance.harnessCommit,
+      `${side}: source build harness SHA mismatch`,
+    );
+  }
   assert.match(
     provenance.scope || '',
     /browser response bytes are not independently attested/,
@@ -1120,7 +1242,12 @@ const populationSignature = (populations) =>
     .map((row) => ({ id: row.id, enabled: row.enabled, count: row.count }))
     .sort((a, b) => a.id.localeCompare(b.id));
 
-function validateReport(report, side, expectedAppCommit) {
+function validateReport(
+  report,
+  side,
+  expectedAppCommit,
+  { weatherQualificationShard = false, settledIdleOnly = false } = {},
+) {
   assert.equal(
     report?.schema,
     CAPTURE_SCHEMA,
@@ -1172,7 +1299,22 @@ function validateReport(report, side, expectedAppCommit) {
     );
 
   const contract = validateContract(report, side);
-  validateFixtureDelivery(report, contract, side);
+  if (!settledIdleOnly) {
+    assert.notEqual(
+      report.workload?.settledIdleOnly,
+      true,
+      `${side}: scoped idle evidence cannot qualify as full paired performance`,
+    );
+    assert.notEqual(
+      contract.qualificationMode,
+      'settled-idle-only',
+      `${side}: scoped idle contract cannot qualify as full paired performance`,
+    );
+  }
+  validateFixtureDelivery(report, contract, side, {
+    weatherQualificationShard,
+    settledIdleOnly,
+  });
   const { workload, environment, captures } = report;
   const austin = isAustinContract(contract);
   const weatherEffects = isWeatherEffectsContract(contract);
@@ -1214,6 +1356,7 @@ function validateReport(report, side, expectedAppCommit) {
         durationPerSampleMs: workload?.durationPerSampleMs,
         runsPerScenario: workload?.runsPerScenario,
       },
+      balancedQualificationShard: weatherQualificationShard,
     });
     equal(
       rebuilt,
@@ -1237,6 +1380,7 @@ function validateReport(report, side, expectedAppCommit) {
         durationPerSampleMs: workload?.durationPerSampleMs,
         runsPerScenario: workload?.runsPerScenario,
       },
+      settledIdleOnly,
     });
     equal(
       rebuilt,
@@ -1244,6 +1388,143 @@ function validateReport(report, side, expectedAppCommit) {
       `${side}: report infrastructure contract is not derived from its fixture and capture evidence`,
     );
   }
+  return {
+    contract,
+    byScenario: validateFrameCaptures(
+      report,
+      side,
+      expectedAppCommit,
+      contract,
+      { austin, weatherQualificationShard, settledIdleOnly },
+    ),
+    buildRecipe,
+  };
+}
+
+export function validateWeatherBalancedQualificationShard(
+  report,
+  {
+    role,
+    expectedAppCommit,
+    expectedHarnessCommit,
+    expectedBuildHarnessCommit,
+  } = {},
+) {
+  assert.ok(['control', 'candidate'].includes(role), 'Invalid shard role');
+  assert.equal(report?.workload?.weatherBalancedQualificationShard, true);
+  assert.equal(report?.comparisonEligible, false);
+  assert.equal(report?.comparisonReadiness?.status, 'not-ready');
+  assert.deepEqual(
+    [...(report?.comparisonReadiness?.reasons || [])].sort(),
+    [
+      WEATHER_BALANCED_SHARD_INELIGIBLE_REASON,
+      'capture-does-not-have-five-runs-per-scenario',
+    ].sort(),
+    'Qualification shard has unexpected ineligibility reasons',
+  );
+  if (Object.hasOwn(report || {}, 'comparisonProfile'))
+    assert.equal(report.comparisonProfile, NATIVE_SHARPNESS_PROFILE_ID);
+  assertNativeSharpnessProfile(report, `${role} environment`);
+  assert.equal(report.environment?.hardwareEligible, true);
+  const derivedProfile = deriveNativeSharpnessProfile(report.captures);
+  assert.deepEqual(
+    report.environment.nativeSharpnessProfile,
+    derivedProfile,
+    `${role} aggregate native sharpness profile differs from capture boundaries`,
+  );
+  assert.deepEqual(
+    report.environment.viewport,
+    derivedProfile.viewport,
+    `${role} aggregate viewport differs from native sharpness profile`,
+  );
+  assert.deepEqual(
+    report.environment.drawingBuffer,
+    derivedProfile.drawingBuffer,
+    `${role} aggregate drawing buffer differs from native sharpness profile`,
+  );
+  for (const [index, capture] of (report.captures || []).entries())
+    for (const boundary of ['before', 'after']) {
+      const conditions = capture.conditions?.[boundary];
+      const environment = conditions?.environment;
+      const settings = conditions?.settings;
+      const capturedSettings = capture.settings?.[boundary];
+      assertNativeSharpnessProfile(
+        { environment },
+        `${role} capture ${index + 1} ${boundary}`,
+      );
+      assert.deepEqual(
+        environment?.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} capture ${index + 1} ${boundary} profile differs`,
+      );
+      assert.deepEqual(
+        environment?.viewport,
+        derivedProfile.viewport,
+        `${role} capture ${index + 1} ${boundary} viewport differs`,
+      );
+      assert.deepEqual(
+        environment?.drawingBuffer,
+        derivedProfile.drawingBuffer,
+        `${role} capture ${index + 1} ${boundary} drawing buffer differs`,
+      );
+      assert.deepEqual(
+        settings?.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} capture ${index + 1} ${boundary} condition settings profile differs`,
+      );
+      assert.equal(
+        settings?.resolutionScale,
+        1,
+        `${role} capture ${index + 1} ${boundary} condition resolution scale differs`,
+      );
+      assert.deepEqual(
+        capturedSettings?.nativeSharpnessProfile,
+        derivedProfile,
+        `${role} capture ${index + 1} ${boundary} settings profile differs`,
+      );
+      assert.equal(
+        capturedSettings?.resolutionScale,
+        1,
+        `${role} capture ${index + 1} ${boundary} resolution scale differs`,
+      );
+    }
+  assert.equal(report.source?.harnessCommit, expectedHarnessCommit);
+  assert.equal(
+    report.source?.buildProvenance?.buildHarnessCommit,
+    expectedBuildHarnessCommit,
+  );
+  const validated = validateReport(report, role, expectedAppCommit, {
+    weatherQualificationShard: true,
+  });
+  assert.equal(
+    report.comparisonContract?.qualificationMode,
+    'balanced-five-pair-shards',
+  );
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  for (const scenario of report.workload.scenarios) {
+    const samples = validated.byScenario.get(scenario);
+    assert.equal(samples.length, 1, `${role} ${scenario}: one sample required`);
+    assert.equal(
+      samples[0].run,
+      1,
+      `${role} ${scenario}: run identity invalid`,
+    );
+  }
+  return validated;
+}
+
+function validateFrameCaptures(
+  report,
+  side,
+  expectedAppCommit,
+  contract,
+  {
+    austin = false,
+    weatherQualificationShard = false,
+    settledIdleOnly = false,
+  } = {},
+) {
+  const { workload, environment, captures } = report;
   assert.equal(
     workload?.warmupMs,
     30_000,
@@ -1256,8 +1537,10 @@ function validateReport(report, side, expectedAppCommit) {
   );
   assert.equal(
     workload?.runsPerScenario,
-    5,
-    `${side}: exactly five runs are required`,
+    weatherQualificationShard ? 1 : 5,
+    weatherQualificationShard
+      ? `${side}: exactly one run per scenario is required for a qualification shard`
+      : `${side}: exactly five runs are required`,
   );
   assert.equal(
     workload?.qualityMode,
@@ -1334,10 +1617,12 @@ function validateReport(report, side, expectedAppCommit) {
     workload.scenarios.length,
     `${side}: duplicate declared scenario`,
   );
-  assert.ok(
-    workload.scenarios.includes('scripted-motion'),
-    `${side}: scripted-motion scenario is required`,
-  );
+  if (settledIdleOnly) assert.deepEqual(workload.scenarios, ['idle']);
+  else
+    assert.ok(
+      workload.scenarios.includes('scripted-motion'),
+      `${side}: scripted-motion scenario is required`,
+    );
   assert.deepEqual(
     Object.keys(contract.routes).sort(),
     [...workload.scenarios].sort(),
@@ -1432,7 +1717,9 @@ function validateReport(report, side, expectedAppCommit) {
       `${label}: undeclared scenario`,
     );
     assert.ok(
-      Number.isInteger(sample.run) && sample.run >= 1 && sample.run <= 5,
+      Number.isInteger(sample.run) &&
+        sample.run >= 1 &&
+        sample.run <= (weatherQualificationShard ? 1 : 5),
       `${label}: invalid run id`,
     );
     assert.ok(
@@ -1555,22 +1842,26 @@ function validateReport(report, side, expectedAppCommit) {
   for (const [scenario, runs] of byScenario) {
     assert.equal(
       runs.length,
-      5,
-      `${side}: ${scenario} must have exactly five runs`,
+      weatherQualificationShard ? 1 : 5,
+      weatherQualificationShard
+        ? `${side}: ${scenario} must have exactly one shard sample`
+        : `${side}: ${scenario} must have exactly five runs`,
     );
     const ids = runs.map((sample) => sample.run);
     assert.equal(
       new Set(ids).size,
-      5,
+      weatherQualificationShard ? 1 : 5,
       `${side}: ${scenario} has duplicate run ids`,
     );
     equal(
       ids.sort((a, b) => a - b),
-      [1, 2, 3, 4, 5],
-      `${side}: ${scenario} run ids must be 1 through 5`,
+      weatherQualificationShard ? [1] : [1, 2, 3, 4, 5],
+      weatherQualificationShard
+        ? `${side}: ${scenario} shard run id must be 1`
+        : `${side}: ${scenario} run ids must be 1 through 5`,
     );
   }
-  return { contract, byScenario, buildRecipe };
+  return byScenario;
 }
 
 const median = (values) => {
@@ -1578,12 +1869,179 @@ const median = (values) => {
   return sorted[Math.floor(sorted.length / 2)];
 };
 
+function compareFrameCaptures(base, next, scenarioNames) {
+  // Application revision is the sole condition that may vary. Run metrics are
+  // deliberately omitted because they are the measured outputs of this pair.
+  for (const scenario of scenarioNames) {
+    const baseRuns = base.byScenario.get(scenario);
+    const candidateRuns = next.byScenario.get(scenario);
+    for (const baseRun of baseRuns) {
+      const candidateRun = candidateRuns.find((run) => run.run === baseRun.run);
+      const pairedConditions = (sample) => {
+        const conditions = structuredClone(sample.conditions);
+        for (const key of ['before', 'after']) {
+          conditions[key] = comparableCaptureConditions(
+            conditions[key],
+            'manual',
+          );
+          const point = conditions[key];
+          delete point.environment.appCommit;
+        }
+        return conditions;
+      };
+      equal(
+        pairedConditions(baseRun),
+        pairedConditions(candidateRun),
+        `${scenario} run ${baseRun.run}: baseline and candidate conditions differ`,
+      );
+      assertRouteDescriptorsEquivalent(
+        baseRun.cameraPath,
+        candidateRun.cameraPath,
+        `${scenario} run ${baseRun.run}: baseline and candidate routes differ beyond camera pose roundoff`,
+      );
+    }
+  }
+
+  const scenarios = {};
+  for (const scenario of scenarioNames) {
+    const baseRuns = base.byScenario.get(scenario);
+    const candidateRuns = next.byScenario.get(scenario);
+    const p95 = (runs) => runs.map((sample) => sample.frameIntervalMs.p95);
+    const available =
+      p95(baseRuns).every(Number.isFinite) &&
+      p95(candidateRuns).every(Number.isFinite);
+    if (!available) {
+      scenarios[scenario] = {
+        status: 'unavailable',
+        baselineMedianP95Ms: null,
+        candidateMedianP95Ms: null,
+        changePct: null,
+        regressionOver10Pct: false,
+      };
+      continue;
+    }
+    const baselineMedianP95Ms = median(p95(baseRuns));
+    const candidateMedianP95Ms = median(p95(candidateRuns));
+    const changePct =
+      ((candidateMedianP95Ms - baselineMedianP95Ms) / baselineMedianP95Ms) *
+      100;
+    assert.ok(
+      baselineMedianP95Ms > 0 && Number.isFinite(changePct),
+      `${scenario}: invalid median p95 change`,
+    );
+    scenarios[scenario] = {
+      status: 'measured',
+      baselineMedianP95Ms,
+      candidateMedianP95Ms,
+      changePct,
+      regressionOver10Pct: changePct > 10,
+    };
+  }
+
+  return scenarios;
+}
+
 /** Validate paired five-run evidence and report measured p95 deltas without making a hardware acceptance claim. */
-export function validatePairedPerformanceReports({
-  baseline,
-  candidate,
-  expectedAppCommits,
-} = {}) {
+export function validatePairedPerformanceReports(options = {}) {
+  return validatePairedReports(options);
+}
+
+/** Qualify only five settled cable-idle samples per build; no motion/startup claim. */
+export function validatePairedSettledIdleReports(options = {}) {
+  assert.equal(
+    options.expectedComparisonProfile,
+    NATIVE_SHARPNESS_PROFILE_ID,
+    'Settled idle qualification requires the native sharpness profile',
+  );
+  for (const [side, report] of [
+    ['baseline', options.baseline],
+    ['candidate', options.candidate],
+  ]) {
+    assert.equal(
+      report?.workload?.settledIdleOnly,
+      true,
+      `${side}: idle scope missing`,
+    );
+    assert.equal(
+      report.comparisonContract?.workloadId,
+      'infrastructure-cables',
+    );
+    assert.equal(
+      report.comparisonContract?.qualificationMode,
+      'settled-idle-only',
+    );
+    assert.equal(report.comparisonEligible, false);
+    assert.equal(report.comparisonReadiness?.status, 'not-ready');
+    assert.deepEqual(
+      report.comparisonReadiness?.reasons,
+      [SETTLED_IDLE_ONLY_INELIGIBLE_REASON],
+      `${side}: scoped idle evidence has additional ineligibility reasons`,
+    );
+    assert.deepEqual(report.workload.scenarios, ['idle']);
+    assert.equal(
+      report.environment?.hardwareEligible,
+      true,
+      `${side}: native hardware required`,
+    );
+    const derivedProfile = deriveNativeSharpnessProfile(report.captures);
+    equal(
+      report.environment.nativeSharpnessProfile,
+      derivedProfile,
+      `${side}: aggregate native profile differs`,
+    );
+    equal(
+      report.environment.viewport,
+      derivedProfile.viewport,
+      `${side}: aggregate viewport differs`,
+    );
+    equal(
+      report.environment.drawingBuffer,
+      derivedProfile.drawingBuffer,
+      `${side}: aggregate drawing buffer differs`,
+    );
+  }
+  return validatePairedReports(options, false, true);
+}
+
+/**
+ * Native map request inventories vary with frame delivery and tile prefetch.
+ * Permit that variation only after independently rebuilding the pinned corpus
+ * and validating every journey, delivery, readiness and cleanup observation.
+ * Dynamic imports preserve the lightweight synchronous CLI rejection path.
+ */
+export async function validatePairedMapPerformanceReports(options = {}) {
+  const [
+    { createDeterministicMapStreamingFixture },
+    { validateMapStreamingCaptureReport },
+  ] = await Promise.all([
+    import('./mapStreamingFixture.mjs'),
+    import('./mapStreamingCapture.mjs'),
+  ]);
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const report of [options.baseline, options.candidate]) {
+    assert.equal(
+      report?.comparisonContract?.workloadId,
+      MAP_STREAMING_WORKLOAD_ID,
+    );
+    const capture = report.workload?.mapStreamingCapture;
+    validateMapStreamingCaptureReport(capture, {
+      fixture,
+      profile: capture?.buildProfile,
+    });
+  }
+  return validatePairedReports(options, true);
+}
+
+function validatePairedReports(
+  {
+    baseline,
+    candidate,
+    expectedAppCommits,
+    expectedComparisonProfile = null,
+  } = {},
+  mapManifestValidated = false,
+  settledIdleOnly = false,
+) {
   assert.ok(
     expectedAppCommits,
     'Explicit baseline and candidate application SHAs are required',
@@ -1598,6 +2056,47 @@ export function validatePairedPerformanceReports({
     SHA1,
     'Explicit full candidate application SHA is required',
   );
+  if (expectedComparisonProfile) {
+    assert.equal(baseline.comparisonProfile, expectedComparisonProfile);
+    assert.equal(candidate.comparisonProfile, expectedComparisonProfile);
+    if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID) {
+      for (const [label, report] of [
+        ['baseline', baseline],
+        ['candidate', candidate],
+      ]) {
+        assertNativeSharpnessProfile(report, `${label} environment`);
+        const mapCapture = report.workload?.mapStreamingCapture;
+        if (mapCapture) {
+          const journeys = mapCapture.journeys || [mapCapture];
+          for (const [index, journey] of journeys.entries()) {
+            for (const phase of ['Before', 'After'])
+              assertNativeSharpnessProfile(
+                {
+                  environment: {
+                    nativeSharpnessProfile:
+                      journey[`settings${phase}`]?.nativeSharpnessProfile,
+                  },
+                },
+                `${label} map journey ${index + 1} ${phase}`,
+              );
+          }
+        }
+        for (const [index, capture] of (report.captures || []).entries()) {
+          for (const phase of ['before', 'after']) {
+            const boundary = capture.conditions?.[phase];
+            assert.ok(
+              boundary?.environment,
+              `${label} capture ${index} ${phase} environment missing`,
+            );
+            assertNativeSharpnessProfile(
+              { environment: boundary.environment },
+              `${label} capture ${index} ${phase}`,
+            );
+          }
+        }
+      }
+    }
+  }
   assert.notEqual(
     expectedAppCommits.baseline,
     expectedAppCommits.candidate,
@@ -1608,17 +2107,35 @@ export function validatePairedPerformanceReports({
     baseline,
     'baseline',
     expectedAppCommits.baseline,
+    { settledIdleOnly },
   );
   const next = validateReport(
     candidate,
     'candidate',
     expectedAppCommits.candidate,
+    { settledIdleOnly },
+  );
+  // A reduced UA is identical across Chrome patch versions. Use the existing
+  // browser-level observation before aggregating any performance samples.
+  assert.equal(
+    observedFullBrowserProduct(baseline, 'baseline'),
+    observedFullBrowserProduct(candidate, 'candidate'),
+    'Full browser products differ between paired captures',
   );
   assert.equal(
     baseline.source.harnessCommit,
     candidate.source.harnessCommit,
     'Harness revisions must match',
   );
+  if (
+    baseline.source.buildProvenance?.buildHarnessCommit ||
+    candidate.source.buildProvenance?.buildHarnessCommit
+  )
+    assert.equal(
+      baseline.source.buildProvenance?.buildHarnessCommit,
+      candidate.source.buildProvenance?.buildHarnessCommit,
+      'Build harness revisions must match',
+    );
   for (const key of [
     'nodeVersion',
     'npmVersion',
@@ -1639,6 +2156,18 @@ export function validatePairedPerformanceReports({
     const { timing: baseTiming, ...baseStaticContract } = base.contract;
     const { timing: candidateTiming, ...candidateStaticContract } =
       next.contract;
+    if (mapManifestValidated) {
+      // Only request-dependent inventory is excluded from cross-build equality.
+      // Each original inventory has already passed full native validation; keep
+      // the raw reports and expose the difference as delivery diagnostics.
+      const signature = ({ assets, ...delivery }) => delivery;
+      baseStaticContract.fixtureDelivery = signature(
+        baseStaticContract.fixtureDelivery,
+      );
+      candidateStaticContract.fixtureDelivery = signature(
+        candidateStaticContract.fixtureDelivery,
+      );
+    }
     equal(
       baseStaticContract,
       candidateStaticContract,
@@ -1674,6 +2203,12 @@ export function validatePairedPerformanceReports({
       candidate.environment.drawingBuffer,
       'Map drawing buffer dimensions differ',
     );
+    if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID)
+      equal(
+        baseline.environment.nativeSharpnessProfile,
+        candidate.environment.nativeSharpnessProfile,
+        'Map native sharpness profile differs',
+      );
     assert.equal(baseTiming?.metric, 'transition-readiness-p95-ms');
     assert.equal(candidateTiming?.metric, baseTiming.metric);
     const baseRuns = baseTiming.runs;
@@ -1701,6 +2236,19 @@ export function validatePairedPerformanceReports({
       changePct,
       regressionOver10Pct: changePct > 10,
     };
+    assert.equal(
+      Boolean(base.frameCaptures),
+      Boolean(next.frameCaptures),
+      'Map frame capture coverage differs between builds',
+    );
+    const frameScenarios = base.frameCaptures
+      ? compareFrameCaptures(
+          base.frameCaptures,
+          next.frameCaptures,
+          baseline.workload.scenarios,
+        )
+      : {};
+    const scenarios = { 'map-streaming-route': scenario, ...frameScenarios };
     return {
       status: 'comparable',
       evidenceScope:
@@ -1717,27 +2265,51 @@ export function validatePairedPerformanceReports({
         targetImprovementPct: 20,
         scenarios: {},
       },
-      scenarios: { 'map-streaming-route': scenario },
+      scenarios,
       mapStreaming: {
         metric: baseTiming.metric,
         baselineRuns: baseRuns,
         candidateRuns,
+        frameCaptureCoverage: base.frameCaptures
+          ? 'validated'
+          : 'not-collected',
       },
       fixtureDeliveryDiagnostics: {
+        assetInventoryComparison: mapManifestValidated
+          ? 'independently-validated-pinned-manifest'
+          : 'identical-requested-inventories',
         baseline: {
+          requestedAssetCount: baseline.fixtureDelivery.assets.length,
+          assetsOnlyInThisCapture: baseline.fixtureDelivery.assets
+            .filter(
+              ({ path }) =>
+                !candidate.fixtureDelivery.assets.some(
+                  (asset) => asset.path === path,
+                ),
+            )
+            .map(({ path }) => path),
           fulfilledResponseCount:
             baseline.fixtureDelivery?.fulfilledAckCount ?? null,
           perSample: null,
         },
         candidate: {
+          requestedAssetCount: candidate.fixtureDelivery.assets.length,
+          assetsOnlyInThisCapture: candidate.fixtureDelivery.assets
+            .filter(
+              ({ path }) =>
+                !baseline.fixtureDelivery.assets.some(
+                  (asset) => asset.path === path,
+                ),
+            )
+            .map(({ path }) => path),
           fulfilledResponseCount:
             candidate.fixtureDelivery?.fulfilledAckCount ?? null,
           perSample: null,
         },
       },
-      regressionsOver10Pct: scenario.regressionOver10Pct
-        ? ['map-streaming-route']
-        : [],
+      regressionsOver10Pct: Object.keys(scenarios).filter(
+        (name) => scenarios[name].regressionOver10Pct,
+      ),
     };
   }
   const { routes: baseRoutes, ...baseContract } = base.contract;
@@ -1821,74 +2393,43 @@ export function validatePairedPerformanceReports({
     candidate.environment.drawingBuffer,
     'Drawing buffer dimensions differ',
   );
-
-  // Application revision is the sole condition that may vary. Run metrics are
-  // deliberately omitted because they are the measured outputs of this pair.
-  for (const scenario of baseline.workload.scenarios) {
-    const baseRuns = base.byScenario.get(scenario);
-    const candidateRuns = next.byScenario.get(scenario);
-    for (const baseRun of baseRuns) {
-      const candidateRun = candidateRuns.find((run) => run.run === baseRun.run);
-      const pairedConditions = (sample) => {
-        const conditions = structuredClone(sample.conditions);
-        for (const key of ['before', 'after']) {
-          conditions[key] = comparableCaptureConditions(
-            conditions[key],
-            'manual',
-          );
-          const point = conditions[key];
-          delete point.environment.appCommit;
-        }
-        return conditions;
-      };
-      equal(
-        pairedConditions(baseRun),
-        pairedConditions(candidateRun),
-        `${scenario} run ${baseRun.run}: baseline and candidate conditions differ`,
-      );
-      assertRouteDescriptorsEquivalent(
-        baseRun.cameraPath,
-        candidateRun.cameraPath,
-        `${scenario} run ${baseRun.run}: baseline and candidate routes differ beyond camera pose roundoff`,
-      );
-    }
-  }
-
-  const scenarios = {};
-  for (const scenario of baseline.workload.scenarios) {
-    const baseRuns = base.byScenario.get(scenario);
-    const candidateRuns = next.byScenario.get(scenario);
-    const p95 = (runs) => runs.map((sample) => sample.frameIntervalMs.p95);
-    const available =
-      p95(baseRuns).every(Number.isFinite) &&
-      p95(candidateRuns).every(Number.isFinite);
-    if (!available) {
-      scenarios[scenario] = {
-        status: 'unavailable',
-        baselineMedianP95Ms: null,
-        candidateMedianP95Ms: null,
-        changePct: null,
-        regressionOver10Pct: false,
-      };
-      continue;
-    }
-    const baselineMedianP95Ms = median(p95(baseRuns));
-    const candidateMedianP95Ms = median(p95(candidateRuns));
-    const changePct =
-      ((candidateMedianP95Ms - baselineMedianP95Ms) / baselineMedianP95Ms) *
-      100;
-    assert.ok(
-      baselineMedianP95Ms > 0 && Number.isFinite(changePct),
-      `${scenario}: invalid median p95 change`,
+  if (expectedComparisonProfile === NATIVE_SHARPNESS_PROFILE_ID)
+    equal(
+      baseline.environment.nativeSharpnessProfile,
+      candidate.environment.nativeSharpnessProfile,
+      'Native sharpness profile differs',
     );
-    scenarios[scenario] = {
-      status: 'measured',
-      baselineMedianP95Ms,
-      candidateMedianP95Ms,
-      changePct,
-      regressionOver10Pct: changePct > 10,
+
+  if (settledIdleOnly) {
+    const evaluation = assessSettledIdlePair(
+      base.byScenario.get('idle'),
+      next.byScenario.get('idle'),
+    );
+    return {
+      status: evaluation.status,
+      evidenceScope:
+        'settled-static-idle-only; hardware provenance requires independent verification',
+      workloadId: 'infrastructure-cables',
+      resolvedScenarios: evaluation.status === 'passed' ? ['idle'] : [],
+      evaluation,
+      fullPairedPerformanceAssessed: false,
+      motionAssessed: false,
+      startupAssessed: false,
     };
   }
+
+  const scenarios = compareFrameCaptures(
+    base,
+    next,
+    baseline.workload.scenarios,
+  );
+  // Static infrastructure acceptance is a completed-frame budget, not a ratio
+  // of inter-render gaps. Preserve the historical interval result alongside it.
+  if (isInfrastructureContract(base.contract) && scenarios.idle)
+    scenarios.idle.settledFrameBudget = assessSettledIdlePair(
+      base.byScenario.get('idle'),
+      next.byScenario.get('idle'),
+    );
 
   const workloadObjectiveScenarios =
     baseline.comparisonContract.objectiveScenarios;

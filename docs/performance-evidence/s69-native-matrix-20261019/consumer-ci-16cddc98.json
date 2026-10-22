@@ -1,0 +1,52 @@
+{
+  "schema": "gev-evidence-consumer-ci-review/v1",
+  "reviewedAt": "2026-10-19T12:30:27.585Z",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "applicationCandidate": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "records": [
+    {
+      "kind": "ci",
+      "runId": 39249310083,
+      "commit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39249310083",
+      "event": "pull_request",
+      "passedJobs": [
+        "Install and update recovery (ubuntu-latest)",
+        "Node 26.x",
+        "Node 24.14.0",
+        "Install and update recovery (macos-latest)",
+        "Street Level browser gate",
+        "Install and update recovery (windows-latest)",
+        "Windows onboarding"
+      ],
+      "skippedJobs": [
+        "Isolated terrain and picking lifecycle",
+        "Isolated import and workspace lifecycle",
+        "Aircraft tracking regression",
+        "Isolated mission render-demand correctness",
+        "Free hosted Mac rendering diagnostic",
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "60-minute rendered application soak",
+        "Isolated CCTV lifecycle",
+        "Baseline-compatible performance build smoke",
+        "Native WebGL probe (${{ matrix.os }})",
+        "Isolated rendered mixed-use smoke",
+        "Free hosted Mac accelerated retention diagnostic"
+      ],
+      "rawSha256": "d93a9baa2622b55240ddab3c65ccfd25479f89d3cb9657d3c6a9206d3aa2b3fa"
+    },
+    {
+      "kind": "release",
+      "runId": 39249310094,
+      "commit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39249310094",
+      "event": "pull_request",
+      "passedJobs": ["Build and verify release artifact"],
+      "skippedJobs": [],
+      "rawSha256": "402be7dcd6b9f4fdb2af1b71a5b4092769d4061cedd91c6bab2ac9d1841f49db"
+    }
+  ],
+  "scope": "CI for the evidence-consumer changes. Candidate application qualification remains bound to its separate exact-commit evidence."
+}

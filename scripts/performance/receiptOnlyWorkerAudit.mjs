@@ -2,6 +2,7 @@ const SHA1 = /^[a-f0-9]{40}$/;
 const SHA256 = /^[a-f0-9]{64}$/;
 const MAX_PATHS = 2048;
 const MAX_TARGETS = 256;
+const CESIUM_BUNDLE_PATH = /^cesium\/(?:[a-f0-9]{64}\/)?Cesium\.js$/;
 
 function boundedStrings(values, maximum, label) {
   if (
@@ -234,7 +235,10 @@ export function createReceiptOnlyWorkerAuditDocument({
   unreceiptedExecutableCount = 0,
   overflowCount = 0,
   embeddedWorkerContract,
+  bundlePath,
 } = {}) {
+  bundlePath =
+    bundlePath || embeddedWorkerContract?.bundlePath || 'cesium/Cesium.js';
   if (
     typeof documentRole !== 'string' ||
     !documentRole ||
@@ -307,7 +311,8 @@ export function createReceiptOnlyWorkerAuditDocument({
   if (
     embeddedWorkerContract?.schema !==
       'gev-cesium-embedded-worker-contract/v1' ||
-    embeddedWorkerContract.bundlePath !== 'cesium/Cesium.js' ||
+    embeddedWorkerContract.bundlePath !== bundlePath ||
+    !CESIUM_BUNDLE_PATH.test(bundlePath) ||
     !SHA256.test(embeddedWorkerContract.bundleSha256 || '') ||
     !SHA256.test(embeddedWorkerContract.workerSourceSha256 || '') ||
     !Number.isSafeInteger(embeddedWorkerContract.allowedModuleCount) ||
@@ -382,7 +387,7 @@ function validDocument(document, expected) {
     document.blobRequestCount >= 0 &&
     document.blobRequestCount <= MAX_TARGETS &&
     document.workerSource?.derivation === 'receipt-embedded-cesium-bundle' &&
-    document.workerSource?.bundlePath === 'cesium/Cesium.js' &&
+    document.workerSource?.bundlePath === expected.bundlePath &&
     document.workerSource?.bundleSha256 === expected.bundleSha256 &&
     document.workerSource?.workerSourceSha256 === expected.workerSourceSha256 &&
     document.workerSource?.allowedModuleCount === expected.allowedModuleCount &&
@@ -409,6 +414,7 @@ export function validateReceiptOnlyWorkerAuditEnvelope({
   bundleSha256,
   workerSourceSha256,
   allowedModuleCount,
+  bundlePath = 'cesium/Cesium.js',
 } = {}) {
   if (
     pageAssetAudit?.schema !== 'gev-receipt-only-worker-audit/v1' ||
@@ -465,7 +471,8 @@ export function validateReceiptOnlyWorkerAuditEnvelope({
       'external-puppeteer-request-and-worker-target-events-only' ||
     pageAssetAudit.workerSource?.derivation !==
       'receipt-embedded-cesium-bundle' ||
-    pageAssetAudit.workerSource?.bundlePath !== 'cesium/Cesium.js' ||
+    pageAssetAudit.workerSource?.bundlePath !== bundlePath ||
+    !CESIUM_BUNDLE_PATH.test(bundlePath) ||
     pageAssetAudit.workerSource?.bundleSha256 !== bundleSha256 ||
     pageAssetAudit.workerSource?.workerSourceSha256 !== workerSourceSha256 ||
     pageAssetAudit.workerSource?.allowedModuleCount !== allowedModuleCount
@@ -494,6 +501,7 @@ export function validateReceiptOnlyWorkerAuditEnvelope({
         bundleSha256,
         workerSourceSha256,
         allowedModuleCount,
+        bundlePath,
       })
     )
       return false;

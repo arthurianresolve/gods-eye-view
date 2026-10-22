@@ -249,3 +249,124 @@ test('a disabled monitor can be enabled later without reading dormant state firs
   assert.equal(active.samples.length, 1);
   monitor.destroy();
 });
+
+test('optional diagnostics distinguish unavailable from observed zero and release listeners', (t) => {
+  const previousObserver = globalThis.PerformanceObserver;
+  const observers = [];
+  class Observer {
+    static supportedEntryTypes = ['longtask'];
+    constructor(callback) {
+      this.callback = callback;
+      observers.push(this);
+    }
+    observe() {}
+    disconnect() {
+      this.disconnected = true;
+    }
+  }
+  globalThis.PerformanceObserver = Observer;
+  t.after(() => {
+    globalThis.PerformanceObserver = previousObserver;
+  });
+  let tileListener;
+  const monitor = createPerformanceMonitor({
+    observeLongTasks: true,
+    viewer: {
+      scene: {
+        globe: {
+          tileLoadProgressEvent: {
+            addEventListener(callback) {
+              tileListener = callback;
+              return () => {
+                tileListener = null;
+              };
+            },
+          },
+        },
+      },
+    },
+    readDiagnostics: () => ({ mode: 'idle', holds: [] }),
+  });
+  assert.equal(monitor.getSnapshot().resources.tileLoadBacklog, null);
+  assert.equal(monitor.getSnapshot().resources.drawCalls, null);
+  assert.equal(monitor.getSnapshot().timings.longTaskStatus, 'observing');
+  tileListener(0);
+  assert.equal(monitor.getSnapshot().resources.tileLoadBacklog, 0);
+  tileListener(7);
+  tileListener(-2);
+  assert.equal(monitor.getSnapshot().resources.tileLoadBacklog, 7);
+  const emit = (observer) =>
+    observer.callback({ getEntries: () => [{ duration: 80, startTime: 12 }] });
+  emit(observers[0]);
+  assert.equal(monitor.getSnapshot().samples.length, 1);
+  const staleTile = tileListener;
+  monitor.setEnabled(false);
+  assert.equal(tileListener, null);
+  assert.equal(observers[0].disconnected, true);
+  monitor.setEnabled(true);
+  emit(observers[0]);
+  staleTile(999);
+  assert.equal(monitor.getSnapshot().samples.length, 1);
+  assert.equal(monitor.getSnapshot().resources.tileLoadBacklog, null);
+  emit(observers[1]);
+  assert.equal(monitor.getSnapshot().samples.length, 2);
+  monitor.destroy();
+  assert.equal(tileListener, null);
+  assert.equal(observers[1].disconnected, true);
+});
+
+test('unsupported long tasks remain unavailable and renderer cache refreshes on recovery', (t) => {
+  const previousObserver = globalThis.PerformanceObserver;
+  globalThis.PerformanceObserver = class {
+    static supportedEntryTypes = ['measure'];
+    constructor() {
+      throw new Error('must not be constructed');
+    }
+  };
+  t.after(() => {
+    globalThis.PerformanceObserver = previousObserver;
+  });
+  const callbacks = new Map();
+  let renderer = 'GPU-A';
+  let queries = 0;
+  const monitor = createPerformanceMonitor({
+    observeLongTasks: true,
+    viewer: {
+      scene: {
+        canvas: {
+          addEventListener(name, callback) {
+            callbacks.set(name, callback);
+          },
+          removeEventListener(name) {
+            callbacks.delete(name);
+          },
+        },
+        context: {
+          _gl: {
+            RENDERER: 1,
+            VENDOR: 2,
+            getParameter(parameter) {
+              queries++;
+              return parameter === 1 ? renderer : 'Vendor';
+            },
+          },
+        },
+      },
+    },
+  });
+  assert.equal(monitor.getSnapshot().identity.renderer, 'GPU-A');
+  assert.equal(monitor.getSnapshot().timings.longTaskStatus, 'unavailable');
+  monitor.getSnapshot();
+  assert.equal(queries, 2);
+  renderer = 'GPU-B';
+  callbacks.get('webglcontextrestored')();
+  assert.equal(monitor.getSnapshot().identity.renderer, 'GPU-B');
+  assert.equal(queries, 4);
+  monitor.setEnabled(false);
+  assert.equal(callbacks.size, 0);
+  renderer = 'GPU-C';
+  monitor.setEnabled(true);
+  assert.equal(monitor.getSnapshot().identity.renderer, 'GPU-C');
+  monitor.destroy();
+  assert.equal(callbacks.size, 0);
+});

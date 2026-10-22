@@ -1,0 +1,355 @@
+{
+  "schema": "gev-weather-native-functional-review/v1",
+  "reviewedAt": "2026-10-19T03:05:33.398Z",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "harnessCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "drawingBuffer": {
+    "width": 2880,
+    "height": 1800
+  },
+  "candidateStatus": "full-capture-integrity-and-all-phase-deadlines-passed",
+  "originalBaselineStatus": "failed-not-a-comparison",
+  "originalBaselineFailure": {
+    "phase": "measure-scene",
+    "scenario": "scripted-motion",
+    "run": 2,
+    "message": "Weather phase early-history was missing, late or wrong. context={\"expectedSourceTimes\":[\"2026-10-08T11:50:00.000Z\",\"2026-10-08T11:50:00.000Z\",\"2026-10-08T11:50:00.000Z\"],\"observedSourceTimes\":[\"2026-10-08T12:00:00.000Z\",\"2026-10-08T12:00:00.000Z\",\"2026-10-08T12:00:00.000Z\"],\"elapsedMs\":5044.799999999814,\"phase\":{\"id\":\"early-history\",\"offsetMs\":0},\"deadline\":{\"elapsedMs\":5000,\"absoluteMs\":609138.2000000002},\"clock\":{\"mode\":\"history\",\"target\":\"2026-10-08T11:50:00.000Z\",\"playing\":false},\"slider\":{\"value\":\"0\",\"",
+    "weatherPhaseContext": {
+      "expectedSourceTimes": [
+        "2026-10-08T11:50:00.000Z",
+        "2026-10-08T11:50:00.000Z",
+        "2026-10-08T11:50:00.000Z"
+      ],
+      "observedSourceTimes": [
+        "2026-10-08T12:00:00.000Z",
+        "2026-10-08T12:00:00.000Z",
+        "2026-10-08T12:00:00.000Z"
+      ],
+      "elapsedMs": 5044.799999999814,
+      "phase": {
+        "id": "early-history",
+        "offsetMs": 0
+      },
+      "deadline": {
+        "elapsedMs": 5000,
+        "absoluteMs": 609138.2000000002
+      },
+      "clock": {
+        "mode": "history",
+        "target": "2026-10-08T11:50:00.000Z",
+        "playing": false
+      },
+      "slider": {
+        "value": "0",
+        "max": "2"
+      },
+      "fixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "transition": {
+        "dispatchedAtElapsedMs": 30.40000000037253,
+        "dispatchCompletedAtElapsedMs": 33.799999999813735,
+        "globeTilesLoaded": false,
+        "layers": [
+          {
+            "id": "weather-radar",
+            "loading": true,
+            "hidden": false,
+            "time": "2026-10-08T12:00:00.000Z",
+            "pendingTiles": 6,
+            "deferredTiles": 1,
+            "loadedTiles": 0,
+            "imageryCount": 2,
+            "hasError": false
+          },
+          {
+            "id": "weather-satellite",
+            "loading": true,
+            "hidden": false,
+            "time": "2026-10-08T12:00:00.000Z",
+            "pendingTiles": 6,
+            "deferredTiles": 1,
+            "loadedTiles": 0,
+            "imageryCount": 2,
+            "hasError": false
+          },
+          {
+            "id": "weather-lightning",
+            "loading": true,
+            "hidden": false,
+            "time": "2026-10-08T12:00:00.000Z",
+            "pendingTiles": 6,
+            "deferredTiles": 2,
+            "loadedTiles": 0,
+            "imageryCount": 2,
+            "hasError": false
+          }
+        ]
+      }
+    },
+    "operator": null
+  },
+  "files": [
+    {
+      "path": "weather-effects-baseline.json",
+      "bytes": 235409,
+      "sha256": "461503ed917e8a41e9be497cbcbc889def1ac49c61337d5a10e98a66ce8030ac"
+    },
+    {
+      "path": "weather-effects-candidate.json",
+      "bytes": 655975,
+      "sha256": "ac54ddd788b23ae35667c1b1cc8d5f2d956431b5115260f01812ca353ad25701"
+    },
+    {
+      "path": "weather-effects-baseline.json.log",
+      "bytes": 1629,
+      "sha256": "5a7ee209a97fb4dbb71e3d1d61ad5de450ea580da0bd0dfad633e56580b98450"
+    },
+    {
+      "path": "weather-effects-candidate.json.log",
+      "bytes": 686,
+      "sha256": "d1d59905e31e00ea71bf0f16eec0e8a1c5e03c184ee250f6c2a2e8680507a949"
+    },
+    {
+      "path": "weather-effects-baseline.json.invocation.json",
+      "bytes": 2310,
+      "sha256": "444d4a04084d1e6b5b7eaeec15292502e3de5f5be8ea89a851ae4bb1a3b150ed"
+    },
+    {
+      "path": "weather-effects-candidate.json.invocation.json",
+      "bytes": 2338,
+      "sha256": "223a0a938de7aea304532ff7f8fb9be190eb083439c988b782f97f03d0e45adc"
+    },
+    {
+      "path": "qualification-process-1792377032231.json",
+      "bytes": 4203,
+      "sha256": "83c3e845bf96c9a8891714af0cd43d19826019ec8721604f86ff246648a91df5"
+    },
+    {
+      "path": "qualification-process-1792377750012.json",
+      "bytes": 1315,
+      "sha256": "b60f147fb989d5ecc3632253db56bc7c1b67c5f375a19724a4cb801eda2bbf94"
+    }
+  ],
+  "samples": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "renderedFrames": 84,
+      "renderedFrameIntervalP95Ms": 1450.7999999998137,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 3141.7000000001863
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2598.5999999996275
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 3089
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "renderedFrames": 84,
+      "renderedFrameIntervalP95Ms": 660.4000000003725,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 2483.7999999998137
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 1858.4000000003725
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2320.600000000559
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "idle",
+      "run": 3,
+      "renderedFrames": 78,
+      "renderedFrameIntervalP95Ms": 5027.4000000003725,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 3158.2999999998137
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2533.5
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2166
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "idle",
+      "run": 4,
+      "renderedFrames": 79,
+      "renderedFrameIntervalP95Ms": 3235.5,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 2350.800000000745
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2061.800000000745
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2312.800000000745
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "idle",
+      "run": 5,
+      "renderedFrames": 79,
+      "renderedFrameIntervalP95Ms": 3990.5,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 2552.399999999441
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2156.5999999996275
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2466.5
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "renderedFrames": 352,
+      "renderedFrameIntervalP95Ms": 298.3999999994412,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 2918.0999999996275
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2205.0999999996275
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 3103.7999999998137
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "renderedFrames": 355,
+      "renderedFrameIntervalP95Ms": 282.69999999925494,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 3506.9000000003725
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2640.2000000001863
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2836.2000000001863
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 3,
+      "renderedFrames": 314,
+      "renderedFrameIntervalP95Ms": 317.3999999994412,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 2763.0999999996275
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 3323.899999999441
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 3350
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 4,
+      "renderedFrames": 358,
+      "renderedFrameIntervalP95Ms": 226.59999999962747,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 2554.2999999998137
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2623.699999999255
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2533
+        }
+      ],
+      "requestRenderModeBefore": true
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 5,
+      "renderedFrames": 339,
+      "renderedFrameIntervalP95Ms": 267.90000000037253,
+      "phaseDelays": [
+        {
+          "phase": "early-history",
+          "delayMs": 3466
+        },
+        {
+          "phase": "middle-history",
+          "delayMs": 2751.5
+        },
+        {
+          "phase": "latest-history",
+          "delayMs": 2791.699999999255
+        }
+      ],
+      "requestRenderModeBefore": true
+    }
+  ],
+  "transitionCount": 30,
+  "maximumTransitionDelayMs": 3506.9000000003725,
+  "motionMedianRunP95Ms": 282.69999999925494,
+  "speedImprovement": "unassessed-original-baseline-failed",
+  "notes": [
+    "Original failed baseline bytes and bounded partial samples are preserved; no failed run is relabeled.",
+    "Parked rendered-frame intervals include intentional gaps between source phases and are not CPU or GPU execution time.",
+    "A separately identified e7a878e control containing only the same weather correctness fix is being qualified for a valid timing comparison."
+  ]
+}

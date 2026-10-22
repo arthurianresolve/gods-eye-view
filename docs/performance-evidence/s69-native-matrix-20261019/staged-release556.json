@@ -1,0 +1,23 @@
+{
+  "schema": "gev-candidate-staging/v1",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "createdAt": "2026-10-19T02:39:37.874Z",
+  "status": "archive-and-source-verified",
+  "archiveSha256": "f2190f1111510d95ab86939e8809c59401423ab721ed9aae06aaf1971c2933f8",
+  "releaseManifestSha256": "1511f7a34df8f1292edad6a1f85605250fafa8bef23d9ff26b46d9d9103ace73",
+  "verifiedManifestFiles": 2126,
+  "extracted": {
+    "resumedFromVerifiedPartialExtraction": true,
+    "originalFailure": "Nonexistent dist/build-info.json assertion; no production change"
+  },
+  "independentAttestation": {
+    "status": "passed",
+    "sourceCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "repository": "arthurianresolve/gods-eye-view",
+    "workflow": "arthurianresolve/gods-eye-view/.github/workflows/release.yml",
+    "denySelfHostedRunners": true,
+    "verificationRecordSha256": "aa5589db0f612934d6d350ec72cb90d2ba344df9010caf5eaef35c74970a367c"
+  },
+  "activeDirectory": "/opt/gods-eye-view-releases/e7a878e168bc97ffedddc27e13bf3e69b7ee6256-verified",
+  "productionChanged": false
+}

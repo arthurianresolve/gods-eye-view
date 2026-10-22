@@ -1,0 +1,104 @@
+{
+  "schema": "gev-final-visual-archive-review/v1",
+  "reviewedAt": "2026-10-19T07:06:09.089Z",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/final-visual-55639cc7-a7837467-20261019",
+  "application": {
+    "baselineSha": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateSha": "55639cc7fde03daacf25e643f16f803e001113f9"
+  },
+  "captureAndValidationProducer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "pixelValidation": {
+    "platform": "Windows",
+    "status": "passed",
+    "states": 4,
+    "policy": "matched-visible-control-variance-v1",
+    "visibleRestoredVariedPixels": 8,
+    "maximumChannelDelta": 7
+  },
+  "matchedPairByteEquality": [
+    {
+      "id": "still-settled",
+      "equal": true
+    },
+    {
+      "id": "hud-visible",
+      "equal": true
+    },
+    {
+      "id": "hud-hidden",
+      "equal": true
+    },
+    {
+      "id": "hud-restored",
+      "equal": true
+    }
+  ],
+  "vmPixelRevalidation": {
+    "status": "unavailable",
+    "reason": "Installed Linux sharp binary requires x86-64-v2 CPU features not exposed by VM105; no VM CPU or application setting changed."
+  },
+  "vmArchiveVerification": "sha256-and-byte-length",
+  "files": [
+    {
+      "name": "baseline-observations.json",
+      "bytes": 121678,
+      "sha256": "e9ad37d2bfa22f946039381c3b02decaaa04ac16a7aea4ac1894f5084fbcbcba"
+    },
+    {
+      "name": "candidate-observations.json",
+      "bytes": 145445,
+      "sha256": "52c8113cb194c22af46f23234f61de53ecaafd1a422f189b3cae6665c5e6d35c"
+    },
+    {
+      "name": "final-visual-qualification.json",
+      "bytes": 251054,
+      "sha256": "07958a9a68a2c69fe3473768db06bd900039647f7ffffeeb4a34658354f921bc"
+    },
+    {
+      "name": "hud-hidden-baseline-attempt-1.png",
+      "bytes": 1430681,
+      "sha256": "9caafc21b13a5d01222689822048f8a67dc8a5b76e18893d98a5b739f09f3877"
+    },
+    {
+      "name": "hud-hidden-candidate-attempt-1.png",
+      "bytes": 1430681,
+      "sha256": "9caafc21b13a5d01222689822048f8a67dc8a5b76e18893d98a5b739f09f3877"
+    },
+    {
+      "name": "hud-restored-baseline-attempt-1.png",
+      "bytes": 1522397,
+      "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+    },
+    {
+      "name": "hud-restored-candidate-attempt-1.png",
+      "bytes": 1522397,
+      "sha256": "43ee7c6ea2b37e5558d49d0c2ead1e3a7c3e41e7477498444d84ffaf62bf140b"
+    },
+    {
+      "name": "hud-visible-baseline-attempt-1.png",
+      "bytes": 1522577,
+      "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+    },
+    {
+      "name": "hud-visible-candidate-attempt-1.png",
+      "bytes": 1522577,
+      "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+    },
+    {
+      "name": "still-settled-baseline-attempt-1.png",
+      "bytes": 1522577,
+      "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+    },
+    {
+      "name": "still-settled-candidate-attempt-1.png",
+      "bytes": 1522577,
+      "sha256": "238bf23524e85d73cf13e5bfe3aeb0b37296f5b88a3303e8065d0270cb0289af"
+    },
+    {
+      "name": "validation.json",
+      "bytes": 2060,
+      "sha256": "7da5ea2d4fae284c52bbf995ea3d0fa82bc94eb2b413033b927cf7d738f7fd58"
+    }
+  ],
+  "productionChanged": false
+}

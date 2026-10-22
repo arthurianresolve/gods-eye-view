@@ -1,0 +1,49 @@
+{
+  "schema": "gev-idle-cadence-independent-review/v1",
+  "reviewedAt": "2026-10-20T03:18:13.189Z",
+  "status": "passed",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "consumerCommit": "975a7f24d3a0f1430bb7a7cdf7da82400dd8d5e5",
+  "consumerSourceProofSha256": "2b9f0cdb5483da96e1c83cb3c47a2ed47d0b971562dc85dc46a9513565647e0c",
+  "diagnosticProducerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/idle-cadence-190c5ab6-b843cac5-native155",
+  "files": [
+    {
+      "name": "diagnostic.json",
+      "bytes": 1387896,
+      "sha256": "3b505a59fdac339653a15b4ed88eb47bd0cb49199e5d92d9a2cfa782b6d15696"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1617,
+      "sha256": "c9e9de54881335b6f1fa3670d68812350726d105d74d8f6bf4647e33abdb9eb9"
+    },
+    {
+      "name": "diagnostic.log",
+      "bytes": 259,
+      "sha256": "3b00f8af2714ba702b48ec5a2f631de89ed8a6b7288c72dfec6fea34bba6bd90"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 3902,
+      "sha256": "f3a277cdf278574fd161f0bb46d875e9b29ac35b67a56e43c86191269cf2f8e5"
+    }
+  ],
+  "evaluation": {
+    "resolvedScenarios": [
+      "idle"
+    ],
+    "metric": "frame-interval-p95-ms",
+    "classification": "intentional-demand-cadence-change",
+    "visualAcceptance": "not-assessed",
+    "motionAcceptance": "not-assessed"
+  },
+  "failure": null,
+  "rawPair": {
+    "directory": "/opt/gods-eye-view-validation/s61-s70-20261018/operating-view-190c5ab6-native155-foreground-ready-2",
+    "baselineSha256": "b793812c40a64c76927e97c513baf0ee998b00b50be61a7d6b18de14dcb859c9",
+    "candidateSha256": "a7a51e9d772a48fb572ef908ee369f1a2e6951cd12172fd5fc92b93ebd3f15fa"
+  },
+  "scope": "Idle rendered-interval semantics only. Original numeric comparison remains unchanged. No motion or visual-equivalence acceptance.",
+  "productionChanged": false
+}

@@ -1,0 +1,319 @@
+{
+  "schema": "gev-formal-native-qualification-result/v1",
+  "status": "failed",
+  "acceptanceEligible": false,
+  "application": {
+    "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+    "baselineRole": "correctness-control; not original e7 performance baseline",
+    "candidate": "e6e1abc10b154b5317101d6e1b9bb18779e469ce"
+  },
+  "qaCommit": "f6e35691db641ae75244dcf8bf15a0d7bc3378d6",
+  "capture": {
+    "status": "completed",
+    "startedAt": "2026-10-20T11:44:12.279Z",
+    "completedAt": "2026-10-20T11:51:23.436Z",
+    "measurementSpan": {
+      "startedAt": "2026-10-20T11:44:55.884Z",
+      "completedAt": "2026-10-20T11:50:46.930Z"
+    },
+    "attempts": 1,
+    "retries": 0,
+    "exitCode": 0,
+    "failureReason": null
+  },
+  "environment": {
+    "mode": "native-window-viewport-v1",
+    "viewport": {
+      "width": 1280,
+      "height": 537,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "nativeHelperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+    "headful": true,
+    "nativeMonitorFitAndBrowserZoomProof": "complete owned-window helper proofs retained; exact matched role geometry, settings and native sharpness validated by frozen consumer"
+  },
+  "identityOnlyScope": {
+    "comparisonEligible": false,
+    "coldStartupEligible": false,
+    "performanceEligible": false,
+    "fullAssetBoundaries": {
+      "baseline": [
+        "before",
+        "after"
+      ],
+      "candidate": [
+        "before",
+        "after"
+      ]
+    },
+    "postflightErrors": []
+  },
+  "proofByRole": {
+    "baseline": {
+      "captureStatus": "completed",
+      "localControlSamples": 20,
+      "replaySamples": 20,
+      "heapSamples": 84,
+      "nativeGeometryCheckpoints": 13,
+      "nativePreparation": {
+        "status": "passed",
+        "attempts": 2
+      },
+      "latestWorkspaceRestoreCheckpoints": 8,
+      "foregroundStatus": "completed",
+      "foregroundObservations": 126,
+      "allForegroundObservationsVisibleFocused": true,
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "browserExitCode": 0,
+      "browserCloseElapsedMs": 636.0132000000158,
+      "cleanupError": null
+    },
+    "candidate": {
+      "captureStatus": "completed",
+      "localControlSamples": 20,
+      "replaySamples": 20,
+      "heapSamples": 84,
+      "nativeGeometryCheckpoints": 13,
+      "nativePreparation": {
+        "status": "passed",
+        "attempts": 3
+      },
+      "latestWorkspaceRestoreCheckpoints": 8,
+      "foregroundStatus": "completed",
+      "foregroundObservations": 126,
+      "allForegroundObservationsVisibleFocused": true,
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "browserExitCode": 0,
+      "browserCloseElapsedMs": 652.0809000000008,
+      "cleanupError": null
+    }
+  },
+  "metrics": {
+    "coldStartup": {
+      "status": "unavailable",
+      "reason": "Identity-only build proof supplies no cold-startup observations."
+    },
+    "localControl": {
+      "status": "failed",
+      "reason": "Visible feedback or intent changed before rendering\n\ntrue !== false\n",
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "loadedReplaySeek": {
+      "status": "measured",
+      "protocolVersion": 4,
+      "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+      "baseline": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 52.19999998807907,
+        "inputToRenderedFrameP95Ms": 55.3999999910593
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 74.40000000596046,
+        "inputToRenderedFrameP95Ms": 79.5
+      },
+      "limitMs": 250,
+      "failures": [],
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "sampledPeakHeap": {
+      "status": "measured",
+      "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+      "baselinePeakHeapBytes": 73152748,
+      "candidatePeakHeapBytes": 71763568,
+      "sampleCountByBuild": {
+        "baseline": 84,
+        "candidate": 84
+      },
+      "actualDurationMsByBuild": {
+        "baseline": 88110.4407,
+        "candidate": 86714.43649999995
+      },
+      "changePct": -1.8990127342857988,
+      "regressionOver10Pct": false,
+      "sourceSoakStatus": null,
+      "sourceSoakFailurePreserved": false,
+      "thresholdPct": 10,
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    }
+  },
+  "localControlReadback": {
+    "status": "unqualified-descriptive-values-only",
+    "interpretation": "All40 samples retain eligible same-intent visible/focused witnesses, followed by unproven-geometry observations within the frozen proof interval. No invalid foreground, contrary-intent or contrary-button-state observations were found. Native mutation targets/names/values were not retained, so no unique writer or actual visibility loss is inferred.",
+    "bounds": "Frozen consumer failure is preserved verbatim. No observation removed, no duration corrected, no threshold changed, no retry.",
+    "builds": {
+      "baseline": {
+        "rawEventTimingMs": [
+          304,
+          96,
+          160,
+          96,
+          128,
+          96,
+          144,
+          112,
+          128,
+          96,
+          128,
+          112,
+          128,
+          96,
+          128,
+          96,
+          128,
+          112,
+          128,
+          96
+        ],
+        "rawEventTimingAbove100Count": 13,
+        "rawDescriptiveNearestRankP95": {
+          "eventTimingMs": 160,
+          "acceptedIntentMs": 1.3999999910593033,
+          "feedbackTwoRafMs": 209.8999999910593,
+          "fullStateMs": 83.09999999403954,
+          "fullRenderedMs": 209.20000000298023
+        },
+        "invalidContinuitySampleCount": 20,
+        "eligibleWitnessMissingCount": 0,
+        "observerWork": {
+          "mutationCallbacks": 395,
+          "mutationRecords": 20732,
+          "continuityChecks": 80,
+          "geometryChecks": 40,
+          "overhead": {
+            "status": "unavailable",
+            "reason": "not-measured"
+          }
+        }
+      },
+      "candidate": {
+        "rawEventTimingMs": [
+          296,
+          216,
+          48,
+          96,
+          48,
+          96,
+          48,
+          112,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          96,
+          48,
+          112
+        ],
+        "rawEventTimingAbove100Count": 4,
+        "rawDescriptiveNearestRankP95": {
+          "eventTimingMs": 216,
+          "acceptedIntentMs": 2.5,
+          "feedbackTwoRafMs": 69.5,
+          "fullStateMs": 119,
+          "fullRenderedMs": 209.29999999701977
+        },
+        "invalidContinuitySampleCount": 20,
+        "eligibleWitnessMissingCount": 0,
+        "observerWork": {
+          "mutationCallbacks": 369,
+          "mutationRecords": 3682,
+          "continuityChecks": 80,
+          "geometryChecks": 40,
+          "overhead": {
+            "status": "unavailable",
+            "reason": "not-measured"
+          }
+        }
+      }
+    },
+    "descriptiveFullReadinessChangePct": {
+      "fullStateMs": 43.20096270581881,
+      "fullRenderedMs": 0.04780114437767935
+    },
+    "baselineAbsoluteFailurePreserved": true,
+    "timingLimits": {
+      "acceptedIntentP95Ms": 100,
+      "eventTimingP95Ms": 100,
+      "fullReadinessRegressionPct": 10
+    }
+  },
+  "hostActivity": [
+    {
+      "source": "Root and Astra agent messages during active capture",
+      "actor": "Astra visual agent",
+      "command": "node qa-artifacts/write-decoration-result-20261020.mjs",
+      "cwd": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105",
+      "startUtc": null,
+      "endUtc": null,
+      "timestampsStatus": "not-recorded; unavailable; no timestamp inference",
+      "observedToolWallSeconds": 2.3392,
+      "exitCode": 0,
+      "work": "Read compact completed validation/review/source/transfer/preparation receipts; serialized/formatted two JSON files with Prettier.",
+      "outputBytes": [
+        10127,
+        8281
+      ],
+      "noWork": [
+        "PNG reads",
+        "six large observation envelope reads",
+        "browser launch",
+        "tests",
+        "GPU work",
+        "VM job"
+      ],
+      "interpretation": "Observed concurrent host activity retained; no causal or pass/failure inference and no retry."
+    }
+  ],
+  "historicalDisposition": "Earlier fixed-size metrics, native diagnostics, OS/CDP preparation failures and old runtime failures remain historical. This cohort is a new explicit native-window measurement, not a reinterpretation.",
+  "nextAction": "No new GPU run authorized by this record. Root assigned separate runtime latency and QA continuity investigations; matrix/soak preparation paused."
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "gev-visual-presentation-cross-build-diagnostic/v1",
+  "status": "diagnostic-only",
+  "acceptanceEligible": false,
+  "createdAt": "2026-10-19T20:56:51.694Z",
+  "baselineSource": {
+    "root": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-presentation-fence-e7-aa400",
+    "rawSha256": "418699b09a3eedb4ed0ec9f169ac210c5761580ddf4497a7e9ceba2a8c1caad1",
+    "build": {
+      "applicationCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "receiptPath": "build-receipt.json",
+      "receiptSha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    }
+  },
+  "candidateSource": {
+    "root": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-presentation-fence-b3-aa400",
+    "rawSha256": "1942b9ae715dc1500ba335fb8cdd2b8a913ebb0cba77b3c395bea94a352b75a0",
+    "build": {
+      "applicationCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+      "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "receiptPath": "build-receipt.json",
+      "receiptSha256": "b9d5eb8bb949b288a41956d8b847a24c052032d827a3a36e31fe8abc1cf9e9a3"
+    }
+  },
+  "results": [
+    {
+      "id": "A",
+      "changedPixels": 2034499,
+      "maxDelta": 252,
+      "logoRegionChanged": 35873,
+      "logoRegionMaxDelta": 2,
+      "outsideLogoRegionChanged": 1998626,
+      "largest": [],
+      "paintSignatureEqual": true
+    },
+    {
+      "id": "B",
+      "changedPixels": 24092,
+      "maxDelta": 252,
+      "logoRegionChanged": 4,
+      "logoRegionMaxDelta": 1,
+      "outsideLogoRegionChanged": 24088,
+      "largest": [],
+      "paintSignatureEqual": true
+    },
+    {
+      "id": "C",
+      "changedPixels": 8973,
+      "maxDelta": 252,
+      "logoRegionChanged": 4,
+      "logoRegionMaxDelta": 1,
+      "outsideLogoRegionChanged": 8969,
+      "largest": [],
+      "paintSignatureEqual": true
+    }
+  ],
+  "scope": "Whole-image exact comparison; the top-left rectangle only localizes changes and is not a mask or acceptance exception."
+}

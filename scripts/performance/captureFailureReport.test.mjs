@@ -291,6 +291,46 @@ test('failure artifact redacts secrets and stays within its hard byte cap', () =
   assert.equal(serialized.includes('secret.invalid'), false);
 });
 
+test('failure artifact retains allowlisted foreground cause after size pruning', () => {
+  const error = new Error('owned window activation failed');
+  error.foregroundActivation = {
+    schema: 'gev-windows-owned-browser-foreground-diagnostic/v1',
+    category: 'timeout',
+    runnerExited: false,
+    runnerTimedOut: true,
+    runnerKilled: true,
+    runnerSignal: 'SIGTERM',
+    runnerErrorCode: 'ETIMEDOUT',
+    browserPid: 77,
+    privateToken: 'should-not-be-copied',
+    stderr: 'secret command output',
+  };
+  const report = createCaptureFailureReport({
+    source,
+    phase: 'activate-sample-foreground',
+    error,
+    errorActual: { huge: 'x'.repeat(100_000) },
+    errorExpected: { huge: 'y'.repeat(100_000) },
+    workload: { huge: 'z'.repeat(100_000) },
+    completedSamples: Array.from({ length: 30 }, () => ({
+      sample: 'x'.repeat(80_000),
+    })),
+  });
+  const serialized = `${JSON.stringify(report, null, 2)}\n`;
+  assert.ok(
+    Buffer.byteLength(serialized, 'utf8') <= MAX_CAPTURE_FAILURE_REPORT_BYTES,
+  );
+  assert.equal(report.failure.foregroundActivation.category, 'timeout');
+  assert.equal(report.failure.foregroundActivation.runnerExited, false);
+  assert.equal(report.failure.foregroundActivation.runnerKilled, true);
+  assert.equal(
+    report.failure.foregroundActivation.runnerErrorCode,
+    'ETIMEDOUT',
+  );
+  assert.equal('privateToken' in report.failure.foregroundActivation, false);
+  assert.equal('stderr' in report.failure.foregroundActivation, false);
+});
+
 test('oversized workload and delivery evidence fall back to bounded summaries', () => {
   const rows = Array.from({ length: 256 }, (_, index) => ({
     index,

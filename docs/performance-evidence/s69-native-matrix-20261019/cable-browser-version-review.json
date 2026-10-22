@@ -1,0 +1,241 @@
+{
+  "schema": "gev-browser-version-control-review/v1",
+  "reviewedAt": "2026-10-19T02:33:13.477Z",
+  "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+  "producer": "563d9dd49d85c5897ab3db5938402532a898cc0b",
+  "protocolSha256": "55985ce99cc0c50df01dcb2e6442ffd22f49e7a3424da1f18e17b0d4a5122cef",
+  "rows": [
+    {
+      "label": "chrome152-a",
+      "browserVersion": "Chrome/152.0.7977.75",
+      "reportSha256": "fa4b59c580ca241879ff9c95cf9196af69b80534cf985a2acdc1b1203618c471",
+      "traceSha256": "1458dfb561d4e806ef6811c0ae73c6b91350c12e839dcbfc5eaad81bd97944ab",
+      "motionP95Ms": 497.69999999925494,
+      "renderedFrames": 201,
+      "events": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 198,
+          "inclusiveWallTotalMs": 21470.635000000006,
+          "wallP95Ms": 287.663,
+          "threadCpuSamples": 198,
+          "threadCpuTotalMs": 3396.297,
+          "threadCpuP95Ms": 22.678
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 198,
+          "inclusiveWallTotalMs": 12995.298999999995,
+          "wallP95Ms": 264.301,
+          "threadCpuSamples": 198,
+          "threadCpuTotalMs": 117.23999999999998,
+          "threadCpuP95Ms": 1.049,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 440,
+          "inclusiveWallTotalMs": 6750.877999999989,
+          "wallP95Ms": 29.398,
+          "threadCpuSamples": 440,
+          "threadCpuTotalMs": 6545.882999999997,
+          "threadCpuP95Ms": 28.499
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 625,
+          "inclusiveWallTotalMs": 1038.2549999999983,
+          "wallP95Ms": 4.061,
+          "threadCpuSamples": 625,
+          "threadCpuTotalMs": 993.6310000000009,
+          "threadCpuP95Ms": 3.864
+        },
+        {
+          "name": "Layout",
+          "count": 426,
+          "inclusiveWallTotalMs": 324.16500000000013,
+          "wallP95Ms": 1.463,
+          "threadCpuSamples": 426,
+          "threadCpuTotalMs": 313.186,
+          "threadCpuP95Ms": 1.388
+        }
+      ]
+    },
+    {
+      "label": "chrome155-a",
+      "browserVersion": "Chrome/155.0.8059.84",
+      "reportSha256": "acd9d87fc0d3d6003327d034e8a1207a9599b4332d6aa8e58e27934ce01ca824",
+      "traceSha256": "e55e3bc2002c6fe565afa5c3efe82a9f79565b1fe93268ba38a4abf457bee06d",
+      "motionP95Ms": 312.59999999962747,
+      "renderedFrames": 219,
+      "events": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 215,
+          "inclusiveWallTotalMs": 370.16200000000026,
+          "wallP95Ms": 5.368,
+          "threadCpuSamples": 215,
+          "threadCpuTotalMs": 242.041,
+          "threadCpuP95Ms": 2.037
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 215,
+          "inclusiveWallTotalMs": 196.77600000000004,
+          "wallP95Ms": 4.316,
+          "threadCpuSamples": 215,
+          "threadCpuTotalMs": 78.03199999999997,
+          "threadCpuP95Ms": 0.697,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 458,
+          "inclusiveWallTotalMs": 5402.209,
+          "wallP95Ms": 21.717,
+          "threadCpuSamples": 458,
+          "threadCpuTotalMs": 5302.955000000004,
+          "threadCpuP95Ms": 21.169
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 671,
+          "inclusiveWallTotalMs": 846.8169999999997,
+          "wallP95Ms": 3.089,
+          "threadCpuSamples": 671,
+          "threadCpuTotalMs": 799.8080000000002,
+          "threadCpuP95Ms": 2.673
+        },
+        {
+          "name": "Layout",
+          "count": 452,
+          "inclusiveWallTotalMs": 245.8109999999998,
+          "wallP95Ms": 0.756,
+          "threadCpuSamples": 452,
+          "threadCpuTotalMs": 243.27399999999986,
+          "threadCpuP95Ms": 0.737
+        }
+      ]
+    },
+    {
+      "label": "chrome155-b",
+      "browserVersion": "Chrome/155.0.8059.84",
+      "reportSha256": "8337c64f37b1665c9b09e7cecabcde78a97c617d5f84d7b58d6ef20acd9d2dac",
+      "traceSha256": "347e4a602fd909a0a04333833706683f40a11dc059097b905a916ef34858bb6c",
+      "motionP95Ms": 341.70000000018626,
+      "renderedFrames": 197,
+      "events": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 194,
+          "inclusiveWallTotalMs": 698.1340000000001,
+          "wallP95Ms": 4.783,
+          "threadCpuSamples": 194,
+          "threadCpuTotalMs": 279.9669999999999,
+          "threadCpuP95Ms": 2.542
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 194,
+          "inclusiveWallTotalMs": 510.4109999999998,
+          "wallP95Ms": 3.819,
+          "threadCpuSamples": 194,
+          "threadCpuTotalMs": 94.68799999999997,
+          "threadCpuP95Ms": 0.918,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 438,
+          "inclusiveWallTotalMs": 5740.325000000003,
+          "wallP95Ms": 24.703,
+          "threadCpuSamples": 438,
+          "threadCpuTotalMs": 5613.970999999997,
+          "threadCpuP95Ms": 23.984
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 628,
+          "inclusiveWallTotalMs": 916.1350000000008,
+          "wallP95Ms": 3.141,
+          "threadCpuSamples": 628,
+          "threadCpuTotalMs": 875.6920000000008,
+          "threadCpuP95Ms": 2.815
+        },
+        {
+          "name": "Layout",
+          "count": 432,
+          "inclusiveWallTotalMs": 278.5619999999999,
+          "wallP95Ms": 0.932,
+          "threadCpuSamples": 432,
+          "threadCpuTotalMs": 273.52200000000005,
+          "threadCpuP95Ms": 0.859
+        }
+      ]
+    },
+    {
+      "label": "chrome152-b",
+      "browserVersion": "Chrome/152.0.7977.75",
+      "reportSha256": "b18d46db67de1484eb9d68f2bee615b5bb75421a64654204d249f5260db12665",
+      "traceSha256": "b627c35299037ae188be83f7f12746ba3b1092f36dd906076d595b9704bded7f",
+      "motionP95Ms": 345.8999999994412,
+      "renderedFrames": 203,
+      "events": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 200,
+          "inclusiveWallTotalMs": 3288.5250000000005,
+          "wallP95Ms": 19.597,
+          "threadCpuSamples": 200,
+          "threadCpuTotalMs": 3220.791000000001,
+          "threadCpuP95Ms": 19.006
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 200,
+          "inclusiveWallTotalMs": 110.63100000000006,
+          "wallP95Ms": 0.937,
+          "threadCpuSamples": 200,
+          "threadCpuTotalMs": 109.39899999999994,
+          "threadCpuP95Ms": 0.919,
+          "overlayCounts": [1]
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 444,
+          "inclusiveWallTotalMs": 6193.085999999997,
+          "wallP95Ms": 25.669,
+          "threadCpuSamples": 444,
+          "threadCpuTotalMs": 6084.515000000001,
+          "threadCpuP95Ms": 25.181
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 640,
+          "inclusiveWallTotalMs": 938.2529999999997,
+          "wallP95Ms": 3.423,
+          "threadCpuSamples": 640,
+          "threadCpuTotalMs": 917.0879999999995,
+          "threadCpuP95Ms": 3.223
+        },
+        {
+          "name": "Layout",
+          "count": 437,
+          "inclusiveWallTotalMs": 275.43500000000006,
+          "wallP95Ms": 1.144,
+          "threadCpuSamples": 437,
+          "threadCpuTotalMs": 269.97800000000007,
+          "threadCpuP95Ms": 1.121
+        }
+      ]
+    }
+  ],
+  "diagnosticOnly": true,
+  "qualification": "not-established",
+  "limitations": [
+    "Two launches per browser do not establish a run-level performance distribution.",
+    "Default composition and visual settings were preserved.",
+    "The last Chrome 152 run overlaps Chrome 155; upgrading alone is not proven causal.",
+    "Wall-duration events do not measure GPU execution."
+  ]
+}

@@ -17,6 +17,7 @@ import {
   PERFORMANCE_MATRIX_ROWS,
   readReusableMatrixReport,
   validateMatrixPair,
+  validateMatrixPairWithNativeEvidence,
   validatePerformanceMatrixPlan,
 } from './performanceMatrix.mjs';
 import { PERFORMANCE_ACCEPTANCE_POLICY_ID } from './candidatePerformanceEvidence.mjs';
@@ -132,6 +133,10 @@ test('matrix capture invocations use exact acceptance settings and workload mode
     '2026-10-08T12:00:00.000Z',
   );
   assert.equal(dense.args[dense.args.indexOf('--runs') + 1], '5');
+  assert.equal(
+    dense.args[dense.args.indexOf('--comparison-profile') + 1],
+    'legacy',
+  );
   assert.equal(dense.args[dense.args.indexOf('--warmup-ms') + 1], '30000');
   assert.equal(dense.args[dense.args.indexOf('--seconds') + 1], '60');
   assert.equal(dense.args[dense.args.indexOf('--expected-density') + 1], '75');
@@ -166,6 +171,116 @@ test('matrix capture invocations use exact acceptance settings and workload mode
   );
 });
 
+test('matrix keeps builder identity distinct and pins the same producer for each pair', () => {
+  const root = path.join(os.tmpdir(), 'gev-matrix-distinct-producer');
+  const input = makePlan(root);
+  const oldHarness = {
+    commit: input.harnessCommit,
+    checkout: input.harnessCheckout,
+  };
+  input.buildHarness = oldHarness;
+  input.harnessCommit = 'd'.repeat(40);
+  input.harnessCheckout = path.join(root, 'corrected-producer');
+  input.rows[0].captureHarness = oldHarness;
+  const plan = validatePerformanceMatrixPlan(input);
+  for (const role of ['baseline', 'candidate']) {
+    const old = createMatrixCaptureInvocation(plan, plan.rows[0], role);
+    assert.equal(old.cwd, oldHarness.checkout);
+    assert.equal(
+      old.args[old.args.indexOf('--expected-harness-sha') + 1],
+      oldHarness.commit,
+    );
+    assert.ok(!old.args.includes('--expected-build-harness-sha'));
+    const corrected = createMatrixCaptureInvocation(plan, plan.rows[1], role);
+    assert.equal(corrected.cwd, input.harnessCheckout);
+    assert.equal(
+      corrected.args[corrected.args.indexOf('--expected-harness-sha') + 1],
+      input.harnessCommit,
+    );
+    assert.equal(
+      corrected.args[
+        corrected.args.indexOf('--expected-build-harness-sha') + 1
+      ],
+      oldHarness.commit,
+    );
+    assert.equal(
+      corrected.args[corrected.args.indexOf('--build-harness-checkout') + 1],
+      oldHarness.checkout,
+    );
+  }
+  for (const mutation of [
+    (p) => {
+      p.buildHarness.commit = 'short';
+    },
+    (p) => {
+      delete p.buildHarness.checkout;
+    },
+    (p) => {
+      p.rows[0].captureHarness.commit = 'short';
+    },
+    (p) => {
+      delete p.rows[0].captureHarness.checkout;
+    },
+  ]) {
+    const invalid = structuredClone(input);
+    mutation(invalid);
+    assert.throws(() => validatePerformanceMatrixPlan(invalid));
+  }
+});
+
+test('resume never relabels historical captures as a newer producer or builder', async (t) => {
+  const root = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), 'gev-matrix-producer-'),
+  );
+  t.after(async () => {
+    const absolute = await fs.promises.realpath(root);
+    assert.equal(
+      path.dirname(absolute).toLowerCase(),
+      (await fs.promises.realpath(os.tmpdir())).toLowerCase(),
+    );
+    assert.ok(path.basename(absolute).startsWith('gev-matrix-producer-'));
+    await fs.promises.rm(absolute, { recursive: true, force: true });
+  });
+  const input = makePlan(root);
+  input.buildHarness = {
+    commit: 'c'.repeat(40),
+    checkout: input.harnessCheckout,
+  };
+  input.harnessCommit = 'd'.repeat(40);
+  input.harnessCheckout = path.join(root, 'new-producer');
+  const plan = validatePerformanceMatrixPlan(input);
+  const row = plan.rows[1];
+  const report = makeReport(candidateCommit);
+  report.comparisonReadiness = { status: 'ready', reasons: [] };
+  report.workload.providerFixture = row.providerFixture;
+  report.environment.hardwareEligible = true;
+  report.source.harnessCommit = 'd'.repeat(40);
+  report.source.buildProvenance.harnessCommit = 'c'.repeat(40);
+  report.source.buildProvenance.captureProducerCommit =
+    report.source.harnessCommit;
+  report.source.buildHarnessCommit = 'c'.repeat(40);
+  await fs.promises.mkdir(plan.outputRoot);
+  const target = matrixReportPath(plan, row, 'candidate');
+  await fs.promises.writeFile(target, JSON.stringify(report));
+  assert.equal(
+    readReusableMatrixReport(plan, row, 'candidate').source.harnessCommit,
+    report.source.harnessCommit,
+  );
+  report.source.harnessCommit = 'c'.repeat(40);
+  await fs.promises.writeFile(target, JSON.stringify(report));
+  assert.throws(
+    () => readReusableMatrixReport(plan, row, 'candidate'),
+    /Capture producer differs/,
+  );
+  report.source.harnessCommit = 'd'.repeat(40);
+  report.source.buildProvenance.harnessCommit = 'd'.repeat(40);
+  await fs.promises.writeFile(target, JSON.stringify(report));
+  assert.throws(
+    () => readReusableMatrixReport(plan, row, 'candidate'),
+    /Build harness differs/,
+  );
+});
+
 test('resume accepts only exact ready hardware reports and revalidates the pair', async () => {
   const root = await fs.promises.mkdtemp(
     path.join(os.tmpdir(), 'gev-matrix-reuse-'),
@@ -194,6 +309,10 @@ test('resume accepts only exact ready hardware reports and revalidates the pair'
       );
     }
     assert.equal(validateMatrixPair(plan, row).status, 'comparable');
+    assert.deepEqual(
+      await validateMatrixPairWithNativeEvidence(plan, row),
+      validateMatrixPair(plan, row),
+    );
 
     const candidatePath = matrixReportPath(plan, row, 'candidate');
     const tampered = JSON.parse(await fs.promises.readFile(candidatePath));
@@ -202,6 +321,139 @@ test('resume accepts only exact ready hardware reports and revalidates the pair'
     assert.throws(
       () => readReusableMatrixReport(plan, row, 'candidate'),
       /50 !== 75/,
+    );
+    await assert.rejects(
+      validateMatrixPairWithNativeEvidence(plan, row),
+      /50 !== 75/,
+    );
+  } finally {
+    await fs.promises.rm(root, { recursive: true, force: true });
+  }
+});
+
+test('native resume reconciles the frozen missing top-level label only from every observed boundary', async () => {
+  const root = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), 'gev-matrix-native-reuse-'),
+  );
+  try {
+    const planInput = makePlan(root);
+    planInput.comparisonProfile = 'native-sharpness-v1';
+    const plan = validatePerformanceMatrixPlan(planInput);
+    await fs.promises.mkdir(plan.outputRoot, { recursive: true });
+    const row = plan.rows.find((entry) => entry.id === 'dense-investigation');
+    const profile = {
+      id: 'native-sharpness-v1',
+      useBrowserRecommendedResolution: false,
+      resolutionScale: 1,
+      maximumScreenSpaceError: 1,
+      viewport: { width: 1440, height: 900, dpr: 1 },
+      drawingBuffer: { width: 1440, height: 900 },
+    };
+    for (const [role, commit] of [
+      ['baseline', baselineCommit],
+      ['candidate', candidateCommit],
+    ]) {
+      const report = makeReport(commit);
+      report.source.harnessCommit = plan.harnessCommit;
+      report.source.buildProvenance.harnessCommit = plan.harnessCommit;
+      report.comparisonReadiness = { status: 'ready', reasons: [] };
+      report.workload.providerFixture = row.providerFixture;
+      report.environment.hardwareEligible = true;
+      for (const capture of report.captures)
+        for (const phase of ['before', 'after']) {
+          capture.settings ||= {};
+          capture.settings[phase] ||= {};
+          capture.settings[phase].nativeSharpnessProfile = profile;
+          capture.conditions[phase].settings.nativeSharpnessProfile = profile;
+          capture.conditions[phase].environment = {
+            nativeSharpnessProfile: profile,
+            viewport: profile.viewport,
+            drawingBuffer: profile.drawingBuffer,
+          };
+        }
+      await fs.promises.writeFile(
+        matrixReportPath(plan, row, role),
+        JSON.stringify(report),
+      );
+      const rawBefore = await fs.promises.readFile(
+        matrixReportPath(plan, row, role),
+        'utf8',
+      );
+      assert.equal(
+        readReusableMatrixReport(plan, row, role).comparisonProfile,
+        'native-sharpness-v1',
+      );
+      assert.equal(
+        await fs.promises.readFile(matrixReportPath(plan, row, role), 'utf8'),
+        rawBefore,
+      );
+    }
+    const candidatePath = matrixReportPath(plan, row, 'candidate');
+    const candidate = JSON.parse(await fs.promises.readFile(candidatePath));
+    delete candidate.captures[0].conditions.before.settings
+      .nativeSharpnessProfile;
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /missing native sharpness profile/,
+    );
+    for (const location of [
+      ['settings', 'before'],
+      ['conditions.settings', 'before'],
+      ['conditions.environment', 'before'],
+    ]) {
+      const candidateAgain = JSON.parse(
+        await fs.promises.readFile(candidatePath),
+      );
+      if (location[0] === 'settings')
+        delete candidateAgain.captures[0].settings[location[1]]
+          .nativeSharpnessProfile;
+      else if (location[0] === 'conditions.settings')
+        delete candidateAgain.captures[0].conditions[location[1]].settings
+          .nativeSharpnessProfile;
+      else
+        delete candidateAgain.captures[0].conditions[location[1]].environment
+          .nativeSharpnessProfile;
+      await fs.promises.writeFile(
+        candidatePath,
+        JSON.stringify(candidateAgain),
+      );
+      assert.throws(
+        () => readReusableMatrixReport(plan, row, 'candidate'),
+        /missing native sharpness profile/,
+      );
+    }
+    candidate.captures[0].conditions.before.settings.nativeSharpnessProfile =
+      profile;
+    candidate.captures[0].conditions.before.environment.nativeSharpnessProfile =
+      profile;
+    candidate.captures[0].settings.before.nativeSharpnessProfile = profile;
+    candidate.environment.nativeSharpnessProfile = {
+      ...profile,
+      maximumScreenSpaceError: 2,
+    };
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /globe SSE differs|explicit environment native profile differs/,
+    );
+    candidate.environment.nativeSharpnessProfile = profile;
+    candidate.captures[0].conditions.before.environment.viewport = {
+      ...profile.viewport,
+      dpr: 1.5,
+    };
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /boundary viewport differs/,
+    );
+    candidate.captures[0].conditions.before.environment.viewport =
+      profile.viewport;
+    candidate.comparisonProfile = 'legacy';
+    await fs.promises.writeFile(candidatePath, JSON.stringify(candidate));
+    assert.throws(
+      () => readReusableMatrixReport(plan, row, 'candidate'),
+      /comparison profile differs/,
     );
   } finally {
     await fs.promises.rm(root, { recursive: true, force: true });
