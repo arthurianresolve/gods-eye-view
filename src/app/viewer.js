@@ -2,6 +2,7 @@ import * as Cesium from 'cesium';
 import { applyModelAtmosphereWorkaround } from './atmosphereCompat.js';
 import { installCesium138CameraAnglesCompat } from './cameraAnglesCompat.js';
 import { cancelPendingFrameCaptures } from '../freshFrame.js';
+import { StarrySky } from '../sky/starrySky.js';
 
 const PINCH_ZOOM_MULTIPLIER = 8;
 const MAX_PINCH_PIXEL_DELTA = 120;
@@ -260,15 +261,12 @@ export function boundedResolutionScale({
   return Math.min(requestedScale, cap);
 }
 
-/** Create the standard globe viewer in caller-owned, visible containers. */
-export function createApplicationViewer({
-  container,
+/** Cesium.Viewer options of the standard globe viewer. */
+export function applicationViewerOptions(
   creditContainer,
-  preserveDrawingBuffer = true,
-}) {
-  if (!container || !creditContainer)
-    throw new TypeError('Viewer and credit containers are required');
-  const viewer = new Cesium.Viewer(container, {
+  { preserveDrawingBuffer = true } = {},
+) {
+  return {
     timeline: false,
     animation: false,
     baseLayerPicker: false,
@@ -281,6 +279,8 @@ export function createApplicationViewer({
     selectionIndicator: false,
     infoBox: false,
     baseLayer: false,
+    // Replaces Cesium's blocky default without suppressing the Sun and Moon.
+    skyBox: new StarrySky(),
     creditContainer,
     msaaSamples: 4,
     // Render at the display's native device-pixel ratio. Cesium defaults to
@@ -291,7 +291,21 @@ export function createApplicationViewer({
     // The false experiment requires matched capture and GPU evidence before
     // becoming the default. The fresh-frame path works with either setting.
     contextOptions: { webgl: { preserveDrawingBuffer } },
-  });
+  };
+}
+
+/** Create the standard globe viewer in caller-owned, visible containers. */
+export function createApplicationViewer({
+  container,
+  creditContainer,
+  preserveDrawingBuffer = true,
+}) {
+  if (!container || !creditContainer)
+    throw new TypeError('Viewer and credit containers are required');
+  const viewer = new Cesium.Viewer(
+    container,
+    applicationViewerOptions(creditContainer, { preserveDrawingBuffer }),
+  );
   let cameraAnglesCompat;
   try {
     viewer.targetFrameRate = 60;

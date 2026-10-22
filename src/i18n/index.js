@@ -20,6 +20,7 @@ const CATALOGS = { en: null };
 const LOADERS = Object.freeze({
   es: () => import('./locales/es.json', { with: { type: 'json' } }),
   ru: () => import('./locales/ru.json', { with: { type: 'json' } }),
+  'zh-CN': () => import('./locales/zh-CN.json', { with: { type: 'json' } }),
 });
 const pendingLoads = new Map();
 

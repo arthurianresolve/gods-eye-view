@@ -502,6 +502,10 @@ export function viewFromParams(params) {
     params.has('dm') || params.has('dd')
       ? migrateDetectionState(params.get('dm') || 'OFF', number('dd'), 50)
       : null;
+  const styleName = params.get('style');
+  const restoredStyle = Object.hasOwn(STYLES_BY_URL_NAME, styleName)
+    ? STYLES_BY_URL_NAME[styleName]
+    : null;
   return createView({
     camera: {
       lat,
@@ -511,11 +515,8 @@ export function viewFromParams(params) {
       pitch_deg: number('pitch'),
     },
     layers: state?.enabledLayerIds ?? [],
-    style: STYLES_BY_URL_NAME[params.get('style')] ?? null,
-    visual: visualFromParams(
-      params,
-      STYLES_BY_URL_NAME[params.get('style')] ?? null,
-    ),
+    style: restoredStyle,
+    visual: visualFromParams(params, restoredStyle),
     map: VIEW_MAPS.includes(map) ? map : null,
     follow,
     annotations: annotationsFromParams(params),

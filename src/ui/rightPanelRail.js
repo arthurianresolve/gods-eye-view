@@ -14,7 +14,7 @@ const pendingCollapseRetries = new WeakSet();
 function rightRailPanels(stack, getComputedStyle) {
   return [...stack.children].filter(
     (panel) =>
-      panel.matches('[data-panel-id]:not(.panel-floating)') &&
+      panel.matches('[data-panel-id]') &&
       !panel.hidden &&
       ((stack.classList.contains('layout-exclusive') &&
         panel.classList.contains('collapsed')) ||
@@ -220,9 +220,9 @@ export function layoutRightPanelRail({
   // A collapse may schedule one follow-up, which only measures and allocates.
   const isCollapseRetry = pendingCollapseRetries.delete(stack);
 
-  // A floating (lifted-out) panel is not laid out by the rail. Neither is one
-  // that other CSS hides, such as an event view. Exclusive presentation hides
-  // collapsed panels itself; those stay in the rail so they can be restored.
+  // A panel that other CSS hides, such as an event view, is not laid out.
+  // Exclusive presentation hides collapsed panels itself; those stay in the
+  // rail so they can be restored.
   const panels = rightRailPanels(stack, getComputedStyle);
   if (!hud.visible || hud.variant !== 'tactical') {
     for (const panel of panels.filter((item) =>

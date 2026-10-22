@@ -236,8 +236,8 @@ export function gbfsProxy({ ratePerMinute = GBFS_RATE_PER_MIN } = {}) {
         }
 
         const upstream = await fetchGbfsUpstream(upstreamUrl.toString());
-        // Relay only parsed JSON under a fixed type, regardless of the
-        // upstream's declared type. Never send provider markup to the browser.
+        // Only JSON is relayed, re-serialized under a fixed type: neither the
+        // upstream's text nor its declared type reaches the browser.
         let payload;
         try {
           payload = JSON.parse(upstream.body);

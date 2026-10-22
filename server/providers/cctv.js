@@ -634,8 +634,10 @@ export function cctvProxy({
           return;
         }
 
-        // Forwarded clients cannot be trusted to spend the Google key, even
-        // when the forwarding header is present with an empty value.
+        // The Street View fallback spends the Google key, so a forwarded
+        // request (whose client this server cannot see) gets the placeholder,
+        // as if no key were configured. Any forwarding header counts, even an
+        // empty one.
         const forwarded = PROXY_SIGNALS.some(
           (name) => req.headers?.[name] !== undefined,
         );
