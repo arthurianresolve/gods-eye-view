@@ -25,6 +25,57 @@ import {
  */
 export const BROWSER_CSP = BROWSER_HEADERS['Content-Security-Policy'];
 
+/** API routes return data, not documents, including on direct navigation. */
+export const API_CSP = "default-src 'none'; sandbox";
+
+export const API_HEADERS = Object.freeze({
+  'Content-Security-Policy': API_CSP,
+  'X-Content-Type-Options': 'nosniff',
+});
+
+/** Match the same /api mount spellings the router may accept. */
+function isApiPath(url) {
+  const raw = String(url || '/');
+  const target = raw
+    .trim()
+    .split(/[?#]/, 1)[0]
+    .replace(/\\/g, '/')
+    .replace(/^[a-z][a-z0-9+.-]*:(?:\/\/[^/]*)?/i, '');
+  let parsed = '';
+  try {
+    parsed = new URL(raw, 'http://localhost').pathname;
+  } catch {
+    /* The unparsed paths still decide. */
+  }
+  return [raw.split(/[?#]/, 1)[0], target, parsed].some((path) =>
+    /^\/api(?:$|[/.])/i.test(path),
+  );
+}
+
+/** Install headers before providers so errors and Host refusals carry them. */
+export function apiResponseHeadersPlugin() {
+  const install = (server) => {
+    server.middlewares.use((req, res, next) => {
+      if (!isApiPath(req.url)) return next();
+      for (const [name, value] of Object.entries(API_HEADERS))
+        res.setHeader(name, value);
+      const setHeader = res.setHeader.bind(res);
+      res.setHeader = (name, value) =>
+        String(name).toLowerCase() === 'content-security-policy' &&
+        String(value) !== API_CSP
+          ? setHeader(name, `${API_CSP}, ${value}`)
+          : setHeader(name, value);
+      next();
+    });
+  };
+  return {
+    name: 'api-response-headers',
+    enforce: 'pre',
+    configureServer: install,
+    configurePreviewServer: install,
+  };
+}
+
 /** Build browser assets with explicit inputs; never load environment or providers. */
 export function createBrowserViteConfig({
   plugins = [],
@@ -54,7 +105,9 @@ export function createBrowserViteConfig({
   }
   return {
     plugins: [
-      // First, so no provider route answers a Host the server does not allow.
+      // First, so even refused API requests carry the API response policy.
+      apiResponseHeadersPlugin(),
+      // Next, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
       cesiumDependencyIdentityPlugin(),
       cesium({ cesiumBaseUrl }),
