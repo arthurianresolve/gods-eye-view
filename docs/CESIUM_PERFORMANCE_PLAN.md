@@ -34,14 +34,16 @@ than unfinished implementation.
 | S70     | Closed: attested package delivered with rollback             | Archive checksum, attestation and all 2,129 manifest hashes pass. Exact public HTTPS bytes, allowed-host rejection, workspace behavior and rollback/restoration pass.                                                                                                                                                                                                                                   | Final Ampfing soak passes for 60m23.837s and 251 measured cycles at 2.425431% final-window heap growth. Physical macOS/discrete GPU and human review remain unavailable. |
 
 **Current provider reconciliation.** Upstream provider-response hardening was
-ported onto `dev` as `8a4808fe` and is an ancestor of `5ac868ef`. The current
-performance runtime includes stricter CCTV source and media validation, keyless
-same-site admission, JSON-only GBFS responses, API response headers and the
-later local-infrastructure scheduling correction. Live tracked refs on
-22 October remain fork `main@1df2a272`, fork `dev@8a4808fe` and upstream
-`main@7be5937f`; a fresh fetch found no newer remote movement requiring
-reconciliation. Final provider, package and hardware evidence below binds to
-the frozen release head.
+ported onto `dev` as `8a4808fe` and is included in the qualified performance
+runtime. The runtime therefore retains stricter CCTV source and media
+validation, keyless same-site admission, JSON-only GBFS responses, API response
+headers and the later local-infrastructure scheduling correction. PR
+[#6](https://github.com/arthurianresolve/gods-eye-view/pull/6) merged the
+qualified branch into `dev` as `bf032e33`; the merge tree exactly matches the
+qualified head `d6398856`, so integration introduced no content change. Fork
+`main@1df2a272` and upstream `main@7be5937f` remain separate from this `dev`
+milestone. Final provider, package and hardware evidence below binds to the
+frozen release head.
 
 ### Frozen-runtime qualification and delivery — 22 October 2026
 
