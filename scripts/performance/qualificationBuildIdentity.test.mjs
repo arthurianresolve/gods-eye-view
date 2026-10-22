@@ -1012,7 +1012,7 @@ test('actual producer brackets all captures with source checks and retains prima
     assert.equal(result.protocol.eventTimingPlan, eventTimingPlan);
     assert.equal(
       result.protocol.interactionProtocol,
-      'trusted-click-event-timing-prerender-postrender-witness-v7',
+      'trusted-click-event-timing-instrumentation-warmup-prerender-postrender-witness-v8',
     );
     assert.equal(
       result.protocol.localReadinessRegistrationPolicy,
