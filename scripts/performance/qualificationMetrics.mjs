@@ -29,6 +29,7 @@ const METRIC_SCHEMA = 'gev-qualification-metrics/v1';
 const INTERACTION_SCHEMA_V2 = 'gev-interaction-latency-evidence/v2';
 const INTERACTION_SCHEMA_V3 = 'gev-interaction-latency-evidence/v3';
 const INTERACTION_SCHEMA_V4 = 'gev-interaction-latency-evidence/v4';
+const INTERACTION_SCHEMA_V5 = 'gev-interaction-latency-evidence/v5';
 const INTERACTION_PROTOCOL_V2 =
   'trusted-event-timeStamp-prerender-postrender-witness-v4';
 const INTERACTION_PROTOCOL_V3 =
@@ -37,6 +38,8 @@ const INTERACTION_PROTOCOL_V4 =
   'trusted-click-event-timing-prerender-postrender-witness-v6';
 const INTERACTION_PROTOCOL_LATE_READINESS =
   'trusted-click-event-timing-prerender-postrender-witness-v7';
+const INTERACTION_PROTOCOL_INSTRUMENTATION_WARMUP =
+  'trusted-click-event-timing-instrumentation-warmup-prerender-postrender-witness-v8';
 const LOCAL_READINESS_REGISTRATION_POLICY =
   'settled-intent-after-layer-prerender-v1';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
@@ -884,12 +887,13 @@ function validateInteractionSide(
   expectedMaterializedCount,
   protocolVersion,
   lateLocalReadiness = false,
+  { expectedSampleCount = INTERACTION_SAMPLE_COUNT } = {},
 ) {
   assert.ok(Array.isArray(side), `${label} samples must be an array`);
   assert.equal(
     side.length,
-    INTERACTION_SAMPLE_COUNT,
-    `${label} requires exactly ${INTERACTION_SAMPLE_COUNT} recorded samples`,
+    expectedSampleCount,
+    `${label} requires exactly ${expectedSampleCount} recorded samples`,
   );
   const ids = new Set();
   let previousInputAtMs = -1;
@@ -1205,6 +1209,67 @@ function validateInteractionSide(
   });
 }
 
+function assertInstrumentationWarmupBoundary(warmup, measured, role) {
+  assert.deepEqual(
+    warmup.map((sample) => sample.generation),
+    [1, 2],
+    `${role} instrumentation warmup must own generations 1 and 2`,
+  );
+  assert.deepEqual(
+    measured.map((sample) => sample.generation),
+    Array.from({ length: INTERACTION_SAMPLE_COUNT }, (_, index) => index + 3),
+    `${role} measured local-control generations must follow warmup`,
+  );
+  const sequence = [...warmup, ...measured];
+  assert.equal(
+    new Set(sequence.map((sample) => sample.sampleId)).size,
+    sequence.length,
+    `${role} warmup and measured sample IDs must be unique`,
+  );
+  for (let index = 1; index < sequence.length; index++) {
+    assert.ok(
+      sequence[index].inputAtMs > sequence[index - 1].inputAtMs,
+      `${role} measured input must follow instrumentation warmup`,
+    );
+    assert.ok(
+      sequence[index].acceptedIntentEpoch >
+        sequence[index - 1].acceptedIntentEpoch,
+      `${role} measured intent epochs must follow instrumentation warmup`,
+    );
+    assert.ok(
+      sequence[index].frameNumberAtRendered >
+        sequence[index - 1].frameNumberAtRendered,
+      `${role} completed frames must advance from instrumentation warmup into measurement`,
+    );
+  }
+}
+
+function instrumentationWarmupDiagnostics(side, warmup) {
+  return {
+    status: 'diagnostic',
+    gating: false,
+    includedInWarmedPercentiles: false,
+    sampleCount: warmup.length,
+    matchedClickToNextRenderingMs: warmup.map(
+      (sample) =>
+        side.eventTimingCapture.entries.find(
+          (entry) =>
+            entry.generation === sample.generation &&
+            entry.startTime === sample.clickAtMs,
+        ).duration,
+    ),
+    clickToAcceptedIntentMs: warmup.map(
+      (sample) => sample.acceptedIntentAtMs - sample.clickAtMs,
+    ),
+    clickToFullReadyStateMs: warmup.map(
+      (sample) => sample.stateAtMs - sample.clickAtMs,
+    ),
+    clickToFullRenderedReadinessMs: warmup.map(
+      (sample) => sample.renderedFrameAtMs - sample.clickAtMs,
+    ),
+  };
+}
+
 function assertIdentitySourceReference(evidence, identitySource) {
   if (identitySource) {
     assert.deepEqual(
@@ -1243,10 +1308,12 @@ function compareInteractionMetric(
         ? 3
         : evidence.schema === INTERACTION_SCHEMA_V4
           ? 4
-          : null;
+          : evidence.schema === INTERACTION_SCHEMA_V5
+            ? 5
+            : null;
   if (!protocolVersion)
     return unavailable(
-      `Interaction evidence must use ${INTERACTION_SCHEMA_V2}, ${INTERACTION_SCHEMA_V3}, or ${INTERACTION_SCHEMA_V4}.`,
+      `Interaction evidence must use ${INTERACTION_SCHEMA_V2}, ${INTERACTION_SCHEMA_V3}, ${INTERACTION_SCHEMA_V4}, or ${INTERACTION_SCHEMA_V5}.`,
     );
   if (evidence.status === 'failed')
     return {
@@ -1260,7 +1327,7 @@ function compareInteractionMetric(
     assertIdentitySourceReference(evidence, identitySource);
     const nativeWindowViewport = validateMeasurementEnvironment(evidence);
     if (identitySource) assert.equal(nativeWindowViewport, true);
-    if (protocolVersion === 4) {
+    if (protocolVersion >= 4) {
       assertInteractionEventTimingPlan(evidence.eventTimingPlan);
       for (const role of ['baseline', 'candidate'])
         assert.equal(
@@ -1352,26 +1419,30 @@ function compareInteractionMetric(
           });
       }
     const lateLocalReadiness =
-      protocolVersion === 4 &&
+      protocolVersion >= 4 &&
       evidence.builds.baseline.interactionProtocol ===
-        INTERACTION_PROTOCOL_LATE_READINESS;
+        (protocolVersion === 5
+          ? INTERACTION_PROTOCOL_INSTRUMENTATION_WARMUP
+          : INTERACTION_PROTOCOL_LATE_READINESS);
     if (
-      protocolVersion === 4 &&
+      protocolVersion >= 4 &&
       evidence.eventTimingPlan.policy ===
         INTERACTION_EVENT_TIMING_PLAN_V6.policy
     )
       assert.equal(
         lateLocalReadiness,
         true,
-        'V6 requires prospective v7 readiness acquisition',
+        'V6 requires prospective readiness acquisition',
       );
     for (const role of ['baseline', 'candidate']) {
       assert.equal(
         evidence.builds[role]?.interactionProtocol,
-        protocolVersion === 4
-          ? lateLocalReadiness
-            ? INTERACTION_PROTOCOL_LATE_READINESS
-            : INTERACTION_PROTOCOL_V4
+        protocolVersion >= 4
+          ? protocolVersion === 5
+            ? INTERACTION_PROTOCOL_INSTRUMENTATION_WARMUP
+            : lateLocalReadiness
+              ? INTERACTION_PROTOCOL_LATE_READINESS
+              : INTERACTION_PROTOCOL_V4
           : protocolVersion === 3
             ? INTERACTION_PROTOCOL_V3
             : INTERACTION_PROTOCOL_V2,
@@ -1427,6 +1498,20 @@ function compareInteractionMetric(
         );
       expectedMaterializedCount = DATACENTER_FIXTURE_FEATURE_COUNT;
     }
+    const instrumentationWarmups = {};
+    if (name === 'localControl' && protocolVersion === 5)
+      for (const role of ['baseline', 'candidate']) {
+        const warmup = evidence.builds[role].instrumentationWarmupLocalControl;
+        validateInteractionSide(
+          warmup,
+          `localControlInstrumentationWarmup ${role}`,
+          expectedMaterializedCount,
+          protocolVersion,
+          true,
+          { expectedSampleCount: 2 },
+        );
+        instrumentationWarmups[role] = warmup;
+      }
     const baselineSamples = validateInteractionSide(
       evidence.builds?.baseline?.[name],
       `${name} baseline`,
@@ -1454,9 +1539,13 @@ function compareInteractionMetric(
       ],
     ]) {
       assert.ok(Array.isArray(localSamples) && Array.isArray(replaySamples));
-      const generations = [...localSamples, ...replaySamples].map(
-        (sample) => sample.generation,
-      );
+      const warmupSamples = instrumentationWarmups[role] || [];
+      const orderedSamples = [
+        ...warmupSamples,
+        ...localSamples,
+        ...replaySamples,
+      ];
+      const generations = orderedSamples.map((sample) => sample.generation);
       assert.equal(
         new Set(generations).size,
         generations.length,
@@ -1467,6 +1556,9 @@ function compareInteractionMetric(
           generations[index] > generations[index - 1],
           `${role} interaction generation order is stale or duplicated`,
         );
+      if (protocolVersion === 5 && name === 'localControl') {
+        assertInstrumentationWarmupBoundary(warmupSamples, localSamples, role);
+      }
     }
     const baselineStateP95Ms = p95(
       baselineSamples.map((sample) => sample.inputToStateMs),
@@ -1481,7 +1573,7 @@ function compareInteractionMetric(
       candidateSamples.map((sample) => sample.inputToRenderedFrameMs),
     );
     const failures = [];
-    if (name === 'localControl' && protocolVersion === 4) {
+    if (name === 'localControl' && protocolVersion >= 4) {
       const observed = {};
       const observedAcknowledgementPolicy =
         evidence.eventTimingPlan.policy ===
@@ -1493,7 +1585,24 @@ function compareInteractionMetric(
         const durations = validateInteractionEventTiming(
           evidence.builds[role].eventTimingCapture,
           evidence.builds[role].localControl,
+          protocolVersion === 5
+            ? {
+                instrumentationWarmupSamples:
+                  evidence.builds[role].instrumentationWarmupLocalControl,
+              }
+            : undefined,
         );
+        const instrumentationWarmup =
+          protocolVersion === 5
+            ? evidence.builds[role].instrumentationWarmupLocalControl
+            : [];
+        const warmupDiagnostics =
+          protocolVersion === 5
+            ? instrumentationWarmupDiagnostics(
+                evidence.builds[role],
+                instrumentationWarmup,
+              )
+            : null;
         observed[role] = {
           sampleCount: samples.length,
           clickToAcceptedIntentP95Ms: p95(
@@ -1509,6 +1618,11 @@ function compareInteractionMetric(
           clickToFullRenderedReadinessP95Ms: p95(
             samples.map((sample) => sample.inputToRenderedFrameMs),
           ),
+          ...(warmupDiagnostics
+            ? {
+                instrumentationWarmupLocalControl: warmupDiagnostics,
+              }
+            : {}),
           ...(observedAcknowledgementPolicy
             ? {
                 acknowledgementCorrectness: {
@@ -1557,8 +1671,14 @@ function compareInteractionMetric(
         protocolVersion,
         feedbackPolicy: evidence.eventTimingPlan.policy,
         semantic: observedAcknowledgementPolicy
-          ? 'Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.'
-          : 'Interaction schema v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback under the separately declared feedback policy before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
+          ? `${
+              protocolVersion === 5
+                ? 'Interaction schema v5 retains the first two post-install trusted ON/OFF actions as setup/warmup evidence under the same observer and proofs, excludes them from the unchanged 20-action warmed p95, and requires all measured generations and intent epochs to follow them. Their timing cause is unattributed. They are not cold first-use evidence; cold activation remains separately measured. '
+                : ''
+            }Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.`
+          : protocolVersion === 5
+            ? 'Interaction schema v5 records the first two post-install trusted ON/OFF actions as setup/warmup evidence under the same observer and proofs, excludes them from the unchanged 20-action warmed p95, and requires all measured generations and intent epochs to follow them. Their timing cause is unattributed. They are not cold first-use evidence; cold activation remains separately measured. Candidate accepted intent and matched Event Timing p95 each remain <=100ms, with complete baseline full-readiness comparisons <=10%.'
+            : 'Interaction schema v4 uses matched trusted-click Event Timing duration for the next rendering update, guarded by visible same-intent feedback under the separately declared feedback policy before the earliest quantized endpoint and continuous intent/foreground observations; candidate accepted intent and rendering p95 each <=100ms. Complete baseline samples support separate <=10% full-readiness comparisons. Two-RAF timestamps are diagnostic, and no physical presentation or asynchronous completion is inferred from Event Timing.',
         baseline: {
           ...observed.baseline,
           absoluteAcknowledgementFailures: absoluteFailures(observed.baseline),
@@ -1566,6 +1686,16 @@ function compareInteractionMetric(
         candidate: observed.candidate,
         absoluteAcknowledgementLimitMs: limitMs,
         absoluteAcknowledgementGateAppliesTo: 'candidate',
+        ...(protocolVersion === 5
+          ? {
+              instrumentationWarmupLocalControl: {
+                pairsPerBuild: 1,
+                samplesPerBuild: 2,
+                excludedFromPercentiles: true,
+                coldFirstUseEvidence: false,
+              },
+            }
+          : {}),
         fullReadinessRegressionLimitPct: STARTUP_REGRESSION_LIMIT_PCT,
         failures,
       };
@@ -2010,7 +2140,13 @@ export function evaluateInterruptedInteractionDiagnostics({
     assert.equal(schema, 'gev-qualification-capture/v1');
     assert.equal(status, 'failed');
     const evidence = interactionEvidence;
-    assert.equal(evidence?.schema, INTERACTION_SCHEMA_V4);
+    const protocolVersion =
+      evidence?.schema === INTERACTION_SCHEMA_V5
+        ? 5
+        : evidence?.schema === INTERACTION_SCHEMA_V4
+          ? 4
+          : null;
+    assert.ok(protocolVersion, 'Interrupted interaction schema is unsupported');
     assert.equal(evidence.status, 'failed');
     assert.equal(sourceCaptures?.comparisonEligible, false);
     assert.equal(sourceCaptures?.performanceEligible, false);
@@ -2069,7 +2205,9 @@ export function evaluateInterruptedInteractionDiagnostics({
       assertForegroundIntegrity(side, `Interrupted ${role}`);
       assert.equal(
         side.interactionProtocol,
-        INTERACTION_PROTOCOL_LATE_READINESS,
+        protocolVersion === 5
+          ? INTERACTION_PROTOCOL_INSTRUMENTATION_WARMUP
+          : INTERACTION_PROTOCOL_LATE_READINESS,
       );
       assert.equal(
         side.localReadinessRegistrationPolicy,
@@ -2093,16 +2231,34 @@ export function evaluateInterruptedInteractionDiagnostics({
         side.eventTimingCapture?.policy,
         evidence.eventTimingPlan.policy,
       );
+      const warmup =
+        protocolVersion === 5 ? side.instrumentationWarmupLocalControl : [];
+      if (protocolVersion === 5) {
+        validateInteractionSide(
+          warmup,
+          `localControlInstrumentationWarmup ${role}`,
+          DATACENTER_FIXTURE_FEATURE_COUNT,
+          protocolVersion,
+          true,
+          { expectedSampleCount: 2 },
+        );
+      }
       const samples = validateInteractionSide(
         side.localControl,
         `localControl ${role}`,
         DATACENTER_FIXTURE_FEATURE_COUNT,
-        4,
+        protocolVersion,
         true,
       );
+      if (protocolVersion === 5) {
+        assertInstrumentationWarmupBoundary(warmup, side.localControl, role);
+      }
       const durations = validateInteractionEventTiming(
         side.eventTimingCapture,
         side.localControl,
+        protocolVersion === 5
+          ? { instrumentationWarmupSamples: warmup }
+          : undefined,
       );
       local[role] = {
         sampleCount: samples.length,
@@ -2116,6 +2272,12 @@ export function evaluateInterruptedInteractionDiagnostics({
         clickToFullRenderedReadinessP95Ms: p95(
           samples.map((sample) => sample.inputToRenderedFrameMs),
         ),
+        ...(protocolVersion === 5
+          ? {
+              instrumentationWarmupLocalControl:
+                instrumentationWarmupDiagnostics(side, warmup),
+            }
+          : {}),
       };
     }
     const replaySide = evidence.builds.candidate;
@@ -2131,7 +2293,7 @@ export function evaluateInterruptedInteractionDiagnostics({
       replaySide.loadedReplaySeek,
       'loadedReplaySeek candidate',
       null,
-      4,
+      protocolVersion,
       true,
     );
     const failures = [];

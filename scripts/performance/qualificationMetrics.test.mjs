@@ -1613,6 +1613,210 @@ function eventTimingInteractionEvidence() {
   return evidence;
 }
 
+function instrumentationWarmupInteractionEvidence(
+  evidence = eventTimingInteractionEvidence(),
+) {
+  evidence.schema = 'gev-interaction-latency-evidence/v5';
+  evidence.eventTimingPlan = INTERACTION_EVENT_TIMING_PLAN_V6;
+  evidence.localReadinessRegistrationPolicy =
+    LOCAL_READINESS_REGISTRATION_POLICY;
+  const shiftTimestamps = (value, delta, seen = new WeakSet()) => {
+    if (!value || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    for (const [key, child] of Object.entries(value)) {
+      if (
+        typeof child === 'number' &&
+        (/(AtMs|TimestampMs)$/.test(key) ||
+          ['atMs', 'startTime', 'processingStart', 'processingEnd'].includes(
+            key,
+          ))
+      )
+        value[key] += delta;
+      else shiftTimestamps(child, delta, seen);
+    }
+  };
+  for (const build of Object.values(evidence.builds)) {
+    build.interactionProtocol =
+      'trusted-click-event-timing-instrumentation-warmup-prerender-postrender-witness-v8';
+    build.localReadinessRegistrationPolicy =
+      LOCAL_READINESS_REGISTRATION_POLICY;
+    Object.assign(build.eventTimingCapture, INTERACTION_EVENT_TIMING_PLAN_V6, {
+      instrumentationWarmupActions: 2,
+    });
+    const warmupSamples = structuredClone(build.localControl.slice(0, 2));
+    const warmupActions = structuredClone(
+      build.eventTimingCapture.actions.slice(0, 2),
+    );
+    const warmupEntries = structuredClone(
+      build.eventTimingCapture.entries.slice(0, 2),
+    );
+    warmupSamples.forEach((sample, index) => {
+      sample.sampleId = `${sample.sampleId}-instrumentation-warmup`;
+      sample.generation = index + 1;
+      sample.frameNumberAtState = index + 1;
+      sample.frameNumberAtRendered = index + 1;
+      sample.preRenderFrameNumber = index + 1;
+    });
+    warmupActions.forEach((action, index) => {
+      action.generation = index + 1;
+      action.witness.generation = index + 1;
+      for (const witness of action.witnesses) witness.generation = index + 1;
+    });
+    warmupEntries.forEach((entry, index) => {
+      entry.generation = index + 1;
+      entry.duration = index === 0 ? 304 : 184;
+      entry.deliveredAtMs = entry.startTime + entry.duration;
+    });
+    for (const sample of build.localControl) {
+      shiftTimestamps(sample, 6000);
+      sample.generation += 2;
+      sample.frameNumberAtState += 100;
+      sample.frameNumberAtRendered += 100;
+      sample.preRenderFrameNumber += 100;
+      sample.acceptedIntentEpoch += 2;
+      sample.transitionIntentEpoch += 2;
+      sample.buttonFeedbackIntentEpoch += 2;
+    }
+    for (const action of build.eventTimingCapture.actions) {
+      shiftTimestamps(action, 6000);
+      action.generation += 2;
+      for (const witness of action.witnesses) {
+        witness.generation += 2;
+        witness.intentEpoch += 2;
+      }
+    }
+    for (const entry of build.eventTimingCapture.entries) {
+      shiftTimestamps(entry, 6000);
+      entry.generation += 2;
+      entry.interactionId += 1000;
+    }
+    for (const sample of build.loadedReplaySeek) sample.generation += 2;
+    build.instrumentationWarmupLocalControl = warmupSamples;
+    build.eventTimingCapture.actions = [
+      ...warmupActions,
+      ...build.eventTimingCapture.actions,
+    ];
+    build.eventTimingCapture.entries = [
+      ...warmupEntries,
+      ...build.eventTimingCapture.entries,
+    ];
+    build.eventTimingCapture.work.geometryChecks = 44;
+    build.eventTimingCapture.work.continuityChecks = 44;
+    for (const sample of [
+      ...build.instrumentationWarmupLocalControl,
+      ...build.localControl,
+    ])
+      sample.localReadinessRegistration = {
+        policy: LOCAL_READINESS_REGISTRATION_POLICY,
+        generation: sample.generation,
+        intentEpoch: sample.acceptedIntentEpoch,
+        expected: sample.expectedLayerEnabled,
+        completedAtMs: sample.acceptedIntentAtMs + 1,
+        registeredAtMs: sample.acceptedIntentAtMs + 2,
+      };
+  }
+  return evidence;
+}
+
+test('v5 records one instrumentation warmup pair and excludes it from warmed local-control p95', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const evaluate = (value) =>
+    evaluateQualificationMetrics({ ...args, interactionEvidence: value })
+      .metrics.localControl;
+  const evidence = instrumentationWarmupInteractionEvidence();
+  const metric = evaluate(evidence);
+  assert.equal(metric.status, 'measured', metric.reason);
+  assert.equal(metric.baseline.sampleCount, 20);
+  assert.equal(metric.candidate.sampleCount, 20);
+  assert.equal(metric.candidate.clickToNextRenderingP95Ms, 64);
+  assert.deepEqual(metric.baseline.instrumentationWarmupLocalControl, {
+    status: 'diagnostic',
+    gating: false,
+    includedInWarmedPercentiles: false,
+    sampleCount: 2,
+    matchedClickToNextRenderingMs: [304, 184],
+    clickToAcceptedIntentMs: [5, 5],
+    clickToFullReadyStateMs: [50, 50],
+    clickToFullRenderedReadinessMs: [80, 80],
+  });
+  assert.deepEqual(metric.candidate.instrumentationWarmupLocalControl, {
+    status: 'diagnostic',
+    gating: false,
+    includedInWarmedPercentiles: false,
+    sampleCount: 2,
+    matchedClickToNextRenderingMs: [304, 184],
+    clickToAcceptedIntentMs: [5, 5],
+    clickToFullReadyStateMs: [55, 55],
+    clickToFullRenderedReadinessMs: [88, 88],
+  });
+  assert.deepEqual(metric.instrumentationWarmupLocalControl, {
+    pairsPerBuild: 1,
+    samplesPerBuild: 2,
+    excludedFromPercentiles: true,
+    coldFirstUseEvidence: false,
+  });
+  assert.match(metric.semantic, /not cold first-use evidence/);
+
+  for (const mutate of [
+    (value) => value.builds.candidate.instrumentationWarmupLocalControl.pop(),
+    (value) => value.builds.candidate.eventTimingCapture.entries.shift(),
+    (value) => {
+      value.builds.candidate.localControl[0].generation = 2;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].acceptedIntentEpoch =
+        value.builds.candidate.instrumentationWarmupLocalControl[1].acceptedIntentEpoch;
+    },
+    (value) => {
+      value.builds.candidate.instrumentationWarmupLocalControl[0].focused = false;
+    },
+    (value) => {
+      delete value.builds.candidate.instrumentationWarmupLocalControl[0]
+        .localReadinessRegistration;
+    },
+  ]) {
+    const malformed = structuredClone(evidence);
+    mutate(malformed);
+    assert.notEqual(evaluate(malformed).status, 'measured');
+  }
+});
+
+test('v5 rejects cross-boundary input/frame reuse and extra actions or entries', () => {
+  const args = { baseline: capture(), candidate: capture(undefined, '2') };
+  const evaluate = (value) =>
+    evaluateQualificationMetrics({ ...args, interactionEvidence: value })
+      .metrics.localControl;
+  const evidence = instrumentationWarmupInteractionEvidence();
+  for (const mutate of [
+    (value) => {
+      value.builds.candidate.localControl[0].inputAtMs =
+        value.builds.candidate.instrumentationWarmupLocalControl[1].inputAtMs;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].frameNumberAtRendered =
+        value.builds.candidate.instrumentationWarmupLocalControl[1].frameNumberAtRendered;
+    },
+    (value) => {
+      value.builds.candidate.eventTimingCapture.actions.push(
+        structuredClone(
+          value.builds.candidate.eventTimingCapture.actions.at(-1),
+        ),
+      );
+    },
+    (value) => {
+      const entry = structuredClone(
+        value.builds.candidate.eventTimingCapture.entries.at(-1),
+      );
+      entry.interactionId += 100000;
+      value.builds.candidate.eventTimingCapture.entries.push(entry);
+    },
+  ]) {
+    const malformed = structuredClone(evidence);
+    mutate(malformed);
+    assert.notEqual(evaluate(malformed).status, 'measured');
+  }
+});
+
 test('v4 gates candidate Event Timing, preserves baseline absolute failure and v3 semantics', () => {
   const args = { baseline: capture(), candidate: capture(undefined, '2') };
   const evidence = eventTimingInteractionEvidence();
@@ -1973,6 +2177,7 @@ test('producer selects only predeclared v3/v4/v5/v6 Event Timing plans before ac
     assert.equal(calls[0].name, 'installInteractionEventTimingInPage');
     assert.deepEqual(calls[0].options, {
       policy: (plan || INTERACTION_EVENT_TIMING_PLAN).policy,
+      instrumentationWarmupActions: 2,
     });
     assert.equal(
       calls[1].options.localReadinessRegistrationPolicy,
@@ -5157,6 +5362,52 @@ test('interrupted replay retains complete local diagnostics without granting acc
   assert.equal(diagnostic.localControl.baseline.sampleCount, 20);
   assert.equal(diagnostic.localControl.candidate.sampleCount, 20);
   assert.equal(diagnostic.candidateReplay.sampleCount, 20);
+  const warmupEvidence = instrumentationWarmupInteractionEvidence(
+    structuredClone(evidence),
+  );
+  const warmupDiagnostic = diagnose(warmupEvidence);
+  assert.equal(warmupDiagnostic.status, 'diagnostic', warmupDiagnostic.reason);
+  assert.equal(warmupDiagnostic.localControl.baseline.sampleCount, 20);
+  assert.deepEqual(
+    warmupDiagnostic.localControl.baseline.instrumentationWarmupLocalControl,
+    {
+      status: 'diagnostic',
+      gating: false,
+      includedInWarmedPercentiles: false,
+      sampleCount: 2,
+      matchedClickToNextRenderingMs: [304, 184],
+      clickToAcceptedIntentMs: [5, 5],
+      clickToFullReadyStateMs: [50, 50],
+      clickToFullRenderedReadinessMs: [80, 80],
+    },
+  );
+  assert.deepEqual(
+    warmupDiagnostic.localControl.candidate.instrumentationWarmupLocalControl,
+    {
+      status: 'diagnostic',
+      gating: false,
+      includedInWarmedPercentiles: false,
+      sampleCount: 2,
+      matchedClickToNextRenderingMs: [304, 184],
+      clickToAcceptedIntentMs: [5, 5],
+      clickToFullReadyStateMs: [55, 55],
+      clickToFullRenderedReadinessMs: [88, 88],
+    },
+  );
+  for (const mutate of [
+    (value) => {
+      value.builds.baseline.localControl[0].inputAtMs =
+        value.builds.baseline.instrumentationWarmupLocalControl[1].inputAtMs;
+    },
+    (value) => {
+      value.builds.candidate.localControl[0].frameNumberAtRendered =
+        value.builds.candidate.instrumentationWarmupLocalControl[1].frameNumberAtRendered;
+    },
+  ]) {
+    const invalid = structuredClone(warmupEvidence);
+    mutate(invalid);
+    assert.equal(diagnose(invalid).status, 'failed');
+  }
   for (const mutate of [
     (value) => value.builds.baseline.localControl.pop(),
     (value) => value.builds.candidate.loadedReplaySeek.pop(),

@@ -80,6 +80,42 @@ therefore rejects the experiment. It is not pushed or included in the current
 runtime. This closes that ownership hypothesis without repeating the earlier
 whole-lifecycle OFF delay.
 
+### Prospective warmed local-control protocol — 22 October 2026
+
+All earlier interaction evidence remains bound to its recorded protocol and
+outcome. In particular, the formal `224b77b0` capture used interaction evidence
+schema v4 and failed the unchanged 100 ms native next-rendering limit: the
+candidate p95 was **120 ms**, its first two native entries were **304 ms** and
+**120 ms**, and its remaining eighteen entries were **48–64 ms**. That failure
+is preserved. It is not reinterpreted or passed by the prospective schema.
+
+The separate trusted-user-warmup diagnostic also remains rejected and
+non-acceptance evidence. After its trusted user-path setup, the four retained
+native durations were **296/184/48/64 ms**. The first retained ON/OFF pair was
+still slow and only the trailing pair was below 100 ms. Its consumer also
+retained an extra late entry from before observer installation. The cause of
+the first post-install pair's latency is **unattributed**; the result does not
+prove that the observer, the application or the compositor caused it.
+
+The prospective acquisition contract advances only the interaction evidence
+schema to v5 and the acquisition protocol to v8. After installing the same
+observer, it records the first trusted ON/OFF pair as explicit setup/warmup
+evidence with the same target, focus, intent, readiness, completed-frame and
+fixed-drain proofs as measured actions. Both entries and their accepted-intent,
+full-ready-state and completed-render durations remain in the evidence and in
+derived diagnostics. Any missing, extra, stale, reordered, unfocused or
+otherwise invalid setup evidence fails closed. Those two actions are excluded
+only from the warmed local-control percentile; the following twenty actions
+remain the unchanged measured cohort under the same observer.
+
+A future v5 run can therefore qualify only the **warmed local-control** gate.
+The setup pair is diagnostic and non-gating, and it is not cold first-use
+evidence. Cold activation remains separately measured. Schema v5 cannot
+retroactively pass the `224b77b0` run, close S60 or S69, establish the 20%
+objective, or replace visual, startup, retention, recovery, exact-package,
+hardware and final-soak evidence. All prior schema-v4 failures remain recorded
+as failures.
+
 **Storage and final-soak gate.** The final Ampfing soak has not started. The
 unchanged Windows guard requires 6 GiB free on C: at launch and 2 GiB throughout;
 the latest verified free space remains below the launch floor after clearing

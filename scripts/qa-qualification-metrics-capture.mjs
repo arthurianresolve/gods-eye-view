@@ -35,12 +35,13 @@ import {
   INTERACTION_EVENT_TIMING_PLAN_V5,
   INTERACTION_EVENT_TIMING_PLAN_V6,
   assertInteractionEventTimingPlan,
+  validateInteractionEventTiming,
 } from './performance/interactionEventTiming.mjs';
 
 const SCHEMA = 'gev-qualification-capture/v1';
-const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v4';
+const INTERACTION_SCHEMA = 'gev-interaction-latency-evidence/v5';
 const INTERACTION_PROTOCOL =
-  'trusted-click-event-timing-prerender-postrender-witness-v7';
+  'trusted-click-event-timing-instrumentation-warmup-prerender-postrender-witness-v8';
 export const LOCAL_READINESS_REGISTRATION_POLICY =
   'settled-intent-after-layer-prerender-v1';
 const LOCAL_RENDER_WITNESS = 'natural-prerender-postrender-pair-v1';
@@ -465,10 +466,10 @@ export function installInteractionObserverInPage(fixtureContract) {
   )
     throw new Error('Unsupported local readiness registration policy');
   const eventTiming =
-    fixtureContract?.interactionProtocolVersion === 4
+    fixtureContract?.interactionProtocolVersion >= 4
       ? window.__qualificationEventTiming
       : null;
-  if (fixtureContract?.interactionProtocolVersion === 4 && !eventTiming)
+  if (fixtureContract?.interactionProtocolVersion >= 4 && !eventTiming)
     throw new Error('Qualification Event Timing observer is missing');
   const app = window.__godsEyeView;
   const scene = app?.viewer?.scene;
@@ -1616,10 +1617,11 @@ export async function installInteractionObserver(
   assertCaptureEventTimingPlan(eventTimingPlan);
   await page.evaluate(installInteractionEventTimingInPage, {
     policy: eventTimingPlan.policy,
+    instrumentationWarmupActions: 2,
   });
   await page.evaluate(installInteractionObserverInPage, {
     ...fixture,
-    interactionProtocolVersion: 4,
+    interactionProtocolVersion: 5,
     localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
   });
 }
@@ -1888,6 +1890,7 @@ export async function collectQualificationMetricsForBuild({
   let interactionStatus = 'failed';
   let heapStatus = 'failed';
   const localControl = [];
+  const instrumentationWarmupLocalControl = [];
   let eventTimingCapture = null;
   const loadedReplaySeek = [];
   const heapSamples = [];
@@ -2025,6 +2028,32 @@ export async function collectQualificationMetricsForBuild({
       });
       await page.evaluate(installRenderedFlightWitnessReaderInPage);
       await installInteractionObserver(page, fixture, eventTimingPlan);
+      for (let index = 0; index < 2; index++) {
+        const desired = index === 0;
+        const enabled = await page.evaluate(() =>
+          window.__godsEyeView.dataManager.isEnabled('local-datacenters'),
+        );
+        assert.equal(
+          enabled,
+          !desired,
+          'Instrumentation warmup toggle must alternate from known state',
+        );
+        instrumentationWarmupLocalControl.push(
+          await collectInteraction(
+            page,
+            'localControl',
+            desired,
+            `${role}-local-instrumentation-warmup-${String(index + 1).padStart(2, '0')}`,
+          ),
+        );
+        foregroundObservations.push({
+          phase: 'interaction-instrumentation-warmup',
+          ...(await readAndAssertPageForeground(
+            page,
+            `${role} local instrumentation warmup ${index + 1}`,
+          )),
+        });
+      }
       for (let index = 0; index < 20; index++) {
         const desired = index % 2 === 0;
         const enabled = await page.evaluate(() =>
@@ -2103,6 +2132,47 @@ export async function collectQualificationMetricsForBuild({
       eventTimingCapture = await page.evaluate(() =>
         window.__qualificationEventTiming.read(),
       );
+      assert.deepEqual(
+        instrumentationWarmupLocalControl.map((sample) => sample.generation),
+        [1, 2],
+        'Instrumentation warmup must own the first observer generations',
+      );
+      assert.deepEqual(
+        localControl.map((sample) => sample.generation),
+        Array.from({ length: 20 }, (_, index) => index + 3),
+        'Measured local controls must follow the instrumentation warmup',
+      );
+      assert.ok(
+        instrumentationWarmupLocalControl[1].acceptedIntentEpoch <
+          localControl[0].acceptedIntentEpoch,
+        'Measured local-control intent epochs must follow the instrumentation warmup',
+      );
+      const orderedLocalControls = [
+        ...instrumentationWarmupLocalControl,
+        ...localControl,
+      ];
+      for (const [index, sample] of orderedLocalControls.entries()) {
+        assert.equal(sample.generation, index + 1);
+        assert.equal(sample.expectedLayerEnabled, index % 2 === 0);
+        assert.equal(sample.visibilityState, 'visible');
+        assert.equal(sample.focused, true);
+        assert.equal(sample.stateObserved, true);
+        assert.equal(sample.renderedFrameObserved, true);
+        if (index === 0) continue;
+        assert.ok(
+          sample.acceptedIntentEpoch >
+            orderedLocalControls[index - 1].acceptedIntentEpoch,
+          'Local-control intent epochs must advance from warmup through measurement',
+        );
+        assert.ok(
+          sample.frameNumberAtRendered >
+            orderedLocalControls[index - 1].frameNumberAtRendered,
+          'Completed local-control frames must advance from warmup through measurement',
+        );
+      }
+      validateInteractionEventTiming(eventTimingCapture, localControl, {
+        instrumentationWarmupSamples: instrumentationWarmupLocalControl,
+      });
       const cleanupObserver = await disposeQualificationObserver(page);
       assert.equal(
         cleanupObserver,
@@ -2342,6 +2412,7 @@ export async function collectQualificationMetricsForBuild({
       observations: foregroundObservations,
     },
     localControl,
+    instrumentationWarmupLocalControl,
     eventTimingCapture,
     loadedReplaySeek,
     heapSamples,
@@ -2505,6 +2576,7 @@ export async function runQualificationMetricsCapture({
           },
     protocol: {
       interactionSamplesPerControlPerBuild: 20,
+      instrumentationWarmupLocalControlPairsPerBuild: 1,
       interactionProtocol: INTERACTION_PROTOCOL,
       eventTimingPlan,
       localReadinessRegistrationPolicy: LOCAL_READINESS_REGISTRATION_POLICY,
@@ -2518,7 +2590,9 @@ export async function runQualificationMetricsCapture({
           'the prepared same-origin response is acknowledged after successful Fetch.fulfillRequest; its delivered bytes/hash/count and exactly eight materialized features are verified by an unmeasured enable-disable preflight before interaction timing',
       },
       interactionSemantics:
-        'v4 local controls use an exact trusted-click Event Timing entry for next-rendering latency, guarded by same-intent visible feedback before its earliest quantized endpoint. Every unchanged primary action has a fixed one-second delivery drain; no missing entry is imputed. Accepted intent and full active-LOD/same-frame readiness remain separate. Acquisition v7 registers local readiness after the exact settled lifecycle intent, behind the layer-owned preRender callback; its state timestamp is the natural before-render observation, not the internal transition instant. Completion still requires the matching postRender state. Two-RAF observations remain diagnostic. Replay seeks retain their trusted input and same-frame rendered-aircraft witness.',
+        'v5 installs one observer, retains the first two post-install trusted ON/OFF actions as setup/warmup evidence with the same focus, target, intent, readiness, completed-frame and fixed-drain proofs, then records the unchanged 20 measured local-control actions. The setup/warmup pair is reported separately and excluded from warmed p95. Its timing cause is unattributed, and it is not cold first-use evidence; cold activation remains separately measured. Each local action requires exactly one trusted-click Event Timing entry and no missing entry is imputed. Acquisition v8 retains prospective settled-intent readiness and matching postRender completion. Replay seeks retain their trusted input and same-frame rendered-aircraft witness.',
+      instrumentationWarmupSemantics:
+        'exactly one recorded ON/OFF pair after observer installation; excluded from warmed percentiles; not cold first-use evidence; cold activation remains separately measured',
       inputClockSource:
         'trusted-click-event-timeStamp for local controls; trusted-event-timeStamp for replay',
       renderWitnessTypes: {
@@ -2770,6 +2844,8 @@ export async function runQualificationMetricsCapture({
             datacenterFixtureReceipt:
               report.builds[role]?.datacenterFixtureReceipt,
             localControl: report.builds[role]?.localControl,
+            instrumentationWarmupLocalControl:
+              report.builds[role]?.instrumentationWarmupLocalControl,
             eventTimingCapture: report.builds[role]?.eventTimingCapture,
             loadedReplaySeek: report.builds[role]?.loadedReplaySeek,
           },

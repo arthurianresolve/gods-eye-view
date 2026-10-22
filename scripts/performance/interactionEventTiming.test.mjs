@@ -2583,6 +2583,8 @@ test('unsupported installer policy or extra options fail before acquiring observ
     { policy: undefined },
     { policy: INTERACTION_EVENT_TIMING_PLAN_V2.policy },
     { policy: 'unknown' },
+    { instrumentationWarmupActions: 1 },
+    { instrumentationWarmupActions: 3 },
     { policy: INTERACTION_EVENT_TIMING_PLAN_V4.policy, skipGeometry: true },
   ]) {
     const env = browserFixture({ installerOptions });
@@ -2591,6 +2593,63 @@ test('unsupported installer policy or extra options fail before acquiring observ
     assert.equal(env.listeners.size, 0);
     assert.equal(env.timers.size, 0);
     assert.equal(env.renderState().renderObserveCalls, 0);
+  }
+});
+
+test('installer retains exactly 20 measured actions or 22 actions with the setup pair', async () => {
+  for (const [installerOptions, acceptedActions] of [
+    [{}, 20],
+    [{ instrumentationWarmupActions: 2 }, 22],
+  ]) {
+    const env = browserFixture({ installerOptions });
+    assert.equal(env.initializationError, null);
+    for (let index = 0; index < acceptedActions; index++) {
+      const clickAtMs = 10 + index * 2000;
+      const sample = {
+        generation: index + 1,
+        clickAtMs,
+        expected: index % 2 === 0,
+        acceptedIntentEpoch: index + 1,
+      };
+      env.setNow(clickAtMs + 1);
+      env.api.registerClick(sample, {
+        isTrusted: true,
+        type: 'click',
+        timeStamp: clickAtMs,
+        target: env.button,
+      });
+      env.setNow(clickAtMs + 10);
+      const drain = env.api.drain(sample.generation);
+      env.setNow(clickAtMs + 1010);
+      env.timers.get(1)();
+      env.timers.delete(1);
+      await drain;
+    }
+    const capture = env.api.read();
+    assert.equal(capture.actions.length, acceptedActions);
+    assert.equal(
+      capture.instrumentationWarmupActions,
+      acceptedActions === 22 ? 2 : 0,
+    );
+    const rejectedIndex = acceptedActions;
+    assert.throws(
+      () =>
+        env.api.registerClick(
+          {
+            generation: rejectedIndex + 1,
+            clickAtMs: 10 + rejectedIndex * 2000,
+            expected: rejectedIndex % 2 === 0,
+          },
+          {
+            isTrusted: true,
+            type: 'click',
+            timeStamp: 10 + rejectedIndex * 2000,
+            target: env.button,
+          },
+        ),
+      /action ownership exceeded/,
+    );
+    env.api.dispose();
   }
 });
 

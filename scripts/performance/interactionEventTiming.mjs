@@ -86,9 +86,16 @@ export function installInteractionEventTimingInPage(options = {}) {
     !options ||
     typeof options !== 'object' ||
     Array.isArray(options) ||
-    Object.keys(options).some((name) => name !== 'policy')
+    Object.keys(options).some(
+      (name) => !['policy', 'instrumentationWarmupActions'].includes(name),
+    )
   )
     throw new Error('Event Timing installer options are invalid');
+  const instrumentationWarmupActions =
+    options.instrumentationWarmupActions ?? 0;
+  if (![0, 2].includes(instrumentationWarmupActions))
+    throw new Error('Event Timing installer instrumentation warmup is invalid');
+  const actionLimit = 20 + instrumentationWarmupActions;
   const policy = Object.hasOwn(options, 'policy')
     ? options.policy
     : 'trusted-click-event-timing-visible-intent-v3';
@@ -676,7 +683,7 @@ export function installInteractionEventTimingInPage(options = {}) {
   }
   const api = {
     registerClick(sample, event) {
-      if (disposed || actions.length >= 20)
+      if (disposed || actions.length >= actionLimit)
         throw new Error('Event Timing action ownership exceeded');
       if (active() && active().drainEndedAtMs == null)
         throw new Error('Previous Event Timing action drain is incomplete');
@@ -769,6 +776,7 @@ export function installInteractionEventTimingInPage(options = {}) {
       collect(performanceObserver?.takeRecords() || []);
       return {
         policy,
+        instrumentationWarmupActions,
         ...(observedAcknowledgementPolicy
           ? {
               semantic:
@@ -1006,7 +1014,21 @@ function assertGeometrySnapshot(proof) {
 }
 
 /** All entries, including late old entries, are evaluated after the fixed cohort. */
-export function validateInteractionEventTiming(capture, samples) {
+export function validateInteractionEventTiming(
+  capture,
+  samples,
+  { instrumentationWarmupSamples = [] } = {},
+) {
+  assert.ok(Array.isArray(instrumentationWarmupSamples));
+  assert.ok(Array.isArray(samples));
+  assert.equal(samples.length, 20);
+  assert.ok(
+    instrumentationWarmupSamples.length === 0 ||
+      instrumentationWarmupSamples.length === 2,
+    'Instrumentation warmup must be absent or exactly one ON/OFF pair',
+  );
+  const allSamples = [...instrumentationWarmupSamples, ...samples];
+  const actionCount = allSamples.length;
   const plan = eventTimingPlan(capture?.policy);
   assert.equal(capture?.policy, plan.policy);
   const restoredPolicy = plan !== INTERACTION_EVENT_TIMING_PLAN_V2;
@@ -1042,8 +1064,17 @@ export function validateInteractionEventTiming(capture, samples) {
     assert.deepEqual(capture.compositorAttribution, plan.compositorAttribution);
   }
   assert.equal(capture.overflow, false);
-  assert.equal(capture.actions?.length, 20);
-  assert.equal(samples?.length, 20);
+  assert.equal(
+    capture.instrumentationWarmupActions ?? 0,
+    instrumentationWarmupSamples.length,
+  );
+  assert.equal(capture.actions?.length, actionCount);
+  if (instrumentationWarmupSamples.length > 0)
+    assert.equal(
+      capture.entries?.length,
+      actionCount,
+      'Warmup and measured controls require exactly one entry per action',
+    );
   assert.ok(
     capture.entries?.length <= 128 && capture.observations?.length <= 1024,
   );
@@ -1055,7 +1086,10 @@ export function validateInteractionEventTiming(capture, samples) {
   const boundaryCallbacks = restoredPolicy
     ? capture.work.renderBoundaryCallbacks
     : 0;
-  assert.equal(capture.work.geometryChecks, 40 + boundaryCallbacks);
+  assert.equal(
+    capture.work.geometryChecks,
+    actionCount * 2 + boundaryCallbacks,
+  );
   for (const [key, maximum] of [
     ['mutationCallbacks', 4096],
     ['mutationRecords', 65536],
@@ -1066,7 +1100,8 @@ export function validateInteractionEventTiming(capture, samples) {
   ])
     assert.ok(
       Number.isSafeInteger(capture.work[key]) &&
-        capture.work[key] >= (key === 'continuityChecks' ? 40 : 0) &&
+        capture.work[key] >=
+          (key === 'continuityChecks' ? actionCount * 2 : 0) &&
         capture.work[key] <= maximum,
     );
   const mutationByCallback = new Map();
@@ -1075,7 +1110,8 @@ export function validateInteractionEventTiming(capture, samples) {
       assert.ok(
         Number.isSafeInteger(capture.work[key]) &&
           capture.work[key] >= 0 &&
-          capture.work[key] <= plan.maximumRenderBoundaryProofsPerAction * 20,
+          capture.work[key] <=
+            plan.maximumRenderBoundaryProofsPerAction * actionCount,
       );
     assert.equal(
       capture.work.renderBoundaryCallbacks,
@@ -1233,7 +1269,7 @@ export function validateInteractionEventTiming(capture, samples) {
       // diagnostic observations may precede registration of the next click.
       // Use receipt time: the next native event can already be queued while
       // the previous action still owns a main-thread mutation delivery.
-      const next = samples[owned.index + 1];
+      const next = allSamples[owned.index + 1];
       if (next)
         assert.ok(
           Number.isFinite(next.clickReceivedAtMs) &&
@@ -1243,7 +1279,7 @@ export function validateInteractionEventTiming(capture, samples) {
     }
   }
   const interactionIds = new Set();
-  return samples.map((sample, index) => {
+  const durations = allSamples.map((sample, index) => {
     const action = capture.actions[index];
     assert.equal(action.generation, sample.generation);
     assert.equal(action.clickAtMs, sample.clickAtMs);
@@ -1625,7 +1661,7 @@ export function validateInteractionEventTiming(capture, samples) {
           'Visible feedback or intent changed before rendering',
         );
     }
-    const nextInput = samples[index + 1]?.pointerDownAtMs;
+    const nextInput = allSamples[index + 1]?.pointerDownAtMs;
     if (nextInput != null)
       assert.ok(
         entry.startTime + entry.duration + 8 < nextInput,
@@ -1633,4 +1669,5 @@ export function validateInteractionEventTiming(capture, samples) {
       );
     return entry.duration;
   });
+  return durations.slice(instrumentationWarmupSamples.length);
 }
