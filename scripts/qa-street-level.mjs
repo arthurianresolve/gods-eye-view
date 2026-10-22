@@ -474,7 +474,7 @@ async function main() {
     executablePath:
       process.env.PUPPETEER_EXECUTABLE_PATH ||
       (await puppeteer.executablePath()),
-    defaultViewport: VIEWPORT,
+    defaultViewport: VIEWPORTS[0],
     protocolTimeout: 300_000,
     args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader'],
   });
