@@ -27,7 +27,22 @@ of the independent latency, visual, retention and recovery gates.
 | S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Performance objectives and final acceptance unresolved                                                                                                                           |
 | S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                                                                                                                                                                    | Final shared qualification pending                                                                                                                                               |
 | S69     | Open: complete candidate qualification                       | Runtime revision `8ac4d263` passes 148 focused infrastructure/lifecycle tests, the full local Windows Node 24 suite, formatting, package boundaries, a production build, and Node 24/26, Windows onboarding, three-OS recovery and browser CI. The owner-return regression fails against the earlier source and passes after its correction. The earlier UHD 620 diagnostic belongs to `8f5116ca` and does not establish this runtime's hardware performance.                                            | Native local-control latency and strict visual equivalence have not passed; the matched five-run workloads, replay and startup gates remain open.                                |
-| S70     | Open: finish private recovery checks and deliver             | At QA-only review head `7452026c`, exact-head CI and signed release verification pass. The independently downloaded archive matches its checksum and repository/workflow/source attestation; all 2,129 manifest file hashes pass a separate streaming readback. The PR merge commit has the same Git tree as that review head. Earlier private-host and workspace/evidence journeys retain their original revision scope. A later documentation-only commit requires its own exact-commit package proof. | Exact-package HTTPS/recovery and physical GPU qualification, the final frozen-runtime Ampfing soak and deployment remain pending. Production was not switched to this candidate. |
+| S70     | Open: finish private recovery checks and deliver             | At QA-only review head `7452026c`, exact-head CI and signed release verification pass. The independently downloaded archive matches its checksum and repository/workflow/source attestation; all 2,129 manifest file hashes pass a separate streaming readback. The PR merge commit has the same Git tree as that review head. Earlier private-host and workspace/evidence journeys retain their original revision scope. Later commits require their own exact-commit package proof. | Exact-package HTTPS/recovery and physical GPU qualification, the final frozen-runtime Ampfing soak and deployment remain pending. Production was not switched to this candidate. |
+
+**Current provider reconciliation.** Upstream provider-response hardening was
+ported onto `dev` as `8a4808fe` and onto the performance branch as `d27c9781`.
+The current performance-branch runtime includes stricter CCTV source and media
+validation, keyless same-site admission, JSON-only GBFS responses, and API
+response headers. On `dev`, the full local Windows Node 24 suite passed with
+9,408 passes, 10 declared skips and no failures; formatting, boundaries,
+changelog assembly, a production build, and an independent source review also
+passed. On the combined performance branch, the 51 directly affected tests,
+formatting, boundaries, and production build pass. No exact-`d27c9781` CI or
+signed-package result is claimed here. The prior release archive and physical
+evidence retain their recorded commit scope. The performance-specific runtime
+change remains `8ac4d263`; `d27c9781` is the latest overall runtime change,
+so final package, provider journeys, and hardware qualification must bind to
+the eventual frozen head. The engineering slice count is unchanged.
 
 ### Latest investigation checkpoint — 22 October 2026
 
@@ -81,8 +96,8 @@ hardware performance result or candidate HTTPS/recovery pass; VM105 production
 remains unchanged. This checkpoint is immutable and does not claim that a
 later documentation commit has been packaged or tested.
 
-**Current review candidate.** The latest runtime-changing commit on branch
-`perf/quality-vm105-s61-s70` is `8ac4d263`. Its [exact-runtime CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39716160075)
+**Prior performance-runtime qualification checkpoint.** The latest
+Cesium-performance change before the provider port was `8ac4d263`. Its [exact-runtime CI](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39716160075)
 passes the required Node 24/26, Windows onboarding, Windows/macOS/Linux
 install-and-update recovery, and Street Level browser jobs. The full local
 Windows Node 24 suite also passed after the owner-return correction. The
