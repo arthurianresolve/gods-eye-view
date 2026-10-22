@@ -42,3 +42,20 @@ million globe-gradient pixels differ by one or two channel values; this is
 **not** a strict pixel-equivalence pass. Unpaused visual qualification on an
 exact committed build remains required. The existing overall S69/S60/S70
 acceptance and final Ampfing soak remain pending.
+
+## Follow-up correction — 22 October 2026
+
+The first implementation invalidated flat-globe samples when a competing
+height owner appeared, but did not rebase a successful depth sample when that
+owner later disappeared. A stem could retain a sampled roof height over an
+otherwise flat ellipsoid. The lifecycle test reproduces that floating stem
+against the original code. The correction rebases active stems through loaded
+globe height on the return transition and allows that path even when scene
+depth sampling is unavailable. Both ownership transitions are checked on the
+next eligible 500 ms visibility walk without an extra depth read on return.
+The corrected source passes 148 focused infrastructure and lifecycle tests,
+formatting, package-boundary checks and a production build.
+
+This is a correctness fix, not a fresh hardware-performance or visual pass.
+The earlier diagnostic numbers above remain tied to their original runtime;
+S69/S60/S70 acceptance and the final Ampfing soak remain pending.

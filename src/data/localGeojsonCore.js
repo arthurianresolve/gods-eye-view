@@ -1225,17 +1225,39 @@ export function createLocalGeoJsonLayer(
             if (!isActive) continue;
 
             const wasGroundSampled = record.groundSampled;
+            let returnedToFlatGlobe = false;
             if (!flatGlobeOnly && record.groundSampleSource === 'flat-globe') {
               record.groundSampled = false;
               record.groundSampleSource = null;
-              record.lastGroundSampleMs = 0;
+              record.lastGroundSampleMs = Number.NEGATIVE_INFINITY;
+            } else if (
+              flatGlobeOnly &&
+              record.groundSampled &&
+              record.groundSampleSource !== 'flat-globe'
+            ) {
+              // A departed height owner cannot leave its sampled roof or tile
+              // elevation on an otherwise flat globe. Rebase this active stem
+              // immediately; the loaded-globe path does no depth readback.
+              record.groundSampled = false;
+              record.lastGroundSampleMs = Number.NEGATIVE_INFINITY;
+              returnedToFlatGlobe = sampleLocalGroundHeight(
+                viewer,
+                record,
+                now,
+                ownsPass,
+                true,
+              );
             }
             const terrainFloorChanged = refreshLocalTerrainFloor(
               viewer,
               record,
               ownsPass,
             );
-            if (refreshStemGeometry || terrainFloorChanged) {
+            if (
+              refreshStemGeometry ||
+              terrainFloorChanged ||
+              returnedToFlatGlobe
+            ) {
               updateLocalStemGeometry(
                 viewer,
                 record,
@@ -1498,7 +1520,11 @@ function sampleLocalGroundHeight(
   flatGlobeOnly = false,
 ) {
   if (ownsPass && !ownsPass()) return false;
-  if (record.groundSampled || !viewer.scene.sampleHeightSupported) return false;
+  if (
+    record.groundSampled ||
+    (!flatGlobeOnly && !viewer.scene.sampleHeightSupported)
+  )
+    return false;
   if (now - record.lastGroundSampleMs < GROUND_SAMPLE_RETRY_MS) return false;
   record.lastGroundSampleMs = now;
   const globe = viewer.scene.globe;

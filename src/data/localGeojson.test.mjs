@@ -2154,7 +2154,7 @@ test('local infrastructure creates no native labels or per-frame geometry callba
   assert.match(source, /const stemPositionBuffers = \[\s*\[base, tip\],\s*\[base, tip\],?\s*\]/);
   assert.match(source, /record\.entity\.polyline\.positions\.setValue\(stemPositions\)/);
   assert.match(source, /viewer\.camera\.moveEnd\.addEventListener/);
-  assert.match(source, /if \(refreshStemGeometry \|\| terrainFloorChanged\)/);
+  assert.match(source, /refreshStemGeometry \|\|\s*terrainFloorChanged \|\|\s*returnedToFlatGlobe/);
   assert.match(source, /now - _lastVisibilityUpdate < VISIBILITY_UPDATE_MS/);
 });
 
@@ -2415,7 +2415,7 @@ test('ground sampling waits for visible globe tiles before caching a height', as
   assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
 });
 
-test('a lone ellipsoid globe uses loaded height, then resamples when another height owner appears', async (t) => {
+test('flat-globe grounding follows a visible height owner appearing and disappearing', async (t) => {
   const env = await createRealLocalLayerHarness({
     sampleHeightSupported: true,
     sampleHeight: () => 117,
@@ -2437,14 +2437,22 @@ test('a lone ellipsoid globe uses loaded height, then resamples when another hei
   const previewEntity = { show: false };
   env.dataSources.push({ show: true, entities: { values: [previewEntity] } });
   setCameraAltitude(env, 20_000);
+  scene.sampleHeightSupported = false;
   env.preRender.raise();
   assert.equal(env.sampleCalls.count, 0, 'flat globe should avoid scene-depth readback');
   assert.ok(Math.abs(baseHeightM(env)) < 0.01);
+  scene.sampleHeightSupported = true;
   previewEntity.show = true;
-  clock.advance(2_100);
+  clock.advance(500);
   env.preRender.raise();
   assert.equal(env.sampleCalls.count, 1, 'new scene ownership requires a real depth sample');
   assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+  scene.sampleHeightSupported = false;
+  previewEntity.show = false;
+  clock.advance(500);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1, 'returning to a flat globe needs no depth sample');
+  assert.ok(Math.abs(baseHeightM(env)) < 0.01, 'a departed height owner cannot leave a floating stem');
 });
 
 test('settled terrain refinement lifts an already sampled stem without another GPU sample', async (t) => {
