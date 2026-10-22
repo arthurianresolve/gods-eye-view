@@ -1457,6 +1457,67 @@ test('first-motion profiling rejects unsupported workload before browser startup
   );
 });
 
+test('tracking profiling requires a dense fixture and an artifact directory', () => {
+  const wrongFixture = invoke([
+    ...verifiedFixtureArgs(),
+    '--provider-fixture',
+    'infrastructure-datacenters',
+    '--tracking-cpu-profile',
+    '--cpu-profile-artifact-directory',
+    'unused-profile-output',
+  ]);
+  assert.notEqual(wrongFixture.status, 0);
+  assert.match(
+    wrongFixture.stderr,
+    /--tracking-cpu-profile requires --provider-fixture dense-investigation/,
+  );
+  assert.doesNotMatch(
+    wrongFixture.stderr,
+    /Browser was not found|Could not find Chrome/,
+  );
+
+  const missingDirectory = invoke([
+    ...verifiedFixtureArgs(),
+    '--provider-fixture',
+    'dense-investigation',
+    '--mixed-layers',
+    '--tracking-cpu-profile',
+    '--runs',
+    '1',
+    '--warmup-ms',
+    '5000',
+    '--seconds',
+    '10',
+  ]);
+  assert.notEqual(missingDirectory.status, 0);
+  assert.match(
+    missingDirectory.stderr,
+    /requires --cpu-profile-artifact-directory/,
+  );
+
+  const conflictingMode = invoke([
+    '--tracking-cpu-profile',
+    '--first-motion-cpu-profile',
+  ]);
+  assert.notEqual(conflictingMode.status, 0);
+  assert.match(
+    conflictingMode.stderr,
+    /cannot be combined with another CPU profile mode/,
+  );
+
+  const unbounded = invoke([
+    ...verifiedFixtureArgs(),
+    '--provider-fixture',
+    'dense-investigation',
+    '--mixed-layers',
+    '--tracking-cpu-profile',
+    '--cpu-profile-artifact-directory',
+    'unused-profile-output',
+  ]);
+  assert.notEqual(unbounded.status, 0);
+  assert.match(unbounded.stderr, /requires one run and at most 50 seconds/);
+});
+
 test('shader program attribution is opt-in only for the dense capture fixture', () => {
   const missingFixture = invoke([
     ...verifiedFixtureArgs(),

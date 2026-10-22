@@ -236,6 +236,15 @@ const startupOnlyShard = args.includes('--startup-only-shard');
 const startupProviderFixtureDiagnosticEnabled = args.includes(
   '--startup-provider-fixture-diagnostic',
 );
+const trackingCpuProfileEnabled = args.includes('--tracking-cpu-profile');
+if (
+  trackingCpuProfileEnabled &&
+  (args.includes('--first-motion-cpu-profile') ||
+    args.includes('--startup-cpu-profile'))
+)
+  throw new Error(
+    '--tracking-cpu-profile cannot be combined with another CPU profile mode.',
+  );
 const startupAttributionEnabled = assertStartupAttributionMode({
   enabled: args.includes('--startup-attribution'),
   startupOnlyShard,
@@ -250,7 +259,8 @@ const startupCpuProfileEnabled = assertStartupCpuAttributionMode({
   startupOnlyShard,
   startupAttributionEnabled,
   startupPageObservedEnabled,
-  firstMotionCpuProfileEnabled: args.includes('--first-motion-cpu-profile'),
+  firstMotionCpuProfileEnabled:
+    args.includes('--first-motion-cpu-profile') || trackingCpuProfileEnabled,
   artifactDirectory: option('--cpu-profile-artifact-directory', null),
 });
 const startupShardId = option('--startup-shard-id', null);
@@ -371,6 +381,8 @@ const austinReadinessHistoryEnabled =
 const firstMotionCpuProfileEnabled = args.includes(
   '--first-motion-cpu-profile',
 );
+const providerSampleCpuProfileEnabled =
+  firstMotionCpuProfileEnabled || trackingCpuProfileEnabled;
 const depthPickAttributionEnabled = args.includes('--depth-pick-attribution');
 const shaderProgramAttributionEnabled = args.includes(
   '--shader-program-attribution',
@@ -619,6 +631,7 @@ if (
     args.includes('--startup-cpu-profile') ||
     args.includes('--scene-frame-diagnostics') ||
     args.includes('--first-motion-cpu-profile') ||
+    trackingCpuProfileEnabled ||
     args.includes('--depth-pick-attribution') ||
     args.includes('--shader-program-attribution') ||
     args.includes('--startup-attribution') ||
@@ -764,6 +777,7 @@ if (startupOnlyShard) {
     nativeRenderingDiagnostic ||
     sceneFrameDiagnosticsEnabled ||
     firstMotionCpuProfileEnabled ||
+    trackingCpuProfileEnabled ||
     depthPickAttributionEnabled ||
     shaderProgramAttributionEnabled ||
     frameTraceEnabled ||
@@ -812,6 +826,7 @@ if (
     windowsCompositionDiagnostic ||
     sceneFrameDiagnosticsEnabled ||
     firstMotionCpuProfileEnabled ||
+    trackingCpuProfileEnabled ||
     depthPickAttributionEnabled ||
     shaderProgramAttributionEnabled)
 )
@@ -844,6 +859,17 @@ if (firstMotionCpuProfileEnabled && !productionFlightFixture)
   throw new Error(
     '--first-motion-cpu-profile requires --provider-fixture dense-investigation.',
   );
+if (trackingCpuProfileEnabled && !productionFlightFixture)
+  throw new Error(
+    '--tracking-cpu-profile requires --provider-fixture dense-investigation.',
+  );
+if (
+  trackingCpuProfileEnabled &&
+  (runs !== 1 || warmupMs + seconds * 1000 > 50_000)
+)
+  throw new Error(
+    '--tracking-cpu-profile requires one run and at most 50 seconds of warmup plus measurement.',
+  );
 if (depthPickAttributionEnabled && !productionFlightFixture)
   throw new Error(
     '--depth-pick-attribution requires --provider-fixture dense-investigation.',
@@ -853,14 +879,14 @@ if (shaderProgramAttributionEnabled && !productionFlightFixture)
     '--shader-program-attribution requires --provider-fixture dense-investigation.',
   );
 if (
-  (firstMotionCpuProfileEnabled || startupCpuProfileEnabled) &&
+  (providerSampleCpuProfileEnabled || startupCpuProfileEnabled) &&
   !cpuProfileArtifactDirectory
 )
   throw new Error(
     'A CPU profile mode requires --cpu-profile-artifact-directory.',
   );
 if (
-  !firstMotionCpuProfileEnabled &&
+  !providerSampleCpuProfileEnabled &&
   !startupCpuProfileEnabled &&
   cpuProfileArtifactDirectory
 )
@@ -1117,13 +1143,16 @@ function shaderProgramAttributionEnvelope() {
     startupRuns + 1 + 3 * runs,
   );
 }
-const providerSampleCpuProfileTargets = [
-  { scenario: 'idle', run: 1 },
-  { scenario: 'idle', run: 2 },
-  { scenario: 'scripted-motion', run: 1 },
-];
-const providerSampleCpuProfileScope =
-  'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing';
+const providerSampleCpuProfileTargets = trackingCpuProfileEnabled
+  ? [{ scenario: 'selected-aircraft-tracking', run: 1 }]
+  : [
+      { scenario: 'idle', run: 1 },
+      { scenario: 'idle', run: 2 },
+      { scenario: 'scripted-motion', run: 1 },
+    ];
+const providerSampleCpuProfileScope = trackingCpuProfileEnabled
+  ? 'first selected-aircraft-tracking sample from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing'
+  : 'first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing';
 const failureProgress = {
   phase: 'browser-startup',
   scenario: null,
@@ -1190,7 +1219,7 @@ const failureProgress = {
           },
         }
       : {}),
-    ...(firstMotionCpuProfileEnabled
+    ...(providerSampleCpuProfileEnabled
       ? {
           providerSampleCpuProfiles: {
             enabled: true,
@@ -1311,7 +1340,8 @@ function providerSampleCpuProfileEnvelope() {
     scope: providerSampleCpuProfileScope,
     performanceAcceptanceEligible: false,
     status:
-      providerSampleCpuProfiles.length === 3 &&
+      providerSampleCpuProfiles.length ===
+        providerSampleCpuProfileTargets.length &&
       providerSampleCpuProfiles.every((record) => record.status === 'complete')
         ? 'complete'
         : 'incomplete',
@@ -1340,8 +1370,12 @@ async function finishStartupCpuProfileWindow({
 
 function shouldProfileProviderSample(scenario, run) {
   return (
-    firstMotionCpuProfileEnabled &&
-    isProviderSampleCpuProfileTarget(scenario, run)
+    providerSampleCpuProfileEnabled &&
+    isProviderSampleCpuProfileTarget(
+      scenario,
+      run,
+      trackingCpuProfileEnabled ? 'tracking' : 'first-motion',
+    )
   );
 }
 
@@ -1365,16 +1399,24 @@ async function startProviderSampleCpuProfile(
   progressRecord,
   { scenario, run, captureOrdinal, documentRole, documentId },
 ) {
-  if (!isProviderSampleCpuProfileTarget(scenario, run)) return null;
+  if (
+    !isProviderSampleCpuProfileTarget(
+      scenario,
+      run,
+      trackingCpuProfileEnabled ? 'tracking' : 'first-motion',
+    )
+  )
+    return null;
   if (activeProviderSampleCpuProfile)
     throw new Error('A provider sample CPU profile is already active.');
   const window = createProviderSampleCpuProfileWindow({
-    enabled: firstMotionCpuProfileEnabled,
+    enabled: providerSampleCpuProfileEnabled,
     profileRunner: runBoundedBoundaryProfile,
     page: targetPage,
     artifactDirectory: cpuProfileArtifactDirectory,
     targetScenario: scenario,
     targetRun: run,
+    mode: trackingCpuProfileEnabled ? 'tracking' : 'first-motion',
     captureOrdinal,
     documentRole,
     documentId,
@@ -8321,7 +8363,7 @@ try {
             },
           }
         : {}),
-      ...(firstMotionCpuProfileEnabled
+      ...(providerSampleCpuProfileEnabled
         ? {
             providerSampleCpuProfiles: {
               ...providerSampleCpuProfileEnvelope(),
@@ -8365,7 +8407,7 @@ try {
       comparisonReadinessReasons.push(
         'austin-setup-readiness-history-instrumentation-is-enabled',
       );
-    if (firstMotionCpuProfileEnabled)
+    if (providerSampleCpuProfileEnabled)
       comparisonReadinessReasons.push(
         'provider-sample-cpu-profile-instrumentation-is-enabled',
       );
@@ -8428,7 +8470,7 @@ try {
           : workerAuditMode === 'receipt-only'
             ? 'external-receipt-path-observation-no-page-worker-instrumentation'
             : 'during-capture-diagnostic-instrumentation',
-      ...(firstMotionCpuProfileEnabled
+      ...(providerSampleCpuProfileEnabled
         ? {
             providerSampleCpuProfiles: {
               ...providerSampleCpuProfileEnvelope(),
