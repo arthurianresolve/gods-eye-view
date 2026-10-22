@@ -12,6 +12,7 @@
  */
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
+import { LAYER_STATE_REGISTRY } from '../src/data/layerState.js';
 import { tileBounds } from '../src/layers/streetLevel/tileMath.js';
 import { encodeCoverageTile } from '../src/layers/streetLevel/providers/mapillary/coverageFixture.mjs';
 import {
