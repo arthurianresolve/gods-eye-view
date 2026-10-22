@@ -1,6 +1,6 @@
 # Cesium performance plan
 
-## Current execution plan — amended 21 October 2026
+## Current execution plan — amended 22 October 2026
 
 This section is the current execution and acceptance policy. The dated
 checkpoints below retain their original revision-specific results and do not
@@ -15,15 +15,15 @@ S68's measured rejection is a completed evaluation, not a shipped optimization.
 S60, S69 and S70 remain open for qualification and delivery. Engineering
 completion is separate from performance acceptance.
 
-| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                                                                                                                                   | Hardware qualification                                                                                                                                                                                                     |
-| ------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                                                                     |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                          | Performance objectives and final acceptance unresolved                                                                                                                                                                     |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                  | Final shared qualification pending                                                                                                                                                                                         |
-| S69     | Open: complete candidate qualification                       | Runtime `8ee87442` passes focused annotation/governor tests, package boundaries, a production build and all seven selected CI jobs at review head `9adbd583`. A local production-browser functional smoke passes screen/world render-demand transitions. Earlier `33d3d72c` has the source-bound physical visual pass for its annotation-free fixture. | The frozen baseline fails the exact replay billboard witness; paired local-control/replay latency, startup and matrix qualification remain unresolved. The new annotation demand needs affected visual/idle qualification. |
-| S70     | Open: finish private recovery checks and deliver             | The signed PR-merge archive for tree-equivalent `9adbd583` passes attestation, checksum, all 2,129 packaged-file checks on VM105 and an isolated private-host smoke. Earlier private package workspace/evidence journeys retain their exact revision scope. Production remains on `e7a878e`.                                                           | The current package still needs HTTPS/recovery and physical GPU qualification; the final frozen-runtime Ampfing soak and deployment remain pending.                                                                        |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                                                                                                                                                             | Hardware qualification                                                                                                                                                           |
+| ------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                                          | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                           |
+| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                                                    | Performance objectives and final acceptance unresolved                                                                                                                           |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                                            | Final shared qualification pending                                                                                                                                               |
+| S69     | Open: complete candidate qualification                       | Review head `8f5116ca` passes 106 focused infrastructure/lifecycle tests, formatting, package boundaries, the production build and all selected Node 24/26, Windows onboarding, install/update recovery and browser CI jobs. The exact-head UHD 620 diagnostic confirms zero flat-globe depth reads. Earlier annotation and visual results retain their original revision scope. | Native local-control latency and strict visual equivalence have not passed; the matched five-run workloads, replay and startup gates remain open.                                |
+| S70     | Open: finish private recovery checks and deliver             | The signed PR-merge archive `fbfae9da` has the same Git tree as `8f5116ca`. Its checksum and repository/workflow/source attestation passed independent verification, and a fresh local read verified all 2,129 extracted files. Earlier private-host and workspace/evidence journeys retain their original revision scope.                                                       | Exact-package HTTPS/recovery and physical GPU qualification, the final frozen-runtime Ampfing soak and deployment remain pending. Production was not switched to this candidate. |
 
-### Latest investigation checkpoint — 21 October 2026
+### Latest investigation checkpoint — 22 October 2026
 
 **Flat-globe infrastructure readback experiment.** A guarded path now uses
 loaded globe height instead of synchronous scene-depth sampling only for a
@@ -36,20 +36,23 @@ passed. This is implemented and focused-tested code, not S69 performance
 acceptance or a substitute for the final candidate/soak evidence.
 
 **Current integration and package checkpoint.** The performance branch at
-`9adbd583` contains the targeted CCTV stale-catalog correction from current
-`dev` (`55dd552c`); no further `dev` reconciliation is needed. Its selected
-[CI run 39659621746](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39659621746)
-and [release verification run 39659621845](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39659621845)
-pass. The signed merge archive's tree matches `9adbd583`; its downloaded
-SHA-256 is `fb7116ab27725ab069db4d2a586bfd4d2c21779f97e831ba82a4ad0b384531ca`.
-Repository/workflow/source-commit attestation checks, VM105 archive transfer,
-all 2,129 release-manifest files, and an isolated private production-host
-smoke pass. These checks close the former **package integrity** gap for this
-tree, but do not satisfy HTTPS/recovery, rendered hardware, or final-soak
-acceptance. They do not authorize stable publication.
-This ledger edit does not change application runtime, but it changes the Git
-commit; final exact-commit release qualification must use the eventual frozen
-candidate rather than treating the older archive as its artifact.
+`8f5116ca` contains the targeted CCTV stale-catalog correction from `dev`
+(`55dd552c`); no further `dev` reconciliation is needed for that correction.
+The selected [CI run 39675739486](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39675739486)
+passes Node 24/26, Windows onboarding, install/update recovery on
+Windows/macOS/Ubuntu, and the Street Level browser gate. Optional performance,
+tracking and soak jobs were skipped by their dispatch conditions, not passed.
+The [release verification run 39675739074](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39675739074)
+passes. The signed merge archive `fbfae9da84a8efbcd216c591134496ca20017413`
+has the same Git tree as the review head. Its downloaded SHA-256 was verified
+as `45b81a2b7964e4a2a39e7c6a8bff2cb8844b314ff70e346e03deb093e526380e`;
+repository/workflow/source-commit attestation verification passed. An
+independent local manifest read on 22 October again verified all 2,129
+extracted files. The previously recorded private-host smoke is for the older
+`9adbd583` tree and does not establish a host pass for this package. Package
+integrity is verified, but HTTPS/recovery, rendered hardware and final-soak
+acceptance remain open. This documentation edit changes the Git commit, so a
+final frozen release artifact must bind to the eventual review head.
 
 The [isolated attachment-order control](performance-evidence/s69-native-matrix-20261019/attachment-order-control-disposition-20261021.json)
 was rejected before hardware comparison: moving hidden GeoJSON attachment
