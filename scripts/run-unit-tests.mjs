@@ -238,6 +238,38 @@ export function allocationTestArgs(file) {
   return ['--expose-gc', '--test', '--test-concurrency=1', file];
 }
 
+/** Keep Windows CreateProcess arguments below its UTF-16 command-line limit. */
+export function parallelTestBatches(
+  files,
+  { platform = process.platform, maxCommandChars = 12_000 } = {},
+) {
+  if (files.length === 0) return [];
+  if (platform !== 'win32') return [files];
+  const prefixChars = process.execPath.length + ' --test'.length;
+  if (!Number.isInteger(maxCommandChars) || maxCommandChars <= prefixChars)
+    throw new RangeError('Invalid unit-test command-line budget.');
+  const batches = [];
+  let batch = [];
+  let chars = prefixChars;
+  for (const file of files) {
+    // Count the separating space and worst-case quotes around each path.
+    const fileChars = file.length + 3;
+    if (prefixChars + fileChars > maxCommandChars)
+      throw new RangeError(
+        `Unit-test path exceeds command-line budget: ${file}`,
+      );
+    if (chars + fileChars > maxCommandChars) {
+      batches.push(batch);
+      batch = [];
+      chars = prefixChars;
+    }
+    batch.push(file);
+    chars += fileChars;
+  }
+  if (batch.length) batches.push(batch);
+  return batches;
+}
+
 function runTests(args) {
   const result = spawnSync(process.execPath, args, {
     cwd: process.cwd(),
@@ -250,8 +282,13 @@ function runTests(args) {
 
 export function runUnitTests() {
   const plan = buildUnitTestPlan(discoverUnitTestFiles());
-  const parallelStatus = runTests(['--test', ...plan.parallel]);
-  if (parallelStatus !== 0) return parallelStatus;
+  const batches = parallelTestBatches(plan.parallel);
+  for (const [index, batch] of batches.entries()) {
+    if (batches.length > 1)
+      console.log(`[unit] Running batch ${index + 1}/${batches.length}`);
+    const parallelStatus = runTests(['--test', ...batch]);
+    if (parallelStatus !== 0) return parallelStatus;
+  }
 
   // The GC-bracketed budgets are calibrated on Node 24 and are meaningless on
   // other allocators. A contributor's suite must stay green on any supported
