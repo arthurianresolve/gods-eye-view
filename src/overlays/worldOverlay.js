@@ -1676,6 +1676,11 @@ function activeFadeCount(timestamp) {
     const stateCount = arbiter.activeStateCount();
     for (let i = 0; i < stateCount; i++) {
       const state = arbiter.activeStateAt(i);
+      const sourceId = state.lastCandidate?._record?.entry?.source;
+      // Hidden sources keep their arbitration history for a later reveal, but
+      // solveDomains cannot paint their retained exit states. Those invisible
+      // fades must not keep requesting frames and clearing the canvas.
+      if (sourceId != null && !sourceCanPaint(sourceId)) continue;
       if (state.selected) {
         if (timestamp - state.enterStartedAt < LABEL_ARBITER_TIMING.fadeInMs)
           count++;

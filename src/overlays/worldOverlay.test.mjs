@@ -750,6 +750,80 @@ test('empty postRender stays inert through production mutation, resize, and cloc
   env.cleanup();
 });
 
+test('hidden source exit states stop requesting frames after the canvas clears', () => {
+  const env = installMockEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    setOverlayEntries('local-datacenters', [selectedEntry('site', {
+      selected: false,
+      protected: false,
+      collisionGroup: 'ambient-card',
+    })]);
+    env.postRender.raise();
+    env.advanceTime(200);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 1);
+
+    // Match local infrastructure OFF: keep the source registration and arbiter
+    // history, remove its entries, then hide it before the next natural frame.
+    clearOverlaySource('local-datacenters');
+    setOverlaySourceVisible('local-datacenters', false);
+    const requests = env.viewer.scene.requestRenderCount;
+    const clears = env.ctx.calls.filter(([op]) => op === 'clearRect').length;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 0);
+    assert.equal(getWorldOverlayDiagnostics().entriesBySource['local-datacenters'], 0);
+    assert.equal(env.ctx.calls.filter(([op]) => op === 'clearRect').length, clears + 1);
+    assert.equal(env.viewer.scene.requestRenderCount, requests);
+
+    const settledCalls = env.ctx.calls.length;
+    for (let frame = 0; frame < 6; frame++) {
+      env.advanceTime(16);
+      env.postRender.raise();
+    }
+    assert.equal(env.ctx.calls.length, settledCalls);
+    assert.equal(env.viewer.scene.requestRenderCount, requests);
+  } finally {
+    env.cleanup();
+  }
+});
+
+test('visible source exit fades retain their paint and render demand', () => {
+  const env = installMockEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    setOverlayEntries('visible-fade', [selectedEntry('site', {
+      selected: false,
+      protected: false,
+      collisionGroup: 'ambient-card',
+    })]);
+    env.postRender.raise();
+    env.advanceTime(200);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 1);
+
+    // Removing an entry from a visible source still paints its ordinary exit
+    // fade. Visibility alone must not be inferred from an empty entry map.
+    clearOverlaySource('visible-fade');
+    const requests = env.viewer.scene.requestRenderCount;
+    env.advanceTime(16);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 1);
+    assert.equal(env.viewer.scene.requestRenderCount, requests + 1);
+    env.advanceTime(150);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 1);
+    assert.equal(env.viewer.scene.requestRenderCount, requests + 2);
+    env.advanceTime(151);
+    env.postRender.raise();
+    assert.equal(getWorldOverlayDiagnostics().paintedCount, 0);
+    assert.equal(env.viewer.scene.requestRenderCount, requests + 2);
+  } finally {
+    env.cleanup();
+  }
+});
+
 test('HUD mutations defer occluder selector scans until overlay paint work exists', () => {
   const env = installMockEnvironment();
   initWorldOverlay(env.viewer);
