@@ -202,7 +202,7 @@ export function createWindLayer({
           overlay: requestedScalar(),
         });
         if (!enabled || controller.signal.aborted || request !== controller)
-          return false;
+          return enabled && !signal?.aborted && request !== controller;
         manifest = snapshot;
         manifestReceivedAt = Date.now();
         error = null;
@@ -217,7 +217,8 @@ export function createWindLayer({
         }
         return true;
       } catch (cause) {
-        if (controller.signal.aborted || request !== controller) return false;
+        if (controller.signal.aborted || request !== controller)
+          return enabled && !signal?.aborted && request !== controller;
         error = cause?.message || msg('Wind source unavailable');
         return true;
       } finally {
