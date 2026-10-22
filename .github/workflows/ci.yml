@@ -88,6 +88,10 @@ on:
         description: Sample first two idle and first scripted-motion windows (diagnostic only)
         type: boolean
         default: false
+      capture_tracking_cpu_profile:
+        description: Sample one selected-aircraft tracking window (diagnostic only)
+        type: boolean
+        default: false
       capture_depth_pick_attribution:
         description: Record bounded caller-tagged depth-pick attribution in the dense capture (diagnostic only)
         type: boolean
@@ -495,6 +499,7 @@ jobs:
           CAPTURE_RENDERER_BACKEND: ${{ inputs.capture_renderer_backend || 'swiftshader' }}
           CAPTURE_SCENE_FRAME_DIAGNOSTICS: ${{ inputs.capture_scene_frame_diagnostics && 'enabled' || 'disabled' }}
           CAPTURE_FIRST_MOTION_CPU_PROFILE: ${{ inputs.capture_first_motion_cpu_profile && 'enabled' || 'disabled' }}
+          CAPTURE_TRACKING_CPU_PROFILE: ${{ inputs.capture_tracking_cpu_profile && 'enabled' || 'disabled' }}
           CAPTURE_DEPTH_PICK_ATTRIBUTION: ${{ inputs.capture_depth_pick_attribution && 'enabled' || 'disabled' }}
           CAPTURE_SHADER_PROGRAM_ATTRIBUTION: ${{ inputs.capture_shader_program_attribution && 'enabled' || 'disabled' }}
           CAPTURE_DELAY_NEGATIVE_CONTROL: ${{ inputs.capture_delay_negative_control && 'enabled' || 'disabled' }}
@@ -506,6 +511,7 @@ jobs:
           --capture-renderer-backend "$CAPTURE_RENDERER_BACKEND"
           --capture-scene-frame-diagnostics "$CAPTURE_SCENE_FRAME_DIAGNOSTICS"
           --capture-first-motion-cpu-profile "$CAPTURE_FIRST_MOTION_CPU_PROFILE"
+          --capture-tracking-cpu-profile "$CAPTURE_TRACKING_CPU_PROFILE"
           --capture-depth-pick-attribution "$CAPTURE_DEPTH_PICK_ATTRIBUTION"
           --capture-shader-program-attribution "$CAPTURE_SHADER_PROGRAM_ATTRIBUTION"
           --capture-delay-negative-control "$CAPTURE_DELAY_NEGATIVE_CONTROL"

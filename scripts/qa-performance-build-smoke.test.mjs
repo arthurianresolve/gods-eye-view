@@ -449,6 +449,37 @@ test('smoke CLI parser preserves the candidate SHA and output path', () => {
   );
   assert.deepEqual(
     parseSmokeArguments([
+      '--capture-tracking-cpu-profile',
+      'enabled',
+      '--provider-fixture',
+      'dense-investigation',
+    ]),
+    { trackingCpuProfile: true, providerFixture: 'dense-investigation' },
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-tracking-cpu-profile',
+        'enabled',
+        '--capture-first-motion-cpu-profile',
+        'enabled',
+        '--provider-fixture',
+        'dense-investigation',
+      ]),
+    /cannot be combined/,
+  );
+  assert.throws(
+    () =>
+      parseSmokeArguments([
+        '--capture-tracking-cpu-profile',
+        'enabled',
+        '--provider-fixture',
+        'infrastructure-dams',
+      ]),
+    /requires the dense investigation fixture/,
+  );
+  assert.deepEqual(
+    parseSmokeArguments([
       '--capture-depth-pick-attribution',
       'enabled',
       '--provider-fixture',
@@ -1208,6 +1239,16 @@ test('weather smoke uses a bounded phased diagnostic without changing the defaul
     seconds: 1,
     weatherPhaseDiagnostic: false,
   });
+  assert.deepEqual(smokeCaptureSchedule('dense-investigation', true), {
+    runs: 1,
+    warmupMs: 1000,
+    seconds: 1,
+    weatherPhaseDiagnostic: false,
+  });
+  assert.throws(
+    () => smokeCaptureSchedule('infrastructure-dams', true),
+    /requires the dense investigation fixture/,
+  );
 });
 
 test('outer smoke projects only validated CLI map-journey failure evidence', () => {
@@ -3915,6 +3956,55 @@ test('failed later profile window preserves the earlier ordered sidecar indexes'
       const malformed = await readProviderCpuProfileIndexSet(directory);
       assert.equal(malformed.invalidIndexCount, 1);
     }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('tracking profile sidecar binds the single selected-aircraft sample', async () => {
+  const directory = await mkdtemp(
+    path.join(os.tmpdir(), 'gev-tracking-profile-index-set-'),
+  );
+  try {
+    const target = {
+      scenario: 'selected-aircraft-tracking',
+      run: 1,
+      captureOrdinal: 2,
+      documentRole: 'provider-sample-2',
+      documentId: 'document-2',
+    };
+    const profileBytes = Buffer.from('tracking-profile');
+    const fileName = 'provider-selected-aircraft-tracking-1-cpu-profile.json';
+    const indexPath = path.join(
+      directory,
+      'provider-selected-aircraft-tracking-1-cpu-profile-ref.json',
+    );
+    const profile = {
+      schema: 'gev-render-boundary-cpu-profile-ref/v1',
+      status: 'complete',
+      performanceAcceptanceEligible: false,
+      fileName,
+      sha256: createHash('sha256').update(profileBytes).digest('hex'),
+      byteLength: profileBytes.byteLength,
+      profilerErrors: [],
+      target,
+    };
+    const index = {
+      schema: 'gev-provider-sample-cpu-profile-index/v1',
+      performanceAcceptanceEligible: false,
+      target,
+      profile,
+    };
+    await writeFile(path.join(directory, fileName), profileBytes);
+    await writeFile(indexPath, `${JSON.stringify(index)}\n`);
+    const accepted = await readProviderCpuProfileIndexSet(directory, true);
+    assert.equal(accepted.status, 'all-targets-recorded');
+    assert.equal(accepted.profiles.length, 1);
+    assert.deepEqual(accepted.profiles[0].target, target);
+    await writeFile(path.join(directory, fileName), 'tampered-profile');
+    const rejected = await readProviderCpuProfileIndexSet(directory, true);
+    assert.equal(rejected.status, 'partial');
+    assert.equal(rejected.invalidIndexCount, 1);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
