@@ -44,6 +44,7 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     assert.ok(csp.includes(directive), directive);
   }
   assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"));
+  assert.deepEqual(config.preview.allowedHosts, config.server.allowedHosts);
   assert.deepEqual(config.preview.headers, config.server.headers);
   assert.deepEqual(config.define, {
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
@@ -72,6 +73,13 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
       host: '0.0.0.0',
       allowedHosts: ['localhost', '127.0.0.1', 'globe.lan'],
     }).server.allowedHosts,
+    ['localhost', '127.0.0.1', 'globe.lan'],
+  );
+  assert.deepEqual(
+    createBrowserViteConfig({
+      host: '0.0.0.0',
+      allowedHosts: ['localhost', '127.0.0.1', 'globe.lan'],
+    }).preview.allowedHosts,
     ['localhost', '127.0.0.1', 'globe.lan'],
   );
   assert.equal(
