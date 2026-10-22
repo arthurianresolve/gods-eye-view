@@ -21,30 +21,84 @@ latency, the 20% objective, the final Ampfing soak and VM105 package deployment
 pending. This is not hardware acceptance, stable-release approval or a waiver
 of the independent latency, visual, retention and recovery gates.
 
-| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Hardware qualification                                                                                                                                                           |
-| ------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                           |
-| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Performance objectives and final acceptance unresolved                                                                                                                           |
-| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                                                                                                                                                                    | Final shared qualification pending                                                                                                                                               |
-| S69     | Open: complete candidate qualification                       | Runtime revision `8ac4d263` passes 148 focused infrastructure/lifecycle tests, the full local Windows Node 24 suite, formatting, package boundaries, a production build, and Node 24/26, Windows onboarding, three-OS recovery and browser CI. The owner-return regression fails against the earlier source and passes after its correction. The earlier UHD 620 diagnostic belongs to `8f5116ca` and does not establish this runtime's hardware performance.                                            | Native local-control latency and strict visual equivalence have not passed; the matched five-run workloads, replay and startup gates remain open.                                |
-| S70     | Open: finish private recovery checks and deliver             | At QA-only review head `7452026c`, exact-head CI and signed release verification pass. The independently downloaded archive matches its checksum and repository/workflow/source attestation; all 2,129 manifest file hashes pass a separate streaming readback. The PR merge commit has the same Git tree as that review head. Earlier private-host and workspace/evidence journeys retain their original revision scope. Later commits require their own exact-commit package proof. | Exact-package HTTPS/recovery and physical GPU qualification, the final frozen-runtime Ampfing soak and deployment remain pending. Production was not switched to this candidate. |
+| Scope   | Engineering                                                  | Automatic validation                                                                                                                                                                                                                                                                                                                                                                                                                                              | Hardware qualification                                                                                                                                                                                                                                       |
+| ------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S47–S59 | 13/13 closed, including documented experimental dispositions | Existing revision-bound checks retained                                                                                                                                                                                                                                                                                                                                                                                                                           | Results have their recorded workload/revision scope; no blanket current-candidate pass                                                                                                                                                                       |
+| S60     | Open: integrate the final candidate evidence and report      | Final manifest/report pending                                                                                                                                                                                                                                                                                                                                                                                                                                     | Performance objectives and final acceptance unresolved                                                                                                                                                                                                       |
+| S61–S68 | 8/8 implemented or evaluated; S68 is a rejected optimization | Existing checks retained, with newer fixes separately validated below                                                                                                                                                                                                                                                                                                                                                                                             | Final shared qualification pending                                                                                                                                                                                                                           |
+| S69     | Open: complete candidate qualification                       | Accepted runtime revision `5ac868ef` bounds local-infrastructure depth sampling to one query per natural frame. Its 142 focused tests, formatting, package boundaries and production build pass. Exact-tree CI passes Node 24/26, Windows onboarding, three-OS recovery and the Street Level browser gate. The local full Node 24 run passed 3,093 tests and had one timing-budget failure only under concurrent work; its isolated 44-test analyst rerun passed. | Native local-control next-paint latency remains failed at 160 ms p95 against 100 ms. Accepted-intent, completed-frame readiness, replay and sampled heap pass. Strict repeated visual qualification, the matched five-run workloads and startup remain open. |
+| S70     | Open: finish private recovery checks and deliver             | [CI `39766420269`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39766420269) and [release `39766420350`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39766420350) pass for `5ac868ef`. Signed PR merge `35f46f6d` has the same Git tree. The independently downloaded archive matches its checksum and attestation; all 2,129 manifest file hashes pass streaming readback. Publication was skipped.                         | Exact-package HTTPS/workspace/recovery, physical GPU qualification, the final frozen-runtime Ampfing soak and deployment remain pending. Production still serves an older asset tree.                                                                        |
 
 **Current provider reconciliation.** Upstream provider-response hardening was
-ported onto `dev` as `8a4808fe` and onto the performance branch as `d27c9781`.
-The current performance-branch runtime includes stricter CCTV source and media
-validation, keyless same-site admission, JSON-only GBFS responses, and API
-response headers. On `dev`, the full local Windows Node 24 suite passed with
-9,408 passes, 10 declared skips and no failures; formatting, boundaries,
-changelog assembly, a production build, and an independent source review also
-passed. On the combined performance branch, the 51 directly affected tests,
-formatting, boundaries, and production build pass. No exact-`d27c9781` CI or
-signed-package result is claimed here. The prior release archive and physical
-evidence retain their recorded commit scope. The performance-specific runtime
-change remains `8ac4d263`; `d27c9781` is the latest overall runtime change,
-so final package, provider journeys, and hardware qualification must bind to
-the eventual frozen head. The engineering slice count is unchanged.
+ported onto `dev` as `8a4808fe` and is an ancestor of `5ac868ef`. The current
+performance runtime includes stricter CCTV source and media validation, keyless
+same-site admission, JSON-only GBFS responses, API response headers and the
+later local-infrastructure scheduling correction. Live tracked refs on
+22 October remain fork `main@1df2a272`, fork `dev@8a4808fe` and upstream
+`main@7be5937f`; no newer remote movement requires reconciliation. Final
+provider journeys and hardware evidence must still bind to the frozen release
+head. The engineering slice count is unchanged.
 
 ### Latest investigation checkpoint — 22 October 2026
+
+**Current accepted runtime and native qualification.** Commit `5ac868ef`
+replaces the remaining enable-time cohort of synchronous scene-depth reads
+with one query per layer per natural frame. It preserves the same bounded
+candidate cohort, final heights, feature identities, geometry, populations and
+fallback semantics. The [formal native review](performance-evidence/s69-native-matrix-20261019/ground-sampling-5ac868ef-20261022-review.json)
+compares the clean source build with correctness control `76cc760b` in Chrome
+155 on the Intel UHD 620 at a 1,280 × 537 CSS viewport, DPR 2 and a 2,560 ×
+1,074 drawing buffer. All twenty local actions, twenty replay seeks and eight
+mixed-use cycles per role (two warmup and six measured) complete with normal
+foreground and cleanup proof.
+
+- Candidate accepted-intent p95 is **2.8 ms**. Full-ready p95 is **59.0 ms**
+  and completed-render readiness p95 is **66.7 ms**, both within the independent
+  10% comparison limit. Replay completed-frame p95 is **46.7 ms**, within
+  250 ms. Sampled peak heap is **3.83% below** the control.
+- Native click-to-next-paint p95 remains **160 ms**, above the unchanged 100 ms
+  limit. The slow endpoint occurs after the application has settled and
+  completed its matching Cesium frame. The measurement policy explicitly
+  lacks a binding from the observed acknowledgement pixels to that compositor
+  presentation, so this does not identify a new application owner; it remains
+  a real failed hardware-experience gate rather than being converted to a pass.
+- The raw capture SHA-256 is
+  `f33dbbfe9efc2c7f2c940802e1c1f4af8feb9108dbc8f3cd272304bd61524950`.
+  The compact review retains the exact automatic and hardware statuses.
+
+The distinct bounded-retirement experiment `35b9357a`, measured against
+accepted-runtime control `5ac868ef`, hid the captured Entity source immediately,
+retained at most one old source through a RAF-to-task
+rendering opportunity, and then destroyed its Cesium visualizers with deadline,
+visibility and destroy fallbacks. All **160 focused tests** pass, including a
+real `DataSourceDisplay` integration and reentrant selection/activation races.
+Its matched physical run nevertheless worsens next-paint p95 from **120 to
+216 ms** and regresses full-ready state from **37.7 to 41.9 ms** and completed
+render readiness from **43.5 to 48.5 ms**, both beyond 10%. The
+[disposition](performance-evidence/s69-native-matrix-20261019/retired-source-35b9357a-20261022-disposition.json)
+therefore rejects the experiment. It is not pushed or included in the current
+runtime. This closes that ownership hypothesis without repeating the earlier
+whole-lifecycle OFF delay.
+
+**Storage and final-soak gate.** The final Ampfing soak has not started. The
+unchanged Windows guard requires 6 GiB free on C: at launch and 2 GiB throughout;
+the latest verified free space remains below the launch floor after clearing
+only reconstructible npm and Puppeteer caches. D: is absent, and E: is excluded
+because a later readback found zero-corrupted evidence despite earlier bounded
+writes. Remote VM storage cannot replace the local pagefile/evidence reserve.
+Historical evidence may be retired only after a fresh manifest and independent
+VM105 length/SHA-256 readback. The long soak remains downstream of the failed
+native gate and storage recovery; it is not required to decide the rejected
+retirement experiment.
+
+**Browser and driver qualification boundary.** The renderer is hardware
+D3D11 on Intel UHD 620 driver `30.0.101.1338` from 2022. A signed system-level
+Chrome 156 update was downloaded and hash-verified by WinGet, but its installer
+was cancelled at the administrative boundary and made no browser change.
+Chrome remains `155.0.8059.85`; no result is relabeled as Chrome 156 evidence.
+The OEM Lenovo driver is the latest model-specific release found during this
+review; adopting Intel's newer generic legacy driver would require a separate
+rollback-controlled system qualification and is not an application patch.
 
 **Tracking attribution follow-up.** The capture harness now offers a separate
 `--tracking-cpu-profile` diagnostic for the first selected-aircraft-tracking
@@ -1366,8 +1420,10 @@ The completed hardware attempt and remaining failures are recorded above.
    The two-action application GPU-service trace and bounded attribution are
    complete. A subsequent same-document trace identifies an empty whiteboard
    compositor surface, and source matching identifies the late polyline shader
-   pipeline. The whiteboard-only candidate at `f0af795f` is built privately;
-   its performance benefit remains unproved. Keep activation and deactivation findings separate,
+   pipeline. The historical whiteboard-only experiment at `f0af795f` was built
+   privately and later reverted; it did not establish a performance benefit.
+   The latest accepted-runtime result and rejected retirement experiment are
+   recorded in the 22 October checkpoint above. Keep activation and deactivation findings separate,
    and require evidence before changing runtime behavior. Do not repeat a
    broad cohort merely to obtain a better result.
 2. **Validate the prospective measurement corrections.** Use the explicit v6
