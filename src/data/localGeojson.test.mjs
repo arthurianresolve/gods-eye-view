@@ -308,6 +308,428 @@ async function createRealLocalLayerHarness({
   return environment;
 }
 
+function renderLocalFrames(env, count) {
+  for (let frame = 0; frame < count; frame++) env.preRender.raise();
+}
+
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
+  test(`${surfaceRenderer} ground cohort advances once per frame without delaying untouched records`, async (t) => {
+    const clock = installFakeClock(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const reasons = [];
+    const env = await createRealLocalLayerHarness({
+      surfaceRenderer,
+      featureCount: 8,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 180,
+      initialGlobe: { show: true, tilesLoaded: true, getHeight: () => 117 },
+      servicesOverrides: {
+        governorRequestRender: (reason) => reasons.push(reason),
+      },
+    });
+    const cluster =
+      surfaceRenderer === 'primitive-collections'
+        ? null
+        : new Cesium.EntityCluster();
+    const visualizer = cluster
+      ? new Cesium.PointVisualizer(cluster, env.dataSources[0].entities)
+      : null;
+    t.after(() => {
+      visualizer?.destroy();
+      cluster?.destroy();
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    const entities = [...env.dataSources[0].entities.values];
+    const distances = entities.map((entity) =>
+      Cesium.Cartesian3.distance(
+        env.viewer.camera.positionWC,
+        entity.__localBaseCartesian,
+      ),
+    );
+
+    for (let frame = 0; frame < entities.length; frame++) {
+      visualizer?.update(Cesium.JulianDate.now());
+      env.preRender.raise();
+      assert.equal(
+        env.sampleCalls.count,
+        frame + 1,
+        'one expensive readback per natural frame',
+      );
+      assert.equal(
+        env.layer.getPerformanceDiagnostics().timers,
+        0,
+        'untouched records must not arm the two-second retry',
+      );
+      assert.deepEqual(
+        reasons,
+        Array(Math.min(frame + 1, entities.length - 1))
+          .fill('local-ground-continuation:local-dams')
+          .concat(
+            frame === entities.length - 1
+              ? ['local-ground-settle:local-dams']
+              : [],
+          ),
+      );
+      assert.equal(env.dataSources[0].show, true);
+      assert.ok(entities.every((entity) => entity.show));
+      assert.ok(env.primitiveOwners.every((owner) => owner.show));
+      if (frame + 1 < entities.length) {
+        assert.ok(
+          Math.abs(
+            Cesium.Cartographic.fromCartesian(
+              entities[frame + 1].__localBaseCartesian,
+            ).height,
+          ) < 0.01,
+          'the visible fallback stays available while later ground queries wait',
+        );
+      }
+      clock.advance(16);
+    }
+    if (cluster) {
+      const lastEntity = entities.at(-1);
+      assert.ok(
+        !Cesium.Cartesian3.equals(
+          cluster.getPoint(lastEntity).position,
+          lastEntity.position.getValue(Cesium.JulianDate.now()),
+        ),
+        'the last point still has its pre-query position until the requested settle frame',
+      );
+      visualizer.update(Cesium.JulianDate.now());
+      env.preRender.raise();
+      for (const entity of entities) {
+        assert.ok(
+          Cesium.Cartesian3.equals(
+            cluster.getPoint(entity).position,
+            entity.position.getValue(Cesium.JulianDate.now()),
+          ),
+          'the real Cesium point visualizer consumes final positions on the settle frame',
+        );
+      }
+    }
+
+    for (const [index, entity] of entities.entries()) {
+      const query = env.sampleCalls.records[index];
+      assert.equal(query.cartographic, entity.__localBaseCarto);
+      assert.deepEqual(query.exclusions, [entity]);
+      assert.equal(query.dataSourcesShown, true);
+      assert.equal(query.primitiveOwnersShown, true);
+      assert.ok(
+        Math.abs(
+          Cesium.Cartographic.fromCartesian(entity.__localBaseCartesian)
+            .height - 180,
+        ) < 0.01,
+      );
+      const tipHeight =
+        180 + distances[index] * 2 * Math.tan(Math.PI / 6) * (65 / 600);
+      const expectedTip = Cesium.Cartesian3.fromRadians(
+        query.cartographic.longitude,
+        query.cartographic.latitude,
+        tipHeight,
+      );
+      assert.ok(
+        Cesium.Cartesian3.distance(
+          entity.position.getValue(Cesium.JulianDate.now()),
+          expectedTip,
+        ) < 1e-6,
+        'the final tip uses the same exact sampled height and screen-size equation',
+      );
+    }
+    assert.deepEqual(env.dataSources[0].entities.values, entities);
+    assert.equal(env.layer.getAnalystRecords().length, 8);
+    renderLocalFrames(env, 8);
+    clock.advance(5_000);
+    t.mock.timers.tick(5_000);
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 8);
+    assert.equal(
+      reasons.length,
+      8,
+      'a drained cohort requests no further frames',
+    );
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  });
+}
+
+test('a ground miss waits for retry only after untouched records drain', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const reasons = [];
+  let missedEntity;
+  let sampleReady = false;
+  const env = await createRealLocalLayerHarness({
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (_cartographic, [entity]) => {
+      if (entity === missedEntity && !sampleReady)
+        throw new Error('surface pending');
+      return 180;
+    },
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = [...env.dataSources[0].entities.values];
+  missedEntity = entities[0];
+  for (let frame = 0; frame < entities.length; frame++) {
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, frame + 1);
+    assert.equal(env.sampleCalls.records[frame].exclusions[0], entities[frame]);
+    assert.equal(
+      env.layer.getPerformanceDiagnostics().timers,
+      frame === 2 ? 1 : 0,
+    );
+    clock.advance(16);
+  }
+  assert.deepEqual(reasons, [
+    ...Array(2).fill('local-ground-continuation:local-dams'),
+    'local-ground-settle:local-dams',
+  ]);
+  clock.advance(1_999);
+  t.mock.timers.tick(1_999);
+  assert.equal(reasons.length, 3);
+  sampleReady = true;
+  clock.advance(1);
+  t.mock.timers.tick(1);
+  assert.equal(reasons.at(-1), 'local-ground-retry:local-dams');
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 4);
+  assert.equal(env.sampleCalls.records[3].exclusions[0], missedEntity);
+  assert.ok(
+    entities.every(
+      (entity) =>
+        Math.abs(
+          Cesium.Cartographic.fromCartesian(entity.__localBaseCartesian)
+            .height - 180,
+        ) < 0.01,
+    ),
+  );
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  clock.advance(5_000);
+  t.mock.timers.tick(5_000);
+  assert.equal(
+    reasons.length,
+    5,
+    'successful retry leaves only its one settle frame and no timer chain',
+  );
+});
+
+test('successful grounding on a free frame cancels a previously armed retry', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const reasons = [];
+  const env = await createRealLocalLayerHarness({
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  env.preRender.raise();
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 1);
+  env.setSampleHeight(() => 180);
+  clock.advance(2_100);
+  env.preRender.raise();
+  assert.ok(Math.abs(baseHeightM(env) - 180) < 0.01);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  t.mock.timers.tick(5_000);
+  assert.deepEqual(
+    reasons,
+    ['local-ground-settle:local-dams'],
+    'an obsolete retry must not wake the idle scene',
+  );
+});
+
+test('slow failed queries cannot retry earlier records before the ground cohort drains', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const reasons = [];
+  const env = await createRealLocalLayerHarness({
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => {
+      clock.advance(2_100);
+      throw new Error('slow unavailable surface');
+    },
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = [...env.dataSources[0].entities.values];
+  for (let frame = 0; frame < entities.length; frame++) {
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, frame + 1);
+    assert.equal(env.sampleCalls.records[frame].exclusions[0], entities[frame]);
+  }
+  assert.deepEqual(
+    reasons,
+    Array(2).fill('local-ground-continuation:local-dams'),
+  );
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().timers,
+    1,
+    'a fully missed cohort reaches the bounded delayed retry instead of continuing forever',
+  );
+  t.mock.timers.tick(2_000);
+  assert.equal(reasons.at(-1), 'local-ground-retry:local-dams');
+  renderLocalFrames(env, 3);
+  assert.equal(env.sampleCalls.count, 6);
+  assert.deepEqual(
+    env.sampleCalls.records.slice(3).map((query) => query.exclusions[0]),
+    entities,
+  );
+});
+
+for (const cancel of ['disable', 'destroy']) {
+  test(`${cancel} releases an unfinished ground cohort and its continuations`, async (t) => {
+    const clock = installFakeClock(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const reasons = [];
+    const env = await createRealLocalLayerHarness({
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 180,
+      servicesOverrides: {
+        governorRequestRender: (reason) => reasons.push(reason),
+      },
+    });
+    t.after(() => {
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    const oldEntities = [...env.dataSources[0].entities.values];
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 1);
+    assert.equal(reasons.length, 1);
+    env.layer[cancel](env.viewer);
+    renderLocalFrames(env, 4);
+    clock.advance(5_000);
+    t.mock.timers.tick(5_000);
+    assert.equal(env.sampleCalls.count, 1);
+    assert.equal(reasons.length, 1);
+    assert.equal(env.dataSources.length, 0);
+    assert.equal(env.preRender.listeners.size, 0);
+    assert.equal(env.moveEnd.listeners.size, 0);
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+    if (cancel === 'disable') {
+      await env.enable();
+      assert.ok(
+        env.dataSources[0].entities.values.every(
+          (entity, index) => entity !== oldEntities[index],
+        ),
+      );
+      renderLocalFrames(env, 3);
+      assert.equal(env.sampleCalls.count, 4);
+      assert.equal(
+        reasons.length,
+        4,
+        'only the rebuilt cohort owns new continuations',
+      );
+      assert.ok(
+        env.sampleCalls.records
+          .slice(1)
+          .every((query) => !oldEntities.includes(query.exclusions[0])),
+      );
+    }
+  });
+}
+
+test('reentrant cancellation on a continuation cannot commit its sample or request another frame', async (t) => {
+  installFakeClock(t);
+  const reasons = [];
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'stem-collection',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 180,
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entity = env.dataSources[0].entities.values[1];
+  const originalBase = Cesium.Cartesian3.clone(entity.__localBaseCartesian);
+  const owner = env.primitiveOwners[0];
+  env.preRender.raise();
+  env.setSampleHeight(() => {
+    env.layer.disable(env.viewer);
+    return 180;
+  });
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 2);
+  assert.deepEqual(entity.__localBaseCartesian, originalBase);
+  assert.equal(owner.isDestroyed(), true);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  assert.deepEqual(reasons, ['local-ground-continuation:local-dams']);
+});
+
+for (const change of ['capability', 'range']) {
+  test(`ground continuation stops when ${change} disappears and resumes on a later eligible frame`, async (t) => {
+    const clock = installFakeClock(t);
+    const reasons = [];
+    const env = await createRealLocalLayerHarness({
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 180,
+      servicesOverrides: {
+        governorRequestRender: (reason) => reasons.push(reason),
+      },
+    });
+    t.after(() => {
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    env.preRender.raise();
+    if (change === 'capability') env.viewer.scene.sampleHeightSupported = false;
+    else {
+      setCameraAltitude(env, 400_000);
+      env.moveEnd.raise();
+    }
+    clock.advance(16);
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 1);
+    assert.equal(reasons.length, 1);
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+    if (change === 'capability') env.viewer.scene.sampleHeightSupported = true;
+    else {
+      setCameraAltitude(env, 20_000);
+      env.moveEnd.raise();
+    }
+    clock.advance(500);
+    renderLocalFrames(env, 2);
+    assert.equal(env.sampleCalls.count, 3);
+    assert.equal(reasons.length, 3);
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  });
+}
+
 for (const surfaceRenderer of [
   'entities',
   'primitive-collections',
@@ -319,7 +741,7 @@ for (const surfaceRenderer of [
     [117, 180, 180, true],
     [117, -20, -20, false],
   ]) {
-    test(`first natural ${surfaceRenderer} preRender keeps visible query semantics and exact surface ${expectedHeight}`, async (t) => {
+    test(`consecutive natural ${surfaceRenderer} frames keep visible query semantics and exact surface ${expectedHeight}`, async (t) => {
       installFakeClock(t);
       const env = await createRealLocalLayerHarness({
         autoEnable: false,
@@ -344,6 +766,13 @@ for (const surfaceRenderer of [
       assert.equal(env.dataSources[0].show, true);
       assert.ok(env.primitiveOwners.every(owner => owner.show === true));
       env.preRender.raise();
+      assert.equal(
+        env.sampleCalls.count,
+        1,
+        'first visible frame waits for only one depth sample',
+      );
+      assert.equal(env.dataSources[0].show, true);
+      renderLocalFrames(env, 2);
       assert.equal(env.sampleCalls.count, 3);
       assert.ok(
         env.sampleCalls.records.every(
@@ -400,7 +829,7 @@ for (const surfaceRenderer of [
             published.entities[index].tip,
             expectedTip,
           ) < 1e-6,
-          'first normal-frame tip matches unchanged ground and screen-size equation',
+          'final tip matches unchanged ground and screen-size equation',
         );
         assert.ok(
           Math.abs(
@@ -427,7 +856,7 @@ for (const surfaceRenderer of [
     t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
     await env.enable();
     assert.equal(env.sampleCalls.count, 0);
-    env.preRender.raise();
+    renderLocalFrames(env, 3);
     const entities = env.dataSources[0].entities.values;
     assert.equal(entities.length, 3);
     assert.equal(new Set(entities.map(entity => entity.id)).size, 3);
@@ -512,7 +941,7 @@ for (const surfaceRenderer of [
     assert.equal(visibilityChanges, 3, 'Final source visibility must still reach each entity');
     assert.deepEqual(env.dataSources[0].entities.values, attachedEntities);
     assert.equal(env.sampleCalls.count, 0);
-    env.preRender.raise();
+    renderLocalFrames(env, 3);
     assert.equal(env.sampleCalls.count, 3);
     for (const [index, query] of env.sampleCalls.records.entries()) {
       assert.equal(query.cartographic, attachedEntities[index].__localBaseCarto);
@@ -560,7 +989,7 @@ for (const surfaceRenderer of [
     assert.equal(env.moveEnd.addCount, 1);
     assert.equal(env.publications.length, 1);
     assert.equal(env.sampleCalls.count, 0);
-    env.preRender.raise();
+    renderLocalFrames(env, 3);
     assert.equal(env.sampleCalls.count, 3);
     assert.equal(env.layer.getAnalystRecords().length, 3);
     for (const [index, query] of env.sampleCalls.records.entries()) {
@@ -770,7 +1199,7 @@ for (const surfaceRenderer of [
   'primitive-collections',
   'stem-collection',
 ]) {
-  test(`fresh and cached ${surfaceRenderer} rebuilds preserve the same first normal-frame domain`, async (t) => {
+  test(`fresh and cached ${surfaceRenderer} rebuilds preserve the same completed grounding domain`, async (t) => {
     installFakeClock(t);
     const snapshot = (env) => ({
       lod: env.layer.getLodDiagnostics(),
@@ -823,7 +1252,7 @@ for (const surfaceRenderer of [
     t.after(() => { prepared.layer.destroy(prepared.viewer); prepared.cleanup(); });
     await prepared.enable();
     assert.equal(prepared.sampleCalls.count, 0);
-    prepared.preRender.raise();
+    renderLocalFrames(prepared, 3);
     const expected = snapshot(prepared);
     const firstEntities = [...prepared.dataSources[0].entities.values];
     prepared.layer.disable(prepared.viewer);
@@ -833,11 +1262,11 @@ for (const surfaceRenderer of [
     assert.equal(prepared.sampleCalls.count, 0);
     assert.equal(prepared.layer.getLodDiagnostics().computed, false);
     assert.ok(prepared.dataSources[0].entities.values.every((entity, index) => entity !== firstEntities[index]), 'Cached source data still rebuilds its owned render entities');
-    prepared.preRender.raise();
+    renderLocalFrames(prepared, 3);
     assert.deepEqual(
       snapshot(prepared),
       expected,
-      'same exact geometry, selection, evidence, query order, exclusions and cohort on the first normal pass',
+      'same exact geometry, selection, evidence, query order, exclusions and cohort after grounding',
     );
   });
 }
@@ -1609,7 +2038,7 @@ test('opt-in stem collection preserves Entity points, other Graphics and native 
       Number.POSITIVE_INFINITY,
     );
   }
-  env.preRender.raise();
+  renderLocalFrames(env, 8);
   assert.equal(env.sampleCalls.count, 8);
   for (const [index, entity] of entities.entries()) {
     const stem = stems.get(index);
@@ -2802,8 +3231,8 @@ test('after the cap a camera-motion frame still samples, and re-opens the budget
   runArmedRetryChain(env, t, clock, 5);
   assert.equal(
     governorScene.renders,
-    GROUND_SAMPLE_MAX_ARMED_RETRIES,
-    'a grounded record asks for no further frames',
+    GROUND_SAMPLE_MAX_ARMED_RETRIES + 1,
+    'a grounded record asks for one visualizer settle frame and no further retries',
   );
 });
 

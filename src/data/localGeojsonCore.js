@@ -28,6 +28,10 @@ const LOCAL_OVERLAY_CELL_SURPLUS = 2;
 const GROUND_SAMPLE_MAX_DISTANCE_M = 75000;
 const GROUND_SAMPLE_RETRY_MS = 2000;
 const GROUND_SAMPLE_MAX_ABS_HEIGHT_M = 9000;
+// A depth sample synchronously renders and reads back the scene. Keep one
+// expensive query per natural frame so the first visible frame need not wait
+// for the whole active cohort. Flat-globe lookups do not consume this budget.
+const GROUND_SAMPLE_MAX_PER_FRAME = 1;
 /**
  * Bounded give-up for the self-armed retry. Sampling can be SUPPORTED and still
  * never succeed (no sampleable surface under the feature), in which case each
@@ -473,6 +477,10 @@ export function createLocalGeoJsonLayer(
   let _groundRetryArms = 0;
   /** Last observed scene.sampleHeightSupported; null until the first walk. */
   let _lastGroundSampleCapability = null;
+  /** Unsampled records ready for the next natural frame, without a retry wait. */
+  let _groundContinuationPending = false;
+  /** Freeze retry eligibility until untouched records in this cohort drain. */
+  let _groundCohortStartedMs = 0;
 
   /**
    * Coalesced one-shot: ask the governor for a frame once the retry window
@@ -506,6 +514,8 @@ export function createLocalGeoJsonLayer(
   function clearGroundRetryRender() {
     _groundRetryArms = 0;
     _lastGroundSampleCapability = null;
+    _groundContinuationPending = false;
+    _groundCohortStartedMs = 0;
     if (!_groundRetryTimer) return;
     clearTimeout(_groundRetryTimer);
     _groundRetryTimer = null;
@@ -704,6 +714,8 @@ export function createLocalGeoJsonLayer(
       _lastVisibilityUpdate = Number.NEGATIVE_INFINITY;
       _groundRetryArms = 0; // fresh give-up budget per enable-cycle
       _lastGroundSampleCapability = null;
+      _groundContinuationPending = false;
+      _groundCohortStartedMs = 0;
       _activeLodIds = new Set(); // fresh globe-LOD selection per enable-cycle
       _lodGraceState = new Map();
       _lastLodBudgetLimit = 0;
@@ -1101,7 +1113,13 @@ export function createLocalGeoJsonLayer(
           const passEpoch = _activationEpoch;
           const ownsPass = () => _enabled && passEpoch === _activationEpoch;
           const now = performance.now();
-          if (now - _lastVisibilityUpdate < VISIBILITY_UPDATE_MS) return;
+          if (
+            !_groundContinuationPending &&
+            now - _lastVisibilityUpdate < VISIBILITY_UPDATE_MS
+          )
+            return;
+          if (!_groundContinuationPending) _groundCohortStartedMs = now;
+          _groundContinuationPending = false;
           _lastVisibilityUpdate = now;
 
           const cameraPos = viewer.camera.positionWC;
@@ -1157,7 +1175,12 @@ export function createLocalGeoJsonLayer(
             _groundRetryArms = 0;
           _lastGroundSampleCapability = canSampleGround;
           let groundRetryPending = false;
-          let groundSampleProgress = false;
+          const groundSampleBudget = {
+            remaining: GROUND_SAMPLE_MAX_PER_FRAME,
+            deferred: false,
+            progress: false,
+            retryBeforeMs: _groundCohortStartedMs,
+          };
 
           // --- Globe-LOD: recompute the active-stem set on camera moves. ---
           // `_stemGeometryDirty` is set by moveEnd, the first enable, and the
@@ -1224,7 +1247,6 @@ export function createLocalGeoJsonLayer(
             // on the next camera move if the budget has room.
             if (!isActive) continue;
 
-            const wasGroundSampled = record.groundSampled;
             let returnedToFlatGlobe = false;
             if (!flatGlobeOnly && record.groundSampleSource === 'flat-globe') {
               record.groundSampled = false;
@@ -1246,6 +1268,7 @@ export function createLocalGeoJsonLayer(
                 now,
                 ownsPass,
                 true,
+                groundSampleBudget,
               );
             }
             const terrainFloorChanged = refreshLocalTerrainFloor(
@@ -1265,6 +1288,7 @@ export function createLocalGeoJsonLayer(
                 null,
                 ownsPass,
                 flatGlobeOnly,
+                groundSampleBudget,
               );
             } else if (
               canSampleGround &&
@@ -1285,6 +1309,7 @@ export function createLocalGeoJsonLayer(
                   now,
                   ownsPass,
                   flatGlobeOnly,
+                  groundSampleBudget,
                 )
               ) {
                 updateLocalStemGeometry(
@@ -1294,12 +1319,11 @@ export function createLocalGeoJsonLayer(
                   distance,
                   ownsPass,
                   flatGlobeOnly,
+                  groundSampleBudget,
                 );
               }
             }
             if (!ownsPass()) return;
-            if (!wasGroundSampled && record.groundSampled)
-              groundSampleProgress = true;
             // Still unsampled AND close enough for a retry to succeed: this
             // layer has no hold and no periodic update, so under the idle
             // governor the retry's preRender never arrives on a parked camera
@@ -1325,8 +1349,16 @@ export function createLocalGeoJsonLayer(
           _stemGeometryDirty = false;
           // Tiles ARE streaming in: real progress re-opens the give-up budget
           // so the records still waiting get their own bounded run of retries.
-          if (groundSampleProgress) _groundRetryArms = 0;
-          if (groundRetryPending) scheduleGroundRetryRender(viewer);
+          if (groundSampleBudget.progress) _groundRetryArms = 0;
+          _groundContinuationPending = groundSampleBudget.deferred;
+          // Untouched records are ready now, rather than failed samples. Drain
+          // them on consecutive frames before spending the delayed retry budget.
+          if (!_groundContinuationPending && groundRetryPending)
+            scheduleGroundRetryRender(viewer);
+          else if (!groundRetryPending && _groundRetryTimer) {
+            clearTimeout(_groundRetryTimer);
+            _groundRetryTimer = null;
+          }
 
           const canvas = viewer.scene.canvas;
           const cohort = selectLocalInfrastructureOverlayCohort(
@@ -1342,6 +1374,18 @@ export function createLocalGeoJsonLayer(
           );
           if (!ownsPass() || !_dataSource) return;
           _overlayPublisher.publish(cohort);
+          if (
+            ownsPass() &&
+            (_groundContinuationPending || groundSampleBudget.progress)
+          )
+            // Entity visualizers update before preRender. The last successful
+            // query needs one more frame even if its tip is outside the overlay
+            // cohort, so that its final constants reach the visible primitives.
+            governorRequestRender(
+              _groundContinuationPending
+                ? `local-ground-continuation:${id}`
+                : `local-ground-settle:${id}`,
+            );
         };
         try {
           // Keep grounding in the first natural preRender, after the normal
@@ -1518,6 +1562,7 @@ function sampleLocalGroundHeight(
   now,
   ownsPass = null,
   flatGlobeOnly = false,
+  sampleBudget = null,
 ) {
   if (ownsPass && !ownsPass()) return false;
   if (
@@ -1525,10 +1570,22 @@ function sampleLocalGroundHeight(
     (!flatGlobeOnly && !viewer.scene.sampleHeightSupported)
   )
     return false;
-  if (now - record.lastGroundSampleMs < GROUND_SAMPLE_RETRY_MS) return false;
-  record.lastGroundSampleMs = now;
+  // A slow cohort can outlast the retry window. Do not retry its earlier
+  // misses before untouched records finish, or failures could keep requesting
+  // immediate continuations forever without reaching the bounded timer budget.
+  const retryBeforeMs = sampleBudget?.retryBeforeMs ?? now;
+  if (retryBeforeMs - record.lastGroundSampleMs < GROUND_SAMPLE_RETRY_MS)
+    return false;
   const globe = viewer.scene.globe;
-  if (globe?.show && globe.tilesLoaded === false) return false;
+  if (globe?.show && globe.tilesLoaded === false) {
+    record.lastGroundSampleMs = now;
+    return false;
+  }
+  if (!flatGlobeOnly && sampleBudget?.remaining === 0) {
+    sampleBudget.deferred = true;
+    return false;
+  }
+  record.lastGroundSampleMs = now;
   if (flatGlobeOnly) {
     // Ellipsoid terrain is exactly height zero. getHeight may differ by tiny
     // loaded-tile quantization, so retain it when finite for visual parity.
@@ -1540,9 +1597,11 @@ function sampleLocalGroundHeight(
       record,
       Number.isFinite(loadedHeight) ? loadedHeight : 0,
     );
+    if (sampleBudget) sampleBudget.progress = true;
     return true;
   }
   let sampled;
+  if (sampleBudget) sampleBudget.remaining -= 1;
   try {
     sampled = viewer.scene.sampleHeight(record.carto, [record.entity]);
   } catch {
@@ -1571,6 +1630,7 @@ function sampleLocalGroundHeight(
   record.groundSampled = true;
   record.groundSampleSource = null;
   setLocalGroundHeight(record, sampled);
+  if (sampleBudget) sampleBudget.progress = true;
   return true;
 }
 
@@ -1593,13 +1653,21 @@ function updateLocalStemGeometry(
   knownDistance = null,
   ownsPass = null,
   flatGlobeOnly = false,
+  sampleBudget = null,
 ) {
   if (ownsPass && !ownsPass()) return false;
   const distance = Number.isFinite(knownDistance)
     ? knownDistance
     : Cesium.Cartesian3.distance(viewer.camera.positionWC, record.base);
   if (distance < GROUND_SAMPLE_MAX_DISTANCE_M)
-    sampleLocalGroundHeight(viewer, record, now, ownsPass, flatGlobeOnly);
+    sampleLocalGroundHeight(
+      viewer,
+      record,
+      now,
+      ownsPass,
+      flatGlobeOnly,
+      sampleBudget,
+    );
   if (ownsPass && !ownsPass()) return false;
   // Keep the intended screen-size scaling in close-up views too. A 5 km
   // minimum made a marker hundreds of metres tall beside a nearby building.
