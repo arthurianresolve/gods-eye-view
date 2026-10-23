@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { beginCpuTiming, endCpuTiming } from '../../performance/cpuTimings.js';
 import {
   GEO_PROGRESS_NOTIFY_INTERVAL_MS,
   GEO_PROGRESS_NOTIFY_BATCH_LIMIT,
@@ -14,6 +15,11 @@ export function createGeometryQueue({
   parts,
   source,
 }) {
+  const queueCursor = () => (layerState._geoQueueCursor ||= { index: 0 });
+  const pendingRecords = new Set();
+  let generation = 0;
+  let processing = false;
+
   /**
    * Stops the staggered geometry-load queue and optionally clears progress
    * counters (kept when pausing mid-flight is not needed — we always clear).
@@ -21,11 +27,14 @@ export function createGeometryQueue({
    */
 
   function stopGeometryLoadQueue(clearProgress = true) {
+    generation += 1;
+    pendingRecords.clear();
     if (layerState._geoQueueTimer) {
       clearTimeout(layerState._geoQueueTimer);
       layerState._geoQueueTimer = 0;
     }
     layerState._geoQueue = [];
+    queueCursor().index = 0;
     layerState._geoProgressNotifier = null;
     if (clearProgress) {
       layerState._geoLoading = false;
@@ -97,6 +106,10 @@ export function createGeometryQueue({
   function processCctvGeometryQueueBatch({
     queue,
     batchSize,
+    cursor = null,
+    budgetMs = Infinity,
+    now = () => performance.now(),
+    isCurrent = () => true,
     visit,
     progress,
     complete,
@@ -105,11 +118,35 @@ export function createGeometryQueue({
     const take = Number.isFinite(batchSize)
       ? Math.max(1, Math.floor(batchSize))
       : 1;
-    const batch = safeQueue.splice(0, take);
-    for (const record of batch) visit?.(record);
-    if (safeQueue.length) {
+    const position = cursor || { index: 0 };
+    position.index = Math.max(
+      0,
+      Math.min(
+        safeQueue.length,
+        Math.floor(Number.isFinite(position.index) ? position.index : 0),
+      ),
+    );
+    const startedAt = Number.isFinite(budgetMs) ? now() : 0;
+    let visited = 0;
+    while (position.index < safeQueue.length && visited < take && isCurrent()) {
+      // Consume before visiting: a change during this build can enqueue one
+      // newer revision of the same record. It must not be lost as a duplicate.
+      const record = safeQueue[position.index++];
+      visit?.(record);
+      visited += 1;
+      if (Number.isFinite(budgetMs) && now() - startedAt >= budgetMs) break;
+    }
+    if (!isCurrent()) return false;
+    const hasMore = position.index < safeQueue.length;
+    // Compatibility for standalone callers; production always supplies a cursor.
+    if (!cursor) safeQueue.splice(0, position.index);
+    if (hasMore) {
       progress?.();
       return true;
+    }
+    if (cursor && typeof cursor === 'object') {
+      safeQueue.length = 0;
+      cursor.index = 0;
     }
     complete?.();
     return false;
@@ -155,6 +192,10 @@ export function createGeometryQueue({
 
   function processCctvGeometryDrainBatch({
     queue,
+    cursor = null,
+    budgetMs = Infinity,
+    now,
+    isCurrent,
     readOwnership,
     visit,
     progress,
@@ -163,6 +204,10 @@ export function createGeometryQueue({
     const pacing = cctvGeometryDrainPacing(readOwnership?.() || {});
     const hasMore = processCctvGeometryQueueBatch({
       queue,
+      cursor,
+      budgetMs,
+      now,
+      isCurrent,
       batchSize: pacing.batchSize,
       visit,
       progress,
@@ -178,12 +223,25 @@ export function createGeometryQueue({
    * @returns {boolean} Whether the queue order changed.
    */
 
-  function prioritizeActiveCctvGeometryRecord(queue, activeRecord) {
+  function prioritizeActiveCctvGeometryRecord(queue, activeRecord, cursor) {
+    return prioritizeActiveCctvGeometryRecordWithCursor(
+      queue,
+      activeRecord,
+      cursor,
+    );
+  }
+
+  function prioritizeActiveCctvGeometryRecordWithCursor(
+    queue,
+    activeRecord,
+    cursor,
+  ) {
     if (!Array.isArray(queue) || !activeRecord) return false;
-    const index = queue.indexOf(activeRecord);
-    if (index <= 0) return false;
-    queue.splice(index, 1);
-    queue.unshift(activeRecord);
+    const firstPending = cursor?.index || 0;
+    const index = queue.indexOf(activeRecord, firstPending);
+    if (index <= firstPending) return false;
+    // Swap only the two pending slots; never shift the consumed prefix.
+    [queue[firstPending], queue[index]] = [queue[index], queue[firstPending]];
     return true;
   }
 
@@ -196,7 +254,7 @@ export function createGeometryQueue({
 
   function processGeometryBatch() {
     layerState._geoQueueTimer = 0;
-    if (!layerState._viewer) {
+    if (!layerState._viewer || !layerState._enabled) {
       stopGeometryLoadQueue();
       return;
     }
@@ -205,51 +263,67 @@ export function createGeometryQueue({
     prioritizeActiveCctvGeometryRecord(
       layerState._geoQueue,
       parts.selection.getActiveRecord(),
+      queueCursor(),
     );
-    const batchResult = processCctvGeometryDrainBatch({
-      queue: layerState._geoQueue,
-      readOwnership: () => ({
-        trackedEntity: layerState._viewer.trackedEntity,
-        cockpitActive:
-          typeof document !== 'undefined' &&
-          document.body?.classList.contains('cockpit-mode'),
-      }),
-      visit: (record) => {
-        try {
-          parts.geometry.updateRecordGeometry(record);
-        } catch (err) {
-          console.warn(
-            '[Data:CCTV] geometry refresh error:',
-            err?.message || err,
-          );
-        }
-        if (
-          layerState._geoLoading &&
-          layerState._geoLoadDone < layerState._geoLoadTotal
-        ) {
-          layerState._geoLoadDone += 1;
-        }
-      },
-      progress: () => layerState._geoProgressNotifier?.progress(),
-      complete: () => {
-        const wasInitialLoad = layerState._geoLoading;
-        layerState._geoLoading = false;
-        if (wasInitialLoad) {
-          layerState._geoLoadDone = layerState._geoLoadTotal;
-          if (layerState._enabled) {
-            parts.rendering.refreshCoverageStyles();
-            // Geometry refinement may have replaced record.position objects — the
-            // one-shot drain completion re-anchors the card entries (event-driven,
-            // not a per-frame or timer pass).
-            parts.cards.refreshAmbientCards();
+    const batchGeneration = generation;
+    processing = true;
+    let batchResult;
+    try {
+      batchResult = processCctvGeometryDrainBatch({
+        queue: layerState._geoQueue,
+        cursor: queueCursor(),
+        budgetMs: 4,
+        isCurrent: () => batchGeneration === generation && layerState._enabled,
+        readOwnership: () => ({
+          trackedEntity: layerState._viewer.trackedEntity,
+          cockpitActive:
+            typeof document !== 'undefined' &&
+            document.body?.classList.contains('cockpit-mode'),
+        }),
+        visit: (record) => {
+          pendingRecords.delete(record);
+          const timing = beginCpuTiming('cctv', 'geometry-prepare');
+          try {
+            parts.geometry.updateRecordGeometry(record);
+          } catch (err) {
+            console.warn(
+              '[Data:CCTV] geometry refresh error:',
+              err?.message || err,
+            );
+          } finally {
+            endCpuTiming(timing);
           }
-        }
-        // Completion is never coalesced: subscribers must observe the final
-        // loading state even if the last progress tick just happened.
-        layerState._geoProgressNotifier?.finish();
-        layerState._geoProgressNotifier = null;
-      },
-    });
+          if (
+            layerState._geoLoading &&
+            layerState._geoLoadDone < layerState._geoLoadTotal
+          ) {
+            layerState._geoLoadDone += 1;
+          }
+        },
+        progress: () => layerState._geoProgressNotifier?.progress(),
+        complete: () => {
+          const wasInitialLoad = layerState._geoLoading;
+          layerState._geoLoading = false;
+          if (wasInitialLoad) {
+            layerState._geoLoadDone = layerState._geoLoadTotal;
+            if (layerState._enabled) {
+              parts.rendering.refreshCoverageStyles();
+              // Geometry refinement may have replaced record.position objects — the
+              // one-shot drain completion re-anchors the card entries (event-driven,
+              // not a per-frame or timer pass).
+              parts.cards.refreshAmbientCards();
+            }
+          }
+          // Completion is never coalesced: subscribers must observe the final
+          // loading state even if the last progress tick just happened.
+          layerState._geoProgressNotifier?.finish();
+          layerState._geoProgressNotifier = null;
+        },
+      });
+    } finally {
+      processing = false;
+    }
+    if (batchGeneration !== generation) return;
     if (batchResult.hasMore) {
       layerState._geoQueueTimer = setTimeout(
         processGeometryBatch,
@@ -269,12 +343,14 @@ export function createGeometryQueue({
    */
 
   function enqueueGeometryRefresh(records) {
+    if (!layerState._enabled || !layerState._viewer) return;
     for (const record of records) {
-      if (!layerState._geoQueue.includes(record)) {
+      if (!pendingRecords.has(record)) {
+        pendingRecords.add(record);
         layerState._geoQueue.push(record);
       }
     }
-    if (!layerState._geoQueueTimer && layerState._geoQueue.length) {
+    if (!processing && !layerState._geoQueueTimer && pendingRecords.size) {
       layerState._geoProgressNotifier = createGeometryProgressNotifier(
         parts.presentation.notifyListeners,
       );
@@ -294,7 +370,12 @@ export function createGeometryQueue({
     // Fresh drain → fresh one-shot completion pass: re-arm the tiles-ready
     // latch so update() can complete any records this drain leaves unresolved.
     layerState._tilesReadyReenqueued = false;
-    if (!layerState._records.length) return;
+    if (
+      !layerState._enabled ||
+      !layerState._viewer ||
+      !layerState._records.length
+    )
+      return;
     const active = parts.selection.getActiveRecord();
     const carto = layerState._viewer?.camera?.positionCartographic;
     const refLat = carto
@@ -317,6 +398,8 @@ export function createGeometryQueue({
       .sort((a, b) => a.distKm - b.distKm)
       .map((entry) => entry.record);
     layerState._geoQueue = active ? [active, ...pending] : pending;
+    for (const record of layerState._geoQueue) pendingRecords.add(record);
+    queueCursor().index = 0;
     layerState._geoLoadTotal = layerState._geoQueue.length;
     layerState._geoLoadDone = 0;
     layerState._geoLoading = true;

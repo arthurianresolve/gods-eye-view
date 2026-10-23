@@ -1,0 +1,115 @@
+{
+  "schema": "gev-natural-pointer-sweep-checkpoint/v1",
+  "status": "standalone-diagnostic-only",
+  "acceptanceEligible": false,
+  "rawReportSha256": "566676705479e99a96c092a7379c09ba195648441ee8105518721fa7e6f213b2",
+  "analysisSha256": "7ea7d7a5a9008ac28a0814a02f69fcdd9676e5c8c3912830c3593326a160ba35",
+  "storage": "VM105 validation task/full-extent-gaze-control-20261020-native-complete",
+  "images": [
+    {
+      "id": 1,
+      "variant": "positive",
+      "name": "document-1-positive.png",
+      "pngSha256": "244e13a090c68181375b2d4dd91109d7e5620b6749cf27c662651a003cb97f45",
+      "rgbaSha256": "5bafb576e5c1463c3b2c7be09f1148707b343bc2038e99de7473c5af3d73aecb"
+    },
+    {
+      "id": 2,
+      "variant": "positive",
+      "name": "document-2-positive.png",
+      "pngSha256": "244e13a090c68181375b2d4dd91109d7e5620b6749cf27c662651a003cb97f45",
+      "rgbaSha256": "5bafb576e5c1463c3b2c7be09f1148707b343bc2038e99de7473c5af3d73aecb"
+    },
+    {
+      "id": 3,
+      "variant": "positive",
+      "name": "document-3-positive.png",
+      "pngSha256": "244e13a090c68181375b2d4dd91109d7e5620b6749cf27c662651a003cb97f45",
+      "rgbaSha256": "5bafb576e5c1463c3b2c7be09f1148707b343bc2038e99de7473c5af3d73aecb"
+    },
+    {
+      "id": 4,
+      "variant": "geometry-negative",
+      "name": "document-4-geometry-negative.png",
+      "pngSha256": "a3b5776396dc9cefc890e8d9e659949e7f1f5a48d61537d4d035b6400aa3ff43",
+      "rgbaSha256": "197e43e860cefd4aa358ad950f312817be08ab7d5ec0b8b2b6405b6016dc9088"
+    }
+  ],
+  "comparisons": [
+    {
+      "kind": "positive",
+      "first": "document-1-positive.png",
+      "second": "document-2-positive.png",
+      "differentPixels": 0,
+      "maximumChannelDelta": 0,
+      "alphaDifferences": 0,
+      "bbox": null
+    },
+    {
+      "kind": "positive",
+      "first": "document-1-positive.png",
+      "second": "document-3-positive.png",
+      "differentPixels": 0,
+      "maximumChannelDelta": 0,
+      "alphaDifferences": 0,
+      "bbox": null
+    },
+    {
+      "kind": "negative",
+      "first": "document-1-positive.png",
+      "second": "document-4-geometry-negative.png",
+      "differentPixels": 1794,
+      "maximumChannelDelta": 195,
+      "alphaDifferences": 0,
+      "bbox": {
+        "minX": 56,
+        "minY": 36,
+        "maxX": 226,
+        "maxY": 137
+      }
+    },
+    {
+      "kind": "positive",
+      "first": "document-2-positive.png",
+      "second": "document-3-positive.png",
+      "differentPixels": 0,
+      "maximumChannelDelta": 0,
+      "alphaDifferences": 0,
+      "bbox": null
+    },
+    {
+      "kind": "negative",
+      "first": "document-2-positive.png",
+      "second": "document-4-geometry-negative.png",
+      "differentPixels": 1794,
+      "maximumChannelDelta": 195,
+      "alphaDifferences": 0,
+      "bbox": {
+        "minX": 56,
+        "minY": 36,
+        "maxX": 226,
+        "maxY": 137
+      }
+    },
+    {
+      "kind": "negative",
+      "first": "document-3-positive.png",
+      "second": "document-4-geometry-negative.png",
+      "differentPixels": 1794,
+      "maximumChannelDelta": 195,
+      "alphaDifferences": 0,
+      "bbox": {
+        "minX": 56,
+        "minY": 36,
+        "maxX": 226,
+        "maxY": 137
+      }
+    }
+  ],
+  "interpretation": [
+    "Three fresh-browser positive captures of the unchanged baseline logo are byte-identical after a fixed legal pointer sweep through its source-derived in-viewport extrema and the canonical pointer path.",
+    "A deliberate one-SVG-unit geometry shift still differs by 1794 pixels with maximum RGB-channel difference 195.",
+    "The procedure changes trusted pointer input only, without altering application CSS, SVG geometry, rendering flags, screenshot masks or pixel thresholds.",
+    "This standalone fixture does not qualify full-application visual equivalence or explain the historical maximum-channel-difference103 result. Full application capture remains required."
+  ]
+}

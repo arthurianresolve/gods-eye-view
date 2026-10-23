@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // Display helpers must not rewrite operator-typed scene/shot titles: only the
 // generated "Scene N" / "Shot N" and the titles of recipe-sourced shots
 // localize; everything else shows exactly as stored.

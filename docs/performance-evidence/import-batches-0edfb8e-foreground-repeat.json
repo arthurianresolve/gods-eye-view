@@ -1,0 +1,532 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "0edfb8e905430d362a2f105d47da08bf04a757ac",
+  "harnessCommit": "0edfb8e905430d362a2f105d47da08bf04a757ac",
+  "capturedAt": "2026-10-10T00:31:53.820Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "workload": "paired",
+  "viewerConstruction": "application-wrapper",
+  "diagnosticsEnabled": false,
+  "preserveDrawingBuffer": true,
+  "captureMode": "pixels",
+  "renderDemand": true,
+  "observeCommands": false,
+  "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [
+    {
+      "id": "same-population-evidence-and-pixels",
+      "status": "passed"
+    },
+    {
+      "id": "twelve-cancelled-imports-release-ownership",
+      "status": "passed"
+    }
+  ],
+  "samples": [
+    {
+      "pair": 0,
+      "mode": "synchronous",
+      "elapsedMs": 102.29999995231628,
+      "maxHeartbeatGapMs": 196.29999995231628,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 259215253,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 6.800000071525574,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 6.700000047683716,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 0,
+      "mode": "cooperative",
+      "elapsedMs": 191.39999997615814,
+      "maxHeartbeatGapMs": 23.300000071525574,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 186632478,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 7.5,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 7.5,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 1,
+      "mode": "cooperative",
+      "elapsedMs": 170.70000004768372,
+      "maxHeartbeatGapMs": 28.699999928474426,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 297617629,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 14.899999976158142,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 9.599999904632568,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 1,
+      "mode": "synchronous",
+      "elapsedMs": 70.90000009536743,
+      "maxHeartbeatGapMs": 238.30000007152557,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 139389341,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 6.399999976158142,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 6.399999976158142,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 2,
+      "mode": "synchronous",
+      "elapsedMs": 75.20000004768372,
+      "maxHeartbeatGapMs": 161.89999997615814,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 269843730,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 11.700000047683716,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 11.700000047683716,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 2,
+      "mode": "cooperative",
+      "elapsedMs": 198.30000007152557,
+      "maxHeartbeatGapMs": 25.199999928474426,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 396099599,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 10,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 10,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 3,
+      "mode": "cooperative",
+      "elapsedMs": 273.7000000476837,
+      "maxHeartbeatGapMs": 33.5,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 139400370,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 19.699999928474426,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 11.199999928474426,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 3,
+      "mode": "synchronous",
+      "elapsedMs": 72.20000004768372,
+      "maxHeartbeatGapMs": 165,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 265310381,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 11.5,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 11.5,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 4,
+      "mode": "synchronous",
+      "elapsedMs": 102.39999997615814,
+      "maxHeartbeatGapMs": 198,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 393365169,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 18.09999990463257,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 18.09999990463257,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 4,
+      "mode": "cooperative",
+      "elapsedMs": 189.60000002384186,
+      "maxHeartbeatGapMs": 20.799999952316284,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 198760437,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "capture": {
+        "elapsedMs": 11.5,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 11.5,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    }
+  ],
+  "renderErrors": [],
+  "status": "passed",
+  "environment": {
+    "appCommit": "0edfb8e905430d362a2f105d47da08bf04a757ac",
+    "harnessCommit": "0edfb8e905430d362a2f105d47da08bf04a757ac",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "coldActivationMs": 365.5,
+  "warmedResources": {
+    "heapBytes": 140888202,
+    "heapScope": "Unforced heap sample; not retained-memory acceptance",
+    "entities": 5000,
+    "collections": [
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "EntityCluster",
+        "count": null
+      }
+    ]
+  },
+  "foregroundUninterrupted": true
+}

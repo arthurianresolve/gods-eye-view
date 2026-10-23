@@ -1,0 +1,44 @@
+{
+  "schema": "gev-failed-qualification-review/v1",
+  "reviewedAt": "2026-10-19T23:14:33.422Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-dams-startup-page-observed-190c5ab6-14201a7f",
+  "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n    antialias: true,\n    bloom: false,\n    bloomIntensity: 0,\n    densityPct: 75,\n    detectionMode: 'DENSE',\n    fxaa: false,\n+   map: 'esri-imagery',\n-   map: 'osm',\n    maximumScreenSpaceError: 1,\n    msaaSamples: 4,\n    nativeSharpnessProfile: {\n      drawingBuffer: {\n        height: 1800,\n",
+  "rawSha256": "6736a092014c967f4d069737ea11321bb38690bb501b7fbe5f34cf12b324e738",
+  "groups": [],
+  "comparisons": [],
+  "files": [
+    {
+      "name": "plan.json",
+      "bytes": 5033,
+      "sha256": "77b494f35702086fa7817a437906fdf597f1222442676e100620c28eaa9804b1"
+    },
+    {
+      "name": "process.json",
+      "bytes": 1400,
+      "sha256": "6736a092014c967f4d069737ea11321bb38690bb501b7fbe5f34cf12b324e738"
+    },
+    {
+      "name": "shards/startup-01.json",
+      "bytes": 9248,
+      "sha256": "1854ef6502de6456403e1fff7f7f7c2f78887ab1ad21ef64f2f06be2fa6fe587"
+    },
+    {
+      "name": "shards/startup-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "e0055d179d6baa62c51486c4659fc93a3972cb8152badc86dcc6df043853da26"
+    },
+    {
+      "name": "shards/startup-01.json.invocation.json",
+      "bytes": 2663,
+      "sha256": "f9169a06b85aea85b2bd23f5ff1ba34e5f638691745eb4aba56008b98173f151"
+    },
+    {
+      "name": "shards/startup-01.json.log",
+      "bytes": 291,
+      "sha256": "118653326363d1285339dd2586e28c8cf0f6f2de1185d1e6a35623b039b09de8"
+    }
+  ],
+  "scope": "All available raw files verified on VM105. Incomplete or input-mismatched attempt retained; no acceptance and no masks or threshold changes. Whole-image pixel comparisons, when present, describe only completed groups."
+}

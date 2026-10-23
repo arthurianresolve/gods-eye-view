@@ -1,0 +1,220 @@
+{
+  "schema": "gev-short-experiment-disposition/v1",
+  "createdAt": "2026-10-21T04:36:35.438Z",
+  "status": "all-six-rejected-no-formal-credit",
+  "acceptanceCredit": "none",
+  "experiments": [
+    {
+      "id": "message-presentation-022d",
+      "name": "message-presentation-short-468f-022d-20261021",
+      "disposition": "rejected; no consistent readiness gain without native regression established",
+      "archive": {
+        "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/post-formal-experiments-20261021",
+        "manifestSha256": "a21c2125a3d2497fb32a6e6f3f03529d34d4d2b24ad50d3af6daf814eded018a"
+      },
+      "raw": {
+        "file": "../gev-s61-evidence-19065997/message-presentation-short-468f-022d-20261021/result.json",
+        "bytes": 1396112,
+        "sha256": "2b053c08748598cb8f9f26cc7cef1942609a1dcf8a4c80dc35b4552447b9cc0f"
+      },
+      "samples": [
+        {
+          "id": "baseline",
+          "nativeMs": [200, 48, 48, 48, 48, 40],
+          "readyMs": [338.3, 31.4, 66.8, 33.1, 68.9, 31.3],
+          "completedRenderMs": [341.4, 34.6, 69.3, 37.4, 71.7, 35.4],
+          "normalCleanup": true
+        },
+        {
+          "id": "candidate",
+          "nativeMs": [272, 56, 48, 48, 48, 48],
+          "readyMs": [363, 44.6, 72.2, 33.9, 61.4, 34.8],
+          "completedRenderMs": [367.7, 46.9, 74.1, 38.2, 63.2, 39.2],
+          "normalCleanup": true
+        }
+      ]
+    },
+    {
+      "id": "immediate-activation-acd6",
+      "name": "immediate-activation-short-468f-acd6-20261021",
+      "disposition": "rejected; faster readiness did not preserve native acknowledgement latency",
+      "observed": "The two warmed ON actions reached readiness in 36–39 ms but native presentation took 112–128 ms; all six samples are retained below.",
+      "archive": {
+        "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/post-formal-experiments-20261021",
+        "manifestSha256": "a21c2125a3d2497fb32a6e6f3f03529d34d4d2b24ad50d3af6daf814eded018a"
+      },
+      "raw": {
+        "file": "../gev-s61-evidence-19065997/immediate-activation-short-468f-acd6-20261021/result.json",
+        "bytes": 1383796,
+        "sha256": "4aad48f3e449f35ade51b390c973ec32468bea463c9a7775222c26605438e289"
+      },
+      "samples": [
+        {
+          "id": "baseline",
+          "nativeMs": [280, 56, 64, 48, 48, 40],
+          "readyMs": [360, 45.5, 82.2, 32.6, 64.6, 30.7],
+          "completedRenderMs": [363.2, 48.5, 84.9, 36, 66.4, 34.3],
+          "normalCleanup": true
+        },
+        {
+          "id": "candidate",
+          "nativeMs": [336, 56, 128, 48, 112, 64],
+          "readyMs": [200.8, 45.4, 38.9, 32.8, 36.3, 34.6],
+          "completedRenderMs": [204.7, 48.6, 41, 36.5, 38.1, 38.5],
+          "normalCleanup": true
+        }
+      ]
+    },
+    {
+      "id": "observer-ablation-acd65",
+      "name": "observer-ablation-acd65cc6-20261021",
+      "disposition": "Extra V6 geometry/mutation observer overhead did not explain the warmed native delay. This does not exclude all harness or observation overhead.",
+      "archive": {
+        "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/post-formal-experiments-20261021",
+        "manifestSha256": "a21c2125a3d2497fb32a6e6f3f03529d34d4d2b24ad50d3af6daf814eded018a"
+      },
+      "raw": {
+        "file": "../gev-s61-evidence-19065997/observer-ablation-acd65cc6-20261021/result.json",
+        "bytes": 1311354,
+        "sha256": "918cd96b2f22202985a8d0fb6de19f6a0bce1fd437f296a88dac6777d151d735"
+      },
+      "samples": [
+        {
+          "id": "full-observer",
+          "nativeMs": [280, 48, 112, 48, 128, 48],
+          "readyMs": [198.8, 33.9, 32.8, 33.7, 39.2, 31],
+          "completedRenderMs": [201.4, 38.4, 35, 38.5, 41.1, 34.8],
+          "normalCleanup": true
+        },
+        {
+          "id": "native-only-observer",
+          "nativeMs": [352, 40, 112, 48, 112, 48],
+          "readyMs": [222.2, 32.3, 37.9, 32.3, 36.6, 31.5],
+          "completedRenderMs": [225.9, 35, 39.9, 37.7, 38.1, 36.1],
+          "normalCleanup": true
+        }
+      ]
+    },
+    {
+      "id": "activation-buffer-397",
+      "name": "activation-buffer-short-acd6-3978-20261021",
+      "disposition": "rejected; buffer-preservation candidate showed no useful short-run latency benefit",
+      "archive": {
+        "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/buffer-flush-rejected-20261021",
+        "manifestSha256": "cee501665ccd6f5e8bd01668620f88eb2715d49d07a2b00e9d94d35a838114f4"
+      },
+      "raw": {
+        "file": "../gev-s61-evidence-19065997/activation-buffer-short-acd6-3978-20261021/result.json",
+        "bytes": 1375386,
+        "sha256": "eea94467de1d1351cabb4de65c76d6619bcc3bed66547baf329472f19dbef6da"
+      },
+      "samples": [
+        {
+          "id": "baseline",
+          "nativeMs": [400, 64, 112, 48, 112, 48],
+          "readyMs": [272.1, 42.9, 32.1, 34.2, 38.1, 33],
+          "completedRenderMs": [277.5, 45.2, 34, 37.3, 40.1, 35.9],
+          "normalCleanup": true
+        },
+        {
+          "id": "candidate",
+          "nativeMs": [416, 72, 160, 48, 112, 64],
+          "readyMs": [254.2, 49.1, 41.4, 31.9, 36.5, 34.8],
+          "completedRenderMs": [260, 52.4, 44, 35.4, 38.1, 39.6],
+          "normalCleanup": true
+        }
+      ]
+    },
+    {
+      "id": "activation-flush-468f",
+      "name": "activation-flush-468f6bf0-20261021",
+      "disposition": "rejected; after-ack flush did not establish consistent readiness and native feedback benefit",
+      "archive": {
+        "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/buffer-flush-rejected-20261021",
+        "manifestSha256": "cee501665ccd6f5e8bd01668620f88eb2715d49d07a2b00e9d94d35a838114f4"
+      },
+      "raw": {
+        "file": "../gev-s61-evidence-19065997/activation-flush-468f6bf0-20261021/result.json",
+        "bytes": 1393852,
+        "sha256": "5abe86586c40c970bc712d38e4fe654fe22db7c4fa0aef2542a805a34bf796bf"
+      },
+      "samples": [
+        {
+          "id": "normal-loop",
+          "nativeMs": [304, 56, 48, 48, 48, 48],
+          "readyMs": [359.5, 32, 64.1, 33.4, 67.4, 32.1],
+          "completedRenderMs": [363.5, 34.3, 65.9, 36.3, 69.4, 35.6],
+          "normalCleanup": true
+        },
+        {
+          "id": "flush-after-ack",
+          "nativeMs": [256, 48, 48, 48, 48, 48],
+          "readyMs": [337.3, 34.9, 65.1, 32.9, 63.4, 32.5],
+          "completedRenderMs": [340.6, 37.6, 66.8, 36.1, 65.1, 36.6],
+          "normalCleanup": true
+        }
+      ]
+    },
+    {
+      "id": "activation-raf-prepare-d5e0",
+      "name": "activation-raf-prepare-short-468f-d5e0-20261021",
+      "disposition": "rejected; RAF-only readiness regressed and native latency samples increased",
+      "observed": {
+        "nativePresentationMs": {
+          "baseline": [296, 72, 48, 48, 64, 48],
+          "candidate": [384, 152, 96, 64, 80, 64]
+        },
+        "rawReadyMs": {
+          "baseline": [424.3, 50.9, 71.5, 33.1, 95.6, 36.3],
+          "candidate": [500.1, 74, 235.4, 54.7, 179.5, 52]
+        }
+      },
+      "archive": {
+        "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/activation-raf-prepare-rejected-20261021",
+        "manifestSha256": "932d298f61b98685d1e96b06997fcd31731b291874938be7560ceba58238e471"
+      },
+      "raw": {
+        "file": "../gev-s61-evidence-19065997/activation-raf-prepare-short-468f-d5e0-20261021/result.json",
+        "bytes": 1390962,
+        "sha256": "1ba8706b74fe845abbf716e3982ecd4884f8bfa206413cc777cc267516ae9657"
+      },
+      "samples": [
+        {
+          "id": "baseline",
+          "nativeMs": [296, 72, 48, 48, 64, 48],
+          "readyMs": [424.3, 50.9, 71.5, 33.1, 95.6, 36.3],
+          "completedRenderMs": [429.4, 55.3, 74.1, 36.4, 99.7, 39.1],
+          "normalCleanup": true
+        },
+        {
+          "id": "candidate",
+          "nativeMs": [384, 152, 96, 64, 80, 64],
+          "readyMs": [500.1, 74, 235.4, 54.7, 179.5, 52],
+          "completedRenderMs": [506.5, 78.5, 241.8, 62.2, 183.4, 56.6],
+          "normalCleanup": true
+        }
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "local": "qa-artifacts/post-formal-experiments-transfer-20261021.json",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/post-formal-experiments-20261021",
+      "status": "all-files-independently-verified",
+      "manifestSha256": "a21c2125a3d2497fb32a6e6f3f03529d34d4d2b24ad50d3af6daf814eded018a"
+    },
+    {
+      "local": "qa-artifacts/activation-buffer-flush-rejected-transfer-20261021.json",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/buffer-flush-rejected-20261021",
+      "status": "all-files-independently-verified-twice",
+      "manifestSha256": "cee501665ccd6f5e8bd01668620f88eb2715d49d07a2b00e9d94d35a838114f4"
+    },
+    {
+      "local": "qa-artifacts/activation-raf-prepare-rejected-transfer-20261021.json",
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/activation-raf-prepare-rejected-20261021",
+      "status": "all-files-independently-verified-twice",
+      "manifestSha256": "932d298f61b98685d1e96b06997fcd31731b291874938be7560ceba58238e471"
+    }
+  ],
+  "scope": "Six-action diagnostic comparisons only. No blanket cause exclusion, full visual equivalence, formal qualification, final-soak or deployment credit."
+}

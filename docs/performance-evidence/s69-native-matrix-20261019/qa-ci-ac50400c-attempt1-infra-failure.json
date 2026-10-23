@@ -1,0 +1,43 @@
+{
+  "schema": "gev-ci-infrastructure-failure/v1",
+  "recordedAt": "2026-10-19T20:53:49.639Z",
+  "runId": 39318954647,
+  "attempt": 1,
+  "commit": "ac50400cb47c982039e8710ea7ff8972e7da239f",
+  "conclusion": "failure",
+  "passedJobs": [
+    "Street Level browser gate",
+    "Install and update recovery (ubuntu-latest)",
+    "Install and update recovery (windows-latest)",
+    "Windows onboarding",
+    "Node 26.x",
+    "Node 24.14.0"
+  ],
+  "unexecutedJob": {
+    "id": 118287678395,
+    "name": "Install and update recovery (macos-latest)",
+    "conclusion": "cancelled",
+    "runnerName": "",
+    "steps": 0
+  },
+  "annotations": [
+    {
+      "level": "failure",
+      "message": "The job was not acquired by Runner of type hosted even after multiple attempts"
+    },
+    {
+      "level": "notice",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+    },
+    {
+      "level": "notice",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+    },
+    {
+      "level": "notice",
+      "message": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times."
+    }
+  ],
+  "scope": "GitHub macOS hosted-runner capacity failure before test execution; not a test pass or evidence of application failure.",
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-ci-ac50400c-attempt1-infra-failure"
+}

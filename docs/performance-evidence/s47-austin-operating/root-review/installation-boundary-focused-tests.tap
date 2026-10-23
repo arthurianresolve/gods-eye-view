@@ -1,0 +1,666 @@
+TAP version 13
+# Subtest: Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence
+ok 1 - Austin comparison contract is built from real fixture delivery acknowledgments and exact five-run evidence
+  ---
+  duration_ms: 801.0986
+  type: 'test'
+  ...
+# Subtest: Austin rendering contract matches observed viewer defaults and labels changed AA settings
+ok 2 - Austin rendering contract matches observed viewer defaults and labels changed AA settings
+  ---
+  duration_ms: 680.113
+  type: 'test'
+  ...
+# Subtest: Austin capture setting copies stay bound to the native visual observations
+ok 3 - Austin capture setting copies stay bound to the native visual observations
+  ---
+  duration_ms: 627.6695
+  type: 'test'
+  ...
+# Subtest: Austin measurement contract consumes the settled render-boundary producer result
+ok 4 - Austin measurement contract consumes the settled render-boundary producer result
+  ---
+  duration_ms: 613.2813
+  type: 'test'
+  ...
+# Subtest: Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity
+ok 5 - Austin comparison rejects same-count source identity substitution and keeps response counters out of fixed identity
+  ---
+  duration_ms: 622.3863
+  type: 'test'
+  ...
+# Subtest: Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog
+ok 6 - Austin paired report accepts actual fixture delivery with variable counters, and rejects a substituted native catalog
+  ---
+  duration_ms: 3602.7571
+  type: 'test'
+  ...
+# Subtest: paired Austin ingestion recomputes cleanup from producer-shaped drain records
+ok 7 - paired Austin ingestion recomputes cleanup from producer-shaped drain records
+  ---
+  duration_ms: 4731.0967
+  type: 'test'
+  ...
+# Subtest: paired Austin validation recomputes raw satellite rows against the pinned TLEs
+ok 8 - paired Austin validation recomputes raw satellite rows against the pinned TLEs
+  ---
+  duration_ms: 1627.2374
+  type: 'test'
+  ...
+# Subtest: paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged
+ok 9 - paired Austin validation rejects a coherent alternate epoch when captured boundary digests stay unchanged
+  ---
+  duration_ms: 1614.79
+  type: 'test'
+  ...
+# Subtest: Austin document evidence binds delivery and confirmed interception release by identity
+ok 10 - Austin document evidence binds delivery and confirmed interception release by identity
+  ---
+  duration_ms: 5.4067
+  type: 'test'
+  ...
+# Subtest: Austin document evidence fails closed for missing, duplicate, mismatched or unsuccessful release
+ok 11 - Austin document evidence fails closed for missing, duplicate, mismatched or unsuccessful release
+  ---
+  duration_ms: 1.427
+  type: 'test'
+  ...
+# Subtest: Austin document evidence is bounded and serializable when cleanup fails
+ok 12 - Austin document evidence is bounded and serializable when cleanup fails
+  ---
+  duration_ms: 2.3198
+  type: 'test'
+  ...
+# Subtest: Austin document evidence requires a valid identity and fully drained release
+ok 13 - Austin document evidence requires a valid identity and fully drained release
+  ---
+  duration_ms: 3.8674
+  type: 'test'
+  ...
+# Subtest: Austin evidence consumes the real interception producer after target closure
+ok 14 - Austin evidence consumes the real interception producer after target closure
+  ---
+  duration_ms: 3.4028
+  type: 'test'
+  ...
+# Subtest: Austin population evidence binds full catalogs and allows native viewport subsets
+ok 15 - Austin population evidence binds full catalogs and allows native viewport subsets
+  ---
+  duration_ms: 2.7964
+  type: 'test'
+  ...
+# Subtest: Austin population evidence rejects stable same-size identity substitutions
+ok 16 - Austin population evidence rejects stable same-size identity substitutions
+  ---
+  duration_ms: 0.6288
+  type: 'test'
+  ...
+# Subtest: Austin installation observations must be a unique subset of the declared catalog
+ok 17 - Austin installation observations must be a unique subset of the declared catalog
+  ---
+  duration_ms: 1.9267
+  type: 'test'
+  ...
+# Subtest: installation-subset failures retain reason codes and bounded observed predicates
+ok 18 - installation-subset failures retain reason codes and bounded observed predicates
+  ---
+  duration_ms: 14.7393
+  type: 'test'
+  ...
+# Subtest: installation failure predicates survive bounded report serialization when samples are trimmed
+ok 19 - installation failure predicates survive bounded report serialization when samples are trimmed
+  ---
+  duration_ms: 8.4572
+  type: 'test'
+  ...
+# Subtest: installation failure predicates survive whole-current replacement at the hard report cap
+ok 20 - installation failure predicates survive whole-current replacement at the hard report cap
+  ---
+  duration_ms: 7.4665
+  type: 'test'
+  ...
+# Subtest: viewport counts are not inferred for whole-catalog or grid layers
+ok 21 - viewport counts are not inferred for whole-catalog or grid layers
+  ---
+  duration_ms: 0.5287
+  type: 'test'
+  ...
+# Subtest: compact readiness snapshot keeps full ownership counters within its byte cap
+ok 22 - compact readiness snapshot keeps full ownership counters within its byte cap
+  ---
+  duration_ms: 6.2316
+  type: 'test'
+  ...
+# Subtest: readiness history retains bounded native layer checkpoints and stops on success
+ok 23 - readiness history retains bounded native layer checkpoints and stops on success
+  ---
+  duration_ms: 3.4508
+  type: 'test'
+  ...
+# Subtest: stalled evaluation stops polling, never overlaps, and discards its late result
+ok 24 - stalled evaluation stops polling, never overlaps, and discards its late result
+  ---
+  duration_ms: 2.1583
+  type: 'test'
+  ...
+# Subtest: readiness cancellation detaches the owned session and ignores a late command
+ok 25 - readiness cancellation detaches the owned session and ignores a late command
+  ---
+  duration_ms: 0.8714
+  type: 'test'
+  ...
+# Subtest: entry history remains capped at sixteen while reporting omitted observations
+ok 26 - entry history remains capped at sixteen while reporting omitted observations
+  ---
+  duration_ms: 7.3151
+  type: 'test'
+  ...
+# Subtest: Puppeteer disconnect symbol invalidates an in-flight result and retires sampling
+ok 27 - Puppeteer disconnect symbol invalidates an in-flight result and retires sampling
+  ---
+  duration_ms: 0.7376
+  type: 'test'
+  ...
+# Subtest: late session creation is explicitly bounded and detached after timeout
+ok 28 - late session creation is explicitly bounded and detached after timeout
+  ---
+  duration_ms: 0.8275
+  type: 'test'
+  ...
+# Subtest: readiness failure identity is preserved while sampler cleanup is bounded
+ok 29 - readiness failure identity is preserved while sampler cleanup is bounded
+  ---
+  duration_ms: 0.5381
+  type: 'test'
+  ...
+# Subtest: missing sampler session support does not change the supplied readiness wait
+ok 30 - missing sampler session support does not change the supplied readiness wait
+  ---
+  duration_ms: 0.6818
+  type: 'test'
+  ...
+# Subtest: capture CLI removes the future-document registration only after document retirement
+ok 31 - capture CLI removes the future-document registration only after document retirement
+  ---
+  duration_ms: 519.3517
+  type: 'test'
+  ...
+# Subtest: same-runner packet validates invariants and reports objective separately
+ok 32 - same-runner packet validates invariants and reports objective separately
+  ---
+  duration_ms: 7.518
+  type: 'test'
+  ...
+# Subtest: a small valid change remains comparable but misses the target
+ok 33 - a small valid change remains comparable but misses the target
+  ---
+  duration_ms: 1.0138
+  type: 'test'
+  ...
+# Subtest: eligibility is reported independently for each experimental candidate
+ok 34 - eligibility is reported independently for each experimental candidate
+  ---
+  duration_ms: 1.802
+  type: 'test'
+  ...
+# Subtest: moving query time into a slower boot does not look like an end-to-end win
+ok 35 - moving query time into a slower boot does not look like an end-to-end win
+  ---
+  duration_ms: 1.4421
+  type: 'test'
+  ...
+# Subtest: CBA order and same-host comparisons are enforced
+ok 36 - CBA order and same-host comparisons are enforced
+  ---
+  duration_ms: 3.5016
+  type: 'test'
+  ...
+# Subtest: AB and BA compare backend variants without requiring the early-query report
+ok 37 - AB and BA compare backend variants without requiring the early-query report
+  ---
+  duration_ms: 2.6098
+  type: 'test'
+  ...
+# Subtest: same-platform renderer comparisons support all recovery operating systems
+ok 38 - same-platform renderer comparisons support all recovery operating systems
+  ---
+  duration_ms: 9.5586
+  type: 'test'
+  ...
+# Subtest: a failed early candidate does not invalidate a completed backend comparison
+ok 39 - a failed early candidate does not invalidate a completed backend comparison
+  ---
+  duration_ms: 0.5545
+  type: 'test'
+  ...
+# Subtest: a sequence without the required driver control cannot compare a candidate
+ok 40 - a sequence without the required driver control cannot compare a candidate
+  ---
+  duration_ms: 0.5734
+  type: 'test'
+  ...
+# Subtest: dirty, wrong-build, missing, reordered, or invalid-ownership reports fail closed
+ok 41 - dirty, wrong-build, missing, reordered, or invalid-ownership reports fail closed
+  ---
+  duration_ms: 5.3139
+  type: 'test'
+  ...
+# Subtest: future-document registration removal leaves the current probe live and is not repeated
+ok 42 - future-document registration removal leaves the current probe live and is not repeated
+  ---
+  duration_ms: 9.0658
+  type: 'test'
+  ...
+# Subtest: capture retirement keeps the registration through its single document lifetime
+ok 43 - capture retirement keeps the registration through its single document lifetime
+  ---
+  duration_ms: 3.9037
+  type: 'test'
+  ...
+# Subtest: early probe does not install in a subframe document
+ok 44 - early probe does not install in a subframe document
+  ---
+  duration_ms: 1.792
+  type: 'test'
+  ...
+# Subtest: an explicitly retired document stops its public Cesium render loop in the existing cleanup evaluation
+ok 45 - an explicitly retired document stops its public Cesium render loop in the existing cleanup evaluation
+  ---
+  duration_ms: 2.5809
+  type: 'test'
+  ...
+# Subtest: ordinary cleanup leaves render scheduling unchanged unless retirement is requested
+ok 46 - ordinary cleanup leaves render scheduling unchanged unless retirement is requested
+  ---
+  duration_ms: 2.4561
+  type: 'test'
+  ...
+# Subtest: retirement rejection fails cleanup with bounded explicit state
+ok 47 - retirement rejection fails cleanup with bounded explicit state
+  ---
+  duration_ms: 2.4531
+  type: 'test'
+  ...
+# Subtest: failed early registration removal is recorded and never retried at final cleanup
+ok 48 - failed early registration removal is recorded and never retried at final cleanup
+  ---
+  duration_ms: 7.6822
+  type: 'test'
+  ...
+# Subtest: late early-registration acknowledgement is reused without a duplicate removal
+ok 49 - late early-registration acknowledgement is reused without a duplicate removal
+  ---
+  duration_ms: 108.4779
+  type: 'test'
+  ...
+# Subtest: late registration-removal errors retain host receipt elapsed time and original timeout
+ok 50 - late registration-removal errors retain host receipt elapsed time and original timeout
+  ---
+  duration_ms: 62.3837
+  type: 'test'
+  ...
+# Subtest: reinstalling in one Page invalidates prior registration acknowledgement
+ok 51 - reinstalling in one Page invalidates prior registration acknowledgement
+  ---
+  duration_ms: 2.694
+  type: 'test'
+  ...
+# Subtest: early probe preserves native getContext and captures identity once before scene observation
+ok 52 - early probe preserves native getContext and captures identity once before scene observation
+  ---
+  duration_ms: 4.2156
+  type: 'test'
+  ...
+# Subtest: early probe cleanup reports an unconfirmed timeout instead of success
+ok 53 - early probe cleanup reports an unconfirmed timeout instead of success
+  ---
+  duration_ms: 8.2646
+  type: 'test'
+  ...
+# Subtest: cleanup evidence verifies the live hook and listeners plus registration acknowledgement
+ok 54 - cleanup evidence verifies the live hook and listeners plus registration acknowledgement
+  ---
+  duration_ms: 2.3977
+  type: 'test'
+  ...
+# Subtest: document and future-registration cleanup failures remain separately attributed
+ok 55 - document and future-registration cleanup failures remain separately attributed
+  ---
+  duration_ms: 1.0156
+  type: 'test'
+  ...
+# Subtest: a fresh installation in the same Page is cleaned instead of reusing prior-document proof
+ok 56 - a fresh installation in the same Page is cleaned instead of reusing prior-document proof
+  ---
+  duration_ms: 1.8759
+  type: 'test'
+  ...
+# Subtest: cleanup timeout preserves separate stages and records late completion
+ok 57 - cleanup timeout preserves separate stages and records late completion
+  ---
+  duration_ms: 41.6292
+  type: 'test'
+  ...
+# Subtest: cleanup attempts every owned listener and bounded failure reports retain stage evidence
+ok 58 - cleanup attempts every owned listener and bounded failure reports retain stage evidence
+  ---
+  duration_ms: 2.6451
+  type: 'test'
+  ...
+# Subtest: late page cleanup retains bounded page timing without converting the host timeout
+ok 59 - late page cleanup retains bounded page timing without converting the host timeout
+  ---
+  duration_ms: 13.7026
+  type: 'test'
+  ...
+# Subtest: late retirement acknowledgement remains a timeout but retains its bounded state
+ok 60 - late retirement acknowledgement remains a timeout but retains its bounded state
+  ---
+  duration_ms: 15.0358
+  type: 'test'
+  ...
+# Subtest: shader attribution timeout keeps its original failure and late snapshot
+ok 61 - shader attribution timeout keeps its original failure and late snapshot
+  ---
+  duration_ms: 54.7235
+  type: 'test'
+  ...
+# Subtest: shader envelope preserves unavailable and malformed observer evidence
+ok 62 - shader envelope preserves unavailable and malformed observer evidence
+  ---
+  duration_ms: 0.62
+  type: 'test'
+  ...
+# Subtest: late document errors discard untrusted status and error fields after timeout
+ok 63 - late document errors discard untrusted status and error fields after timeout
+  ---
+  duration_ms: 22.7238
+  type: 'test'
+  ...
+# Subtest: early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts
+ok 64 - early probe ignores non-Cesium canvases and rejects missing, replaced, or lost contexts
+  ---
+  duration_ms: 5.2852
+  type: 'test'
+  ...
+# Subtest: early probe accepts a valid zero-duration clock sample
+ok 65 - early probe accepts a valid zero-duration clock sample
+  ---
+  duration_ms: 1.3243
+  type: 'test'
+  ...
+# Subtest: shader lifecycle hook preserves GL calls and reports bounded program history
+ok 66 - shader lifecycle hook preserves GL calls and reports bounded program history
+  ---
+  duration_ms: 4.3886
+  type: 'test'
+  ...
+# Subtest: shader attribution installation is opt-in and cleanup is owner-safe
+ok 67 - shader attribution installation is opt-in and cleanup is owner-safe
+  ---
+  duration_ms: 9.7773
+  type: 'test'
+  ...
+# Subtest: shader attribution records bounded overflow without confusing it with cleanup failure
+ok 68 - shader attribution records bounded overflow without confusing it with cleanup failure
+  ---
+  duration_ms: 4.8508
+  type: 'test'
+  ...
+# Subtest: shader checkpoint preserves actual pname rows across generic failure projection
+ok 69 - shader checkpoint preserves actual pname rows across generic failure projection
+  ---
+  duration_ms: 33.1054
+  type: 'test'
+  ...
+# Subtest: render boundary reports page entry, dispatch delay, render and listener cleanup
+ok 70 - render boundary reports page entry, dispatch delay, render and listener cleanup
+  ---
+  duration_ms: 24.5272
+  type: 'test'
+  ...
+# Subtest: host deadline retains page entry acknowledgement when page stalls
+ok 71 - host deadline retains page entry acknowledgement when page stalls
+  ---
+  duration_ms: 29.4996
+  type: 'test'
+  ...
+# Subtest: host deadline distinguishes no page entry and ignores malformed or foreign acknowledgements
+ok 72 - host deadline distinguishes no page entry and ignores malformed or foreign acknowledgements
+  ---
+  duration_ms: 18.4096
+  type: 'test'
+  ...
+# Subtest: a progress binding that resolves after the deadline is disposed without starting page evaluation
+ok 73 - a progress binding that resolves after the deadline is disposed without starting page evaluation
+  ---
+  duration_ms: 47.2323
+  type: 'test'
+  ...
+# Subtest: malformed progress binding is disposed and page evaluation never starts
+ok 74 - malformed progress binding is disposed and page evaluation never starts
+  ---
+  duration_ms: 2.5619
+  type: 'test'
+  ...
+# Subtest: binding cleanup failure is recorded without replacing a page timer failure
+ok 75 - binding cleanup failure is recorded without replacing a page timer failure
+  ---
+  duration_ms: 2.0966
+  type: 'test'
+  ...
+# Subtest: binding cleanup duration measures only its own bounded teardown
+ok 76 - binding cleanup duration measures only its own bounded teardown
+  ---
+  duration_ms: 9.1798
+  type: 'test'
+  ...
+# Subtest: page timeout and render-request errors remain distinct from host timeout
+ok 77 - page timeout and render-request errors remain distinct from host timeout
+  ---
+  duration_ms: 1.7877
+  type: 'test'
+  ...
+# Subtest: invalid observers fail before scheduling a timer
+ok 78 - invalid observers fail before scheduling a timer
+  ---
+  duration_ms: 0.5773
+  type: 'test'
+  ...
+# Subtest: a null optional progress binding is treated as absent while malformed bindings still fail
+ok 79 - a null optional progress binding is treated as absent while malformed bindings still fail
+  ---
+  duration_ms: 1.1959
+  type: 'test'
+  ...
+# Subtest: host deadline is scheduled from the original boundary start after slow dispatch
+ok 80 - host deadline is scheduled from the original boundary start after slow dispatch
+  ---
+  duration_ms: 1.359
+  type: 'test'
+  ...
+# Subtest: boundary progress recorder remains bound to the invocation owner after current record changes
+ok 81 - boundary progress recorder remains bound to the invocation owner after current record changes
+  ---
+  duration_ms: 4.863
+  type: 'test'
+  ...
+# Subtest: preinstalled document binding covers warmup and measurement without boundary setup cost
+ok 82 - preinstalled document binding covers warmup and measurement without boundary setup cost
+  ---
+  duration_ms: 3.8608
+  type: 'test'
+  ...
+# Subtest: late acknowledgements remain bound to their invocation and cannot update the next record
+ok 83 - late acknowledgements remain bound to their invocation and cannot update the next record
+  ---
+  duration_ms: 12.7461
+  type: 'test'
+  ...
+# Subtest: late document-binding setup schedules cleanup without treating install as success
+ok 84 - late document-binding setup schedules cleanup without treating install as success
+  ---
+  duration_ms: 35.6464
+  type: 'test'
+  ...
+# Subtest: failed document-binding setup attempts owner-local cleanup and preserves setup error
+ok 85 - failed document-binding setup attempts owner-local cleanup and preserves setup error
+  ---
+  duration_ms: 1.5182
+  type: 'test'
+  ...
+# Subtest: persistent binding cleanup is bounded and reports an unremoved owner
+ok 86 - persistent binding cleanup is bounded and reports an unremoved owner
+  ---
+  duration_ms: 266.2503
+  type: 'test'
+  ...
+# Subtest: concurrent binding disposal waits for the same pending removal outcome
+ok 87 - concurrent binding disposal waits for the same pending removal outcome
+  ---
+  duration_ms: 32.4332
+  type: 'test'
+  ...
+# Subtest: concurrent disposal shares removal rejection and timeout results
+    # Subtest: rejection
+    ok 1 - rejection
+      ---
+      duration_ms: 0.9022
+      type: 'test'
+      ...
+    # Subtest: timeout
+    ok 2 - timeout
+      ---
+      duration_ms: 261.5416
+      type: 'test'
+      ...
+    1..2
+ok 88 - concurrent disposal shares removal rejection and timeout results
+  ---
+  duration_ms: 263.3213
+  type: 'test'
+  ...
+# Subtest: invocation unregistration errors use invocation cleanup evidence
+ok 89 - invocation unregistration errors use invocation cleanup evidence
+  ---
+  duration_ms: 0.5269
+  type: 'test'
+  ...
+# Subtest: failure reports retain progress-binding setup and boundary-timeout ownership
+    # Subtest: setup failure
+    ok 1 - setup failure
+      ---
+      duration_ms: 0.3311
+      type: 'test'
+      ...
+    # Subtest: boundary timeout after cleanup
+    ok 2 - boundary timeout after cleanup
+      ---
+      duration_ms: 14.2608
+      type: 'test'
+      ...
+    1..2
+ok 90 - failure reports retain progress-binding setup and boundary-timeout ownership
+  ---
+  duration_ms: 15.0566
+  type: 'test'
+  ...
+# Subtest: diagnostic render probe records request, postRender and owned cleanup
+ok 91 - diagnostic render probe records request, postRender and owned cleanup
+  ---
+  duration_ms: 9.0446
+  type: 'test'
+  ...
+# Subtest: page timer and missing render request stay explicit without relaxing settle
+ok 92 - page timer and missing render request stay explicit without relaxing settle
+  ---
+  duration_ms: 9.0894
+  type: 'test'
+  ...
+# Subtest: render request exception is retained and listener is removed
+ok 93 - render request exception is retained and listener is removed
+  ---
+  duration_ms: 0.7855
+  type: 'test'
+  ...
+# Subtest: warmup boundary leaves viewer loop active and final boundary retires after postRender
+ok 94 - warmup boundary leaves viewer loop active and final boundary retires after postRender
+  ---
+  duration_ms: 2.7488
+  type: 'test'
+  ...
+# Subtest: final boundary timeout does not claim retirement or settle successfully
+ok 95 - final boundary timeout does not claim retirement or settle successfully
+  ---
+  duration_ms: 5.0919
+  type: 'test'
+  ...
+# Subtest: final boundary fails closed when loop state is unavailable or retirement is refused
+ok 96 - final boundary fails closed when loop state is unavailable or retirement is refused
+  ---
+  duration_ms: 1.9992
+  type: 'test'
+  ...
+# Subtest: host binding receives owned page phase acknowledgements and is removed
+ok 97 - host binding receives owned page phase acknowledgements and is removed
+  ---
+  duration_ms: 12.6014
+  type: 'test'
+  ...
+# Subtest: page evaluate argument order delivers the invocation and host observes page entry
+ok 98 - page evaluate argument order delivers the invocation and host observes page entry
+  ---
+  duration_ms: 3.9523
+  type: 'test'
+  ...
+# Subtest: tracked endpoint helper is composed into the page function with JSON-only evaluate arguments
+ok 99 - tracked endpoint helper is composed into the page function with JSON-only evaluate arguments
+  ---
+  duration_ms: 4.17
+  type: 'test'
+  ...
+# Subtest: provider warmup clock hold and listener registration share one serialized page callback
+ok 100 - provider warmup clock hold and listener registration share one serialized page callback
+  ---
+  duration_ms: 12.4829
+  type: 'test'
+  ...
+# Subtest: atomic provider clock callback error removes the listener without requesting a render
+ok 101 - atomic provider clock callback error removes the listener without requesting a render
+  ---
+  duration_ms: 0.9726
+  type: 'test'
+  ...
+# Subtest: host progress preserves an atomic warmup snapshot when its page render times out
+ok 102 - host progress preserves an atomic warmup snapshot when its page render times out
+  ---
+  duration_ms: 27.7199
+  type: 'test'
+  ...
+# Subtest: serialized Austin boundary waits for installation readiness and a later render before retirement
+ok 103 - serialized Austin boundary waits for installation readiness and a later render before retirement
+  ---
+  duration_ms: 6.3909
+  type: 'test'
+  ...
+# Subtest: Austin readiness boundary fails on missing or errored installation state without retiring
+ok 104 - Austin readiness boundary fails on missing or errored installation state without retiring
+  ---
+  duration_ms: 2.0198
+  type: 'test'
+  ...
+# Subtest: Austin readiness timeout stays within page boundary and removes its listener
+ok 105 - Austin readiness timeout stays within page boundary and removes its listener
+  ---
+  duration_ms: 21.8421
+  type: 'test'
+  ...
+1..105
+# tests 109
+# suites 0
+# pass 109
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18162.58

@@ -1,0 +1,125 @@
+{
+  "schema": "gev-ci-checkpoint/v1",
+  "observedAt": "2026-10-12T22:19:28.089Z",
+  "scope": "QA branch integration and isolated Windows software-rendered recovery; no performance or physical-GPU acceptance",
+  "candidateCommit": "9cb2a7b84c2cf545823388595bdd500b389a7bdd",
+  "runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 38314355177,
+      "headSha": "9cb2a7b84c2cf545823388595bdd500b389a7bdd",
+      "jobs": [
+        {
+          "name": "Street Level browser gate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323345"
+        },
+        {
+          "name": "Node 26.x",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323498"
+        },
+        {
+          "name": "Install and update recovery (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323567"
+        },
+        {
+          "name": "Install and update recovery (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323602"
+        },
+        {
+          "name": "Install and update recovery (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323614"
+        },
+        {
+          "name": "Node 24.14.0",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323708"
+        },
+        {
+          "name": "Windows onboarding",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177/job/115027323814"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314355177"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 38314447553,
+      "headSha": "9cb2a7b84c2cf545823388595bdd500b389a7bdd",
+      "jobs": [
+        {
+          "name": "Install and update recovery (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314447553/job/115027625840"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38314447553"
+    }
+  ],
+  "rawRecovery": {
+    "path": "hosted-windows-recovery-38314447553.json",
+    "bytes": 18119,
+    "sha256": "b1e358ca56156a69c4343a694ba14580d1ad63f46cd589fb6cbfd6fd9d7ed76e"
+  },
+  "recoveryChecks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 481.5598000000173,
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 441.3021000000008,
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 468.0274999999674,
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 556.33540000004,
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeElapsedMs": 1719.5448000000324,
+      "forcedBrowserProcessTermination": false
+    }
+  ],
+  "limitations": [
+    "Earlier intermittent Windows shutdown timeout remains unexplained; this passing run did not reproduce it.",
+    "Austin fixture readiness remains failed; no completed performance samples."
+  ]
+}

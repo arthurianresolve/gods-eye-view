@@ -1,0 +1,163 @@
+{
+  "schema": "gev-import-batches/v1",
+  "applicationCommit": "572c80c98b11da6e1529db909ffd6c396437ae77",
+  "harnessCommit": "572c80c98b11da6e1529db909ffd6c396437ae77",
+  "capturedAt": "2026-10-09T19:32:39.902Z",
+  "fixture": "synthetic-5000-import-points/v1",
+  "workload": "paired",
+  "preserveDrawingBuffer": true,
+  "observeCommands": true,
+  "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+  "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+  "checks": [],
+  "samples": [
+    {
+      "pair": 0,
+      "mode": "synchronous",
+      "elapsedMs": 88.19999992847443,
+      "maxHeartbeatGapMs": 189.5,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 257027212,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "submittedCommands": {
+        "state": "completed",
+        "completionObservedAfterMs": 12.899999976158142,
+        "polls": 1,
+        "observationMs": 13.299999952316284
+      },
+      "capture": {
+        "elapsedMs": 13.600000023841858,
+        "renderedFrames": 1,
+        "updates": 1,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 13.600000023841858,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": true
+      },
+      "pixelSha256": "5e4039bcb2c26169235ad7a0f7a7c20daa8faa51463d7d7784631f65255e5bb1"
+    },
+    {
+      "pair": 0,
+      "mode": "cooperative",
+      "elapsedMs": 148.10000002384186,
+      "maxHeartbeatGapMs": 12.200000047683716,
+      "features": 5000,
+      "resources": {
+        "heapBytes": 140717477,
+        "heapScope": "Unforced heap sample; not retained-memory acceptance",
+        "entities": 5000,
+        "collections": [
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "PrimitiveCollection",
+            "count": 1
+          },
+          {
+            "type": "EntityCluster",
+            "count": null
+          }
+        ]
+      },
+      "submittedCommands": {
+        "state": "completed",
+        "completionObservedAfterMs": 8.199999928474426,
+        "polls": 1,
+        "observationMs": 401
+      },
+      "capture": {
+        "elapsedMs": 401.10000002384186,
+        "renderedFrames": 0,
+        "updates": 0,
+        "animationFrames": 0,
+        "maximumHeartbeatGapMs": 9.199999928474426,
+        "defaultRenderLoop": true,
+        "targetFrameRate": 60,
+        "requestRenderMode": true,
+        "width": 640,
+        "height": 360,
+        "contextLost": false,
+        "visible": "visible",
+        "completed": false
+      }
+    }
+  ],
+  "renderErrors": [],
+  "status": "failed",
+  "environment": {
+    "appCommit": "572c80c98b11da6e1529db909ffd6c396437ae77",
+    "harnessCommit": "572c80c98b11da6e1529db909ffd6c396437ae77",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 529,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "coldActivationMs": 473.10000002384186,
+  "warmedResources": {
+    "heapBytes": 142654810,
+    "heapScope": "Unforced heap sample; not retained-memory acceptance",
+    "entities": 5000,
+    "collections": [
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "PrimitiveCollection",
+        "count": 1
+      },
+      {
+        "type": "EntityCluster",
+        "count": null
+      }
+    ]
+  },
+  "error": "A fresh capture is required.",
+  "foregroundUninterrupted": true
+}

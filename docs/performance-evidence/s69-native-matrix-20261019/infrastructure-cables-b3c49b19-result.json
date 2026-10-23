@@ -1,0 +1,124 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-19T16:32:19.778Z",
+  "row": "infrastructure-cables",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 332.80000000074506,
+        "candidateMedianP95Ms": 329,
+        "changePct": -1.1418269232982425,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "measured",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 4122,
+    "candidateMedianMs": 3509,
+    "baselineInitialSettleMedianMs": 4714,
+    "candidateInitialSettleMedianMs": 4544,
+    "initialSettleChangePct": -3.606279168434451,
+    "initialSettleRegressionOver10Pct": false,
+    "baselineRunsMs": [
+      6456,
+      4122,
+      3716,
+      4187,
+      3504
+    ],
+    "candidateRunsMs": [
+      4496,
+      3509,
+      3403,
+      3657,
+      3242
+    ],
+    "changePct": -14.871421639980593,
+    "regressionOver10Pct": false,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6707,
+      "sha256": "bb6477984503eca6828ebf1a9c645a2430ca17ae79ca945d1c1b7a8dd659d23f"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3938,
+      "sha256": "061fc7f779843e521bc85eaf769877a59011a894a2d3c02d5688da0628f72d08"
+    },
+    {
+      "name": "infrastructure-cables-baseline.json",
+      "bytes": 374875,
+      "sha256": "f61e8fbae614bd6d83870aca89847c1c981898c9ec8ea831f9f43204c0c06a0d"
+    },
+    {
+      "name": "infrastructure-cables-candidate.json",
+      "bytes": 375741,
+      "sha256": "0287e76100f1effb08f01629ff518fe11ab77f9e69f6fe31ac712ccfc9b9eb85"
+    },
+    {
+      "name": "infrastructure-cables-candidate.json.log",
+      "bytes": 686,
+      "sha256": "4ee7b0f80cc2937e5c3815b222632ff4ecf98aeeff99b0987916dbf71797bc9a"
+    },
+    {
+      "name": "infrastructure-cables-candidate.json.invocation.json",
+      "bytes": 2453,
+      "sha256": "67d651f4447ffdf25cacf0acda92ea04f9e21266d4a9088c26e902f8a0ab9e9b"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-cables-b3c49b19-native155",
+  "productionChanged": false
+}

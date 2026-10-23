@@ -1,0 +1,1696 @@
+{
+  "schema": "gev-gpu-service-trace-summary/v1",
+  "status": "completed-diagnostic-only",
+  "acceptanceEligible": false,
+  "productionChanged": false,
+  "application": "fb38992850a0e082e8c9147904f87846cc8e2520",
+  "qa": "3fdbcf420c4bf5e4995503ef033b828221116698",
+  "raw": {
+    "root": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\gpu-service-trace-fb389928-3fdbcf42-20261020-r3",
+    "processSha256": "965cc0245d14356b920e7b5edd111889e0954931baca993d01ad6ee4a2791c1d",
+    "traceSha256": "f3ab4a6620e0b2fcb04d104ff2650be71a767ed094f942d6532d4cc0e667e785",
+    "traceBytes": 21627145,
+    "events": 96025
+  },
+  "archive": {
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/gpu-service-trace-fb389928-3fdbcf42-20261020-r3-complete",
+    "files": 44,
+    "bytes": 24742332,
+    "receipt": {
+      "path": "qa-artifacts/gpu-service-trace-r3-transfer-20261020.json",
+      "sha256": "5eb03fea94e160b64eb0e1e2d3e99f4d0b37b908156b78c1a8ef061864d53b64"
+    }
+  },
+  "detail": {
+    "path": "qa-artifacts/gpu-service-trace-fb389928-analysis-20261020-r2.json",
+    "sha256": "e765788550c2651d57955b39cfda54111028db93b0cd201264cd80722bbc784b",
+    "bytes": 407972,
+    "reader": {
+      "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\analyze-gpu-service-trace-fb389928-20261020-r2.mjs",
+      "sha256": "63d8a574a039810e40236220fc7775d5e5777e9dc900448c0ecd46b344357368",
+      "maximumNodeHeapMiB": 384,
+      "unsafe64BitIdLexemesPreserved": 3366
+    }
+  },
+  "processIdentity": {
+    "browserPid": 24160,
+    "gpuPid": 39388,
+    "rendererPid": 40884,
+    "rendererMainTid": 42664,
+    "rendererCompositorTid": 31772,
+    "gpuMainTid": 37964,
+    "vizCompositorTid": 33256,
+    "product": "Chrome/155.0.8059.84",
+    "revision": "@5869fe313571d75152b77813cf0a4ee26a4e6df0"
+  },
+  "sourceBindings": {
+    "qaFreeze": {
+      "path": "qa-artifacts/interaction-continuity-v3-freeze-3fdbcf42-20261020.json",
+      "sha256": "6ec79d83e205c1b4ff827dd9e759e598f1a67121414be20dd2ee6d71815eda88"
+    },
+    "buildReceipt": {
+      "path": "qa-artifacts/rail-reconcile-fb389928-vm/standard.receipt.json",
+      "sha256": "677e9944d1c22405d6036bae48a3502dffcf11e824e8c686bd99b1584dd62021",
+      "source": {
+        "commit": "fb38992850a0e082e8c9147904f87846cc8e2520",
+        "worktree": "clean"
+      },
+      "harness": {
+        "commit": "55639cc7fde03daacf25e643f16f803e001113f9",
+        "worktree": "clean"
+      },
+      "index": {
+        "path": "assets/index-Bs7JXy7i.js",
+        "bytes": 3483012,
+        "sha256": "4b3a3966ec9fdd59539c884cd5f5bba52ad8f4a029051cc2c44dd4d89e68f0a9"
+      }
+    },
+    "cesiumShaderProgram": {
+      "path": "../gev-dev/node_modules/@cesium/engine/Source/Renderer/ShaderProgram.js",
+      "sha256": "b0ae609324f012437311fc443f483802917be375e3015c647173080dd15dba4f",
+      "lines": [
+        217,
+        304,
+        471
+      ]
+    },
+    "gpuDeviceSemantics": "https://raw.githubusercontent.com/chromium/chromium/main/gpu/command_buffer/service/gpu_tracer.cc"
+  },
+  "actions": [
+    {
+      "enabled": true,
+      "generation": 1,
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 10846.39999999106,
+        "duration": 232,
+        "processingStart": 10852.70000000298,
+        "processingEnd": 10856,
+        "interactionId": 197,
+        "deliveredAtMs": 11326.39999999106,
+        "targetMatched": true,
+        "generation": 1
+      },
+      "exactTimestampGenerationMatch": true,
+      "traceCommitMs": 133.956,
+      "tracePostCommitMs": 96.859,
+      "traceEventLatency": {
+        "display_trace_id": "-3950399108419918365",
+        "event_latency_id": "2057116072664680654",
+        "event_type": "MOUSE_RELEASED",
+        "has_high_latency": true,
+        "surface_frame_trace_id": "-3950399108419918392",
+        "vsync_interval_ms": 16.663
+      },
+      "milestonesRelativeTrustedDomClick": {
+        "acceptedIntentAtMs": 7.5,
+        "transitionAtMs": 9.1,
+        "buttonFeedbackFirstFrameAtMs": 92.9,
+        "buttonFeedbackAtMs": 457.6,
+        "stateAtMs": 497.3,
+        "renderedFrameAtMs": 537.9
+      },
+      "drains": {
+        "startedAtMs": 577.1,
+        "endedAtMs": 1578.5,
+        "durationMs": 1001.4
+      },
+      "rendererTaskUnionInsideNativeEventMs": 156.576,
+      "gpuServiceTaskUnionInsideNativeEventMs": 218.973,
+      "gpuServiceRaster": {
+        "count": 15,
+        "wallMs": 113.033,
+        "threadCpuMs": 111.728,
+        "spans": [
+          {
+            "atMs": -36.526,
+            "wallMs": 65.403,
+            "cpuMs": 64.184
+          },
+          {
+            "atMs": 29.918,
+            "wallMs": 1.225,
+            "cpuMs": 1.215
+          },
+          {
+            "atMs": 48.684,
+            "wallMs": 13.844,
+            "cpuMs": 13.683
+          },
+          {
+            "atMs": 81.105,
+            "wallMs": 3.967,
+            "cpuMs": 4.774
+          },
+          {
+            "atMs": 85.148,
+            "wallMs": 0.2,
+            "cpuMs": 0.193
+          },
+          {
+            "atMs": 85.39,
+            "wallMs": 0.109,
+            "cpuMs": 0.108
+          },
+          {
+            "atMs": 85.558,
+            "wallMs": 2.718,
+            "cpuMs": 2.698
+          },
+          {
+            "atMs": 88.489,
+            "wallMs": 0.104,
+            "cpuMs": 0.097
+          },
+          {
+            "atMs": 88.627,
+            "wallMs": 4.352,
+            "cpuMs": 4.278
+          },
+          {
+            "atMs": 150.75,
+            "wallMs": 14.904,
+            "cpuMs": 14.421
+          },
+          {
+            "atMs": 205.648,
+            "wallMs": 0.163,
+            "cpuMs": 0.156
+          },
+          {
+            "atMs": 205.847,
+            "wallMs": 1.79,
+            "cpuMs": 1.7
+          },
+          {
+            "atMs": 207.696,
+            "wallMs": 0.139,
+            "cpuMs": 0.133
+          },
+          {
+            "atMs": 207.959,
+            "wallMs": 4.026,
+            "cpuMs": 4.005
+          },
+          {
+            "atMs": 212.023,
+            "wallMs": 0.089,
+            "cpuMs": 0.083
+          }
+        ]
+      },
+      "rendererReadPixelsBeforeEventEndpoint": {
+        "count": 2,
+        "unionMs": 47.987
+      },
+      "pipeline": [
+        {
+          "atMs": 88.456,
+          "wallMs": 0.046,
+          "pid": 39388,
+          "tid": 33256,
+          "step": "STEP_ISSUE_BEGIN_FRAME",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 88.475,
+          "wallMs": 0.025,
+          "pid": 39388,
+          "tid": 33256,
+          "step": "STEP_SEND_ON_BEGIN_FRAME_MOJO_MESSAGE",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 88.531,
+          "wallMs": 0.223,
+          "pid": 40884,
+          "tid": 31772,
+          "frame_sequence": 1373,
+          "step": "STEP_RECEIVE_BEGIN_FRAME",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 88.8,
+          "wallMs": 0.569,
+          "pid": 40884,
+          "tid": 31772,
+          "step": "STEP_GENERATE_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 89.072,
+          "wallMs": 0.236,
+          "pid": 40884,
+          "tid": 31772,
+          "step": "STEP_SUBMIT_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 89.117,
+          "wallMs": 0.188,
+          "pid": 40884,
+          "tid": 31772,
+          "step": "STEP_SEND_SUBMIT_COMPOSITOR_FRAME_MOJO_MESSAGE",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 89.723,
+          "wallMs": 0.28,
+          "pid": 39388,
+          "tid": 33256,
+          "frame_sink_id": {
+            "frame_sink_client_id": 11,
+            "frame_sink_id": 11
+          },
+          "step": "STEP_RECEIVE_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419918392"
+        },
+        {
+          "atMs": 133.628,
+          "wallMs": 0.569,
+          "pid": 39388,
+          "tid": 33256,
+          "aggregated_surface_frame_trace_ids": [
+            -1,
+            "-3950399108419918392",
+            "-3950399108419918519"
+          ],
+          "display_trace_id": "-3950399108419918350",
+          "step": "STEP_SURFACE_AGGREGATION"
+        },
+        {
+          "atMs": 147.095,
+          "wallMs": 3.013,
+          "pid": 40884,
+          "tid": 31772,
+          "latency_ids": [
+            "2057116072664680644",
+            "2057116072664680651",
+            "2057116072664680654"
+          ],
+          "step": "STEP_SUBMIT_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419918352"
+        },
+        {
+          "atMs": 187.55,
+          "wallMs": 12.489,
+          "pid": 39388,
+          "tid": 33256,
+          "display_trace_id": "-3950399108419918365",
+          "step": "STEP_DRAW_AND_SWAP"
+        },
+        {
+          "atMs": 187.558,
+          "wallMs": 0.31,
+          "pid": 39388,
+          "tid": 33256,
+          "aggregated_surface_frame_trace_ids": [
+            -1,
+            "-3950399108419918352",
+            "-3950399108419918519"
+          ],
+          "display_trace_id": "-3950399108419918365",
+          "step": "STEP_SURFACE_AGGREGATION"
+        },
+        {
+          "atMs": 199.797,
+          "wallMs": 0.083,
+          "pid": 39388,
+          "tid": 33256,
+          "display_trace_id": "-3950399108419918365",
+          "step": "STEP_SEND_BUFFER_SWAP"
+        },
+        {
+          "atMs": 229.983,
+          "wallMs": 0.349,
+          "pid": 39388,
+          "tid": 37964,
+          "display_trace_id": "-3950399108419918365",
+          "step": "STEP_BUFFER_SWAP_POST_SUBMIT"
+        },
+        {
+          "atMs": 230.253,
+          "wallMs": 0.075,
+          "pid": 39388,
+          "tid": 37964,
+          "display_trace_id": "-3950399108419918365",
+          "step": "STEP_FINISH_BUFFER_SWAP"
+        },
+        {
+          "atMs": 230.307,
+          "wallMs": 0.156,
+          "pid": 39388,
+          "tid": 33256,
+          "display_trace_id": "-3950399108419918365",
+          "step": "STEP_SWAP_BUFFERS_ACK"
+        }
+      ],
+      "paintNodes": [
+        {
+          "atMs": 121.927,
+          "wallMs": 7.015,
+          "rawPaintClip": [
+            0,
+            0,
+            2560,
+            0,
+            2560,
+            1074,
+            0,
+            1074
+          ],
+          "paintLayerId": 0,
+          "nodeId": 2,
+          "nodeName": "#document"
+        },
+        {
+          "atMs": 122.141,
+          "wallMs": 0.079,
+          "rawPaintClip": [
+            -8388608,
+            -8388608,
+            8388607,
+            -8388608,
+            8388607,
+            8388607,
+            -8388608,
+            8388607
+          ],
+          "paintLayerId": 0,
+          "nodeId": 108,
+          "nodeName": "SPAN class='title-logo brand-logo'"
+        },
+        {
+          "atMs": 122.243,
+          "wallMs": 6.545,
+          "rawPaintClip": [
+            -104,
+            -189,
+            2456,
+            -189,
+            2456,
+            885,
+            -104,
+            885
+          ],
+          "paintLayerId": 0,
+          "nodeId": 38,
+          "nodeName": "DIV id='data-panel' class='panel-collapsible active'"
+        }
+      ],
+      "freshRasterTasks": [
+        {
+          "atMs": 137.051,
+          "wallMs": 0.873,
+          "pid": 40884,
+          "tid": 43696,
+          "layerId": 67,
+          "sourceFrameNumber": 210,
+          "tileId": {
+            "id_ref": "0x3f5c09e11a40"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 137.967,
+          "wallMs": 0.264,
+          "pid": 40884,
+          "tid": 43696,
+          "layerId": 48,
+          "sourceFrameNumber": 210,
+          "tileId": {
+            "id_ref": "0x3f5c09e12b80"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 138.273,
+          "wallMs": 4.302,
+          "pid": 40884,
+          "tid": 43696,
+          "layerId": 83,
+          "sourceFrameNumber": 210,
+          "tileId": {
+            "id_ref": "0x3f5c0716b140"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 142.678,
+          "wallMs": 3.968,
+          "pid": 40884,
+          "tid": 43696,
+          "layerId": 83,
+          "sourceFrameNumber": 210,
+          "tileId": {
+            "id_ref": "0x3f5c09e17980"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        }
+      ],
+      "gpuDeviceTimerMarkers": [
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": -36.487,
+          "durationMs": 51.814,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 29.943,
+          "durationMs": 0.307,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 39.019,
+          "durationMs": 2.337,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 41.358,
+          "durationMs": 3.263,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 48.742,
+          "durationMs": 0.742,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 81.146,
+          "durationMs": 0.196,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 85.65,
+          "durationMs": 0.148,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 88.647,
+          "durationMs": 0.712,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 98.574,
+          "durationMs": 2.733,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 101.308,
+          "durationMs": 3.723,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 147.336,
+          "durationMs": 0.014,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 150.823,
+          "durationMs": 0.866,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 187.976,
+          "durationMs": 0.013,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 205.864,
+          "durationMs": 0.168,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 207.979,
+          "durationMs": 1.36,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        }
+      ]
+    },
+    {
+      "enabled": false,
+      "generation": 2,
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 12446.79999999702,
+        "duration": 112,
+        "processingStart": 12447.89999999106,
+        "processingEnd": 12450.79999999702,
+        "interactionId": 204,
+        "deliveredAtMs": 12641.5,
+        "targetMatched": true,
+        "generation": 2
+      },
+      "exactTimestampGenerationMatch": true,
+      "traceCommitMs": 26.527,
+      "tracePostCommitMs": 86.785,
+      "traceEventLatency": {
+        "display_trace_id": "-3950399108419918061",
+        "event_latency_id": "2057116072664682353",
+        "event_type": "MOUSE_RELEASED",
+        "has_high_latency": true,
+        "surface_frame_trace_id": "-3950399108419917969",
+        "vsync_interval_ms": 16.663
+      },
+      "milestonesRelativeTrustedDomClick": {
+        "acceptedIntentAtMs": 1.2,
+        "transitionAtMs": 2.1,
+        "buttonFeedbackFirstFrameAtMs": 16.1,
+        "buttonFeedbackAtMs": 61.9,
+        "stateAtMs": 14.3,
+        "renderedFrameAtMs": 15.9
+      },
+      "drains": {
+        "startedAtMs": 91.6,
+        "endedAtMs": 1092.7,
+        "durationMs": 1001.1
+      },
+      "rendererTaskUnionInsideNativeEventMs": 78.569,
+      "gpuServiceTaskUnionInsideNativeEventMs": 84.923,
+      "gpuServiceRaster": {
+        "count": 12,
+        "wallMs": 41.912,
+        "threadCpuMs": 40.64,
+        "spans": [
+          {
+            "atMs": 49.054,
+            "wallMs": 15.94,
+            "cpuMs": 15.437
+          },
+          {
+            "atMs": 65.111,
+            "wallMs": 2.56,
+            "cpuMs": 2.488
+          },
+          {
+            "atMs": 67.796,
+            "wallMs": 0.175,
+            "cpuMs": 0.169
+          },
+          {
+            "atMs": 68.037,
+            "wallMs": 5.155,
+            "cpuMs": 4.986
+          },
+          {
+            "atMs": 73.373,
+            "wallMs": 0.175,
+            "cpuMs": 0.169
+          },
+          {
+            "atMs": 73.585,
+            "wallMs": 5.836,
+            "cpuMs": 5.694
+          },
+          {
+            "atMs": 79.5,
+            "wallMs": 0.082,
+            "cpuMs": 0.076
+          },
+          {
+            "atMs": 79.655,
+            "wallMs": 1.984,
+            "cpuMs": 1.933
+          },
+          {
+            "atMs": 81.735,
+            "wallMs": 0.17,
+            "cpuMs": 0.161
+          },
+          {
+            "atMs": 85.332,
+            "wallMs": 2.835,
+            "cpuMs": 2.792
+          },
+          {
+            "atMs": 102.474,
+            "wallMs": 0.145,
+            "cpuMs": 0.14
+          },
+          {
+            "atMs": 102.677,
+            "wallMs": 6.855,
+            "cpuMs": 6.595
+          }
+        ]
+      },
+      "rendererReadPixelsBeforeEventEndpoint": {
+        "count": 0,
+        "unionMs": 0
+      },
+      "pipeline": [
+        {
+          "atMs": 13.473,
+          "wallMs": 0.03,
+          "pid": 39388,
+          "tid": 33256,
+          "step": "STEP_ISSUE_BEGIN_FRAME",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 13.485,
+          "wallMs": 0.017,
+          "pid": 39388,
+          "tid": 33256,
+          "step": "STEP_SEND_ON_BEGIN_FRAME_MOJO_MESSAGE",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 13.559,
+          "wallMs": 0.025,
+          "pid": 40884,
+          "tid": 31772,
+          "frame_sequence": 1468,
+          "step": "STEP_RECEIVE_BEGIN_FRAME",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 27.797,
+          "wallMs": 1.953,
+          "pid": 40884,
+          "tid": 31772,
+          "step": "STEP_GENERATE_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 29.07,
+          "wallMs": 0.476,
+          "pid": 40884,
+          "tid": 31772,
+          "latency_ids": [
+            "2057116072664682319",
+            "2057116072664682354",
+            "2057116072664682353"
+          ],
+          "step": "STEP_SUBMIT_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 29.13,
+          "wallMs": 0.408,
+          "pid": 40884,
+          "tid": 31772,
+          "step": "STEP_SEND_SUBMIT_COMPOSITOR_FRAME_MOJO_MESSAGE",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 32.479,
+          "wallMs": 0.101,
+          "pid": 39388,
+          "tid": 33256,
+          "frame_sink_id": {
+            "frame_sink_client_id": 11,
+            "frame_sink_id": 11
+          },
+          "step": "STEP_RECEIVE_COMPOSITOR_FRAME",
+          "surface_frame_trace_id": "-3950399108419917969"
+        },
+        {
+          "atMs": 48.832,
+          "wallMs": 7.234,
+          "pid": 39388,
+          "tid": 33256,
+          "display_trace_id": "-3950399108419918061",
+          "step": "STEP_DRAW_AND_SWAP"
+        },
+        {
+          "atMs": 48.837,
+          "wallMs": 0.169,
+          "pid": 39388,
+          "tid": 33256,
+          "aggregated_surface_frame_trace_ids": [
+            -1,
+            "-3950399108419917969",
+            "-3950399108419918142"
+          ],
+          "display_trace_id": "-3950399108419918061",
+          "step": "STEP_SURFACE_AGGREGATION"
+        },
+        {
+          "atMs": 55.614,
+          "wallMs": 0.092,
+          "pid": 39388,
+          "tid": 33256,
+          "display_trace_id": "-3950399108419918061",
+          "step": "STEP_SEND_BUFFER_SWAP"
+        },
+        {
+          "atMs": 101.753,
+          "wallMs": 0.227,
+          "pid": 39388,
+          "tid": 37964,
+          "display_trace_id": "-3950399108419918061",
+          "step": "STEP_BUFFER_SWAP_POST_SUBMIT"
+        },
+        {
+          "atMs": 101.954,
+          "wallMs": 0.023,
+          "pid": 39388,
+          "tid": 37964,
+          "display_trace_id": "-3950399108419918061",
+          "step": "STEP_FINISH_BUFFER_SWAP"
+        },
+        {
+          "atMs": 102.019,
+          "wallMs": 0.13,
+          "pid": 39388,
+          "tid": 33256,
+          "display_trace_id": "-3950399108419918061",
+          "step": "STEP_SWAP_BUFFERS_ACK"
+        }
+      ],
+      "paintNodes": [
+        {
+          "atMs": 24.807,
+          "wallMs": 0.865,
+          "rawPaintClip": [
+            0,
+            0,
+            2560,
+            0,
+            2560,
+            1074,
+            0,
+            1074
+          ],
+          "paintLayerId": 0,
+          "nodeId": 2,
+          "nodeName": "#document"
+        },
+        {
+          "atMs": 24.862,
+          "wallMs": 0.051,
+          "rawPaintClip": [
+            -48,
+            -837,
+            2512,
+            -837,
+            2512,
+            237,
+            -48,
+            237
+          ],
+          "paintLayerId": 0,
+          "nodeId": 32,
+          "nodeName": "DIV class='cesium-widget-credits'"
+        },
+        {
+          "atMs": 24.918,
+          "wallMs": 0.717,
+          "rawPaintClip": [
+            -104,
+            -189,
+            2456,
+            -189,
+            2456,
+            885,
+            -104,
+            885
+          ],
+          "paintLayerId": 0,
+          "nodeId": 38,
+          "nodeName": "DIV id='data-panel' class='panel-collapsible active'"
+        },
+        {
+          "atMs": 25.642,
+          "wallMs": 0.023,
+          "rawPaintClip": [
+            -2104,
+            -189,
+            456,
+            -189,
+            456,
+            885,
+            -2104,
+            885
+          ],
+          "paintLayerId": 0,
+          "nodeId": 54,
+          "nodeName": "DIV id='pp-toggles' class='panel-collapsible collapsed'"
+        },
+        {
+          "atMs": 84.994,
+          "wallMs": 1.2,
+          "rawPaintClip": [
+            0,
+            0,
+            2560,
+            0,
+            2560,
+            1074,
+            0,
+            1074
+          ],
+          "paintLayerId": 0,
+          "nodeId": 2,
+          "nodeName": "#document"
+        },
+        {
+          "atMs": 85.078,
+          "wallMs": 1.092,
+          "rawPaintClip": [
+            -104,
+            -189,
+            2456,
+            -189,
+            2456,
+            885,
+            -104,
+            885
+          ],
+          "paintLayerId": 0,
+          "nodeId": 51,
+          "nodeName": "DIV id='left-panel-stack' class='layout-focus'"
+        }
+      ],
+      "freshRasterTasks": [
+        {
+          "atMs": 26.922,
+          "wallMs": 0.071,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e11a40"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 26.997,
+          "wallMs": 0.028,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 39,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e1b040"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.029,
+          "wallMs": 0.026,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 20,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e13540"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.058,
+          "wallMs": 0.042,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 48,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c087b0a40"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.104,
+          "wallMs": 0.028,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e1aec0"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.139,
+          "wallMs": 0.194,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 83,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e15700"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.338,
+          "wallMs": 0.021,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 20,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c000a3080"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.363,
+          "wallMs": 0.011,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e1b1c0"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.378,
+          "wallMs": 0.019,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 115,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e16300"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 27.4,
+          "wallMs": 0.01,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c0a689140"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 33.414,
+          "wallMs": 0.34,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 83,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c000a1b80"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 49.354,
+          "wallMs": 0.391,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 83,
+          "sourceFrameNumber": 242,
+          "tileId": {
+            "id_ref": "0x3f5c09e15700"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 88.056,
+          "wallMs": 0.423,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 83,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c0c82a600"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 88.505,
+          "wallMs": 1.118,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 48,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c000a3b00"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 89.66,
+          "wallMs": 0.151,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 20,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c000a1b80"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 89.824,
+          "wallMs": 0.085,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 116,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c0009fcc0"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 89.921,
+          "wallMs": 0.034,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 20,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c087b4ac0"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 89.965,
+          "wallMs": 0.137,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c000a3a40"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 90.113,
+          "wallMs": 0.033,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c000a2180"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 90.155,
+          "wallMs": 0.025,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c000a3680"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 90.19,
+          "wallMs": 0.025,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 67,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c000a35c0"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        },
+        {
+          "atMs": 90.246,
+          "wallMs": 0.157,
+          "pid": 40884,
+          "tid": 21208,
+          "layerId": 117,
+          "sourceFrameNumber": 243,
+          "tileId": {
+            "id_ref": "0x3f5c0c82a540"
+          },
+          "tileResolution": "HIGH_RESOLUTION"
+        }
+      ],
+      "gpuDeviceTimerMarkers": [
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 32.001,
+          "durationMs": 2.233,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 49.088,
+          "durationMs": 1.581,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 65.137,
+          "durationMs": 0.184,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 68.058,
+          "durationMs": 0.588,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 73.635,
+          "durationMs": 0.384,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 79.677,
+          "durationMs": 0.286,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererMainThread-0x3f5c01ac2e00",
+          "atMs": 82.855,
+          "durationMs": 3.158,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 86.014,
+          "durationMs": 0.984,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        },
+        {
+          "name": "RendererRasterWorker-0x3f5c00176800",
+          "atMs": 102.696,
+          "durationMs": 0.333,
+          "pid": 39388,
+          "tid": 30540,
+          "args": {
+            "channel": "TraceCHROMIUM",
+            "gl_category": "gpu_toplevel"
+          }
+        }
+      ]
+    }
+  ],
+  "lateOnFrame": {
+    "relativeToFirstClick": true,
+    "phasePreRenderAtMs": 894.6,
+    "phasePostRenderAtMs": 1217.3,
+    "logicalContext": "After first ON full-render witness, during its existing one-second observation drain, before OFF input by about383ms",
+    "programLinks": [
+      {
+        "query": {
+          "name": "GLES2Implementation::GetProgramiv",
+          "atMs": 897.959,
+          "wallMs": 170.42,
+          "cpuMs": 0.256,
+          "pid": 40884,
+          "tid": 42664,
+          "args": {}
+        },
+        "wait": {
+          "name": "CommandBufferProxyImpl::WaitForGetOffset",
+          "atMs": 898.129,
+          "wallMs": 170.219,
+          "cpuMs": 0.068,
+          "pid": 40884,
+          "tid": 42664,
+          "args": {
+            "end": 65871,
+            "start": 65871
+          }
+        },
+        "matchingWebGLServiceByExactPutOffset": {
+          "name": "CommandBufferService:PutChanged",
+          "atMs": 942.664,
+          "wallMs": 125.515,
+          "cpuMs": 1.047,
+          "pid": 39388,
+          "tid": 37964,
+          "args": {
+            "handler": ".WebGL-0x3f5c0019e800",
+            "put_offset": 65871
+          }
+        },
+        "queryToServiceStartMs": 44.705,
+        "getProgramSemantic": "ShaderProgram initialization queries can cause GPU command flush/wait. Trace identifies the WebGL command context and exact buffer offset, but not the program/shader source nor exclusive driver/compiler/hardware wait cause."
+      },
+      {
+        "query": {
+          "name": "GLES2Implementation::GetProgramiv",
+          "atMs": 1074.715,
+          "wallMs": 141.839,
+          "cpuMs": 1.144,
+          "pid": 40884,
+          "tid": 42664,
+          "args": {}
+        },
+        "wait": {
+          "name": "CommandBufferProxyImpl::WaitForGetOffset",
+          "atMs": 1074.735,
+          "wallMs": 141.801,
+          "cpuMs": 1.117,
+          "pid": 40884,
+          "tid": 42664,
+          "args": {
+            "end": 69915,
+            "start": 69915
+          }
+        },
+        "matchingWebGLServiceByExactPutOffset": {
+          "name": "CommandBufferService:PutChanged",
+          "atMs": 1094.229,
+          "wallMs": 122.116,
+          "cpuMs": 1.292,
+          "pid": 39388,
+          "tid": 37964,
+          "args": {
+            "handler": ".WebGL-0x3f5c0019e800",
+            "put_offset": 69915
+          }
+        },
+        "queryToServiceStartMs": 19.514,
+        "getProgramSemantic": "ShaderProgram initialization queries can cause GPU command flush/wait. Trace identifies the WebGL command context and exact buffer offset, but not the program/shader source nor exclusive driver/compiler/hardware wait cause."
+      }
+    ],
+    "deviceTimers": [
+      {
+        "name": "RendererRasterWorker-0x3f5c00176800",
+        "atMs": 880.951,
+        "durationMs": 0.47
+      },
+      {
+        "name": "RendererMainThread-0x3f5c01ac2e00",
+        "atMs": 901.963,
+        "durationMs": 2.309
+      },
+      {
+        "name": "RendererMainThread-0x3f5c01ac2e00",
+        "atMs": 904.273,
+        "durationMs": 2.802
+      },
+      {
+        "name": "BrowserRasterWorker-0x25bc01622500",
+        "atMs": 934.925,
+        "durationMs": 0.072
+      },
+      {
+        "name": "RendererRasterWorker-0x3f5c00176800",
+        "atMs": 1069.634,
+        "durationMs": 0.47
+      },
+      {
+        "name": "BrowserRasterWorker-0x25bc01622500",
+        "atMs": 1091.427,
+        "durationMs": 0.001
+      }
+    ]
+  },
+  "renderingContext": {
+    "nativeViewport": {
+      "width": 1280,
+      "height": 537,
+      "dpr": 2
+    },
+    "nativeBuffer": {
+      "width": 2560,
+      "height": 1074
+    },
+    "targetFrameRate": 60,
+    "requestRenderMode": true,
+    "maximumRenderTimeChange": "Infinity",
+    "frameNumberBefore": 96,
+    "frameNumberAfter": 111,
+    "governorBefore": {
+      "installed": true,
+      "mode": "idle",
+      "holds": [],
+      "recentRequests": [
+        {
+          "reason": "sharpen",
+          "at": 1792504766428
+        },
+        {
+          "reason": "sharpen",
+          "at": 1792504766428
+        },
+        {
+          "reason": "detection-visibility",
+          "at": 1792504766429
+        },
+        {
+          "reason": "map-stack",
+          "at": 1792504766434
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766448
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766514
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766585
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766647
+        },
+        {
+          "reason": "layer-params:flights",
+          "at": 1792504773075
+        },
+        {
+          "reason": "layer-params:military",
+          "at": 1792504773077
+        },
+        {
+          "reason": "layer-params:satellites",
+          "at": 1792504773077
+        },
+        {
+          "reason": "layer-params:flights",
+          "at": 1792504773182
+        },
+        {
+          "reason": "layer-params:military",
+          "at": 1792504773184
+        },
+        {
+          "reason": "layer-params:satellites",
+          "at": 1792504773186
+        },
+        {
+          "reason": "layer-visibility",
+          "at": 1792504773340
+        },
+        {
+          "reason": "layer-visibility",
+          "at": 1792504774109
+        }
+      ],
+      "scheduledUpdates": []
+    },
+    "governorAfter": {
+      "installed": true,
+      "mode": "idle",
+      "holds": [],
+      "recentRequests": [
+        {
+          "reason": "detection-visibility",
+          "at": 1792504766429
+        },
+        {
+          "reason": "map-stack",
+          "at": 1792504766434
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766448
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766514
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766585
+        },
+        {
+          "reason": "detection-animation",
+          "at": 1792504766647
+        },
+        {
+          "reason": "layer-params:flights",
+          "at": 1792504773075
+        },
+        {
+          "reason": "layer-params:military",
+          "at": 1792504773077
+        },
+        {
+          "reason": "layer-params:satellites",
+          "at": 1792504773077
+        },
+        {
+          "reason": "layer-params:flights",
+          "at": 1792504773182
+        },
+        {
+          "reason": "layer-params:military",
+          "at": 1792504773184
+        },
+        {
+          "reason": "layer-params:satellites",
+          "at": 1792504773186
+        },
+        {
+          "reason": "layer-visibility",
+          "at": 1792504773340
+        },
+        {
+          "reason": "layer-visibility",
+          "at": 1792504774109
+        },
+        {
+          "reason": "layer-visibility",
+          "at": 1792504774779
+        },
+        {
+          "reason": "layer-visibility",
+          "at": 1792504776225
+        }
+      ],
+      "scheduledUpdates": []
+    }
+  },
+  "conclusions": [
+    "OFF has an exact input-event→surface-frame→display-frame link: first commit26.527ms, affected frame submit29.070/receive32.479, misses27.217 aggregation, joins48.837 aggregation, swaps101.954, presents113.312ms.",
+    "OFF post-commit interval includes renderer-raster command batches and Skia composition on CrGpuMain, with zero renderer ReadPixels. It is not explained by delayed logical disable or the height-query path.",
+    "OFF freshly schedules ten raster tasks for sourceFrame242 at26.922..27.400ms; further sourceFrame243 work follows. Prior ON backlog is not a sufficient sole explanation.",
+    "GPU task labels distinguish RendererRasterWorker, RendererMainThread and WebGL command handlers. Tile compositor layer IDs do not map to Paint.layerId=0; exact CSS/DOM ownership of the slow GPU batch remains unavailable.",
+    "Late ON has two GetProgramiv waits linked by exact command-buffer offsets to WebGL service handlers. This is separate from initial grounding ReadPixels and from the subsequent OFF input. No shader source/program identity or unique driver/compiler cause is exposed.",
+    "The trace justifies inspecting the existing #data-panel and #left-panel-stack repaint boundaries. It does not justify a rendering-quality change, cache change, scheduler delay, or a specific safe CSS patch without ownership evidence."
+  ],
+  "nextEngineeringDisposition": "No runtime patch or further capture in this subtask. The demonstrated OFF boundary is post-commit compositor/raster scheduling, with fresh UI paint/raster work; exact slow layer/CSS ownership is unavailable because Paint.layerId=0 and compositor IDs lack DOM snapshots. The separate late-ON program-information wait has a precise WebGL buffer context/offset link, but lacks shader/program-source identity. These observations do not justify reducing quality, changing sampleHeight/caching, delaying inputs, or claiming a unique GPU-driver cause.",
+  "limitations": [
+    "Exactly two diagnostic actions; no acceptance or matched-regression claim.",
+    "CPU duration is thread CPU where present; wall time is not hardware GPU time. Nested spans must not be added.",
+    "GetCategories inventory is advisory/empty; category emission is evidenced by the trace counts. The stdout selectedCategories field accidentally prints advisory membership; record.trace.selectedCategories is authoritative.",
+    "GPU service context labels and compositor layer/tile IDs are present; Paint.layerId=0 and no layer-tree snapshots map those IDs to exact DOM owners. Paint node names and overlapping raster tasks alone do not establish which CSS rule is slow.",
+    "No power/other-app/OS GPU exclusivity measurement during capture; foreground proof covers only the owned window.",
+    "GPU-device markers are emitted from Chromium GPU timers (gpu_tracer.cc), distinct from service wall/thread-CPU spans. Their calibration and complete hardware coverage were not independently verified; do not add them to CPU/service totals.",
+    "Some recorded thread-CPU durations slightly exceed wall durations; raw values remain preserved.",
+    "The late ON first-frame readback and later program-information wait are separate from OFF. The late ON wait finishes about383ms before OFF input."
+  ],
+  "originalCollector": {
+    "status": "failed",
+    "failureReason": "Planned diagnostic boundary after 2 formal local interactions; no next state read, arm or input was delivered.",
+    "reason": "Intentionally truncated frozen collector, never recategorized as formal acceptance."
+  },
+  "cleanup": {
+    "errors": [],
+    "phaseStatus": "disposed",
+    "phaseCleanupErrors": [],
+    "qualificationMetricsObserverAbsent": true,
+    "qualificationEventTimingAbsent": true,
+    "qualificationFlightWitnessReaderAbsent": true,
+    "browserClose": {
+      "closeCompleted": true,
+      "forcedProcessTermination": false,
+      "observation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "effectiveCloseDeadlineMs": 5000,
+        "postDisconnectExitTimeoutMs": 5000,
+        "postDisconnectExitWaitAttempted": false,
+        "closeStartHostMs": 50036.8713,
+        "closeSettledHostMs": 50800.4087,
+        "closeElapsedMs": 763.5374000000011,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 714.1016000000018
+        },
+        "protocolCloseTrace": null,
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null
+      }
+    }
+  },
+  "fullAssetChecks": [
+    {
+      "phase": "before",
+      "application": "fb38992850a0e082e8c9147904f87846cc8e2520",
+      "receipt": {
+        "assetCount": 886,
+        "totalAssetBytes": 68600503,
+        "receiptSha256": "9c5f1039b13f6f3c94e65d73995aaa9f7d6f45bc291a8a2a1e5ffaa29df1933e"
+      },
+      "served": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "9c5f1039b13f6f3c94e65d73995aaa9f7d6f45bc291a8a2a1e5ffaa29df1933e",
+        "assetCount": 886,
+        "totalAssetBytes": 68600503
+      }
+    },
+    {
+      "phase": "after",
+      "application": "fb38992850a0e082e8c9147904f87846cc8e2520",
+      "receipt": {
+        "assetCount": 886,
+        "totalAssetBytes": 68600503,
+        "receiptSha256": "9c5f1039b13f6f3c94e65d73995aaa9f7d6f45bc291a8a2a1e5ffaa29df1933e"
+      },
+      "served": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "9c5f1039b13f6f3c94e65d73995aaa9f7d6f45bc291a8a2a1e5ffaa29df1933e",
+        "assetCount": 886,
+        "totalAssetBytes": 68600503
+      }
+    }
+  ]
+}

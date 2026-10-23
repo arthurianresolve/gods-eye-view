@@ -1,0 +1,39 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38188605428",
+  "commit": "87fad3fd3aa8f83a6e53d6a9cc0fd734b56bac69",
+  "rawSha256": "e6f58d9b1e8328aad94da923d5f701805bc27353d12a41a62e00126f211c236f",
+  "status": "failed",
+  "baselineStatus": "passed",
+  "candidateStatus": "failed",
+  "captureFailure": {
+    "reportSchema": "gev-performance-capture-failure/v1",
+    "status": "failed",
+    "failure": {
+      "message": "Infrastructure document wall clock did not remain at the fixture epoch.",
+      "phase": "configure-infrastructure-fixture",
+      "scenario": null,
+      "run": null,
+      "operator": null,
+      "actual": null,
+      "expected": null
+    },
+    "source": {
+      "appCommit": "87fad3fd3aa8f83a6e53d6a9cc0fd734b56bac69",
+      "harnessCommit": "87fad3fd3aa8f83a6e53d6a9cc0fd734b56bac69",
+      "provenanceStatus": "pre-capture-served-assets-verified"
+    },
+    "fixtureDelivery": null,
+    "completedSampleCount": 0,
+    "completedSamplesRetained": 0,
+    "evidenceTruncated": false
+  },
+  "attribution": {
+    "type": "source-confirmed clock adapter contract mismatch",
+    "cause": "Infrastructure requires a frozen wall epoch but calls installFixedWallClock, which advances from the fixture epoch using performance.now elapsed time.",
+    "preserve": "Dense moving fixture clock semantics and strict infrastructure timestamp checks remain required."
+  },
+  "limitations": [
+    "No completed infrastructure timing sample.",
+    "Software-rendered setup failure; no hardware or performance acceptance."
+  ]
+}

@@ -325,7 +325,7 @@ test('AIS first-connect grace expiry reports failure even without a terminal man
   assert.equal(presentLoadingFeedback(state, unavailable, 300).label, 'LOAD FAILED');
 });
 
-test('participant stats failure outranks a simultaneous visibility completion', () => {
+test('missing optional provider keys do not become a global failure', () => {
   const enabling = aggregateLayerLoading([{
     id: 'ais-live-vessels',
     name: 'AIS Vessels',
@@ -346,7 +346,72 @@ test('participant stats failure outranks a simultaneous visibility completion', 
     type: 'visibility', layerId: 'ais-live-vessels', enabled: true,
   });
 
-  assert.equal(state.terminal, 'error');
+  assert.equal(state.terminal, 'complete');
+  assert.equal(
+    presentLoadingFeedback(state, missingKey, 250).label,
+    'LOAD COMPLETE',
+  );
+});
+
+test('legacy key guidance in the error field does not become a global failure', () => {
+  const enabling = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    lifecycleState: 'enabling',
+    stats: { loading: true },
+  }]);
+  let state = reduceLoadingFeedback(createLoadingFeedbackState(), enabling, 0);
+  state = reduceLoadingFeedback(state, enabling, 200);
+
+  const keyRequired = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    enabled: true,
+    lifecycleState: 'enabled',
+    stats: { loading: false, keyRequired: true, error: 'KEY REQUIRED' },
+  }]);
+  state = reduceLoadingFeedback(state, keyRequired, 250, {
+    type: 'visibility', layerId: 'firms', enabled: true,
+  });
+
+  assert.equal(keyRequired.records[0].error, null);
+  assert.equal(state.terminal, 'complete');
+  assert.equal(presentLoadingFeedback(state, keyRequired, 250).label, 'LOAD COMPLETE');
+});
+
+test('an unrelated failure is preserved even when a key is also required', () => {
+  const summary = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    enabled: true,
+    lifecycleState: 'enabled',
+    stats: { loading: false, keyRequired: true, error: 'upstream timeout' },
+  }]);
+  assert.equal(summary.records[0].error, 'upstream timeout');
+  let state = reduceLoadingFeedback(createLoadingFeedbackState(), aggregateLayerLoading([
+    { id: 'firms', name: 'NASA FIRMS', lifecycleState: 'enabling', stats: { loading: true } },
+  ]), 0);
+  state = reduceLoadingFeedback(state, summary, 200, {
+    type: 'visibility', layerId: 'firms', enabled: true,
+  });
+  assert.equal(state.batchOutcome, 'error');
+});
+
+test('a refresh failure is not hidden by a legacy key label', () => {
+  const summary = aggregateLayerLoading([{
+    id: 'firms',
+    name: 'NASA FIRMS',
+    enabled: true,
+    lifecycleState: 'enabled',
+    stats: {
+      loading: false,
+      keyRequired: true,
+      error: 'KEY REQUIRED',
+      managerRefreshError: 'proxy refresh failed',
+    },
+  }]);
+  assert.equal(summary.records[0].error, 'proxy refresh failed');
+  assert.equal(summary.records[0].unavailable, false);
 });
 
 test('retains the worst terminal outcome until every concurrent load drains', () => {

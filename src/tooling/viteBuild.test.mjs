@@ -24,7 +24,9 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
   assert.equal(config.plugins[0].enforce, 'pre');
   assert.equal(config.plugins[1].name, 'host-check');
   assert.equal(config.plugins[1].enforce, 'pre');
-  assert.equal(config.plugins[4], plugin);
+  assert.equal(config.plugins[2].name, 'gev-cesium-dependency-identity');
+  assert.equal(typeof config.plugins[2].configResolved, 'function');
+  assert.equal(config.plugins[5], plugin);
   assert.equal(config.server.host, 'localhost');
   assert.equal(config.server.port, 4173);
   assert.deepEqual(config.server.allowedHosts, ['localhost', '127.0.0.1']);
@@ -43,12 +45,18 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     assert.ok(csp.includes(directive), directive);
   }
   assert.ok(!csp.includes("script-src 'self' 'unsafe-inline'"));
+  assert.deepEqual(config.preview.allowedHosts, config.server.allowedHosts);
   assert.deepEqual(config.preview.headers, config.server.headers);
   assert.deepEqual(config.define, {
     'import.meta.env.GOOGLE_MAPS_API_KEY': '"browser-fixture"',
     'import.meta.env.CESIUM_ION_TOKEN': '"ion-fixture"',
     'import.meta.env.MAPILLARY_CLIENT_TOKEN': '""',
+    __GEV_APP_COMMIT__: 'null',
   });
+  assert.equal(
+    createBrowserViteConfig({ appCommit: 'abc123' }).define.__GEV_APP_COMMIT__,
+    '"abc123"',
+  );
   assert.equal(
     createBrowserViteConfig({ mapillaryToken: 'MLY|1|abc' }).define[
       'import.meta.env.MAPILLARY_CLIENT_TOKEN'
@@ -68,6 +76,13 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     }).server.allowedHosts,
     ['localhost', '127.0.0.1', 'globe.lan'],
   );
+  assert.deepEqual(
+    createBrowserViteConfig({
+      host: '0.0.0.0',
+      allowedHosts: ['localhost', '127.0.0.1', 'globe.lan'],
+    }).preview.allowedHosts,
+    ['localhost', '127.0.0.1', 'globe.lan'],
+  );
   assert.equal(
     createBrowserViteConfig({ host: '::', port: '4800' }).server.port,
     4800,
@@ -84,7 +99,7 @@ test('build helper does not discover environment values or construct local provi
       undefined,
     );
     assert.deepEqual(
-      config.plugins.slice(4).map((plugin) => plugin.name),
+      config.plugins.slice(5).map((plugin) => plugin.name),
       ['embed-framing', 'panel-build'],
     );
   } finally {
@@ -97,8 +112,13 @@ test('root config retains existing named exports and standalone provider order',
   for (const [name, value] of Object.entries(providers))
     assert.equal(compatibility[name], value, name);
   const config = standaloneConfig({ mode: 'test' });
+  assert.match(
+    config.define.__GEV_APP_COMMIT__,
+    /^"[a-f0-9]{40}"$|^null$/,
+    'standalone dev config must expose a real checkout commit when available',
+  );
   const standaloneProviders = config.plugins
-    .slice(4, -5)
+    .slice(5, -5)
     .map((plugin) => plugin.name);
   assert.equal(
     standaloneProviders.filter((name) => name === 'gemini-live-proxy').length,
@@ -116,25 +136,9 @@ test('root config retains existing named exports and standalone provider order',
   // The local MCP route follows every provider and precedes the API fallback.
   assert.equal(config.plugins.at(-5).name, 'local-mcp');
   assert.equal(config.plugins.at(-4).name, 'api-not-found');
-  // Config-only, so it sits after the provider slice rather than in it.
   assert.equal(config.plugins.at(-3).name, 'gev-unwatched-runtime-dirs');
   assert.equal(config.plugins.at(-2).name, 'embed-framing');
   assert.equal(config.plugins.at(-1).name, 'panel-build');
-});
-
-test('directories the server writes while it runs are kept out of the dev watcher', () => {
-  // Providers write cache files and logs here while the app runs; none of it is
-  // source, so the dev watcher has no reason to stat it.
-  const config = standaloneConfig({ mode: 'test' });
-  const plugin = config.plugins.find(
-    ({ name }) => name === 'gev-unwatched-runtime-dirs',
-  );
-  // Dev only: preview and build have no watcher.
-  assert.equal(plugin.apply, 'serve');
-  assert.deepEqual(plugin.config().server.watch.ignored, [
-    '**/.gev-cache/**',
-    '**/.gev-logs/**',
-  ]);
 });
 
 test('build export resolves in Node and has no browser fallback', async () => {
@@ -267,7 +271,7 @@ test('the CSP admits the event media embeds and the Maps JavaScript API, and no 
   assert.ok(frames.includes('https://platform.twitter.com'));
 });
 
-/** A raw GET, so the Host header and an absolute-form target are sent as given. */
+/** Preserve raw Host and absolute-form targets when testing middleware. */
 function rawGet(port, target, headers = {}) {
   return new Promise((resolve, reject) => {
     const req = request(

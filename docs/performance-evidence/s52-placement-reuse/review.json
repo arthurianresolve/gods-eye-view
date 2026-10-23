@@ -1,0 +1,38 @@
+{
+  "schema": "gev-s52-placement-independent-review/v1",
+  "reviewedAt": "2026-10-11T00:12:15.855Z",
+  "baselineCommit": "f25154a61326e881e2223f2238d94b06cf231df8",
+  "integrationBaseline": "72694089e7fa0fa414042cde48765e1418a70d7e",
+  "integrationBaselineProductionSourceIdentical": true,
+  "candidateSourceSha256": "c43194668c660a84e3aba94e94208d0ce1fd5378ce004aef1e7d86cced71872b",
+  "workReportSha256": "d5fc0b8ae1e8982b39066f41065e2084269ff9310adc6bb235177dc1e44391f3",
+  "candidateTestsPassed": 4,
+  "baselineTestsPassed": 3,
+  "baselineExpectedWorkAssertionFailures": 1,
+  "sampledOutputParity": true,
+  "placementBuildCalls": {
+    "baseline": 28,
+    "candidate": 14
+  },
+  "consumedDependencyHashesVerified": true,
+  "finalIntegrityVerified": true,
+  "existingEvidenceOverwriteRejected": true,
+  "focused": {
+    "tests": 85,
+    "pass": 85,
+    "fail": 0,
+    "artifact": "focused.txt",
+    "sha256": "93c65c57f73e247d06b112a9bac10a4fb590f60f4f4990e707919f27c4359c61",
+    "encoding": "utf8"
+  },
+  "allocation": {
+    "tests": 13,
+    "pass": 13,
+    "fail": 0,
+    "artifact": "allocation.txt",
+    "sha256": "ab37a8ec2526866cf3ccd7958c0d5b28644b0bb7cca4dec8071ab8cfb79cd777",
+    "encoding": "utf16le-bom",
+    "runtimeSourceUnchangedSinceGate": true
+  },
+  "scope": "Mock-canvas work counts and behavior only. CPU timing, browser pixels and hardware acceptance pending."
+}

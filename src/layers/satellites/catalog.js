@@ -1,6 +1,7 @@
 import * as Cesium from 'cesium';
 import { twoline2satrec } from 'satellite.js';
-import { noradIdFromSatnum } from '../../sources/tle.js';
+import { satelliteElementEpochMs } from './records.js';
+import { decodeTleCatalogNumber } from '../../sources/tle.js';
 import {
   DENSE_REFRESH_FRAMES,
   DENSE_GROUP_PATH,
@@ -43,11 +44,21 @@ export function createCatalog({ state: layerState, services, parts, source }) {
       if (!sat || !point) continue;
       const pos = parts.orbits.propagatePosition(sat.satrec, now);
       if (pos) {
-        point.position = Cesium.Cartesian3.fromDegrees(
+        const cartesian = Cesium.Cartesian3.fromDegrees(
           pos.longitude,
           pos.latitude,
           pos.altitude,
+          undefined,
+          layerState._scratchPropagationCartesian,
         );
+        const previous = point.position;
+        if (
+          !previous ||
+          previous.x !== cartesian.x ||
+          previous.y !== cartesian.y ||
+          previous.z !== cartesian.z
+        )
+          point.position = cartesian;
       }
     }
   }
@@ -101,6 +112,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
       let added = 0;
 
       for (let start = 0; start < entries.length; start += DENSE_CREATE_CHUNK) {
+        const addedBeforeChunk = added;
         loadSignal.throwIfAborted();
         if (
           token !== layerState._denseLoadToken ||
@@ -114,7 +126,8 @@ export function createCatalog({ state: layerState, services, parts, source }) {
           const entry = entries[i];
           const satrec = twoline2satrec(entry.line1, entry.line2);
           if (!satrec || satrec.error !== 0) continue;
-          const noradId = noradIdFromSatnum(satrec.satnum);
+          const noradId = decodeTleCatalogNumber(satrec.satnum);
+          if (noradId === null) continue;
           if (layerState._catalog.has(noradId)) continue; // core catalog keeps priority
           const pos = parts.orbits.propagatePosition(satrec, now);
           if (!pos) continue;
@@ -123,6 +136,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
             name: entry.name,
             satrec,
             group: 'dense',
+            elementEpoch: satelliteElementEpochMs(satrec),
           });
           const point = layerState._pointCollection.add({
             position: Cesium.Cartesian3.fromDegrees(
@@ -142,6 +156,8 @@ export function createCatalog({ state: layerState, services, parts, source }) {
           layerState._denseStale ||= Boolean(res.stale);
           added++;
         }
+        if (added > addedBeforeChunk)
+          parts.lifecycle?.methods?.syncRenderDemand?.();
         // Yield to the event loop between chunks.
         await new Promise((resolve) => setTimeout(resolve, 0));
         loadSignal.throwIfAborted();
@@ -231,6 +247,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
     layerState._denseCursor = 0;
     layerState._count = layerState._points.size;
     layerState._catalogRevision++;
+    parts.lifecycle?.methods?.syncRenderDemand?.();
   }
   return {
     _abortActiveUpdates,

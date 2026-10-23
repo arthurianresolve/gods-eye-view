@@ -1,0 +1,148 @@
+{
+  "schema": "gev-visual-transition-path-independent-review/v1",
+  "reviewedAt": "2026-10-20T01:38:52.825Z",
+  "status": "failed",
+  "acceptanceEligible": false,
+  "diagnosticOnly": true,
+  "scope": "All original files independently hash verified. Unmasked pixel comparisons of fixed fresh-page state paths; this is diagnostic evidence only.",
+  "producerCommit": "25cab4fd4db58e2432c8845131578c9df7dff526",
+  "helper": {
+    "path": "run-visual-transition-path-diagnostic-20261020.mjs",
+    "sha256": "c736849b187afcb8515ab96163e4d8d8bddb956bf175949a3cfd721289404de6"
+  },
+  "images": [],
+  "comparisons": [],
+  "slots": [
+    {
+      "id": "slot-01-baseline-initial-on",
+      "status": "failed",
+      "error": {
+        "name": "AssertionError",
+        "message": "Visual readiness failed\n+ actual - expected\n\n+ 'not-ready'\n- 'ready'\n"
+      },
+      "cleanup": {
+        "interceptionDrain": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "pageClose": {
+          "closeCompleted": true,
+          "openPageCount": 0
+        },
+        "interceptionRelease": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "browserClose": {
+          "closeCompleted": true,
+          "forcedProcessTermination": false,
+          "observation": {
+            "closeStatus": "completed",
+            "closeDeadlineMs": 5000,
+            "effectiveCloseDeadlineMs": 5000,
+            "postDisconnectExitTimeoutMs": 5000,
+            "postDisconnectExitWaitAttempted": false,
+            "closeStartHostMs": 75184.6711,
+            "closeSettledHostMs": 75991.1025,
+            "closeElapsedMs": 806.4313999999868,
+            "timingOrigins": {
+              "closeElapsedMs": "browser.close invocation",
+              "processExitElapsedMs": "closeRecoveryBrowser entry"
+            },
+            "closeRejectionName": null,
+            "processExitedBeforeClose": false,
+            "processExit": {
+              "code": 0,
+              "signal": null,
+              "elapsedMs": 762.9539999999979
+            },
+            "protocolCloseTrace": null,
+            "forceProcessStatus": "not-needed",
+            "forceProcessAttempted": false,
+            "forceProcessCallbackInvoked": false,
+            "forceProcessElapsedMs": null
+          }
+        },
+        "browserCloseProof": "passed"
+      },
+      "states": []
+    }
+  ],
+  "error": {
+    "name": "AssertionError",
+    "message": "Visual readiness failed\n+ actual - expected\n\n+ 'not-ready'\n- 'ready'\n"
+  },
+  "decoder": {
+    "name": "pngjs",
+    "version": "7.0.0",
+    "archiveSha256": "c4b71873d48a692dd5eeb1dcb62185c7aafe40f2180c7cc7f30ec71e89a080be",
+    "receiptSha256": "9285ef98c0d6f9e2cb5c0f598af972f153532b5097fdfc740511f3810fab2cc8"
+  },
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-transition-path-e7-190c5ab6",
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 16117,
+      "sha256": "8cf452c4c8051ea4b1f8bb9e170962cfcdf298df01d2bb32faeb13fe3e56fcd9"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-transition-path-diagnostic-20261020.mjs",
+      "bytes": 34668,
+      "sha256": "c736849b187afcb8515ab96163e4d8d8bddb956bf175949a3cfd721289404de6"
+    },
+    {
+      "name": "predeclared-plan.json",
+      "bytes": 4033,
+      "sha256": "9ce7b8725945b3cc1932dbc665771b98bd8f75e4726c134f53108109ae234244"
+    }
+  ]
+}

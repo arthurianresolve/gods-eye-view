@@ -1,0 +1,125 @@
+{
+  "schema": "gev-cable-idle-trace-source-validation/v1",
+  "reviewedAt": "2026-10-20T05:28:42.354Z",
+  "status": "automatically-validated",
+  "frozenApplicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "runtimeChanged": false,
+  "hardwareRunStarted": false,
+  "validation": {
+    "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/cable-idle-event-trace-validation-20261020-r6",
+    "focusedTestAndFormatReceiptSha256": "34d03de3fc5773c25c2339c38e1f0546fc4fc13fd7b2f3b7d727f561853d8647",
+    "targetedLintReceiptSha256": "19b299eb2100a601d73b3fbc83e1a751cf1cc2d0d0bab6fe496c86642fec2974",
+    "formattedSourceFiles": [
+      {
+        "name": "scripts/capture-scene-performance.mjs",
+        "bytes": 356059,
+        "sha256": "6cefb0966894bb29cae35513304a941d263a25c75e66ccea19a6a9c8522e51de"
+      },
+      {
+        "name": "scripts/capture-scene-performance.test.mjs",
+        "bytes": 48511,
+        "sha256": "4dbdd9ffbfe6634dd77a66383014eaff75dabb266032cc95fc0178cc4ace0147"
+      },
+      {
+        "name": "qa-artifacts/run-cable-idle-provider-events-190c5ab6.mjs",
+        "bytes": 19109,
+        "sha256": "9ffeeb6b45aef9e3e5824c9594cc520d2a00fff1869e914e6d9639dd329b3b39"
+      }
+    ],
+    "checks": [
+      {
+        "label": "prettier-write",
+        "code": 0,
+        "logBytes": 155,
+        "logSha256": "3bb8ce4a9b431a73a0faaa7282f1730a3ff272627a13041fe563ed82e9e5ae86",
+        "summary": "scripts/capture-scene-performance.mjs 486ms\nscripts/capture-scene-performance.test.mjs 77ms\nqa-artifacts/run-cable-idle-provider-events-190c5ab6.mjs 31ms\n\n"
+      },
+      {
+        "label": "node24",
+        "nodeVersion": "v24.16.0",
+        "code": 0,
+        "signal": null,
+        "logBytes": 2940,
+        "logSha256": "788c25f759021ef15fa5ad30d740c96183f2afe836074fceed76f0b8694e7ecc",
+        "summary": [
+          "ℹ tests 30",
+          "ℹ pass 30",
+          "ℹ fail 0",
+          "ℹ skipped 0",
+          "ℹ duration_ms 7911.880605"
+        ]
+      },
+      {
+        "label": "node26",
+        "nodeVersion": "v26.11.0",
+        "code": 0,
+        "signal": null,
+        "logBytes": 2939,
+        "logSha256": "deb252cd35fabf80f48d75c44ab42d58bfc8a7d5f4bd33a9e2dcd3a55827480d",
+        "summary": [
+          "ℹ tests 30",
+          "ℹ pass 30",
+          "ℹ fail 0",
+          "ℹ skipped 0",
+          "ℹ duration_ms 7921.714099"
+        ]
+      },
+      {
+        "label": "prettier-check",
+        "code": 0,
+        "logBytes": 67,
+        "logSha256": "6d83a3564f7f607a548332e41eaafbcd07cb5356c80db107b0460bd253c93ea0",
+        "summary": "Checking formatting...\nAll matched files use Prettier code style!\n\n"
+      },
+      {
+        "label": "node24-syntax",
+        "file": "scripts/capture-scene-performance.mjs",
+        "code": 0,
+        "stderr": ""
+      },
+      {
+        "label": "node24-syntax",
+        "file": "scripts/capture-scene-performance.test.mjs",
+        "code": 0,
+        "stderr": ""
+      },
+      {
+        "label": "node24-syntax",
+        "file": "qa-artifacts/run-cable-idle-provider-events-190c5ab6.mjs",
+        "code": 0,
+        "stderr": ""
+      },
+      {
+        "label": "node26-syntax",
+        "file": "scripts/capture-scene-performance.mjs",
+        "code": 0,
+        "stderr": ""
+      },
+      {
+        "label": "node26-syntax",
+        "file": "scripts/capture-scene-performance.test.mjs",
+        "code": 0,
+        "stderr": ""
+      },
+      {
+        "label": "node26-syntax",
+        "file": "qa-artifacts/run-cable-idle-provider-events-190c5ab6.mjs",
+        "code": 0,
+        "stderr": ""
+      }
+    ],
+    "lintScope": "Targeted no-undef only for the two changed tracked files; full 77-file capture inventory was not rerun."
+  },
+  "behavior": [
+    "Opt-in first 60-second cable idle window after the unchanged 30-second warmup.",
+    "Bounded public tile-load transitions and completed resource timing; no stored URLs, headers or payloads.",
+    "Independent observer disconnect after drain errors and confirmed listener removal.",
+    "Bounded partial diagnostics and cleanup state retained when measurement fails.",
+    "Ordinary captures remain unchanged and diagnostic captures remain comparison-ineligible."
+  ],
+  "limitations": [
+    "Completed resource entries do not expose all in-flight requests or resource-timing buffer loss.",
+    "Temporal correlation does not establish every render request cause or GPU execution time.",
+    "Focused tests are not hardware evidence or a pass for the existing cable-idle availability gap."
+  ]
+}

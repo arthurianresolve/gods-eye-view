@@ -1,0 +1,918 @@
+{
+  "schema": "gev-s69-matrix-raw-report-index/v1",
+  "recordedAt": "2026-10-18T23:00:33.892Z",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "candidateCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+  "matrixPlanSha256": "02d8e0b8d91257bb1450ae21ff1a3ed02ec33b2e89395d3eca4608440491c5e3",
+  "reports": [
+    {
+      "file": "dense-investigation-baseline.json",
+      "sha256": "787dbb84d429e09ca2edc682205dac1075f855ca54965bd6f689d933488f0e04",
+      "bytes": 701096,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 522.8000000119209,
+          "frameCount": 205
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": 608.9000000059605,
+          "frameCount": 191
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": 545.6000000238419,
+          "frameCount": 190
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": 579.4000000059605,
+          "frameCount": 200
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": 550.0999999940395,
+          "frameCount": 191
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 490.80000001192093,
+          "frameCount": 198
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 530.1999999880791,
+          "frameCount": 202
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 488.90000000596046,
+          "frameCount": 196
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 614.5999999940395,
+          "frameCount": 186
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 606.9000000059605,
+          "frameCount": 188
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 1,
+          "p95Ms": 1233.0999999940395,
+          "frameCount": 227
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 2,
+          "p95Ms": 927,
+          "frameCount": 205
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 3,
+          "p95Ms": 1393.8999999761581,
+          "frameCount": 207
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 4,
+          "p95Ms": 1364.800000011921,
+          "frameCount": 202
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 5,
+          "p95Ms": 1391.0999999940395,
+          "frameCount": 203
+        }
+      ]
+    },
+    {
+      "file": "dense-investigation-candidate.json",
+      "sha256": "cc4cfaa064c4b37cb51f5cafb13c45417f8939b35a14dd5eb94127dd7c2b5e4d",
+      "bytes": 703946,
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 577.5,
+          "frameCount": 194
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": 602.5999999940395,
+          "frameCount": 184
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": 571.8000000119209,
+          "frameCount": 188
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": 556.4000000059605,
+          "frameCount": 202
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": 598.2000000178814,
+          "frameCount": 199
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 521.6999999880791,
+          "frameCount": 202
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 545.6999999880791,
+          "frameCount": 198
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 530.6999999880791,
+          "frameCount": 187
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 554.5999999940395,
+          "frameCount": 201
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 554.5,
+          "frameCount": 190
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 1,
+          "p95Ms": 1375.199999988079,
+          "frameCount": 211
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 2,
+          "p95Ms": 1368.4000000059605,
+          "frameCount": 205
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 3,
+          "p95Ms": 1358.800000011921,
+          "frameCount": 208
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 4,
+          "p95Ms": 1380.199999988079,
+          "frameCount": 208
+        },
+        {
+          "scenario": "selected-aircraft-tracking",
+          "run": 5,
+          "p95Ms": 1354.6000000238419,
+          "frameCount": 211
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-baseline.json",
+      "sha256": "6cb987003bb48f1c3bcefc78623b6c367e8fe71138c8dbb1f8f633491c9f309f",
+      "bytes": 386823,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 460.90000000596046,
+          "frameCount": 174
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 386.40000000596046,
+          "frameCount": 201
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 378.2999999821186,
+          "frameCount": 189
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 323.89999997615814,
+          "frameCount": 212
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 346,
+          "frameCount": 197
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-cables-baseline.json",
+      "sha256": "9f5cf802c980e2a1984eb9817594d226be3a4b8f87447393b89509eba53eae3a",
+      "bytes": 374289,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 644.6999999880791,
+          "frameCount": 7
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 308.40000000596046,
+          "frameCount": 218
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 351.09999999403954,
+          "frameCount": 202
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 335.09999999403954,
+          "frameCount": 209
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 348.7999999821186,
+          "frameCount": 194
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 339.19999998807907,
+          "frameCount": 208
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-cables-candidate.json",
+      "sha256": "d8a212fb6c098ef53f142addeb3e9e54e2f3c3a3a4d6d9f2c9aaad6685560075",
+      "bytes": 375517,
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 599.5999999940395,
+          "frameCount": 195
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 546.5999999940395,
+          "frameCount": 215
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 599.7000000178814,
+          "frameCount": 196
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 549.6999999880791,
+          "frameCount": 212
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 531.5,
+          "frameCount": 219
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-candidate.json",
+      "sha256": "f340f32df14b8e5f811cb87696d038539f9aef8f2acd4dbd3f5d27738cbdbe38",
+      "bytes": 387793,
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 372.7999999821186,
+          "frameCount": 184
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 591.6999999880791,
+          "frameCount": 181
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 342.30000001192093,
+          "frameCount": 194
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 368.09999999403954,
+          "frameCount": 182
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 357.19999998807907,
+          "frameCount": 192
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-dams-baseline.json",
+      "sha256": "78c53f6cd2342890c6086244519f21c3702736c5d84ad78ce4fcc53011e7b7d2",
+      "bytes": 369798,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 303.69999998807907,
+          "frameCount": 233
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 318.19999998807907,
+          "frameCount": 219
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 274.09999999403954,
+          "frameCount": 242
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 288.7000000178814,
+          "frameCount": 224
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 300.09999999403954,
+          "frameCount": 235
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-dams-candidate.json",
+      "sha256": "0ab5cd8d48c614ffe23a4edebd14a08d7b7867d0f85e56cc88c6b7400a009204",
+      "bytes": 371175,
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 409.90000000596046,
+          "frameCount": 248
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 492.90000000596046,
+          "frameCount": 212
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 289.7000000178814,
+          "frameCount": 242
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 541.5999999940395,
+          "frameCount": 203
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 343.19999998807907,
+          "frameCount": 238
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-datacenters-baseline.json",
+      "sha256": "dff6b955eb9093433f36e344a92ce66257627872aeea5fda33e2f024ee644eb4",
+      "bytes": 370729,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 321.40000000596046,
+          "frameCount": 45
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 319.10000002384186,
+          "frameCount": 214
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 301.69999998807907,
+          "frameCount": 232
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 317,
+          "frameCount": 214
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 316.30000001192093,
+          "frameCount": 218
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 322.2000000178814,
+          "frameCount": 214
+        }
+      ]
+    },
+    {
+      "file": "infrastructure-datacenters-candidate.json",
+      "sha256": "bb34314af8bb6ce206dd5ea5226cd836cd33109e9279d087708542691fc7a099",
+      "bytes": 371695,
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 570.6999999880791,
+          "frameCount": 15
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": null,
+          "frameCount": 0
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 296.09999999403954,
+          "frameCount": 236
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 360.90000000596046,
+          "frameCount": 200
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 317.09999999403954,
+          "frameCount": 222
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 297.09999999403954,
+          "frameCount": 232
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 336.19999998807907,
+          "frameCount": 209
+        }
+      ]
+    },
+    {
+      "file": "operating-view-baseline.json",
+      "sha256": "867d27cd2a0e0b098bc9925872523a87e08d38df73b954dff0525f8913845348",
+      "bytes": 13193206,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 611.7000000178814,
+          "frameCount": 248
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": 705.3000000119209,
+          "frameCount": 242
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": 557.1999999880791,
+          "frameCount": 253
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": 561.6999999880791,
+          "frameCount": 241
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": 270.7999999821186,
+          "frameCount": 278
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 470.2000000178814,
+          "frameCount": 267
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 443.59999999403954,
+          "frameCount": 269
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 462.2000000178814,
+          "frameCount": 267
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 422.59999999403954,
+          "frameCount": 266
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 456.39999997615814,
+          "frameCount": 258
+        }
+      ]
+    },
+    {
+      "file": "operating-view-candidate.json",
+      "sha256": "41e20e70dc4b95016b526736ec0237e0f8068f0a20042e2783587a9d00c83b01",
+      "bytes": 13195616,
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "status": "completed",
+      "samples": [
+        {
+          "scenario": "idle",
+          "run": 1,
+          "p95Ms": 1017.5999999940395,
+          "frameCount": 98
+        },
+        {
+          "scenario": "idle",
+          "run": 2,
+          "p95Ms": 1015.5,
+          "frameCount": 101
+        },
+        {
+          "scenario": "idle",
+          "run": 3,
+          "p95Ms": 1012.3000000119209,
+          "frameCount": 101
+        },
+        {
+          "scenario": "idle",
+          "run": 4,
+          "p95Ms": 1020.9000000059605,
+          "frameCount": 86
+        },
+        {
+          "scenario": "idle",
+          "run": 5,
+          "p95Ms": 1015.2000000178814,
+          "frameCount": 93
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1,
+          "p95Ms": 454.10000002384186,
+          "frameCount": 275
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 2,
+          "p95Ms": 452.2000000178814,
+          "frameCount": 272
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 3,
+          "p95Ms": 454,
+          "frameCount": 280
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 4,
+          "p95Ms": 457.30000001192093,
+          "frameCount": 270
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 5,
+          "p95Ms": 441.09999999403954,
+          "frameCount": 280
+        }
+      ]
+    },
+    {
+      "file": "weather-effects-baseline.json",
+      "sha256": "a2a6904f03aa5e9c5741d994449da110d4f1d893b7ab94be95108fd25935b690",
+      "bytes": 232769,
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "d372aaa644e4db2464d70f9611fc11e97beaf951",
+      "status": "failed",
+      "samples": []
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const stageDir = path.dirname(fileURLToPath(import.meta.url));
+const root = path.resolve(stageDir, '..', '..');
+const sourceRoot = path.join(stageDir, 'named-entry-capture-controls-01', 'submarine-cables-named-entry');
+const expectedRuntimeSha256 = '233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2';
+const workerSha256 = '9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901';
+const sha = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const outputArg = process.argv[2];
+if (!outputArg) throw new Error('Usage: run-cable-snapshot-capture-attribution.mjs fresh-output-directory');
+const outputDir = path.resolve(root, outputArg);
+if (outputDir === root || !outputDir.startsWith(`${root}${path.sep}`) || existsSync(outputDir))
+  throw new Error('Output must be a fresh directory inside this checkout');
+
+const sourcePath = path.join(sourceRoot, 'src/overlays/worldOverlay.js');
+const original = readFileSync(sourcePath, 'utf8');
+assert.equal(sha(Buffer.from(original)), expectedRuntimeSha256);
+const replaceUnique = (source, before, after, label) => {
+  const start = source.indexOf(before);
+  assert.ok(start >= 0, `Missing ${label} anchor`);
+  assert.equal(source.indexOf(before, start + before.length), -1, `Ambiguous ${label} anchor`);
+  return source.slice(0, start) + after + source.slice(start + before.length);
+};
+const replaceRange = (source, startAnchor, endAnchor, label) => {
+  const start = source.indexOf(startAnchor);
+  const end = source.indexOf(endAnchor, start);
+  assert.ok(start >= 0 && end > start, `Invalid ${label} source bounds`);
+  assert.equal(source.indexOf(startAnchor, start + startAnchor.length), -1, `Ambiguous ${label} start`);
+  return source.slice(0, start) + source.slice(end);
+};
+const captureStart = 'function snapshotPaintItem(item, index, keyhole) {';
+const captureEnd = '\nfunction cachedPaintItemMatches(';
+const fnStart = original.indexOf(captureStart);
+const fnEnd = original.indexOf(captureEnd, fnStart);
+assert.ok(fnStart >= 0 && fnEnd > fnStart, 'Snapshot capture function must be present');
+const noReuseStart = original.indexOf('function canReuseSharedPaint(fontRevision, keyhole) {');
+const noReuseEnd = original.indexOf('\nfunction hasLaterDetectionPainter() {', noReuseStart);
+assert.ok(noReuseStart >= 0 && noReuseEnd > noReuseStart, 'Shared-paint guard source bounds must be unique');
+const noReuseSource =
+  original.slice(0, noReuseStart) +
+  'function canReuseSharedPaint(fontRevision, keyhole) {\n  return false;\n}' +
+  original.slice(noReuseEnd);
+
+const captureGroups = {
+  scalarPresentation: (body) => replaceRange(
+    body,
+    '  snapshot.key = item.key;',
+    '  const details = Array.isArray(entry.details) ? entry.details : [];',
+    'scalar presentation capture',
+  ),
+  details: (body) => replaceRange(
+    body,
+    '  const details = Array.isArray(entry.details) ? entry.details : [];',
+    '  snapshot.entryFields[0] = entry.variant;',
+    'details capture',
+  ),
+  entryIdentityAndFields: (body) => replaceRange(
+    replaceRange(body, '  snapshot.entry = entry;\n', '  snapshot.key = item.key;', 'entry identity'),
+    '  snapshot.entryFields[0] = entry.variant;',
+    '  const layout = entry._overlayLayout || {};',
+    'entry style fields',
+  ),
+  placement: (body) => replaceRange(
+    body,
+    '  snapshot.placementValuesValid = true;',
+    '  const rect = placement.rect;',
+    'placement capture',
+  ),
+  layoutAndRect: (body) => replaceRange(
+    replaceRange(
+      body,
+      '  const layout = entry._overlayLayout || {};',
+      '  snapshot.placementValuesValid = true;',
+      'layout capture',
+    ),
+    '  const rect = placement.rect;',
+    '\n}',
+    'rect capture',
+  ),
+};
+
+function variantForGroup(groupName) {
+  const start = noReuseSource.indexOf(captureStart);
+  const end = noReuseSource.indexOf(captureEnd, start);
+  const candidateBody = captureGroups[groupName](noReuseSource.slice(start, end));
+  return noReuseSource.slice(0, start) + candidateBody + noReuseSource.slice(end);
+}
+
+const variants = [
+  { name: 'full-no-reuse-0', source: noReuseSource, role: 'reference-before' },
+  ...Object.keys(captureGroups).map((group) => ({ name: `omit-${group}`, source: variantForGroup(group), role: 'omission-control', group })),
+  { name: 'full-no-reuse-1', source: noReuseSource, role: 'reference-after' },
+];
+const commonEnv = {
+  GEV_ALLOC_ENTRIES: '160',
+  GEV_ALLOC_PROFILE: 'submarine-cables',
+  GEV_ALLOC_WARMUP: '3000',
+  GEV_ALLOC_CHUNK: '48',
+  GEV_ALLOC_CHUNKS: '10',
+};
+const rows = [];
+mkdirSync(outputDir, { recursive: true });
+for (let index = 0; index < variants.length; index++) {
+  const variant = variants[index];
+  const target = path.join(outputDir, variant.name);
+  cpSync(sourceRoot, target, { recursive: true });
+  const targetRuntime = path.join(target, 'src/overlays/worldOverlay.js');
+  writeFileSync(targetRuntime, variant.source, { flag: 'w' });
+  const targetWorker = path.join(target, 'src/overlays/worldOverlayAllocation.worker.mjs');
+  assert.equal(sha(readFileSync(targetWorker)), workerSha256);
+  const check = spawnSync(process.execPath, ['--check', targetRuntime], { cwd: target, encoding: 'utf8', timeout: 15_000 });
+  if (check.error) throw check.error;
+  assert.equal(check.status, 0, `${variant.name} syntax: ${check.stderr}`);
+  const child = spawnSync(process.execPath, ['--expose-gc', '--no-concurrent-recompilation', targetWorker], {
+    cwd: target,
+    encoding: 'utf8',
+    timeout: 240_000,
+    maxBuffer: 8 * 1024 * 1024,
+    env: { ...process.env, ...commonEnv },
+  });
+  const stdout = child.stdout || '';
+  const stderr = child.stderr || '';
+  writeFileSync(path.join(target, 'worker.stdout.txt'), stdout, { flag: 'w' });
+  writeFileSync(path.join(target, 'worker.stderr.txt'), stderr, { flag: 'w' });
+  if (child.error) throw child.error;
+  assert.equal(child.status, 0, `${variant.name} worker failed: ${stderr}`);
+  const measured = JSON.parse(stdout.trim().split(/\r?\n/).at(-1));
+  assert.equal(measured.ok, true);
+  assert.equal(measured.profile, 'submarine-cables');
+  assert.equal(measured.entryCount, 160);
+  rows.push({
+    index,
+    name: variant.name,
+    role: variant.role,
+    omittedGroup: variant.group || null,
+    runtimeSha256: sha(readFileSync(targetRuntime)),
+    workerSha256: sha(readFileSync(targetWorker)),
+    stdoutSha256: sha(Buffer.from(stdout)),
+    stderrSha256: sha(Buffer.from(stderr)),
+    measured,
+  });
+}
+
+const references = rows.filter((row) => row.role.startsWith('reference'));
+assert.equal(references.length, 2);
+assert.equal(references[0].runtimeSha256, references[1].runtimeSha256);
+assert.equal(references[0].workerSha256, references[1].workerSha256);
+for (const row of rows.filter((item) => item.role === 'omission-control')) {
+  assert.equal(row.measured.candidateCount, references[0].measured.candidateCount, `${row.name} population drift`);
+  assert.equal(row.measured.paintedCount, references[0].measured.paintedCount, `${row.name} paint population drift`);
+  assert.deepEqual(row.measured.paintedBySource, references[0].measured.paintedBySource, `${row.name} source population drift`);
+  assert.deepEqual(row.measured.solveCount, references[0].measured.solveCount, `${row.name} solve work drift`);
+}
+
+const report = {
+  schema: 's52-cable-snapshot-capture-attribution/v1',
+  scope: 'Diagnostic-only cable160 heap-delta attribution. Every variant forces canReuseSharedPaint false, so the shared-canvas path performs normal repaint and the deep comparator cannot exit early on an omitted field. Each omission removes exactly one snapshot capture group; it does not alter candidate generation, painting, populations, or normal production eligibility. Omitted snapshot state is intentionally unusable and no visual correctness claim is made for those variants.',
+  runtimeVariantSha256: expectedRuntimeSha256,
+  noReuseReferenceSha256: sha(Buffer.from(noReuseSource)),
+  workerSha256,
+  runnerSha256: sha(readFileSync(fileURLToPath(import.meta.url))),
+  packageLockSha256: sha(readFileSync(path.join(root, 'package-lock.json'))),
+  node: process.version,
+  platform: process.platform,
+  conditions: { profile: 'submarine-cables', entries: 160, warmupFrames: 3000, stabilizationChunks: 6, chunkFrames: 48, measuredChunks: 10, order: rows.map(({ name }) => name) },
+  population: {
+    candidateCount: references[0].measured.candidateCount,
+    paintedCount: references[0].measured.paintedCount,
+    paintedBySource: references[0].measured.paintedBySource,
+  },
+  results: rows.map(({ measured, ...row }) => ({
+    ...row,
+    medianBytesPerFrame: measured.medianBytesPerFrame,
+    maxBytesPerFrame: measured.maxBytesPerFrame,
+    chunkBytesPerFrame: measured.chunkBytesPerFrame,
+  })),
+};
+const reportPath = path.join(outputDir, 'report.json');
+writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+console.log(JSON.stringify({
+  report: path.relative(root, reportPath).replaceAll('\\', '/'),
+  reportSha256: sha(readFileSync(reportPath)),
+  population: report.population,
+  results: report.results.map(({ name, role, omittedGroup, runtimeSha256, medianBytesPerFrame, maxBytesPerFrame, chunkBytesPerFrame }) => ({
+    name, role, omittedGroup, runtimeSha256, medianBytesPerFrame, maxBytesPerFrame, chunkBytesPerFrame,
+  })),
+}, null, 2));

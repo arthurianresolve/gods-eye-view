@@ -1,0 +1,106 @@
+{
+  "schema": "gev-windows-recovery-success-summary/v1",
+  "status": "passed",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39391051088",
+  "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39391051088/job/118522657616",
+  "pullRequestHead": "716b6cc3d3d1be105f80fb3f2f445aec8f63bde7",
+  "testedMergeCommit": "44f7eab08723c699531278639df317794f9bb61c",
+  "logSha256": "c5da6a96bbd9bd6745b0c21cb21411ace736ce8d2846369c8bca20ece12ae8dd",
+  "rawEvidenceSha256": "5074aa99ac0f1dcc3d7d2c260f5686422949f0fbd1ffe9587180cf988410b12b",
+  "environment": {
+    "platform": "win32",
+    "os": "10.0.26100",
+    "node": "v24.14.0",
+    "browserVersion": "Chrome/152.0.7977.75",
+    "requestedRenderingBackend": "swiftshader-webgl-only",
+    "hardwareRenderingValidated": false
+  },
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "pageCloseCompleted": true,
+      "openPagesBeforeBrowserClose": 0,
+      "browserCloseElapsedMs": 527.4927000000025,
+      "browserExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 545.8032999999996
+      },
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "pageCloseCompleted": true,
+      "openPagesBeforeBrowserClose": 0,
+      "browserCloseElapsedMs": 1489.5667999999714,
+      "browserExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 1501.507900000026
+      },
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "pageCloseCompleted": true,
+      "openPagesBeforeBrowserClose": 0,
+      "browserCloseElapsedMs": 591.8829999999725,
+      "browserExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 600.2003000000259
+      },
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "pageCloseCompleted": true,
+      "openPagesBeforeBrowserClose": 0,
+      "browserCloseElapsedMs": 612.6183999999193,
+      "browserExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 640.029899999965
+      },
+      "forcedBrowserProcessTermination": false
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "pageCloseCompleted": true,
+      "openPagesBeforeBrowserClose": 0,
+      "browserCloseElapsedMs": 349.4492999999784,
+      "browserExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 367.1827999999514
+      },
+      "forcedBrowserProcessTermination": false
+    }
+  ],
+  "interpretation": "This separate exact-revision hosted Windows run passes every recovery phase with normal process exit. It is software-rendered installation/recovery evidence, not native GPU evidence or proof that the earlier intermittent Chrome shutdown delay cannot recur. The failed 220349dd run remains preserved. Asynchronous process diagnostics do not change the close deadline."
+}

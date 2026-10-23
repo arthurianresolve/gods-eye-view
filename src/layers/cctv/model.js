@@ -375,26 +375,56 @@ export function createModel({ state: layerState, services, parts, source }) {
    *   exists to wait on).
    */
 
-  function projectionTilesReady() {
+  function discoverProjectionTileset() {
+    layerState._activeTileset = null;
+    const primitives = layerState._viewer?.scene?.primitives;
+    if (!primitives || typeof primitives.get !== 'function') return null;
+    let hiddenTileset = null;
+    for (let i = 0; i < primitives.length; i++) {
+      const primitive = primitives.get(i);
+      if (
+        !(primitive instanceof Cesium.Cesium3DTileset) ||
+        primitive.isDestroyed?.()
+      )
+        continue;
+      if (primitive.show === true) {
+        layerState._activeTileset = primitive;
+        break;
+      }
+      if (!hiddenTileset) hiddenTileset = primitive;
+    }
+    layerState._activeTileset ||= hiddenTileset;
+    return layerState._activeTileset;
+  }
+
+  function currentProjectionTileset() {
     if (
       !layerState._activeTileset ||
-      layerState._activeTileset.isDestroyed?.()
-    ) {
-      layerState._activeTileset = null;
-      const primitives = layerState._viewer?.scene?.primitives;
-      if (primitives && typeof primitives.get === 'function') {
-        for (let i = 0; i < primitives.length; i++) {
-          const p = primitives.get(i);
-          if (p instanceof Cesium.Cesium3DTileset && !p.isDestroyed?.()) {
-            layerState._activeTileset = p;
-            break;
-          }
-        }
-      }
-    }
-    if (!layerState._activeTileset) return true;
-    if (layerState._activeTileset.show === false) return false;
-    return layerState._activeTileset.tilesLoaded === true;
+      layerState._activeTileset.isDestroyed?.() ||
+      layerState._activeTileset.show === false
+    )
+      discoverProjectionTileset();
+    return layerState._activeTileset?.show === true
+      ? layerState._activeTileset
+      : null;
+  }
+
+  function hasProjectionTileset() {
+    if (!layerState._activeTileset || layerState._activeTileset.isDestroyed?.())
+      discoverProjectionTileset();
+    return !!layerState._activeTileset;
+  }
+
+  function projectionTilesReady() {
+    const visible = currentProjectionTileset();
+    if (visible) return visible.tilesLoaded === true;
+    return !hasProjectionTileset();
+  }
+
+  /** Re-discover the tileset after a settled map-source ownership change. */
+  function refreshProjectionTileset() {
+    discoverProjectionTileset();
+    return projectionTilesReady();
   }
 
   /**
@@ -447,8 +477,13 @@ export function createModel({ state: layerState, services, parts, source }) {
 
   function projectionLoopIsNeeded() {
     if (!layerState._enabled || !layerState._viewer) return false;
-    if (layerState._showProjection && parts.selection.getActiveRecord())
-      return true;
+    if (layerState._showProjection) {
+      const active = parts.selection.getActiveRecord();
+      if (active) {
+        const runtime = active.projection;
+        if (runtime?.video && !runtime.disposed) return true;
+      }
+    }
     return focusPassIsNeeded(
       getFocusTarget(),
       layerState._activeFocusStyleCount,
@@ -565,6 +600,9 @@ export function createModel({ state: layerState, services, parts, source }) {
     sectorAreaKm2,
     currentViewContext,
     projectionTilesReady,
+    refreshProjectionTileset,
+    currentProjectionTileset,
+    hasProjectionTileset,
     planeOrientationFor,
     projectionLoopIsNeeded,
     cardFrameTick,

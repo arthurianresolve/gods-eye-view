@@ -11,6 +11,7 @@ import {
   createWindInspectionMarker,
   WIND_UNITS,
 } from './inspection.js';
+import { createWindEvidence } from './evidence.js';
 import { t, msg, translateKnown } from '../../i18n/index.js';
 import { unitLabel } from '../../ui/unitLabels.js';
 
@@ -47,6 +48,10 @@ export function windStats(manifest) {
   return {
     count: manifest?.grid ? manifest.grid.nx * manifest.grid.ny : 0,
     lastUpdate: Number.isFinite(run) ? run : null,
+    issuedAt: Number.isFinite(run) ? run : null,
+    validAt: Number.isFinite(Date.parse(manifest?.cycle?.validIso))
+      ? Date.parse(manifest.cycle.validIso)
+      : null,
     error:
       manifest?.reason ||
       (manifest?.unavailable ? msg('Wind unavailable') : null),
@@ -60,6 +65,7 @@ export function createWindLayer({
   cesium = Cesium,
   container,
   createRendering = createWindRendering,
+  eventTarget = globalThis.window,
 } = {}) {
   if (typeof feed?.getSnapshot !== 'function')
     throw new TypeError('Wind requires a snapshot source');
@@ -78,13 +84,14 @@ export function createWindLayer({
   let reading = null;
   let inspectionMarker = null;
   let sampledPosition = null;
+  let manifestReceivedAt = null;
   const hideInspection = () => {
     reading = null;
     sampledPosition = null;
     inspectionMarker?.clear();
   };
   const sample = (position) => {
-    reading = inspectWindAtCenter(manifest, viewer, cesium, {
+    const result = inspectWindAtCenter(manifest, viewer, cesium, {
       position,
       units,
       overlay,
@@ -98,6 +105,20 @@ export function createWindLayer({
           manifest?.reason ||
           (manifest?.stale ? 'Cached forecast · stale' : 'Model forecast'),
     });
+    reading = Number.isFinite(result.speed)
+      ? {
+          ...result,
+          evidence: createWindEvidence(manifest, result, {
+            model,
+            receivedAt: manifestReceivedAt,
+            feedState: manifest?.stale
+              ? 'stale'
+              : error
+                ? 'degraded'
+                : 'nominal',
+          }),
+        }
+      : result;
     sampledPosition = reading.position || position || null;
     inspectionMarker?.show(sampledPosition);
   };
@@ -155,6 +176,7 @@ export function createWindLayer({
       // The renderer releases its field on disable. Retaining a manifest here
       // would falsely satisfy an appearance-only reuse after the next enable.
       manifest = null;
+      manifestReceivedAt = null;
       error = null;
       hideInspection();
       rendering?.stop();
@@ -182,6 +204,7 @@ export function createWindLayer({
         if (!enabled || controller.signal.aborted || request !== controller)
           return enabled && !signal?.aborted && request !== controller;
         manifest = snapshot;
+        manifestReceivedAt = Date.now();
         error = null;
         if (sampledPosition) sample(sampledPosition);
         if (snapshot.unavailable) {
@@ -225,6 +248,7 @@ export function createWindLayer({
       if (params.inspect === false) hideInspection();
       if (modelChanged) {
         manifest = null;
+        manifestReceivedAt = null;
         error = null;
         rendering?.stop();
         rendering?.clear();
@@ -432,6 +456,27 @@ export function createWindLayer({
       controls.summary.actions = controls.chips.filter(
         ({ id }) => id === 'read-wind',
       );
+      if (reading?.evidence)
+        controls.summary.actions.push({
+          id: 'inspect-wind-evidence',
+          label: t('Inspect forecast evidence'),
+          title: t('Inspect the forecast source, issue time and valid time'),
+          onClick() {
+            const EventCtor = eventTarget?.CustomEvent;
+            if (!EventCtor || !eventTarget?.dispatchEvent) return;
+            eventTarget.dispatchEvent(
+              new EventCtor('gev:evidence-record-opened', {
+                detail: {
+                  kind: 'forecast',
+                  label: t('Wind forecast at {coordinates}', {
+                    coordinates: reading.coordinates.replace(' · ', ' '),
+                  }),
+                  evidence: reading.evidence,
+                },
+              }),
+            );
+          },
+        });
       return controls;
     },
 

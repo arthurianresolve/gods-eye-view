@@ -1,0 +1,431 @@
+{
+  "schema": "gev-capture-stage-review/v1",
+  "artifactSha256": "d764d0498d0ce51e03e6209bee20ed9b25fa0be9fb5257775751bf8e6a0797b1",
+  "candidateSha": "068b24ddd8a4961e56a1a25bba89777032635f12",
+  "harnessSha": "068b24ddd8a4961e56a1a25bba89777032635f12",
+  "status": "failed",
+  "failure": {
+    "message": "Child process timed out; Wrote bounded failed-capture evidence. Capture failed during prepare-fresh-provider-document: Protocol error (Runtime.callFunctionOn): Target closed; cleanup confirmed (1).",
+    "phase": "candidate"
+  },
+  "baselineDurationMs": 64719,
+  "completedSamples": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "durationMs": 6827.299999999988,
+      "renderedFrameCount": 3,
+      "frameIntervalMs": {
+        "p50": 28.300000000017462,
+        "p95": 3473.7999999999884,
+        "max": 3473.7999999999884,
+        "samples": 2,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 3460
+      },
+      "totalObjects": 7578,
+      "foregroundThroughout": true,
+      "setupStages": [
+        {
+          "stage": "fresh-provider-document-setup",
+          "status": "completed",
+          "startedAtMs": 34778.316946,
+          "elapsedMs": 19287.144183000004
+        },
+        {
+          "stage": "provider-previous-document-worker-audit",
+          "status": "completed",
+          "startedAtMs": 34778.733314,
+          "elapsedMs": 907.9803690000044
+        },
+        {
+          "stage": "worker-metadata-read",
+          "status": "completed",
+          "startedAtMs": 34778.825827,
+          "elapsedMs": 7.396749999999884
+        },
+        {
+          "stage": "worker-blob-read",
+          "status": "completed",
+          "startedAtMs": 34786.242394,
+          "elapsedMs": 867.7598930000022
+        },
+        {
+          "stage": "worker-blob-validation",
+          "status": "completed",
+          "startedAtMs": 35654.057611,
+          "elapsedMs": 23.16251600000396
+        },
+        {
+          "stage": "worker-observer-restoration-check",
+          "status": "completed",
+          "startedAtMs": 35677.248901,
+          "elapsedMs": 9.374213000002783
+        },
+        {
+          "stage": "provider-context-and-fixture-attach",
+          "status": "completed",
+          "startedAtMs": 35686.747967,
+          "elapsedMs": 180.0923599999951
+        },
+        {
+          "stage": "provider-navigation",
+          "status": "completed",
+          "startedAtMs": 35866.854783,
+          "elapsedMs": 4622.196226
+        },
+        {
+          "stage": "provider-viewer-readiness",
+          "status": "completed",
+          "startedAtMs": 40489.069764,
+          "elapsedMs": 2598.7945439999967
+        },
+        {
+          "stage": "provider-loading-readiness-and-clock-check",
+          "status": "completed",
+          "startedAtMs": 43087.880198,
+          "elapsedMs": 61.34761100000469
+        },
+        {
+          "stage": "provider-layer-and-camera-setup",
+          "status": "completed",
+          "startedAtMs": 43149.241404,
+          "elapsedMs": 10885.762799999997
+        },
+        {
+          "stage": "provider-population-readiness",
+          "status": "completed",
+          "startedAtMs": 54035.055239,
+          "elapsedMs": 13.36931000000186
+        },
+        {
+          "stage": "provider-fixture-delivery-and-home-pose",
+          "status": "completed",
+          "startedAtMs": 54048.442633,
+          "elapsedMs": 17.007746000002953
+        },
+        {
+          "stage": "tracking-and-camera-setup",
+          "status": "completed",
+          "startedAtMs": 54065.471538,
+          "elapsedMs": 5.166359000002558
+        },
+        {
+          "stage": "configured-wall-clock-warmup",
+          "status": "completed",
+          "startedAtMs": 54070.659518,
+          "elapsedMs": 1000.4741060000015
+        },
+        {
+          "stage": "fixture-warmup-clock-boundary",
+          "status": "completed",
+          "startedAtMs": 55071.456106,
+          "elapsedMs": 783.7137090000033
+        },
+        {
+          "stage": "warmup-completed-render-settle",
+          "status": "completed",
+          "startedAtMs": 55855.339392,
+          "elapsedMs": 5182.943644999999
+        },
+        {
+          "stage": "worker-blob-read-and-observer-restore",
+          "status": "completed",
+          "startedAtMs": 61038.466851,
+          "elapsedMs": 901.6824110000016
+        },
+        {
+          "stage": "worker-blob-validation",
+          "status": "completed",
+          "startedAtMs": 61940.370535,
+          "elapsedMs": 13.005657999994582
+        }
+      ]
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "durationMs": 6550.900000000023,
+      "renderedFrameCount": 3,
+      "frameIntervalMs": {
+        "p50": 74.40000000002328,
+        "p95": 3630.2999999999884,
+        "max": 3630.2999999999884,
+        "samples": 2,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 3618
+      },
+      "totalObjects": 7578,
+      "foregroundThroughout": true,
+      "setupStages": [
+        {
+          "stage": "fresh-provider-document-setup",
+          "status": "completed",
+          "startedAtMs": 86113.247016,
+          "elapsedMs": 14188.708798000007
+        },
+        {
+          "stage": "provider-context-and-fixture-attach",
+          "status": "completed",
+          "startedAtMs": 86113.272794,
+          "elapsedMs": 731.3519529999903
+        },
+        {
+          "stage": "provider-navigation",
+          "status": "completed",
+          "startedAtMs": 86844.642069,
+          "elapsedMs": 816.619715000008
+        },
+        {
+          "stage": "provider-viewer-readiness",
+          "status": "completed",
+          "startedAtMs": 87661.280409,
+          "elapsedMs": 3455.2761179999943
+        },
+        {
+          "stage": "provider-loading-readiness-and-clock-check",
+          "status": "completed",
+          "startedAtMs": 91116.575733,
+          "elapsedMs": 1493.6995949999982
+        },
+        {
+          "stage": "provider-layer-and-camera-setup",
+          "status": "completed",
+          "startedAtMs": 92610.295695,
+          "elapsedMs": 7350.643231000009
+        },
+        {
+          "stage": "provider-population-readiness",
+          "status": "completed",
+          "startedAtMs": 99960.965596,
+          "elapsedMs": 331.9728620000096
+        },
+        {
+          "stage": "provider-fixture-delivery-and-home-pose",
+          "status": "completed",
+          "startedAtMs": 100292.963454,
+          "elapsedMs": 8.983133000001544
+        },
+        {
+          "stage": "tracking-and-camera-setup",
+          "status": "completed",
+          "startedAtMs": 100301.967937,
+          "elapsedMs": 2.3158970000076806
+        },
+        {
+          "stage": "configured-wall-clock-warmup",
+          "status": "completed",
+          "startedAtMs": 100304.304352,
+          "elapsedMs": 1000.238725999996
+        },
+        {
+          "stage": "fixture-warmup-clock-boundary",
+          "status": "completed",
+          "startedAtMs": 101304.620082,
+          "elapsedMs": 3017.823967000004
+        },
+        {
+          "stage": "warmup-completed-render-settle",
+          "status": "completed",
+          "startedAtMs": 104322.482731,
+          "elapsedMs": 410.2681100000045
+        },
+        {
+          "stage": "worker-blob-read-and-observer-restore",
+          "status": "completed",
+          "startedAtMs": 104732.827855,
+          "elapsedMs": 733.2665450000059
+        },
+        {
+          "stage": "worker-blob-validation",
+          "status": "completed",
+          "startedAtMs": 105466.155534,
+          "elapsedMs": 8.65644199999224
+        }
+      ]
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "durationMs": 8046.5,
+      "renderedFrameCount": 3,
+      "frameIntervalMs": {
+        "p50": 3178.7999999999884,
+        "p95": 4845.299999999988,
+        "max": 4845.299999999988,
+        "samples": 2,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 3062
+      },
+      "totalObjects": 7578,
+      "foregroundThroughout": true,
+      "setupStages": [
+        {
+          "stage": "fresh-provider-document-setup",
+          "status": "completed",
+          "startedAtMs": 124840.755438,
+          "elapsedMs": 9372.934554000007
+        },
+        {
+          "stage": "provider-context-and-fixture-attach",
+          "status": "completed",
+          "startedAtMs": 124840.781186,
+          "elapsedMs": 714.1746640000056
+        },
+        {
+          "stage": "provider-navigation",
+          "status": "completed",
+          "startedAtMs": 125554.973753,
+          "elapsedMs": 767.3781160000071
+        },
+        {
+          "stage": "provider-viewer-readiness",
+          "status": "completed",
+          "startedAtMs": 126322.371295,
+          "elapsedMs": 3061.091981999998
+        },
+        {
+          "stage": "provider-loading-readiness-and-clock-check",
+          "status": "completed",
+          "startedAtMs": 129383.481852,
+          "elapsedMs": 11.353793000002042
+        },
+        {
+          "stage": "provider-layer-and-camera-setup",
+          "status": "completed",
+          "startedAtMs": 129394.848118,
+          "elapsedMs": 4788.210263999994
+        },
+        {
+          "stage": "provider-population-readiness",
+          "status": "completed",
+          "startedAtMs": 134183.085111,
+          "elapsedMs": 25.259033000009367
+        },
+        {
+          "stage": "provider-fixture-delivery-and-home-pose",
+          "status": "completed",
+          "startedAtMs": 134208.370864,
+          "elapsedMs": 5.310071000014432
+        },
+        {
+          "stage": "tracking-and-camera-setup",
+          "status": "completed",
+          "startedAtMs": 134213.702505,
+          "elapsedMs": 2.0028929999971297
+        },
+        {
+          "stage": "configured-wall-clock-warmup",
+          "status": "completed",
+          "startedAtMs": 134215.718271,
+          "elapsedMs": 1000.385042000009
+        },
+        {
+          "stage": "fixture-warmup-clock-boundary",
+          "status": "completed",
+          "startedAtMs": 135216.160139,
+          "elapsedMs": 2965.1690599999856
+        },
+        {
+          "stage": "warmup-completed-render-settle",
+          "status": "completed",
+          "startedAtMs": 138181.36178,
+          "elapsedMs": 5504.1841450000065
+        },
+        {
+          "stage": "worker-blob-read-and-observer-restore",
+          "status": "completed",
+          "startedAtMs": 143685.622407,
+          "elapsedMs": 4563.616220000025
+        },
+        {
+          "stage": "worker-blob-validation",
+          "status": "completed",
+          "startedAtMs": 148249.292017,
+          "elapsedMs": 8.778970000013942
+        }
+      ]
+    }
+  ],
+  "current": [
+    {
+      "sequence": 52,
+      "stage": "fresh-provider-document-setup",
+      "status": "failed",
+      "startedAtMs": 166843.068389,
+      "elapsedMs": 13200.288973000017,
+      "timeoutMs": null,
+      "errorName": "TargetCloseError"
+    },
+    {
+      "sequence": 53,
+      "stage": "provider-context-and-fixture-attach",
+      "status": "completed",
+      "startedAtMs": 166843.10061,
+      "elapsedMs": 751.5104620000056,
+      "timeoutMs": null,
+      "errorName": null
+    },
+    {
+      "sequence": 54,
+      "stage": "provider-navigation",
+      "status": "completed",
+      "startedAtMs": 167594.628966,
+      "elapsedMs": 777.8295410000137,
+      "timeoutMs": null,
+      "errorName": null
+    },
+    {
+      "sequence": 55,
+      "stage": "provider-viewer-readiness",
+      "status": "completed",
+      "startedAtMs": 168372.477572,
+      "elapsedMs": 3531.054422999994,
+      "timeoutMs": null,
+      "errorName": null
+    },
+    {
+      "sequence": 56,
+      "stage": "provider-loading-readiness-and-clock-check",
+      "status": "completed",
+      "startedAtMs": 171903.550389,
+      "elapsedMs": 1520.7479469999962,
+      "timeoutMs": null,
+      "errorName": null
+    },
+    {
+      "sequence": 57,
+      "stage": "provider-layer-and-camera-setup",
+      "status": "failed",
+      "startedAtMs": 173424.317762,
+      "elapsedMs": 6619.004324000009,
+      "timeoutMs": null,
+      "errorName": "TargetCloseError"
+    }
+  ],
+  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "dpr": 1
+  },
+  "drawingBuffer": {
+    "width": 1440,
+    "height": 900
+  },
+  "limitations": [
+    "Failed smoke; not a baseline/candidate performance comparison.",
+    "Stage durations are wall time, not CPU or GPU attribution.",
+    "Failure evidence is explicitly truncated.",
+    "Worker audits completed in each of the three captured samples; this run does not establish a worker stall."
+  ]
+}

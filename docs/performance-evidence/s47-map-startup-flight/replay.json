@@ -1,0 +1,67 @@
+{
+  "scope": "CPU-only actual Cesium Camera, TweenCollection and production flyToAustin with controlled timer/tween samples; no browser or GPU; does not identify the past hosted endpoint",
+  "revision": "d93f95b6285646169b241edfbf6af09b74f3d165",
+  "node": "v24.16.0",
+  "cesium": "1.138.0",
+  "sourceSha256": "44a93bc244a0f438b874a1606c4fbd2de5df82b03e88e5d3793cf253f0884649",
+  "routeId": "austin-map-rightward-v1",
+  "results": [
+    {
+      "startupPhase": "active",
+      "cancelFlightBeforeSetView": false,
+      "afterSetView": {
+        "longitude": -97.72000000000001,
+        "latitude": 30.27,
+        "heightM": 6000.000000000201,
+        "headingRadians": 6.283185307179586,
+        "pitchRadians": -1.5707963267948966
+      },
+      "afterNextTween": {
+        "longitude": -97.74309999999998,
+        "latitude": 30.267199999999985,
+        "heightM": 23474.999999995507,
+        "headingRadians": 0.016362461737447376,
+        "pitchRadians": -1.5053464798451106
+      },
+      "tweenCount": 1
+    },
+    {
+      "startupPhase": "active",
+      "cancelFlightBeforeSetView": true,
+      "afterSetView": {
+        "longitude": -97.72000000000001,
+        "latitude": 30.27,
+        "heightM": 6000.000000000201,
+        "headingRadians": 6.283185307179586,
+        "pitchRadians": -1.5707963267948966
+      },
+      "afterNextTween": {
+        "longitude": -97.72000000000001,
+        "latitude": 30.27,
+        "heightM": 6000.000000000201,
+        "headingRadians": 6.283185307179586,
+        "pitchRadians": -1.5707963267948966
+      },
+      "tweenCount": 0
+    },
+    {
+      "startupPhase": "pending",
+      "cancelFlightBeforeSetView": true,
+      "afterSetView": {
+        "longitude": -97.72000000000001,
+        "latitude": 30.27,
+        "heightM": 6000.000000000201,
+        "headingRadians": 6.283185307179586,
+        "pitchRadians": -1.5707963267948966
+      },
+      "afterNextTween": {
+        "longitude": -97.72144375000006,
+        "latitude": 30.269825000000008,
+        "heightM": 5662.500000000449,
+        "headingRadians": 0.016362461737447376,
+        "pitchRadians": -1.5053464798451088
+      },
+      "tweenCount": 1
+    }
+  ]
+}

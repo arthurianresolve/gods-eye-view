@@ -1,0 +1,30 @@
+{
+  "run": 38430700214,
+  "commit": "c7c47245f96e4839312983e8bcbba1da57948b4e",
+  "selectedJobs": 7,
+  "selectedJobsPassed": 7,
+  "recoveryChecksPerOs": 5,
+  "hardwareRenderingValidated": false,
+  "artifacts": [
+    {
+      "file": "run.json",
+      "bytes": 24931,
+      "sha256": "198d62076d1b08649a1945b6919158e8cc858fde9fdbdafaed75acd0bb99157e"
+    },
+    {
+      "file": "linux/profile-recovery.json",
+      "bytes": 17279,
+      "sha256": "ccfbe538bc984b6bfcae622421a478d051d6ad8b5ad413b068150029f0c967d1"
+    },
+    {
+      "file": "macos/profile-recovery.json",
+      "bytes": 18664,
+      "sha256": "e886354ecf9845b4f365a5a02f80a82fae302d4c00c5cc83c02413c3a0a0b7d4"
+    },
+    {
+      "file": "windows/profile-recovery.json",
+      "bytes": 24163,
+      "sha256": "59c2a526f4d5d6e601d63fe72e350793e081d1532079a703b783829be7823c0b"
+    }
+  ]
+}

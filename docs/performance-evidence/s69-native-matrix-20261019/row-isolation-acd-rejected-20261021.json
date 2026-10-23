@@ -1,0 +1,97 @@
+{
+  "schema": "gev-current-acd-row-isolation-disposition/v1",
+  "createdAt": "2026-10-21T09:58:00.277Z",
+  "status": "rejected-no-consistent-warm-benefit",
+  "acceptanceEligible": false,
+  "runtimeChangesAdopted": false,
+  "productionChanged": false,
+  "applicationCommit": "acd65cc680c2728e41b0796e2274f6afb25018aa",
+  "qaCommit": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "planSha256": "26b2cc1f98d8844310da984f2deb96d72db1e3f31438d119042d07a596c3b9f6",
+  "resultSha256": "2ab959c9f05b4268ea31743314aad23692f7549898047bfae67742bfba3a7586",
+  "variants": [
+    {
+      "id": "control",
+      "nativeMs": [
+        352,
+        112,
+        112,
+        48,
+        144,
+        48
+      ],
+      "readinessMs": [
+        197.4,
+        71.9,
+        34.9,
+        33,
+        37.7,
+        33.5
+      ],
+      "renderedMs": [
+        200.6,
+        74.2,
+        36.8,
+        37,
+        39.6,
+        37.9
+      ],
+      "normalClose": true,
+      "ownedStyleRemoved": true,
+      "foreground": "completed"
+    },
+    {
+      "id": "rowPromotion",
+      "nativeMs": [
+        312,
+        64,
+        112,
+        48,
+        112,
+        48
+      ],
+      "readinessMs": [
+        189.5,
+        33.3,
+        32.4,
+        33,
+        35.2,
+        34.5
+      ],
+      "renderedMs": [
+        191.9,
+        36.5,
+        34.5,
+        38.8,
+        37.2,
+        37.1
+      ],
+      "normalClose": true,
+      "ownedStyleRemoved": true,
+      "foreground": "completed"
+    }
+  ],
+  "predeclaredRule": "Both prototype warm ON durations must be lower than their paired control values.",
+  "warmOnComparisons": [
+    {
+      "control": 112,
+      "prototype": 112,
+      "improved": false
+    },
+    {
+      "control": 144,
+      "prototype": 112,
+      "improved": true
+    }
+  ],
+  "decision": "Reject row isolation on current acd schedule. One warm ON improves and one is unchanged; both prototype warm ON values remain112ms. No adopted runtime patch, formal20sample acceptance, broad matrix or final soak follows from this result. Keep the independent100ms native gate and visual/readiness gates.",
+  "scope": "One uninstrumented six-action acquisition per role with same build/fixtures/settings, no retries. Cold pair retained. This does not prove a112ms hardware floor or the unique cause of all remaining latency.",
+  "dispositionSha256": "1bc3103d6ca98a3751e95962331bc7220d6cf26033fe5cefbcd031a434096224",
+  "vmArchive": {
+    "name": "row-isolation-acd-comparison-20261021-analysis",
+    "fileCount": 13,
+    "totalBytes": 1450955,
+    "independentReadback": true,
+    "transferReceiptSha256": "9aade991e636588e3447a8e1238ca2c8508ad047525135f7921e1167348315f5"
+  }
+}

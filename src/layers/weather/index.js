@@ -50,6 +50,15 @@ const utc = (value) =>
     ? `${formatUtcDayMonth(value)} ${value.slice(11, 16)} UTC`
     : t('Unavailable');
 
+const sameManifest = (previous, next) =>
+  previous?.product === next.product &&
+  previous.latest === next.latest &&
+  previous.times.length === next.times.length &&
+  previous.times.every((time, index) => time === next.times[index]) &&
+  ['west', 'south', 'east', 'north'].every(
+    (key) => previous.bounds[key] === next.bounds[key],
+  );
+
 /** A per-application observation layer, using the existing layer lifecycle and
  * row controls. History is transient: shared links always open latest imagery. */
 export function createWeatherLayer({
@@ -369,10 +378,22 @@ export function createWeatherLayer({
           stop();
           return true;
         }
+        // Polling unchanged metadata must not restart the shared clock's
+        // pending observation in every product. Keep failed/missing frames
+        // eligible for retry, and let changed manifests recalculate selection.
+        const clockState = clock?.getState();
+        const preserveHistory =
+          clockState?.mode === 'history' &&
+          sameManifest(manifest, snapshot) &&
+          !error &&
+          !rendering.getDiagnostics().error &&
+          ((frameRequest && !frameRequest.signal.aborted) ||
+            noFrame ||
+            shownTime() === clock.selectFor(id, clockState.target));
         manifest = snapshot;
         error = null;
         if (clock) {
-          await clock.refresh();
+          if (!preserveHistory) await clock.refresh();
           if (
             isLatest() &&
             request === controller &&

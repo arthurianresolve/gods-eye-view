@@ -1,0 +1,60 @@
+{
+  "testedCommit": "e0a13cc6f7a6be11fa45e19bd911dc5b3022d7fa",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38149943934",
+  "reviewedAt": "2026-10-11T15:27:11.095Z",
+  "codeImplemented": true,
+  "automaticallyValidated": true,
+  "hardwareValidated": false,
+  "ciJobsPassed": [
+    "Windows onboarding",
+    "Street Level browser gate",
+    "Install and update recovery (macos-latest)",
+    "Install and update recovery (ubuntu-latest)",
+    "Node 24.14.0",
+    "Node 26.x",
+    "Install and update recovery (windows-latest)"
+  ],
+  "runSha256": "411b591580b002d3e94fece03b06df0b846afdef1e0ef5a7e05201447c9275a2",
+  "recovery": [
+    {
+      "platform": "windows",
+      "checks": 5,
+      "browserVersion": "Chrome/152.0.7977.75",
+      "node": "v24.14.0",
+      "closeElapsedMs": {
+        "min": 335.88280000002123,
+        "max": 1159.2831000000006
+      },
+      "sha256": "e5a26f29978b3782adbdf31ffe3197ae1953453116c0e20e285a505235fd09f7"
+    },
+    {
+      "platform": "macos",
+      "checks": 5,
+      "browserVersion": "Chrome/152.0.7977.75",
+      "node": "v24.14.0",
+      "closeElapsedMs": {
+        "min": 748.273291999998,
+        "max": 1322.0756249999977
+      },
+      "sha256": "7c80c6e4b068517852cd2a2d40f1cbbcc9e897450c85ffd7835753e4dcc15e89"
+    },
+    {
+      "platform": "linux",
+      "checks": 5,
+      "browserVersion": "Chrome/152.0.7977.75",
+      "node": "v24.14.0",
+      "closeElapsedMs": {
+        "min": 360.2550459999911,
+        "max": 775.6161060000013
+      },
+      "sha256": "7c0bbb362244a8e981d1afd09e27cb48c1228cdcbbe392c2d908ee88f2904b76"
+    }
+  ],
+  "limitations": [
+    "Hosted recovery uses software rendering; it is not physical GPU evidence.",
+    "No weather GPU speedup, retained-heap plateau, or 60-minute soak acceptance is claimed.",
+    "Published layer-token checks are PR-only and were skipped on this workflow dispatch; no layer token allocation changed.",
+    "This success does not establish the root cause of earlier intermittent Windows shutdown timeouts.",
+    "The browser journey job succeeded; its workflow uploads diagnostic artifacts only on failure, so job/step results are retained without claiming screenshot review."
+  ]
+}

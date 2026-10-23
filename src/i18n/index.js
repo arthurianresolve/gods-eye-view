@@ -16,17 +16,67 @@ import {
   normalizeLocale,
   writeStoredLocale,
 } from './locale.js';
-import es from './locales/es.json' with { type: 'json' };
-import ru from './locales/ru.json' with { type: 'json' };
-import zhCN from './locales/zh-CN.json' with { type: 'json' };
-
-const CATALOGS = Object.freeze({ es, ru, 'zh-CN': zhCN });
+const CATALOGS = { en: null };
+const LOADERS = Object.freeze({
+  es: () => import('./locales/es.json', { with: { type: 'json' } }),
+  ru: () => import('./locales/ru.json', { with: { type: 'json' } }),
+  'zh-CN': () => import('./locales/zh-CN.json', { with: { type: 'json' } }),
+});
+const pendingLoads = new Map();
 
 let currentLocale = DEFAULT_LOCALE;
+let requestedLocale = DEFAULT_LOCALE;
 
 /** The catalog for a locale; null for English and unknown codes. */
 export function getCatalog(locale) {
   return CATALOGS[normalizeLocale(locale)] ?? null;
+}
+
+/** Prepare a locale catalog before constructing UI. Concurrent requests coalesce. */
+export function prepareLocale(
+  locale,
+  { loaders = LOADERS, force = false } = {},
+) {
+  const normalized = normalizeLocale(locale) || DEFAULT_LOCALE;
+  requestedLocale = normalized;
+  if (normalized === DEFAULT_LOCALE || (CATALOGS[normalized] && !force)) {
+    setLocale(normalized);
+    return Promise.resolve(normalized);
+  }
+  if (pendingLoads.has(normalized)) {
+    // A repeated request is the latest preference even when another locale's
+    // load completed in between. Re-select it so the shared pending result
+    // installs only while it is still the active request.
+    setLocale(normalized);
+    return pendingLoads.get(normalized);
+  }
+  const loader = loaders[normalized];
+  if (typeof loader !== 'function')
+    return Promise.reject(new Error(`No catalog loader for ${normalized}`));
+  setLocale(normalized);
+  // Defer invocation into a promise so a synchronously throwing injected
+  // loader follows the same rejection and retry path as a dynamic import.
+  const load = Promise.resolve().then(loader);
+  const pending = load
+    .then((module) => {
+      CATALOGS[normalized] = module.default;
+      if (currentLocale === normalized) formatterCache.clear();
+      return normalized;
+    })
+    .catch((error) => {
+      if (currentLocale === normalized) {
+        setLocale(DEFAULT_LOCALE, { preserveRequested: true });
+      }
+      throw error;
+    })
+    .finally(() => pendingLoads.delete(normalized));
+  pendingLoads.set(normalized, pending);
+  return pending;
+}
+
+/** Retry a failed or superseded locale preparation explicitly. */
+export function retryLocalePreparation(locale = requestedLocale) {
+  return prepareLocale(locale);
 }
 
 /** Active locale. */
@@ -39,8 +89,9 @@ export function getLocale() {
  * applyDocumentTranslations to reflect it in the DOM.
  * @returns {string} The locale actually applied (normalized).
  */
-export function setLocale(locale) {
+export function setLocale(locale, { preserveRequested = false } = {}) {
   const normalized = normalizeLocale(locale) || DEFAULT_LOCALE;
+  if (!preserveRequested) requestedLocale = normalized;
   if (normalized !== currentLocale) {
     currentLocale = normalized;
     formatterCache.clear();

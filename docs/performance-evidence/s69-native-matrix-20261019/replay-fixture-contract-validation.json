@@ -1,0 +1,54 @@
+{
+  "schema": "gev-replay-fixture-contract-validation/v1",
+  "startedAt": "2026-10-19T17:02:10.771Z",
+  "baseCommit": "d7bb1b97adb7586286962a9193cc124521461540",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "sha256": "914d7c38313c6d514903c9b5e3d82560b3a3061f930c5ddaf171a35171444aa2"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.mjs",
+      "sha256": "d0e14e1a7444be4c3e289836317be3a5be612189d9188cb589b942658f45a404"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "sha256": "d6deafc14b0e98189fd7b2fd321cd2ffcc4edcad1a26d838ceea89fd4cbf551f"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "629742d89eed5d031d5c672324837d129d000399068d1b0e9e25de5fc80f2312",
+      "summary": [
+        "ℹ tests 19",
+        "ℹ pass 19",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 239.493309"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "ae07967c32c83576481cfb23725af62482613486e18b5f191cbb3a7ac27fe0ab",
+      "summary": [
+        "ℹ tests 19",
+        "ℹ pass 19",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 241.953201"
+      ]
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/replay-fixture-contract-review-20261019",
+  "scope": "Fixture snapshots=4; actual retained rows=5 including one altitude correction. Application and fixture bytes unchanged. No latency or heap threshold changes.",
+  "completedAt": "2026-10-19T17:02:11.729Z"
+}

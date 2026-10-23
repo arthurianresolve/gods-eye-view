@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { setLocale, getCatalog } from '../../i18n/index.js';
+import { prepareLocale, setLocale, getCatalog } from '../../i18n/index.js';
 import { installationClassLabel } from './classLabel.js';
 
 const pack = JSON.parse(
@@ -16,6 +16,7 @@ const pack = JSON.parse(
   ),
 );
 
+await Promise.all([prepareLocale('es'), prepareLocale('ru')]);
 setLocale('en');
 const englishLabel = Object.fromEntries(
   pack.classes.map((c) => [c, installationClassLabel(c)]),

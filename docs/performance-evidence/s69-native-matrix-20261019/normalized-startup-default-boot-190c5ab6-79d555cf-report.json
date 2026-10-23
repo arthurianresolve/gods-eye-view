@@ -1,0 +1,201 @@
+{
+  "schema": "gev-normalized-startup-evidence/v1",
+  "scope": "prospective default-empty-layer application startup confirmation only",
+  "application": {
+    "controlCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+    "captureProducerCommit": "79d555cfb262fe3357ac575fdf45da1c7cfd1e16",
+    "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9"
+  },
+  "sourceEvidence": {
+    "localEvidenceRoot": "../gev-s61-evidence-19065997/infrastructure-dams-startup-default-boot-190c5ab6-79d555cf",
+    "vmArchive": "task/startup-default-boot-190c5ab6-79d555cf-complete-20261020",
+    "plan": {
+      "path": "plan.json",
+      "sha256": "f5d8ef165f22d39ffef518eaddd8a12032607df8eeb37949a91f710fbb95f43d"
+    },
+    "envelope": {
+      "path": "envelope.json",
+      "sha256": "b337476903b566cbba0689cc5dfcbdd6a7dfe5fef3883960cdf6dfa2bffd2104"
+    },
+    "process": {
+      "path": "process.json",
+      "sha256": "6a5082ca9af6b4c7c560d5810759f671ffc20142fd9f7e276794baeb67071d86"
+    },
+    "review": {
+      "path": "review.json",
+      "sha256": "d78f1967fed80b5e4916de4a4dbb46f9d878548e6bd3d17dac5279161fa26ee5"
+    },
+    "independentVmReadback": {
+      "path": "qa-artifacts/qa79-prospective-startup-independent-readback.json",
+      "status": "measured",
+      "sha256": "1c260bd437c3d72f8c50c3a4028c0d8677773c07c9915d29370cd3d6c6ab2a37",
+      "sourceProofSha256": "4733525574a5f40bdf1353974b993a8a0d4c1ca852f3654dd5e3feb0b070d563",
+      "sourceCommit": "79d555cfb262fe3357ac575fdf45da1c7cfd1e16",
+      "sourceFiles": 141,
+      "rawFiles": 45,
+      "reviewerSha256": "9d2ef0d0d6bfcf00947c086eb17af8e28eecebe6fcd34e68877e67758d063cc5"
+    }
+  },
+  "qualification": {
+    "producerReviewStatus": "passed",
+    "independentVmReview": "measured",
+    "confirmationOnly": true,
+    "motionEligible": false,
+    "comparisonEligible": false,
+    "thresholdPct": 10,
+    "order": [
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate"
+    ],
+    "method": "page-observed-after-foreground-v1",
+    "measurement": "navigation-to-page-observed-viewer-and-loader-hidden",
+    "timingSemantics": "performance.now at first page-predicate observation: an upper bound on state availability, not exact publication or first visible render; page and host clocks are validated independently",
+    "startupOnly": true
+  },
+  "conditions": {
+    "workload": "infrastructure-dams",
+    "startupView": "empty-layer default Austin cinematic view; no dam layer activation is measured",
+    "providerResponses": "live original provider responses; no synthetic provider payloads",
+    "clock": "2026-10-08T12:00:00Z",
+    "locale": "en",
+    "camera": "unmodified production default Austin cinematic path",
+    "browser": "Chrome/155.0.8059.84",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "platform": "Win32",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 1800
+    },
+    "nativeSharpnessProfile": "native-sharpness-v1",
+    "settings": {
+      "qualityMode": "manual",
+      "detectionMode": "DENSE",
+      "densityPct": 75,
+      "map": "esri-imagery",
+      "antialias": true,
+      "msaaSamples": 4,
+      "fxaa": false,
+      "bloom": false,
+      "sharpen": true,
+      "sharpenIntensity": 49
+    },
+    "cacheDisabled": true,
+    "foreground": "confirmed before navigation and at page observations"
+  },
+  "results": {
+    "appReady": {
+      "controlMedianMs": 3351.2000000029802,
+      "candidateMedianMs": 3531.5999999940395,
+      "changePct": 5.3831463353693865,
+      "regressionOver10Pct": false
+    },
+    "loadingScreenHidden": {
+      "controlMedianMs": 4562,
+      "candidateMedianMs": 4561,
+      "changePct": -0.021920210434020166,
+      "regressionOver10Pct": false
+    },
+    "samples": [
+      {
+        "slot": "startup-01",
+        "role": "control",
+        "appReadyMs": 3351.2,
+        "loadingHiddenMs": 4727.7,
+        "sha256": "f37658fe2d313b801b619fd62bcdabc424ba97063ad4094b35a792861a1e1317"
+      },
+      {
+        "slot": "startup-02",
+        "role": "candidate",
+        "appReadyMs": 3351.2,
+        "loadingHiddenMs": 4561.0,
+        "sha256": "707c720ca2f4553b7d6738ff54787e625e56d1a57208ae31ed292cdb2e704809"
+      },
+      {
+        "slot": "startup-03",
+        "role": "candidate",
+        "appReadyMs": 3301.2,
+        "loadingHiddenMs": 4461.4,
+        "sha256": "0d201833c363300710b8d1d35f3a249ab3a72ca1d1f8c8689dd6979cdf75a732"
+      },
+      {
+        "slot": "startup-04",
+        "role": "control",
+        "appReadyMs": 2879.5,
+        "loadingHiddenMs": 4052.9,
+        "sha256": "32304689750b8e3dd788d16ead56901808fcc816b7815fa93c10991cd95c8148"
+      },
+      {
+        "slot": "startup-05",
+        "role": "control",
+        "appReadyMs": 3243.9,
+        "loadingHiddenMs": 4393.0,
+        "sha256": "7c40b35d7a3c23f68284b8040a0bd1f4625efd92f2de49c0b55908ce7a2a9c91"
+      },
+      {
+        "slot": "startup-06",
+        "role": "candidate",
+        "appReadyMs": 3875.8,
+        "loadingHiddenMs": 5083.7,
+        "sha256": "e28139e2263c3e9bfc39adcdfd58125607eb8a9953d6984184fe289d1710e0da"
+      },
+      {
+        "slot": "startup-07",
+        "role": "candidate",
+        "appReadyMs": 4035.6,
+        "loadingHiddenMs": 4988.6,
+        "sha256": "835f4d05aa0ac8ffc6480138df5bad58ce8419b37f890a386a2e68412c65c7dd"
+      },
+      {
+        "slot": "startup-08",
+        "role": "control",
+        "appReadyMs": 7172.5,
+        "loadingHiddenMs": 8502.4,
+        "sha256": "1b6afbe9cdbb4474a56cef181cc3cfc1d3255a0aa235ea93f979a0d5c587443a"
+      },
+      {
+        "slot": "startup-09",
+        "role": "control",
+        "appReadyMs": 3522.5,
+        "loadingHiddenMs": 4562.0,
+        "sha256": "f142b8808ab93c2f4393401358e4e3a6e961538164f1ef5fd7dff2889420350b"
+      },
+      {
+        "slot": "startup-10",
+        "role": "candidate",
+        "appReadyMs": 3531.6,
+        "loadingHiddenMs": 4510.7,
+        "sha256": "7bbb8c5f850dbff2fde53af5d258c0e257f2011d98ea6fa92495f5643522e36d"
+      }
+    ]
+  },
+  "historicalFailure": {
+    "status": "retained-failure",
+    "path": "infrastructure-dams-startup-page-observed-190c5ab6-14201a7f-map-pinned",
+    "planSha256": "40fb65ad62cc0cb2a147eabe7ae8a1f2a19334dc5bbce5034b4cebde663e6552",
+    "independentReviewSha256": "a2ee4875f9cddd661fe357955b36520724ca851eefc13ca1268642d1ed06eb3e",
+    "measurement": "navigation-to-page-observed-viewer-and-loader-hidden",
+    "method": "page-observed-after-foreground-v1",
+    "appReadyChangePct": 28.533106809328736,
+    "loadingHiddenChangePct": 26.458249735375077,
+    "interpretation": "The original live-provider comparison remains failed. This prospective confirmation does not rewrite, replace, subtract from, or retroactively pass that result."
+  },
+  "limits": [
+    "Startup-only evidence; does not measure dam-layer activation, motion, or full mixed-use retention.",
+    "Page-observed readiness values are upper bounds on predicate availability, not exact publication or first rendered presentation.",
+    "Independent sealed VM review remains pending."
+  ]
+}

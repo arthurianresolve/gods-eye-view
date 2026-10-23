@@ -1,0 +1,19 @@
+{
+  "baselineCommit": "acc471e4afb4ff629244ec37caf2836b6aef89ef",
+  "testSha256": "21208d7ec897c442a6042a4f5fe9a498326d2eff5e4b9d9cb1e6872b42fa2692",
+  "baselineExitCode": 1,
+  "timedOut": false,
+  "failures": [
+    "not ok 1 - overlapping same-revision _updateSummary calls share context and service work",
+    "not ok 2 - an active request skips a changed-camera context until the old request settles",
+    "not ok 3 - a request rejection after a revision change cannot reset newer state",
+    "not ok 4 - destroy before the scheduled build starts prevents scene work",
+    "not ok 5 - destroy after context starts prevents late service work and painting",
+    "# tests 5",
+    "# pass 0",
+    "# fail 5",
+    "# cancelled 0",
+    "# skipped 0"
+  ],
+  "scope": "Actual HUD integration regressions only; mocked context/service, not GPU or latency evidence"
+}

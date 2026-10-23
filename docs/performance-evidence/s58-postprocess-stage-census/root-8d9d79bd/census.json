@@ -1,0 +1,458 @@
+{
+  "schemaVersion": 1,
+  "fixture": {
+    "id": "s58-visual-effects-stage-census-v1",
+    "engine": "Cesium-1.138.0",
+    "path": "VisualSettings.setStyle -> VisualEffects -> real Cesium PostProcessStageCollection; UI boundary stubbed",
+    "selectedStyleSequence": [
+      "normal",
+      "noir",
+      "thermal"
+    ],
+    "transitionDurationMs": 500,
+    "crossfadeSamplesMs": [
+      250,
+      500
+    ],
+    "finalEffects": {
+      "bloomEnabled": true,
+      "bloomIntensity": 100,
+      "sharpenEnabled": true
+    },
+    "observation": "stage ownership/enabled state only; no collection update or WebGL context",
+    "sha256": "fc1ff2fe71c4e1f4257bbb160f7aa9dd5b34320b33c4089fedea19783151a2f1"
+  },
+  "identity": {
+    "source": {
+      "commit": "8d9d79bd62badae6fcecb69304fd6b6aaa02c3b7",
+      "dirty": false,
+      "files": {
+        "src/ui/visualEffects.js": "f593d95d3318b9b346395e7bdb44d11f07d522b3049c2aebcade95ea2b269309",
+        "src/ui/visualSettings.js": "0f452418d98c3973b4d0e798d048afd0a61acca16e11febb7039365df9585716",
+        "src/ui/visualPresets.js": "0bb852d077c2740db505dac0d3a6288d44a3de00fc5abb82ff57b37f97886a70",
+        "package-lock.json": "632eab4fec411920456fe4da43a3564d5cdfe0eb0bfa6b66e862c1465217fd36",
+        "scripts/performance/s58PostProcessStageCensus.mjs": "58e8595ee59a2dd85eb4af0c3cdee6b893c3d3b9427d213a019963b2e9bdcea2"
+      }
+    },
+    "cesiumVersion": "1.138.0"
+  },
+  "timeline": [
+    {
+      "label": "initialized-normal",
+      "selectedStyle": "normal",
+      "expectedEnabledStyles": [],
+      "enabledStyles": [],
+      "styleStages": [
+        {
+          "name": "retro",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "surveillance",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "thermal",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "anime",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "noir",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "snow",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        }
+      ],
+      "styleStageCount": 6,
+      "enabledStyleContributionCount": 0,
+      "sharpen": {
+        "nativeStage": true,
+        "inCollection": true,
+        "enabled": false,
+        "amount": 1.08
+      },
+      "borrowedBloom": {
+        "enabled": false,
+        "intensity": 0
+      },
+      "transitionCount": 0,
+      "collectionLength": 7
+    },
+    {
+      "label": "normal-to-noir-midpoint",
+      "selectedStyle": "noir",
+      "expectedEnabledStyles": [
+        "noir"
+      ],
+      "enabledStyles": [
+        "noir"
+      ],
+      "styleStages": [
+        {
+          "name": "retro",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "surveillance",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "thermal",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "anime",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "noir",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": true,
+          "intensity": 0.5,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "snow",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        }
+      ],
+      "styleStageCount": 6,
+      "enabledStyleContributionCount": 1,
+      "sharpen": {
+        "nativeStage": true,
+        "inCollection": true,
+        "enabled": false,
+        "amount": 1.08
+      },
+      "borrowedBloom": {
+        "enabled": false,
+        "intensity": 0
+      },
+      "transitionCount": 1,
+      "collectionLength": 7
+    },
+    {
+      "label": "settled-noir",
+      "selectedStyle": "noir",
+      "expectedEnabledStyles": [
+        "noir"
+      ],
+      "enabledStyles": [
+        "noir"
+      ],
+      "styleStages": [
+        {
+          "name": "retro",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "surveillance",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "thermal",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "anime",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "noir",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": true,
+          "intensity": 1,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "snow",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        }
+      ],
+      "styleStageCount": 6,
+      "enabledStyleContributionCount": 1,
+      "sharpen": {
+        "nativeStage": true,
+        "inCollection": true,
+        "enabled": false,
+        "amount": 1.08
+      },
+      "borrowedBloom": {
+        "enabled": false,
+        "intensity": 0
+      },
+      "transitionCount": 0,
+      "collectionLength": 7
+    },
+    {
+      "label": "noir-to-thermal-crossfade",
+      "selectedStyle": "thermal",
+      "expectedEnabledStyles": [
+        "noir",
+        "thermal"
+      ],
+      "enabledStyles": [
+        "noir",
+        "thermal"
+      ],
+      "styleStages": [
+        {
+          "name": "retro",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "surveillance",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "thermal",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": true,
+          "intensity": 0.5,
+          "animated": true,
+          "time": 0.75
+        },
+        {
+          "name": "anime",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "noir",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": true,
+          "intensity": 0.5,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "snow",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        }
+      ],
+      "styleStageCount": 6,
+      "enabledStyleContributionCount": 2,
+      "sharpen": {
+        "nativeStage": true,
+        "inCollection": true,
+        "enabled": false,
+        "amount": 1.08
+      },
+      "borrowedBloom": {
+        "enabled": false,
+        "intensity": 0
+      },
+      "transitionCount": 2,
+      "collectionLength": 7
+    },
+    {
+      "label": "settled-thermal-with-effects",
+      "selectedStyle": "thermal",
+      "expectedEnabledStyles": [
+        "thermal"
+      ],
+      "enabledStyles": [
+        "thermal"
+      ],
+      "styleStages": [
+        {
+          "name": "retro",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "surveillance",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        },
+        {
+          "name": "thermal",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": true,
+          "intensity": 1,
+          "animated": true,
+          "time": 1
+        },
+        {
+          "name": "anime",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "noir",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": false,
+          "time": null
+        },
+        {
+          "name": "snow",
+          "nativeStage": true,
+          "inCollection": true,
+          "enabled": false,
+          "intensity": 0,
+          "animated": true,
+          "time": 0
+        }
+      ],
+      "styleStageCount": 6,
+      "enabledStyleContributionCount": 1,
+      "sharpen": {
+        "nativeStage": true,
+        "inCollection": true,
+        "enabled": true,
+        "amount": 1.08
+      },
+      "borrowedBloom": {
+        "enabled": true,
+        "intensity": 100
+      },
+      "transitionCount": 0,
+      "collectionLength": 7
+    }
+  ],
+  "ownership": {
+    "beforeDestroy": {
+      "pendingAnimationFrames": 1,
+      "renderHolds": [
+        "style-anim"
+      ],
+      "ownedStageCount": 7
+    },
+    "afterDestroy": {
+      "collectionLength": 0,
+      "pendingAnimationFrames": 0,
+      "renderHolds": [],
+      "bloomRestored": true
+    }
+  },
+  "renderedFrames": null,
+  "gpuPassCount": null,
+  "shaderCompilation": null,
+  "scope": "Enabled stage ownership only. No WebGL, stage collection update, rendered pixels, or GPU pass measurement."
+}

@@ -1,0 +1,75 @@
+import assert from 'node:assert/strict';
+import { readFileSync, writeFileSync, cpSync, mkdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+const stage = 'qa-artifacts/s52-paint-stage-rebased-936bd/didpaint-signature-prototype-01/candidate';
+const output = 'qa-artifacts/s52-self-unregister-review-02';
+const sha = b => createHash('sha256').update(b).digest('hex');
+const candidate = readFileSync(`${stage}/src/overlays/worldOverlay.js`);
+assert.equal(sha(candidate), '89962db8616688264abb552268965cbb6657a66fa401d13fea1ce07a23b868e5');
+const appendix = `
+test('root paint cache clears pixels after a shared painter unregisters itself', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('self-releasing-shared', [selectedEntry('retained-label', {
+    position: positionAtScreen(252, 174, 500, 360), title: 'LABEL', edgeFade: 'none',
+  })]);
+  let painter = registerWorldOverlayPaintLane('selected', (frame) => {
+    frame.ctx.fillRect(1, 2, 3, 4);
+    painter.unregister();
+  }, { id: 'self-releasing-marker', active: true, target: 'shared' });
+  env.postRender.raise();
+  const isMarker = ([name, ...args]) => name === 'fillRect' && JSON.stringify(args) === '[1,2,3,4]';
+  assert.ok(env.ctx.calls.some(isMarker), 'first frame draws the custom marker');
+  env.ctx.calls.length = 0;
+  env.advanceTime(16);
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name]) => name === 'clearRect'), 'next frame removes retired painter pixels');
+  assert.ok(env.ctx.calls.some(([name]) => name === 'fillText'), 'retained label is repainted after clear');
+  assert.equal(env.ctx.calls.some(isMarker), false, 'retired painter does not run again');
+});
+
+test('root paint cache observes a self-releasing late callback mutation on the next frame', (t) => {
+  const env = installMockEnvironment({ width: 500, height: 360, dpr: 1 });
+  t.after(() => env.cleanup());
+  initWorldOverlay(env.viewer);
+  setOverlayEntries('self-releasing-late', [selectedEntry('mutable-label', {
+    position: positionAtScreen(252, 174, 500, 360), title: 'ALPHA', edgeFade: 'none',
+  })]);
+  let painter = registerWorldOverlayPaintLane('tracked', () => {
+    const rect = getOverlayPaintRect('self-releasing-late', 'mutable-label');
+    assert.ok(rect?.entry, 'later callback sees the already painted label');
+    rect.entry.title = 'OMEGA';
+    painter.unregister();
+  }, { id: 'self-releasing-late-callback', active: true, target: 'detection' });
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name, text]) => name === 'fillText' && text === 'ALPHA'));
+  env.ctx.calls.length = 0;
+  env.advanceTime(16);
+  env.postRender.raise();
+  assert.ok(env.ctx.calls.some(([name, text]) => name === 'fillText' && text === 'OMEGA'), 'next frame paints the post-label mutation');
+});
+`;
+mkdirSync(output);
+writeFileSync(`${output}/regression.append.mjs.txt`, appendix, { flag: 'wx' });
+const rows = [];
+for (const [side, source, expectedExit, expectedFails] of [['production', readFileSync('src/overlays/worldOverlay.js'), 0, 0], ['prototype', candidate, 1, 2]]) {
+  const target = `${output}/${side}`;
+  cpSync(stage, target, { recursive: true });
+  writeFileSync(`${target}/src/overlays/worldOverlay.js`, source);
+  const test = `${target}/src/overlays/worldOverlay.test.mjs`;
+  writeFileSync(test, Buffer.concat([readFileSync(test), Buffer.from(appendix)]));
+  const result = spawnSync(process.execPath, ['--test', '--test-reporter=tap', '--test-name-pattern=root paint cache', test], { encoding: 'utf8', timeout: 60_000, maxBuffer: 1e7 });
+  if (result.error) throw result.error;
+  writeFileSync(`${output}/${side}.stdout.txt`, result.stdout, { flag: 'wx' });
+  writeFileSync(`${output}/${side}.stderr.txt`, result.stderr, { flag: 'wx' });
+  assert.equal(result.status, expectedExit, result.stdout + result.stderr);
+  const failures = [...result.stdout.matchAll(/^not ok \d+ - (.+)$/gm)].map(m => m[1]);
+  assert.equal(failures.length, expectedFails, result.stdout);
+  assert.match(result.stdout, /^# tests 2$/m);
+  rows.push({ side, sourceSha256: sha(source), stdoutSha256: sha(Buffer.from(result.stdout)), stderrSha256: sha(Buffer.from(result.stderr)), exitCode: result.status, failures });
+}
+const report = { schema: 'gev-paint-self-unregister-failure-control/v1', node: process.version, platform: process.platform, scope: 'Unit command/output correctness, not native pixel or performance evidence.', diagnosis: 'Frame-end active painter counts do not prove the frame had no custom shared paint or post-label mutation. Self-unregistration hides both from cache eligibility.', appendixSha256: sha(Buffer.from(appendix)), rows };
+writeFileSync(`${output}/review.json`, JSON.stringify(report, null, 2) + '\n', { flag: 'wx' });
+console.log(JSON.stringify(report));

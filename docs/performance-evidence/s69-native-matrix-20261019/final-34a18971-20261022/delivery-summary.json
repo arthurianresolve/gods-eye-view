@@ -1,0 +1,44 @@
+{
+  "schema": "gev-vm105-delivery-summary/v1",
+  "verifiedAt": "2026-10-22T17:10:00.000Z",
+  "candidateCommit": "34a1897150adf1c03eac72e04b9a9ec37fb09ba8",
+  "releaseCommit": "64fd4ea80a31927e070cd696cef8b877a7f038c0",
+  "gitTree": "1599f0d13d853549482d3e32a1d4cc6dca0bd860",
+  "archive": {
+    "sha256": "20e9352806096d3ef2e9529646cd6ab1ed9f3dc62b394b4428cbecbfe0255511",
+    "manifestFilesVerified": 2129,
+    "sidecarChecksum": "passed",
+    "githubAttestation": "passed"
+  },
+  "deployment": {
+    "target": "VM105",
+    "releaseDirectory": "/opt/gods-eye-view-releases/64fd4ea80a31927e070cd696cef8b877a7f038c0-verified",
+    "publicOrigin": "https://vision.macarthur.systems",
+    "publicIndexSha256": "a59795afefa75d50336145ee3202dca90f6832749bd7327085a61222e807d46c",
+    "serviceActive": true,
+    "allowedHostStatus": 200,
+    "unapprovedHostStatus": 403
+  },
+  "workspaceJourney": {
+    "outcome": "passed",
+    "afterRollbackRestore": true,
+    "checks": [
+      "save-as",
+      "duplicate-and-open",
+      "stale-two-tab-conflict",
+      "reload-and-reopen",
+      "command-palette",
+      "geojson-preview-apply-save-reload",
+      "synthetic-demo",
+      "cross-tab-indexeddb-conflict"
+    ]
+  },
+  "publicProviderSecurity": {
+    "mapillaryStatus": 403,
+    "tomtomStatus": 403,
+    "firmsStatus": 200,
+    "windStatus": 200,
+    "policy": "cost-bearing reverse-proxy routes retain documented same-site refusal"
+  },
+  "rollbackRestore": "passed"
+}

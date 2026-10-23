@@ -1,0 +1,205 @@
+{
+  "schema": "s52-cable-scalar-subgroup-controls/v1",
+  "scope": "Diagnostic-only cable160 capture controls. Every source forces canReuseSharedPaint false identically; each control omits exactly the named snapshot writes. Normal candidate generation, presentation, solve and painting remain active. Omitted snapshot values are not valid for reuse; this does not test visual correctness or a production cache mode.",
+  "referenceRuntimeSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+  "noReuseReferenceSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396",
+  "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+  "runnerSha256": "4ad9546471b8e87e779170b491817668eb7545e5b42296626ccadd9e3619c553",
+  "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "conditions": {
+    "profile": "submarine-cables",
+    "entries": 160,
+    "warmupFrames": 3000,
+    "stabilizationChunks": 6,
+    "chunkFrames": 48,
+    "measuredChunks": 10,
+    "order": [
+      "full-no-reuse-0",
+      "omit-keyhole-capture",
+      "full-no-reuse-1",
+      "omit-other-seven-numeric",
+      "full-no-reuse-2",
+      "omit-key-lane-selection-corner",
+      "full-no-reuse-3"
+    ]
+  },
+  "population": {
+    "candidates": 160,
+    "painted": 96,
+    "paintedBySource": {
+      "telegeography-submarine-cables": 96
+    }
+  },
+  "rows": [
+    {
+      "order": 0,
+      "name": "full-no-reuse-0",
+      "role": "reference",
+      "omitted": null,
+      "runtimeSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maxBytesPerFrame": 21496,
+      "chunkBytesPerFrame": [
+        20791,
+        20855,
+        20961,
+        21097.166666666668,
+        21405.166666666668,
+        21236,
+        21374.833333333332,
+        21496,
+        21198.666666666668,
+        20943.833333333332
+      ]
+    },
+    {
+      "order": 1,
+      "name": "omit-keyhole-capture",
+      "role": "control",
+      "omitted": "keyhole helper call and stored return",
+      "runtimeSha256": "46f0a456ed59a7c6310219220bcc6aa4721736d34059afa012d8a5b4c36ffce4",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "a77bc35892831ed93cc3fa9d263bd8dbb12e833fc55264119ccbca4e9a11e88e",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 17846,
+      "maxBytesPerFrame": 18120.666666666668,
+      "chunkBytesPerFrame": [
+        17543,
+        17566,
+        17633,
+        17697,
+        18120.666666666668,
+        17846,
+        17930.5,
+        18034.666666666668,
+        17876,
+        17672.666666666668
+      ]
+    },
+    {
+      "order": 2,
+      "name": "full-no-reuse-1",
+      "role": "reference",
+      "omitted": null,
+      "runtimeSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maxBytesPerFrame": 21496,
+      "chunkBytesPerFrame": [
+        20791,
+        20855,
+        20961,
+        21097.166666666668,
+        21405.166666666668,
+        21236,
+        21374.833333333332,
+        21496,
+        21198.666666666668,
+        20943.833333333332
+      ]
+    },
+    {
+      "order": 3,
+      "name": "omit-other-seven-numeric",
+      "role": "control",
+      "omitted": "seven numeric snapshot assignments excluding keyhole alpha",
+      "runtimeSha256": "6bc31258222071b4cc8cddc3ddd7a6225b24f0bc88238cb953906115542ce704",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maxBytesPerFrame": 21496,
+      "chunkBytesPerFrame": [
+        20791,
+        20855,
+        20961,
+        21097.166666666668,
+        21405.166666666668,
+        21236,
+        21374.833333333332,
+        21496,
+        21198.666666666668,
+        20943.833333333332
+      ]
+    },
+    {
+      "order": 4,
+      "name": "full-no-reuse-2",
+      "role": "reference",
+      "omitted": null,
+      "runtimeSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maxBytesPerFrame": 21496,
+      "chunkBytesPerFrame": [
+        20791,
+        20855,
+        20961,
+        21097.166666666668,
+        21405.166666666668,
+        21236,
+        21374.833333333332,
+        21496,
+        21198.666666666668,
+        20943.833333333332
+      ]
+    },
+    {
+      "order": 5,
+      "name": "omit-key-lane-selection-corner",
+      "role": "control",
+      "omitted": "key/lane/zIndex/selected/corner assignments",
+      "runtimeSha256": "81ad7807a3a71089df1080cfb0bb8ab0f81bb82e964454fdfd4a5d097c0ea375",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "9376ddf2ad8ec34cb9c178c7fd8633292dd02ca5c12bde641a6293ac86a90688",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maxBytesPerFrame": 21496,
+      "chunkBytesPerFrame": [
+        20764.833333333332,
+        20855,
+        20961,
+        21097.166666666668,
+        21405.166666666668,
+        21236,
+        21374.833333333332,
+        21496,
+        21198.666666666668,
+        20943.833333333332
+      ]
+    },
+    {
+      "order": 6,
+      "name": "full-no-reuse-3",
+      "role": "reference",
+      "omitted": null,
+      "runtimeSha256": "c900ef20ff5d2b33579adbf5a1ed593009a7cde186ad29b2e5314dc55459d396",
+      "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+      "stdoutSha256": "81993a7cad94cb74103eb98500f9e31e07cc5d5949d83e8caa0edd1cd2e7f4f7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "medianBytesPerFrame": 21198.666666666668,
+      "maxBytesPerFrame": 21496,
+      "chunkBytesPerFrame": [
+        20791,
+        20855,
+        20961,
+        21097.166666666668,
+        21405.166666666668,
+        21236,
+        21374.833333333332,
+        21496,
+        21198.666666666668,
+        20943.833333333332
+      ]
+    }
+  ]
+}

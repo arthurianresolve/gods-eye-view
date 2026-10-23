@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "scope": "independently recomputed diagnostic; not performance acceptance",
+  "candidateCommit": "552d1144c2dc24780449dabe56f9ee50f9d8c3e2",
+  "reportSha256": "adba009a25b8c4ebff9d50a7b4761848560120fab5299d086a409e5e381a27d4",
+  "reviewerScriptSha256": "eb29eed8954d89c6e3c417db28bf0d6e8bdd20a538bd3214a2a3baea0d54f2b4",
+  "nodeCount": 167,
+  "sampleCount": 463,
+  "nodeSelfSizeBytes": 7825824,
+  "sampleSizeBytes": 7828108,
+  "loadElapsedMs": 24,
+  "sameThreadGcOverlapMs": 5.601,
+  "otherThreadGcOverlapMs": 3.133,
+  "naturalBrowserCloseMs": 975.798041,
+  "performanceAcceptanceEligible": false
+}

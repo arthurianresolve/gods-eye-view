@@ -1,0 +1,173 @@
+{
+  "schema": "gev-s69-ground-sampling-qualification-review/v1",
+  "createdAt": "2026-10-22T11:52:53.277Z",
+  "status": "implementation-validated-hardware-acceptance-failed",
+  "candidate": "5ac868ef1e7fe8eee61ea6de99b2836416db2085",
+  "control": "76cc760b384da27e7cfc848a76f317112574826a",
+  "environment": {
+    "browser": "Chrome/155.0.8059.85",
+    "renderer": "ANGLE Intel UHD Graphics 620 D3D11",
+    "viewport": {
+      "width": 1280,
+      "height": 537,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2560,
+      "height": 1074
+    }
+  },
+  "artifacts": {
+    "rawCaptureSha256": "f33dbbfe9efc2c7f2c940802e1c1f4af8feb9108dbc8f3cd272304bd61524950",
+    "reviewSha256": "10c301aa496652e9aafb2db4f95a11b87e6ec869a7f184ba918bcb373ee4f582"
+  },
+  "validation": {
+    "focusedTests": "142/142",
+    "fullNode24": "3093 pass, 1 timing-budget failure under concurrent load; focused analyst rerun 44/44 pass",
+    "formatting": "pass",
+    "packageBoundaries": "pass",
+    "productionBuild": "pass",
+    "ciRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39766420269",
+    "releaseRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39766420350"
+  },
+  "result": {
+    "status": "failed",
+    "acceptanceEligible": false,
+    "metrics": {
+      "coldStartup": {
+        "status": "unavailable",
+        "reason": "Identity-only build proof supplies no cold-startup observations."
+      },
+      "localControl": {
+        "status": "failed",
+        "protocolVersion": 4,
+        "feedbackPolicy": "trusted-click-event-timing-observed-acknowledgement-v6",
+        "semantic": "Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.",
+        "baseline": {
+          "sampleCount": 20,
+          "clickToAcceptedIntentP95Ms": 1.899999976158142,
+          "clickToNextRenderingP95Ms": 160,
+          "diagnosticTwoRafFeedbackP95Ms": 166.70000004768372,
+          "clickToFullReadyStateP95Ms": 65.80000001192093,
+          "clickToFullRenderedReadinessP95Ms": 67.90000003576279,
+          "acknowledgementCorrectness": {
+            "status": "observed",
+            "proof": "same-intent-current-visible-natural-raf-v1",
+            "sampleCount": 20
+          },
+          "compositorAttribution": {
+            "status": "unavailable",
+            "reason": "no-acknowledgement-to-presented-frame-binding"
+          },
+          "diagnosticUncertainGeometryObservations": 268,
+          "absoluteAcknowledgementFailures": [
+            "matched click-to-next-rendering p95 exceeds the 100ms limit"
+          ]
+        },
+        "candidate": {
+          "sampleCount": 20,
+          "clickToAcceptedIntentP95Ms": 2.799999952316284,
+          "clickToNextRenderingP95Ms": 160,
+          "diagnosticTwoRafFeedbackP95Ms": 56.799999952316284,
+          "clickToFullReadyStateP95Ms": 59,
+          "clickToFullRenderedReadinessP95Ms": 66.69999998807907,
+          "acknowledgementCorrectness": {
+            "status": "observed",
+            "proof": "same-intent-current-visible-natural-raf-v1",
+            "sampleCount": 20
+          },
+          "compositorAttribution": {
+            "status": "unavailable",
+            "reason": "no-acknowledgement-to-presented-frame-binding"
+          },
+          "diagnosticUncertainGeometryObservations": 247
+        },
+        "absoluteAcknowledgementLimitMs": 100,
+        "absoluteAcknowledgementGateAppliesTo": "candidate",
+        "fullReadinessRegressionLimitPct": 10,
+        "failures": [
+          "matched click-to-next-rendering p95 exceeds the 100ms limit"
+        ],
+        "measurementEnvironment": {
+          "schema": "gev-qualification-native-window-environment/v1",
+          "mode": "native-window-viewport-v1",
+          "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+          "viewport": {
+            "width": 1280,
+            "height": 537,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2560,
+            "height": 1074
+          }
+        }
+      },
+      "loadedReplaySeek": {
+        "status": "measured",
+        "protocolVersion": 4,
+        "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+        "baseline": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 53.30000001192093,
+          "inputToRenderedFrameP95Ms": 58
+        },
+        "candidate": {
+          "sampleCount": 20,
+          "inputToStateP95Ms": 43.5,
+          "inputToRenderedFrameP95Ms": 46.69999998807907
+        },
+        "limitMs": 250,
+        "failures": [],
+        "measurementEnvironment": {
+          "schema": "gev-qualification-native-window-environment/v1",
+          "mode": "native-window-viewport-v1",
+          "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+          "viewport": {
+            "width": 1280,
+            "height": 537,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2560,
+            "height": 1074
+          }
+        }
+      },
+      "sampledPeakHeap": {
+        "status": "measured",
+        "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+        "baselinePeakHeapBytes": 75690920,
+        "candidatePeakHeapBytes": 72793512,
+        "sampleCountByBuild": {
+          "baseline": 83,
+          "candidate": 82
+        },
+        "actualDurationMsByBuild": {
+          "baseline": 87200.5196,
+          "candidate": 86991.63400000002
+        },
+        "changePct": -3.8279466017852606,
+        "regressionOver10Pct": false,
+        "sourceSoakStatus": null,
+        "sourceSoakFailurePreserved": false,
+        "thresholdPct": 10,
+        "measurementEnvironment": {
+          "schema": "gev-qualification-native-window-environment/v1",
+          "mode": "native-window-viewport-v1",
+          "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+          "viewport": {
+            "width": 1280,
+            "height": 537,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2560,
+            "height": 1074
+          }
+        }
+      }
+    }
+  },
+  "decision": "Retain staged ground sampling: accepted-intent, completed-frame readiness, replay and sampled-heap gates pass; native next-paint p95 remains above 100 ms, so S69 hardware qualification and the final soak remain blocked."
+}

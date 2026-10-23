@@ -1,0 +1,43 @@
+{
+  "schema": "gev-weather-foreground-failure-receipt/v1",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "status": "failed-before-measurement",
+  "acceptanceEligible": false,
+  "completedSamples": 0,
+  "scope": "Native Windows foreground initialization failed before the first weather measurement. A fresh plan adds only the owned-blank-page handoff; timing and source deadlines remain unchanged.",
+  "createdAt": "2026-10-19T18:02:22.381Z",
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/weather-balanced-b3c49b19-foreground-failure",
+  "files": [
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "b9d5eb8bb949b288a41956d8b847a24c052032d827a3a36e31fe8abc1cf9e9a3"
+    },
+    {
+      "name": "build-receipt-control.json",
+      "bytes": 78806,
+      "sha256": "c92035a3ef08222015e5361061079ad0a87c3ae286ab1fb009c97b337f4cab0e"
+    },
+    {
+      "name": "qualification-envelope.json",
+      "bytes": 984,
+      "sha256": "b82c0d53eb5e5d4d567cb8e68adae851eef97a15a7a18db72baab52eb1b71eda"
+    },
+    {
+      "name": "qualification-plan.json",
+      "bytes": 2702,
+      "sha256": "6cad6deac635113a93e71fae836597411f5471b98d737a61fee700fc106cbf03"
+    },
+    {
+      "name": "sample-01-control.json",
+      "bytes": 3362,
+      "sha256": "1f29ad7876097ed697d594b4f5713bd1557f3812d8122f42cd44a8cc99a5b04e"
+    },
+    {
+      "name": "process.json",
+      "bytes": 512,
+      "sha256": "dacd98b0847375cc197df1d09828ec917bede84da0bcc98b846fb4504b46c8c3"
+    }
+  ],
+  "verifiedAt": "2026-10-19T18:02:24.067Z"
+}

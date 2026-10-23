@@ -1,0 +1,59 @@
+{
+  "schema": "gev-layer-refresh-disposition/v1",
+  "createdAt": "2026-10-21",
+  "status": "rejected-no-repeatable-elapsed-benefit",
+  "acceptanceEligible": false,
+  "source": {
+    "baselineBranchCommit": "f0a470cf44c4661aa1d4772da49009c0f1f2ae16",
+    "baselineReleaseCommit": "55e65d695b6e1f3207bfe01f3b555e489b58e965",
+    "candidateBranchCommit": "5139060391972e8569b44903a304f9993e3b458d",
+    "candidateReleaseCommit": "83d6f17b24dbcec8ae95c1d9edb56be2bbf45bee",
+    "experimentCommit": "68e4d196e9e3f5a371e2842df02e05a68354ed23",
+    "revertCommit": "20fa36b4069cadfed6dac06aca994c7a3345bd35",
+    "qaCommit": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+    "comparisonScriptSha256": "f41a1b666c5c88f63f761f96784a28d49bc89d51f480b2147886ea15cf825b0f"
+  },
+  "releaseProof": {
+    "baselineArchiveSha256": "572df3239d0fdaae495fdc0930c33d8b63be71bcf8bb2f70946e2816a8030b9b",
+    "candidateArchiveSha256": "1b521ffcaa8ad8553f150f9232c2f4f8051836159c65f172350aa94071e86724",
+    "baselineReleaseRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39581165506",
+    "candidateReleaseRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39593162786",
+    "checks": "Both downloaded archives passed checksum and GitHub attestation verification; VM105 extraction passed all 2129 release-manifest file hashes per role. The baseline release tree matches its branch commit, and the candidate release tree matches its branch commit."
+  },
+  "raw": {
+    "primary": "E:/Codex/gods-eye-view/evidence/layer-refresh-compare-20261021/browser-cpu",
+    "independentMirror": "/opt/gods-eye-view-validation/s61-s70-20261018/layer-refresh-compare-20261021/browser-cpu",
+    "planSha256": "f8321e4c958deb5d5933735a61c14b0aff203c6143b232c019db19f3bbc59c94",
+    "resultSha256": "f1f75dfb114bb3c6c99c7ef28e68a31f70647ab7a7ace07369decd8762a5f2e4",
+    "mirrorReadback": "Both SHA-256 values were independently recomputed from the VM105 copies."
+  },
+  "method": {
+    "workload": "Visible, synthetic-fixture application layer panel; 29 rows; five batches of 40 synchronous status refreshes per role; first batch retained as warmup.",
+    "browser": "Chrome 155 on Windows Intel UHD Graphics 620 via ANGLE D3D11",
+    "instrumentation": "The diagnostic temporarily counted the panel container's querySelector calls and manager getAll calls, and measured synchronous refresh batches with performance.now. Both wrappers were restored in finally blocks.",
+    "decisionRule": "A majority of the four post-warmup paired batches must have lower candidate elapsed time, in addition to the expected selector and snapshot reductions."
+  },
+  "observations": {
+    "baseline": {
+      "querySelectorCalls": 6400,
+      "getAllCalls": 400,
+      "batchElapsedMs": [57.9, 52.1, 43.9, 39.3, 29.0],
+      "browserClosedNormally": true
+    },
+    "candidate": {
+      "querySelectorCalls": 600,
+      "getAllCalls": 200,
+      "batchElapsedMs": [60.6, 28.1, 57.7, 40.8, 39.1],
+      "browserClosedNormally": true
+    },
+    "postWarmupCandidateFasterPairs": 1,
+    "postWarmupPairs": 4,
+    "settingsAndPopulationsUnchangedWithinEachRole": true
+  },
+  "limits": [
+    "This is a browser CPU maintenance diagnostic, not native Event Timing, GPU timing, visual-equivalence acceptance, or a formal S69 matrix.",
+    "The two roles ran sequentially, so transient browser and OS work can affect elapsed batches; the predeclared repeatability rule therefore controls the decision.",
+    "The residual 600 selector calls in the candidate are from other panel/application paths; the test does not attribute their cost to the changed row cache."
+  ],
+  "decision": "The deterministic reduction in calls did not produce a repeatable synchronous elapsed-time improvement. The experiment is reverted from the review branch and receives no performance or final-soak credit."
+}

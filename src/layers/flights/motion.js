@@ -124,8 +124,35 @@ export function createMotion({
    * @returns {Cesium.Cartesian3|null} Estimated ECEF position, or null if no history exists.
    */
 
-  function _deadReckon(icao24, result) {
+  function _deadReckon(icao24, result, sampledRenderTime = null) {
     const info = flightState.records.data.get(icao24);
+    if (flightState._positionSourceMode === 'recorded') {
+      if (
+        !info ||
+        info.positionMode !== 'recorded' ||
+        !Number.isFinite(info.rawLat) ||
+        !Number.isFinite(info.rawLon) ||
+        !Number.isFinite(info.renderAltitudeM)
+      ) {
+        flightState._drCourseDeg = null;
+        flightState._drSpeedMps = null;
+        flightState._drCourseHold = false;
+        flightState._drExtrapolating = false;
+        return null;
+      }
+      flightState._drCourseDeg = info.true_track || 0;
+      flightState._drSpeedMps = info.velocity || 0;
+      flightState._drCourseHold =
+        flightState._drSpeedMps < COURSE_HOLD_SPEED_MPS;
+      flightState._drExtrapolating = false;
+      return Cesium.Cartesian3.fromDegrees(
+        info.rawLon,
+        info.rawLat,
+        info.renderAltitudeM,
+        undefined,
+        result || new Cesium.Cartesian3(),
+      );
+    }
     if (FOCUS_EVIDENCE_DEV && flightState._focusEvidenceIds.has(icao24)) {
       const position = flightState._billboards.get(icao24)?.position;
       flightState._drCourseDeg = info?.true_track || 0;
@@ -149,11 +176,13 @@ export function createMotion({
     const out = result || new Cesium.Cartesian3();
     // Render one poll interval behind real time so we interpolate between
     // two KNOWN fixes whenever possible (see RENDER_DELAY_SEC rationale).
-    const renderTime = Cesium.JulianDate.addSeconds(
-      Cesium.JulianDate.now(),
-      -RENDER_DELAY_SEC,
-      flightState._scratchRenderTime,
-    );
+    const renderTime =
+      sampledRenderTime ||
+      Cesium.JulianDate.addSeconds(
+        Cesium.JulianDate.now(),
+        -RENDER_DELAY_SEC,
+        flightState._scratchRenderTime,
+      );
 
     // Bracketing pair: interpolate — no extrapolation error, no snap-back.
     for (let i = history.length - 1; i >= 1; i--) {
@@ -302,16 +331,79 @@ export function createMotion({
    * @returns {boolean}
    */
 
-  function _isTrackWarmingUp() {
-    if (!flightState._trackedIcao) return false;
-    const history = flightState._positionHistory.get(flightState._trackedIcao);
-    if (!history || history.length === 0) return true;
-    const renderTime = Cesium.JulianDate.addSeconds(
+  /**
+   * Return the delayed time paired with the tracked pose. Position evaluation
+   * advances on each valid frame; trail observers may explicitly ask for the
+   * time of an already-cached pose from a later frame phase.
+   */
+  function _trackedDisplayRenderTime(
+    icao24,
+    { preferCachedPose = false } = {},
+  ) {
+    const frame = flightState._viewer?.scene?.frameState?.frameNumber;
+    const validFrame = Number.isSafeInteger(frame) && frame >= 0;
+    if (
+      validFrame &&
+      flightState._trackedFrameTimeFrame === frame &&
+      flightState._trackedFrameTimeIcao === icao24
+    )
+      return flightState._trackedFrameRenderTime;
+    // Cache-only observers must evaluate the time belonging to the pose they
+    // read, even when frameNumber is unavailable or Cesium advanced it later.
+    if (
+      preferCachedPose &&
+      flightState._drReconcileValid &&
+      flightState._drReconcileIcao === icao24 &&
+      flightState._trackedFrameTimeIcao === icao24
+    )
+      return flightState._trackedFrameRenderTime;
+
+    const info = flightState.records.data.get(icao24);
+    if (
+      flightState._positionSourceMode === 'recorded' &&
+      info?.positionMode === 'recorded' &&
+      Number.isFinite(info.selectedTimeMs)
+    ) {
+      const destination = validFrame
+        ? flightState._trackedFrameRenderTime
+        : flightState._scratchTrackedRenderTime;
+      Cesium.JulianDate.fromDate(new Date(info.selectedTimeMs), destination);
+      if (validFrame) {
+        flightState._trackedFrameTimeFrame = frame;
+        flightState._trackedFrameTimeIcao = icao24;
+      }
+      return destination;
+    }
+
+    // Without a valid frame and without an already-rendered pose, this is only
+    // a synchronous sample to be passed from the trail warmup check to the pose
+    // callback. It is never retained as a reusable invalid-frame cache entry.
+    const destination = validFrame
+      ? flightState._trackedFrameRenderTime
+      : flightState._scratchTrackedRenderTime;
+    Cesium.JulianDate.addSeconds(
       Cesium.JulianDate.now(),
       -RENDER_DELAY_SEC,
-      flightState._scratchWarmupTime,
+      destination,
     );
-    return Cesium.JulianDate.lessThan(renderTime, history[0].time);
+    if (validFrame) {
+      flightState._trackedFrameTimeFrame = frame;
+      flightState._trackedFrameTimeIcao = icao24;
+    }
+    return destination;
+  }
+
+  function _isTrackWarmingUp(renderTime = null) {
+    const icao24 = flightState._trackedIcao;
+    if (!icao24) return false;
+    if (flightState._positionSourceMode === 'recorded')
+      return flightState.records.data.get(icao24)?.positionMode !== 'recorded';
+    const history = flightState._positionHistory.get(icao24);
+    if (!history || history.length === 0) return true;
+    // Cache-only trail/model consumers must judge the pose they actually read,
+    // even when postRender runs after Cesium advanced frameNumber.
+    const sampledRenderTime = renderTime || _trackedDisplayRenderTime(icao24);
+    return Cesium.JulianDate.lessThan(sampledRenderTime, history[0].time);
   }
 
   /** Resolve the selected aircraft's actual rendered square extent this frame. */
@@ -366,9 +458,11 @@ export function createMotion({
    * @returns {Cesium.Cartesian3|null}
    */
 
-  function _trackedDisplayPosition(icao24) {
-    const frame = flightState._viewer?.scene?.frameState?.frameNumber ?? -1;
+  function _trackedDisplayPosition(icao24, renderTime = null) {
+    const frame = flightState._viewer?.scene?.frameState?.frameNumber;
+    const validFrame = Number.isSafeInteger(frame) && frame >= 0;
     if (
+      validFrame &&
       frame === flightState._cachedDRFrame &&
       icao24 === flightState._drReconcileIcao
     )
@@ -378,7 +472,12 @@ export function createMotion({
     // _drReconcileIcao, so a track switch doesn't inherit the old plane's _drPrevRaw.)
     const sameTrack =
       flightState._drReconcileValid && flightState._drReconcileIcao === icao24;
-    const raw = _deadReckon(icao24, flightState._scratchDrRaw);
+    const trackedRenderTime = renderTime || _trackedDisplayRenderTime(icao24);
+    const raw = _deadReckon(
+      icao24,
+      flightState._scratchDrRaw,
+      trackedRenderTime,
+    );
     flightState._cachedDRCourse = flightState._drCourseDeg;
     flightState._cachedDRSpeedMps = flightState._drSpeedMps;
     flightState._cachedDRHold = flightState._drCourseHold;
@@ -391,8 +490,43 @@ export function createMotion({
       return null;
     }
 
-    const nowMs = Date.now();
     const info = flightState.records.data.get(icao24);
+    if (
+      flightState._positionSourceMode === 'recorded' &&
+      info?.positionMode === 'recorded'
+    ) {
+      Cesium.Cartesian3.fromElements(0, 0, 0, flightState._drCorrection);
+      flightState._drCorrectionStartMs = 0;
+      Cesium.Cartesian3.clone(raw, flightState._drPrevRaw);
+      Cesium.Cartesian3.clone(raw, flightState._drPrevDisplay);
+      flightState._drPrevMs = 0;
+      flightState._drReconcileValid = true;
+      const display = Cesium.Cartesian3.clone(
+        raw,
+        flightState._trackedPosHolder,
+      );
+      flightState._cachedDRPosition = display;
+      if (!validFrame) {
+        Cesium.JulianDate.clone(
+          trackedRenderTime,
+          flightState._trackedFrameRenderTime,
+        );
+        flightState._trackedFrameTimeFrame = -1;
+        flightState._trackedFrameTimeIcao = icao24;
+      }
+      const focusSizePx = _trackedFocusSizePx(icao24, display);
+      publishFocusTargetFromCachedPosition({
+        ownerLayer: 'flights',
+        id: icao24,
+        scene: flightState._viewer?.scene,
+        camera: flightState._viewer?.camera,
+        displayPosition: display,
+        widthPx: focusSizePx,
+        heightPx: focusSizePx,
+      });
+      return display;
+    }
+    const nowMs = Date.now();
     if (sameTrack) {
       const dtSec = Math.max(0.001, (nowMs - flightState._drPrevMs) / 1000);
       const speed = (info && info.velocity) || 0;
@@ -444,6 +578,14 @@ export function createMotion({
     flightState._drPrevMs = nowMs;
     flightState._drReconcileValid = true;
     flightState._cachedDRPosition = display;
+    if (!validFrame) {
+      Cesium.JulianDate.clone(
+        trackedRenderTime,
+        flightState._trackedFrameRenderTime,
+      );
+      flightState._trackedFrameTimeFrame = -1;
+      flightState._trackedFrameTimeIcao = icao24;
+    }
     const focusSizePx = _trackedFocusSizePx(
       icao24,
       flightState._cachedDRPosition,
@@ -586,6 +728,11 @@ export function createMotion({
   function _trackedDisplayCourse() {
     const info = flightState.records.data.get(flightState._trackedIcao);
     const fallback = (info && info.true_track) || 0;
+    if (
+      flightState._positionSourceMode === 'recorded' &&
+      info?.positionMode === 'recorded'
+    )
+      return fallback;
     const cacheValid =
       flightState._drReconcileValid &&
       flightState._drReconcileIcao === flightState._trackedIcao &&
@@ -627,6 +774,8 @@ export function createMotion({
     flightState._cachedDRCourse = null;
     flightState._cachedDRSpeedMps = null;
     flightState._cachedDRHold = false;
+    flightState._trackedFrameTimeFrame = -1;
+    flightState._trackedFrameTimeIcao = null;
     flightState._trackedCourseMs = 0;
   }
 
@@ -1086,6 +1235,7 @@ export function createMotion({
   return {
     _refloorStaleGroundedContacts,
     _deadReckon,
+    _trackedDisplayRenderTime,
     _extrapolateFix,
     _isTrackWarmingUp,
     _trackedFocusSizePx,

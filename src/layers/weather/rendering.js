@@ -387,12 +387,26 @@ function createGlobeRendering({
             .then((image) => {
               // Cesium decodes tiles as ImageBitmaps already flipped, since WebGL
               // ignores UNPACK_FLIP_Y for them; a canvas upload flips again.
-              if (!frame.closed && snapshot.product === 'clouds-regional')
-                image = processInfraredImage(image, infrared, createCanvas, {
-                  flipY:
-                    typeof ImageBitmap !== 'undefined' &&
-                    image instanceof ImageBitmap,
-                });
+              if (!frame.closed && snapshot.product === 'clouds-regional') {
+                // This provider returns the processed canvas to Cesium, never
+                // the decoded source. Once the synchronous copy completes the
+                // source ImageBitmap is application-owned and can be released.
+                const decodedImage = image;
+                try {
+                  image = processInfraredImage(
+                    decodedImage,
+                    infrared,
+                    createCanvas,
+                    {
+                      flipY:
+                        typeof ImageBitmap !== 'undefined' &&
+                        decodedImage instanceof ImageBitmap,
+                    },
+                  );
+                } finally {
+                  decodedImage.close?.();
+                }
+              }
               frame.retries.delete(tileKey);
               frame.loaded++;
               return image;

@@ -248,7 +248,13 @@ export function createFrames({ state: layerState, services, parts, source }) {
 
   function refreshProjectionImage(record, force = false) {
     const runtime = record?.projection;
-    if (!runtime || runtime.mode !== 'image' || !runtime.image) return;
+    if (
+      !runtime ||
+      runtime.disposed ||
+      runtime.mode !== 'image' ||
+      !runtime.image
+    )
+      return;
     // Hidden-state gate (perf wave 2): no new frame fetch/decode for a canvas
     // nobody can see. The refresh interval re-fills naturally on return.
     if (typeof document !== 'undefined' && document.hidden && !force) return;
@@ -258,12 +264,14 @@ export function createFrames({ state: layerState, services, parts, source }) {
     // clears this latch so the next normal tick can refresh.
     if (runtime.imageLoading) return;
     const now = Date.now();
+    if (!force && now < (runtime.nextImageRetryAt || 0)) return;
     const refreshMs =
       record.camera.id === layerState._activeCameraId
         ? PROJECTION_ACTIVE_REFRESH_MS
         : PROJECTION_IDLE_REFRESH_MS;
     if (!force && now - runtime.lastImageRefreshAt < refreshMs) return;
     runtime.lastImageRefreshAt = now;
+    runtime.nextImageRetryAt = 0;
 
     const frameUrl = frameUrlFor(record.camera, refreshMs);
     const sep = frameUrl.includes('?') ? '&' : '?';
@@ -307,7 +315,7 @@ export function createFrames({ state: layerState, services, parts, source }) {
    * @param {Object} record - Camera record with an initialized projection runtime.
    */
 
-  function drawProjectionFrame(record) {
+  function drawProjectionFrame(record, { refresh = true } = {}) {
     const runtime = record?.projection;
     if (!runtime || !runtime.ctx) return;
 
@@ -340,7 +348,9 @@ export function createFrames({ state: layerState, services, parts, source }) {
       return;
     }
 
-    refreshProjectionImage(record);
+    // A completion must paint its decoded frame before any next fetch can
+    // clear imageReady, even when the provider took longer than the cadence.
+    if (refresh) refreshProjectionImage(record);
     if (runtime.image && runtime.imageReady) {
       if (runtime.drawnImageStamp !== runtime.imageStamp) {
         // The frame URL carries a 10s cache-buster tick, so a fresh Image

@@ -1,0 +1,197 @@
+{
+  "schema": "gev-performance-capture-failure/v1",
+  "captureSchema": "gev-performance-capture/v1",
+  "status": "failed",
+  "capturedAt": "2026-10-12T16:45:07.721Z",
+  "comparisonEligible": false,
+  "comparisonReadiness": {
+    "status": "not-ready",
+    "reason": "Failed or incomplete captures are never comparison evidence."
+  },
+  "source": {
+    "harnessCommit": "60b6a9b9ad40edd3859f1b0190c191406b3a3577",
+    "harnessDirtyWorktree": false,
+    "appCommit": "60b6a9b9ad40edd3859f1b0190c191406b3a3577",
+    "appWorktreeState": "clean",
+    "provenanceStatus": "pre-capture-served-assets-verified",
+    "reason": null,
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "pre-capture-served-assets-verified",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "ccfbd160d1e8dd0462a76c303ddc1e8328277040c0ccde348570889f6b3f0fbf",
+      "appCommit": "60b6a9b9ad40edd3859f1b0190c191406b3a3577",
+      "harnessCommit": "60b6a9b9ad40edd3859f1b0190c191406b3a3577",
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "ccfbd160d1e8dd0462a76c303ddc1e8328277040c0ccde348570889f6b3f0fbf",
+        "assetCount": 436,
+        "totalAssetBytes": 43983899
+      },
+      "after": null
+    }
+  },
+  "fixture": null,
+  "workload": {
+    "rendererProbeCleanup": [
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 18.407226000001174,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 11.923666999999114,
+          "pageExecutionElapsedMs": 0.1999999999825377,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "already-disabled",
+            "before": false,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 5.333407999998599,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "startup-document-retirement",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1"
+      }
+    ],
+    "rendererProbeCleanupOmittedCount": 0,
+    "rendererLoopRetirements": [
+      {
+        "phase": "startup-final-details",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1",
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0
+      }
+    ],
+    "rendererLoopRetirementsOmittedCount": 0,
+    "fixtureInterceptionReleases": [],
+    "warmupMs": 1000,
+    "durationPerSampleMs": 1000,
+    "runsPerScenario": 2,
+    "startupRuns": 1,
+    "qualityMode": "manual",
+    "expectedDensityPct": 75,
+    "detectionMode": "DENSE",
+    "mixedLayers": false,
+    "scenarios": []
+  },
+  "failure": {
+    "phase": "main-navigation",
+    "scenario": null,
+    "run": null,
+    "message": "createWeatherEffectsFixtureDelivery is not defined",
+    "operator": null
+  },
+  "fixtureDelivery": null,
+  "progress": {
+    "startupSampleCount": 1,
+    "startupSamples": [
+      {
+        "run": 1,
+        "cacheDisabled": true,
+        "appReadyMs": 6725,
+        "initialSettleMs": 8422,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "focused": true,
+        "visible": true,
+        "navigationMs": 3118,
+        "memory": {
+          "usedJsHeapBytes": 38164031,
+          "reason": null
+        },
+        "renderLoopRetirement": {
+          "requested": true,
+          "status": "retired-with-final-observation",
+          "before": true,
+          "after": false,
+          "confirmed": true,
+          "elapsedMs": 0
+        },
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "vendor": "Google Inc. (Google)",
+        "rendererEvidence": {
+          "source": "early-cesium-context-creation",
+          "contextAttributes": {
+            "alpha": false,
+            "antialias": true,
+            "depth": true,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": true,
+            "stencil": true,
+            "desynchronized": false
+          },
+          "queryDurationMs": 4.2000000000116415,
+          "parameterQueryCount": 2
+        }
+      }
+    ],
+    "completedSampleCount": 0,
+    "completedSamples": [],
+    "current": {
+      "performanceDiagnosticsDocuments": [
+        {
+          "documentRole": "startup-1",
+          "documentId": "startup-document-1",
+          "requested": true,
+          "hookAvailable": true,
+          "disabled": true
+        }
+      ]
+    },
+    "completedSamplesRetained": 0,
+    "startupSamplesRetained": 1
+  },
+  "evidenceTruncated": false
+}

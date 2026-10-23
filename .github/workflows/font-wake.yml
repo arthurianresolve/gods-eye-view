@@ -1,0 +1,65 @@
+name: S52 font wake comparison
+
+on:
+  push:
+    branches: [qa/s52-font-wake]
+  workflow_dispatch:
+    inputs:
+      baseline_sha:
+        description: Immutable pre-fix source commit
+        type: string
+        default: 33d985657c8949a02cfce2f0f1ad4131d3da774c
+      candidate_sha:
+        description: Immutable font-wake candidate commit
+        type: string
+        default: 0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb
+
+permissions:
+  contents: read
+
+jobs:
+  font-wake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASELINE_SHA: ${{ inputs.baseline_sha || '33d985657c8949a02cfce2f0f1ad4131d3da774c' }}
+      CANDIDATE_SHA: ${{ inputs.candidate_sha || '0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb' }}
+    steps:
+      - name: Check out comparison harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Use supported Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.14.0
+          cache: npm
+      - name: Install locked dependencies and fixture browser
+        run: npm ci
+      - name: Prepare immutable source checkouts
+        shell: bash
+        run: |
+          [[ "$BASELINE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git worktree add --detach ../font-wake-baseline "$BASELINE_SHA"
+          git worktree add --detach ../font-wake-candidate "$CANDIDATE_SHA"
+          cmp package-lock.json ../font-wake-baseline/package-lock.json
+          cmp package-lock.json ../font-wake-candidate/package-lock.json
+          ln -s "$PWD/node_modules" ../font-wake-baseline/node_modules
+          ln -s "$PWD/node_modules" ../font-wake-candidate/node_modules
+      - name: Run two alternating real-font correctness pairs
+        run: node scripts/performance/fontWakeComparison.mjs ../font-wake-baseline ../font-wake-candidate qa-artifacts/font-wake
+      - name: Print bounded raw evidence to the job log
+        if: always()
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, readFileSync } from 'node:fs';
+          const path = 'qa-artifacts/font-wake/report.json';
+          if (!existsSync(path)) {
+            console.log(JSON.stringify({ schema: 'gev-s52-font-wake-comparison/v1', status: 'not-run', reason: 'Runner did not produce a report; inspect prior step failures.' }));
+          } else {
+            console.log('FONT_WAKE_REPORT ' + readFileSync(path, 'utf8').trim().split('\n').join(''));
+          }
+          JS

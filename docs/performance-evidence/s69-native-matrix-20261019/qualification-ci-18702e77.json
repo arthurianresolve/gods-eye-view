@@ -1,0 +1,83 @@
+{
+  "schema": "gev-qualification-ci-receipt/v1",
+  "retrievedAt": "2026-10-19T09:36:10.624Z",
+  "repository": "arthurianresolve/gods-eye-view",
+  "commitLookup": "18702e7703bfe9dd394fa638fcc3d6a91bff86fc",
+  "ci": {
+    "runId": 39227024448,
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39227024448",
+    "conclusion": "success",
+    "selectedJobs": [
+      {
+        "id": 117975845542,
+        "name": "Windows onboarding",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117975845627,
+        "name": "Node 24.14.0",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117975845709,
+        "name": "Install and update recovery (macos-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117975845929,
+        "name": "Install and update recovery (windows-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117975845996,
+        "name": "Install and update recovery (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117975846005,
+        "name": "Street Level browser gate",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 117975847215,
+        "name": "Node 26.x",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ],
+    "optionalSkippedJobs": [
+      "60-minute rendered application soak",
+      "Isolated terrain and picking lifecycle",
+      "Free hosted Mac accelerated retention diagnostic",
+      "Isolated mission render-demand correctness",
+      "Isolated CCTV lifecycle",
+      "Isolated rendered mixed-use smoke",
+      "Native WebGL probe (${{ matrix.os }})",
+      "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+      "Aircraft tracking regression",
+      "Free hosted Mac rendering diagnostic",
+      "Isolated import and workspace lifecycle",
+      "Baseline-compatible performance build smoke"
+    ]
+  },
+  "release": {
+    "runId": 39227024469,
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39227024469",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "id": 117975678297,
+        "name": "Build and verify release artifact",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "scope": "Exact harness187 CI and packaging. Optional skips are not passes or physical GPU evidence. Prior896 CI failed because three QA test files were missing from the discovery ledger;187 registers them. Application556 package and hardware qualification remain separately bound."
+}

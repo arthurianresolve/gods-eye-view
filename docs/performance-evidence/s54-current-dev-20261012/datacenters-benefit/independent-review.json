@@ -1,0 +1,212 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38187703722",
+  "applicationCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+  "harnessCommit": "d05e5415c3fc9d299a16349ba66355ddbcdb92cf",
+  "rawSha256": "7f9a154f79c45e7383c2172b782220de54b02a56ad1ab44ad2b7e4192016069c",
+  "validatorPassed": true,
+  "sourceFilesVerified": 27,
+  "pngFilesVerified": 40,
+  "renderer": {
+    "graphics": {
+      "featureStatus": {
+        "webgl": "enabled",
+        "webgl2": null,
+        "gpu_compositing": "enabled",
+        "opengl": "enabled_on"
+      },
+      "devices": [
+        {
+          "vendor": "Google Inc. (Apple)",
+          "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+          "driver": "26.6.2"
+        }
+      ]
+    },
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "rendererClass": {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  },
+  "summary": {
+    "latency": {
+      "entities": {
+        "sourceReadyElapsedMedianMs": 333.69999999995343,
+        "firstUsableAfterSourceReadyMedianMs": 3277.9000000001397,
+        "samples": 5
+      },
+      "primitive-collections": {
+        "sourceReadyElapsedMedianMs": 297.5,
+        "firstUsableAfterSourceReadyMedianMs": 2339.399999999907,
+        "samples": 5
+      }
+    },
+    "memory": {
+      "entities": {
+        "enabledHeapDeltaMedianBytes": 163935120,
+        "afterDestroyHeapDeltaMedianBytes": 119075204,
+        "absoluteHeapBytesAfterGc": 134026924,
+        "afterViewerDestroyHeapDeltaMedianBytes": 9247888,
+        "samples": 5
+      },
+      "primitive-collections": {
+        "enabledHeapDeltaMedianBytes": 137603476,
+        "afterDestroyHeapDeltaMedianBytes": 85380872,
+        "absoluteHeapBytesAfterGc": 100336948,
+        "afterViewerDestroyHeapDeltaMedianBytes": 9054024,
+        "samples": 5
+      }
+    }
+  },
+  "percentChange": {
+    "sourceReady": -10.848067126148786,
+    "firstUsableAfterSourceReady": -28.631135788162933,
+    "enabledPostGcHeapDelta": -16.06223486462205
+  },
+  "pairs": [
+    {
+      "suite": "latency",
+      "index": 0,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -99.5,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -3527.6999999999534,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true
+      },
+      "sourceReadyPercent": -23.656680932009756,
+      "firstUsablePercent": -59.09540162492593
+    },
+    {
+      "suite": "latency",
+      "index": 1,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -5.100000000093132,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -886.4000000001397,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true
+      },
+      "sourceReadyPercent": -1.7519752662629728,
+      "firstUsablePercent": -27.478454956913843
+    },
+    {
+      "suite": "latency",
+      "index": 2,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -6.100000000093132,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -1071.8999999999069,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true
+      },
+      "sourceReadyPercent": -2.0783645656194616,
+      "firstUsablePercent": -36.124966298191005
+    },
+    {
+      "suite": "latency",
+      "index": 3,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -142.39999999990687,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -1426.5,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true
+      },
+      "sourceReadyPercent": -32.37099340757832,
+      "firstUsablePercent": -37.1484375
+    },
+    {
+      "suite": "latency",
+      "index": 4,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": 11.300000000046566,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -1147.4000000001397,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true
+      },
+      "sourceReadyPercent": 3.3862750974072986,
+      "firstUsablePercent": -35.004118490499735
+    },
+    {
+      "suite": "memory",
+      "index": 0,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -75.4000000001397,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -1041.8000000000466,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true,
+        "candidateMinusEntitiesEnabledHeapDeltaBytes": -26462420,
+        "candidateMinusEntitiesAfterDestroyHeapDeltaBytes": -33672560,
+        "candidateMinusEntitiesAfterViewerDestroyHeapDeltaBytes": -462864
+      },
+      "sourceReadyPercent": -20.03188097771299,
+      "firstUsablePercent": -33.14667515113098
+    },
+    {
+      "suite": "memory",
+      "index": 1,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -80.30000000004657,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -1173.4999999997672,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true,
+        "candidateMinusEntitiesEnabledHeapDeltaBytes": -26113700,
+        "candidateMinusEntitiesAfterDestroyHeapDeltaBytes": -33451980,
+        "candidateMinusEntitiesAfterViewerDestroyHeapDeltaBytes": -109944
+      },
+      "sourceReadyPercent": -21.586021505388864,
+      "firstUsablePercent": -36.119917510535906
+    },
+    {
+      "suite": "memory",
+      "index": 2,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -68.3000000002794,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -406.19999999995343,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true,
+        "candidateMinusEntitiesEnabledHeapDeltaBytes": -26313712,
+        "candidateMinusEntitiesAfterDestroyHeapDeltaBytes": -33760824,
+        "candidateMinusEntitiesAfterViewerDestroyHeapDeltaBytes": -64276
+      },
+      "sourceReadyPercent": -19.120940649564332,
+      "firstUsablePercent": -14.924495719585561
+    },
+    {
+      "suite": "memory",
+      "index": 3,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": -10.699999999720603,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -509.10000000009313,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true,
+        "candidateMinusEntitiesEnabledHeapDeltaBytes": -26269540,
+        "candidateMinusEntitiesAfterDestroyHeapDeltaBytes": -33694332,
+        "candidateMinusEntitiesAfterViewerDestroyHeapDeltaBytes": -132672
+      },
+      "sourceReadyPercent": -3.6593707249398144,
+      "firstUsablePercent": -19.05243067250759
+    },
+    {
+      "suite": "memory",
+      "index": 4,
+      "deltas": {
+        "candidateMinusEntitiesSourceReadyMs": 1.7999999998137355,
+        "candidateMinusEntitiesFirstUsableAfterReadyMs": -531.2999999998137,
+        "matchedPopulation": true,
+        "matchedOutputPixels": true,
+        "candidateMinusEntitiesEnabledHeapDeltaBytes": -26538940,
+        "candidateMinusEntitiesAfterDestroyHeapDeltaBytes": -33871916,
+        "candidateMinusEntitiesAfterViewerDestroyHeapDeltaBytes": -431440
+      },
+      "sourceReadyPercent": 0.5407029137317387,
+      "firstUsablePercent": -19.40892818001869
+    }
+  ],
+  "limitations": [
+    "Hosted Apple paravirtual Metal; no physical Windows coverage.",
+    "Activation latency and separate forced-GC JavaScript heap samples, not motion p95 or total retained/GPU memory.",
+    "Default rendering remains Entities; mixed-layer and long-run acceptance pending."
+  ],
+  "decodedRgbaImagesVerified": 40,
+  "exactRendererImagePairs": 20,
+  "decoder": "System.Drawing bitmap lockbits converted BGRA to RGBA"
+}

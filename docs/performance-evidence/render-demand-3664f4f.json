@@ -1,0 +1,67 @@
+{
+  "schema": "gev-render-demand/v1",
+  "applicationCommit": "3664f4f24eafe1e640aca01ecae281a38784b9c8",
+  "harnessCommit": "3664f4f24eafe1e640aca01ecae281a38784b9c8",
+  "capturedAt": "2026-10-09T16:38:13.503Z",
+  "fixture": "synthetic-governor/v1",
+  "scope": "isolated governor correctness, not whole-application cadence or performance",
+  "checks": [
+    {
+      "id": "idle-ten-seconds",
+      "status": "passed",
+      "frames": 0,
+      "durationMs": 10002.600000023842
+    },
+    {
+      "id": "one-second-cadence",
+      "status": "passed",
+      "callsMs": [
+        1016.1000000238419,
+        2017,
+        3017.2999999523163
+      ],
+      "frames": 3
+    },
+    {
+      "id": "independent-owners-and-final-frame",
+      "status": "passed",
+      "pixel": [
+        0,
+        255,
+        0,
+        255
+      ]
+    },
+    {
+      "id": "disposal",
+      "status": "passed",
+      "holds": 0,
+      "scheduledUpdates": 0
+    }
+  ],
+  "status": "passed",
+  "environment": {
+    "appCommit": "3664f4f24eafe1e640aca01ecae281a38784b9c8",
+    "harnessCommit": "3664f4f24eafe1e640aca01ecae281a38784b9c8",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 887,
+      "height": 585,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "settings": {
+    "resolutionScale": 1,
+    "msaaSamples": 4,
+    "antialias": true,
+    "preserveDrawingBuffer": true
+  },
+  "backgrounded": false
+}

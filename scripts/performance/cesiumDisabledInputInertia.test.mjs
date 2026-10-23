@@ -1,0 +1,823 @@
+import assert from 'node:assert/strict';
+import { createHash, randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import vm from 'node:vm';
+import * as Engine from '@cesium/engine';
+
+const ROOT = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../..',
+);
+const MANIFEST = JSON.parse(
+  readFileSync(path.join(ROOT, 'patches/cesium-1.138.0-inertia.json'), 'utf8'),
+);
+const COLLISION_MANIFEST = JSON.parse(
+  readFileSync(
+    path.join(ROOT, 'patches/cesium-1.138.0-collision-transform.json'),
+    'utf8',
+  ),
+);
+const require = createRequire(import.meta.url);
+const NATIVE_DATE = globalThis.Date;
+
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+function distributionFile(relativePath) {
+  return path.join(ROOT, 'node_modules', relativePath);
+}
+
+function recoverStock(entry, patchedBytes) {
+  assert.equal(sha256(patchedBytes), entry.patchedSha256);
+  const patchedText = patchedBytes.toString('utf8');
+  assert.equal(patchedText.split(entry.newText).length - 1, 1);
+  const stock = Buffer.from(patchedText.replace(entry.newText, entry.oldText));
+  assert.equal(sha256(stock), entry.sourceSha256);
+  return stock;
+}
+
+function recoverInertiaStage(relativePath, installedBytes) {
+  const entry = COLLISION_MANIFEST.files.find(
+    (candidate) => candidate.relativePath === relativePath,
+  );
+  assert.ok(entry, `missing collision manifest entry for ${relativePath}`);
+  const digest = sha256(installedBytes);
+  if (digest === entry.sourceSha256) return installedBytes;
+  assert.equal(digest, entry.patchedSha256);
+  const patchedText = installedBytes.toString('utf8');
+  assert.equal(patchedText.split(entry.newText).length - 1, 1);
+  const inertiaStage = Buffer.from(
+    patchedText.replace(entry.newText, entry.oldText),
+  );
+  assert.equal(sha256(inertiaStage), entry.sourceSha256);
+  return inertiaStage;
+}
+
+class EventTargetLite {
+  listeners = new Map();
+
+  addEventListener(type, listener) {
+    const listeners = this.listeners.get(type) ?? new Set();
+    listeners.add(listener);
+    this.listeners.set(type, listeners);
+  }
+
+  removeEventListener(type, listener) {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  dispatch(type, event) {
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  }
+}
+
+let controlledNow = 1_800_000_000_000;
+class ControlledDate extends NATIVE_DATE {
+  constructor(...args) {
+    super(...(args.length === 0 ? [controlledNow] : args));
+  }
+
+  static now() {
+    return controlledNow;
+  }
+}
+
+function setControlledTime() {
+  controlledNow = 1_800_000_000_000;
+  globalThis.Date = ControlledDate;
+}
+
+function advanceFrame() {
+  controlledNow += 16;
+}
+
+function eventAt(x, y, button = 0, ctrlKey = false) {
+  return {
+    clientX: x,
+    clientY: y,
+    button,
+    buttons: button === 0 ? 1 : button === 1 ? 4 : 2,
+    shiftKey: false,
+    ctrlKey,
+    altKey: false,
+    preventDefault() {},
+    target: null,
+  };
+}
+
+function createController(namespace, Controller, documentTarget) {
+  const canvas = Object.assign(new EventTargetLite(), {
+    disableRootEvents: true,
+    clientWidth: 800,
+    clientHeight: 600,
+    onwheel: null,
+    style: {},
+    getBoundingClientRect() {
+      return { left: 0, top: 0, width: 800, height: 600 };
+    },
+  });
+  documentTarget.location = { href: 'http://localhost/' };
+  globalThis.document = documentTarget;
+  const scene = {
+    canvas,
+    drawingBufferWidth: 800,
+    drawingBufferHeight: 600,
+    mapProjection: new namespace.GeographicProjection(
+      namespace.Ellipsoid.WGS84,
+    ),
+    ellipsoid: namespace.Ellipsoid.WGS84,
+  };
+  const camera = new namespace.Camera(scene);
+  camera.setView({
+    destination: namespace.Cartesian3.fromDegrees(-97.7, 30.3, 10_000_000),
+    orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+  });
+  Object.assign(scene, {
+    camera,
+    globe: undefined,
+    mode: namespace.SceneMode.SCENE3D,
+    verticalExaggeration: 1,
+    verticalExaggerationRelativeHeight: 0,
+    cameraUnderground: false,
+  });
+  const controller = new Controller(scene);
+  controller.enableCollisionDetection = false;
+  return { canvas, camera, controller };
+}
+
+function cameraPose(camera) {
+  return {
+    position: [camera.positionWC.x, camera.positionWC.y, camera.positionWC.z],
+    direction: [
+      camera.directionWC.x,
+      camera.directionWC.y,
+      camera.directionWC.z,
+    ],
+    up: [camera.upWC.x, camera.upWC.y, camera.upWC.z],
+  };
+}
+
+function poseDistance(a, b) {
+  return Math.hypot(
+    ...a.position.map((value, index) => value - b.position[index]),
+  );
+}
+
+function runLockedDrag(
+  namespace,
+  Controller,
+  documentTarget,
+  interleaveFrames,
+) {
+  setControlledTime();
+  const { canvas, camera, controller } = createController(
+    namespace,
+    Controller,
+    documentTarget,
+  );
+  canvas.dispatch('mousedown', eventAt(400, 300));
+  controller.enableInputs = false;
+  for (const point of [
+    [408, 306],
+    [416, 312],
+    [424, 318],
+    [432, 324],
+    [440, 330],
+  ]) {
+    advanceFrame();
+    canvas.dispatch('mousemove', eventAt(...point));
+    if (interleaveFrames) controller.update();
+  }
+  advanceFrame();
+  canvas.dispatch('mouseup', eventAt(440, 330));
+  controller.update();
+  const atUnlock = cameraPose(camera);
+  controller.enableInputs = true;
+  const afterUnlock = [];
+  for (let index = 0; index < 8; index += 1) {
+    advanceFrame();
+    controller.update();
+    afterUnlock.push(cameraPose(camera));
+  }
+  const frameMovementM = afterUnlock.map((pose, index) =>
+    poseDistance(index === 0 ? atUnlock : afterUnlock[index - 1], pose),
+  );
+  controller.destroy();
+  return {
+    frameMovementM,
+    totalMovementAfterUnlockM: frameMovementM.reduce(
+      (sum, value) => sum + value,
+      0,
+    ),
+  };
+}
+
+function runManualGesture(namespace, Controller, documentTarget, actionKind) {
+  setControlledTime();
+  const { canvas, camera, controller } = createController(
+    namespace,
+    Controller,
+    documentTarget,
+  );
+  const initialPose = cameraPose(camera);
+  const button = actionKind === 'tilt' ? 1 : actionKind === 'zoom' ? 2 : 0;
+  const ctrlKey = actionKind === 'tilt' && false;
+  const input = (x, y) => eventAt(x, y, button, ctrlKey);
+  canvas.dispatch('mousedown', input(400, 300));
+  const directPoses = [];
+  for (const point of [
+    [410, 307],
+    [420, 315],
+  ]) {
+    advanceFrame();
+    canvas.dispatch('mousemove', input(...point));
+    controller.update();
+    directPoses.push(cameraPose(camera));
+  }
+  advanceFrame();
+  canvas.dispatch('mouseup', input(420, 315));
+  const inertiaPoses = [];
+  for (let index = 0; index < 8; index += 1) {
+    advanceFrame();
+    controller.update();
+    inertiaPoses.push(cameraPose(camera));
+  }
+  controller.destroy();
+  return { initialPose, directPoses, inertiaPoses };
+}
+
+function runFreshGestureAfterLock(namespace, Controller, documentTarget) {
+  setControlledTime();
+  const { canvas, camera, controller } = createController(
+    namespace,
+    Controller,
+    documentTarget,
+  );
+  canvas.dispatch('mousedown', eventAt(400, 300));
+  controller.enableInputs = false;
+  advanceFrame();
+  canvas.dispatch('mousemove', eventAt(430, 320));
+  controller.update();
+  advanceFrame();
+  canvas.dispatch('mouseup', eventAt(430, 320));
+  controller.update();
+  controller.enableInputs = true;
+
+  const beforeFreshGesture = cameraPose(camera);
+  canvas.dispatch('mousedown', eventAt(400, 300));
+  for (const point of [
+    [410, 307],
+    [420, 315],
+  ]) {
+    advanceFrame();
+    canvas.dispatch('mousemove', eventAt(...point));
+    controller.update();
+  }
+  advanceFrame();
+  canvas.dispatch('mouseup', eventAt(420, 315));
+  const afterRelease = cameraPose(camera);
+  const inertiaPoses = [];
+  for (let index = 0; index < 8; index += 1) {
+    advanceFrame();
+    controller.update();
+    inertiaPoses.push(cameraPose(camera));
+  }
+  controller.destroy();
+  return {
+    directMovementM: poseDistance(beforeFreshGesture, afterRelease),
+    inertiaMovementM: poseDistance(afterRelease, inertiaPoses.at(-1)),
+    inertiaPoses,
+  };
+}
+
+function runPriorInertiaThenLock(namespace, Controller, documentTarget) {
+  setControlledTime();
+  const { canvas, camera, controller } = createController(
+    namespace,
+    Controller,
+    documentTarget,
+  );
+  canvas.dispatch('mousedown', eventAt(400, 300));
+  for (const point of [
+    [410, 307],
+    [420, 315],
+  ]) {
+    advanceFrame();
+    canvas.dispatch('mousemove', eventAt(...point));
+    controller.update();
+  }
+  advanceFrame();
+  canvas.dispatch('mouseup', eventAt(420, 315));
+  const atRelease = cameraPose(camera);
+  advanceFrame();
+  controller.update();
+  advanceFrame();
+  controller.update();
+  const beforeLock = cameraPose(camera);
+  controller.enableInputs = false;
+  advanceFrame();
+  controller.update();
+  const atUnlock = cameraPose(camera);
+  controller.enableInputs = true;
+  const afterUnlock = [];
+  for (let index = 0; index < 5; index += 1) {
+    advanceFrame();
+    controller.update();
+    afterUnlock.push(cameraPose(camera));
+  }
+  controller.destroy();
+  return {
+    activeInertiaMovementM: poseDistance(atRelease, beforeLock),
+    postUnlockMovementM: poseDistance(atUnlock, afterUnlock.at(-1)),
+  };
+}
+
+function runActionDisabledStaleInertia(namespace, Controller, documentTarget) {
+  setControlledTime();
+  const { canvas, camera, controller } = createController(
+    namespace,
+    Controller,
+    documentTarget,
+  );
+  canvas.dispatch('mousedown', eventAt(400, 300));
+  for (const point of [
+    [410, 307],
+    [420, 315],
+  ]) {
+    advanceFrame();
+    canvas.dispatch('mousemove', eventAt(...point));
+    controller.update();
+  }
+  advanceFrame();
+  canvas.dispatch('mouseup', eventAt(420, 315));
+  advanceFrame();
+  controller.update();
+  controller.enableRotate = false;
+  advanceFrame();
+  controller.update();
+  const atReenable = cameraPose(camera);
+  controller.enableRotate = true;
+  for (let index = 0; index < 5; index += 1) {
+    advanceFrame();
+    controller.update();
+  }
+  const afterReenable = cameraPose(camera);
+  controller.destroy();
+  return poseDistance(atReenable, afterReenable);
+}
+
+function loadIife(filePath, documentTarget) {
+  const sandbox = {
+    console,
+    URL,
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
+    performance,
+    TextDecoder,
+    TextEncoder,
+    atob,
+    btoa,
+    Blob,
+    TransformStream,
+    ReadableStream,
+    WritableStream,
+    Response,
+    Request,
+    Headers,
+    AbortController,
+    Date: ControlledDate,
+    location: { href: 'http://localhost/' },
+  };
+  sandbox.global = sandbox;
+  vm.runInNewContext(readFileSync(filePath, 'utf8'), sandbox, {
+    filename: filePath,
+    timeout: 15_000,
+  });
+  sandbox.document = documentTarget;
+  return sandbox.Cesium;
+}
+
+function loadIifeText(text, filename, documentTarget) {
+  const sandbox = {
+    console,
+    URL,
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
+    performance,
+    TextDecoder,
+    TextEncoder,
+    atob,
+    btoa,
+    Blob,
+    TransformStream,
+    ReadableStream,
+    WritableStream,
+    Response,
+    Request,
+    Headers,
+    AbortController,
+    Date: ControlledDate,
+    location: { href: 'http://localhost/' },
+  };
+  sandbox.global = sandbox;
+  vm.runInNewContext(text, sandbox, { filename, timeout: 15_000 });
+  sandbox.document = documentTarget;
+  return sandbox.Cesium;
+}
+
+function relocateSourceImports(bytes, realPath) {
+  const source = bytes.toString('utf8');
+  const imports = [...source.matchAll(/^import .+$/gm)];
+  let relocated = 0;
+  const output = source.replace(
+    /^import ([^\r\n]+) from "(\.[^"\r\n]+)";$/gm,
+    (_match, binding, specifier) => {
+      relocated++;
+      return `import ${binding} from ${JSON.stringify(new URL(specifier, pathToFileURL(realPath)).href)};`;
+    },
+  );
+  assert.ok(
+    imports.length > 0,
+    'source fixture needs its pinned dependency imports',
+  );
+  assert.equal(relocated, imports.length, 'unsupported source fixture import');
+  assert.doesNotMatch(
+    source,
+    /\bimport\s*\(/,
+    'unsupported dynamic source fixture import',
+  );
+  return output;
+}
+
+async function withStockDistributionFile(realPath, stockBytes, kind, run) {
+  // Never create transient siblings in installed dependencies: other test
+  // processes snapshot that immutable tree concurrently. Absolute source
+  // imports preserve the installed Engine classes' identity and module bytes
+  // below the import declarations; bundled CJS resolves its installed packages.
+  const temporaryParent = realpathSync(os.tmpdir());
+  const directory = mkdtempSync(
+    path.join(temporaryParent, 'gev-inertia-stock-'),
+  );
+  const temporaryPath = path.join(
+    directory,
+    kind === 'source' ? 'stock.mjs' : `stock${path.extname(realPath)}`,
+  );
+  try {
+    if (kind === 'cjs')
+      symlinkSync(
+        path.join(ROOT, 'node_modules'),
+        path.join(directory, 'node_modules'),
+        'junction',
+      );
+    writeFileSync(
+      temporaryPath,
+      kind === 'source'
+        ? relocateSourceImports(stockBytes, realPath)
+        : stockBytes,
+      { flag: 'wx' },
+    );
+    return await run(temporaryPath);
+  } finally {
+    const target = path.resolve(directory);
+    assert.equal(path.dirname(target), temporaryParent);
+    assert.match(path.basename(target), /^gev-inertia-stock-[A-Za-z0-9]+$/);
+    assert.equal(
+      realpathSync(target),
+      target,
+      'Owned fixture must not redirect',
+    );
+    rmSync(target, { recursive: true, force: true });
+  }
+}
+
+async function withDistribution(entry, kind, run) {
+  const realPath = distributionFile(entry.relativePath);
+  const installedBytes = readFileSync(realPath);
+  const patchedBytes = recoverInertiaStage(entry.relativePath, installedBytes);
+  const stockBytes = recoverStock(entry, patchedBytes);
+  const documentTarget = Object.assign(new EventTargetLite(), {
+    onmousewheel: undefined,
+  });
+  return withStockDistributionFile(
+    realPath,
+    stockBytes,
+    kind,
+    async (temporaryPath) => {
+      delete globalThis.document;
+      delete globalThis.window;
+      let stockNamespace;
+      let patchedNamespace;
+      let stockController;
+      let patchedController;
+      if (kind === 'source') {
+        stockNamespace = Engine;
+        patchedNamespace = Engine;
+        stockController = (
+          await import(
+            `${pathToFileURL(temporaryPath).href}?stock=${randomUUID()}`
+          )
+        ).default;
+        patchedController = (
+          await import(
+            `${pathToFileURL(realPath).href}?patched=${randomUUID()}`
+          )
+        ).default;
+      } else if (kind === 'cjs') {
+        stockNamespace = require(temporaryPath);
+        patchedNamespace = require(realPath);
+        stockController = stockNamespace.ScreenSpaceCameraController;
+        patchedController = patchedNamespace.ScreenSpaceCameraController;
+      } else {
+        stockNamespace = loadIife(temporaryPath, documentTarget);
+        patchedNamespace = loadIifeText(
+          patchedBytes.toString('utf8'),
+          realPath,
+          documentTarget,
+        );
+        stockController = stockNamespace.ScreenSpaceCameraController;
+        patchedController = patchedNamespace.ScreenSpaceCameraController;
+      }
+      assert.equal(typeof stockController, 'function');
+      assert.equal(typeof patchedController, 'function');
+      await run({
+        stockNamespace,
+        patchedNamespace,
+        stockController,
+        patchedController,
+        documentTarget,
+      });
+    },
+  );
+}
+
+test('stock distribution fixtures keep shared dependency trees immutable and clean up on callback failure', async () => {
+  const entry = MANIFEST.files.find((item) =>
+    item.relativePath.startsWith('@cesium/engine/Source/'),
+  );
+  const realPath = distributionFile(entry.relativePath);
+  const before = readdirSync(path.dirname(realPath)).sort();
+  const bytes = recoverStock(
+    entry,
+    recoverInertiaStage(entry.relativePath, readFileSync(realPath)),
+  );
+  const failure = new Error('controlled fixture failure');
+  let ownedDirectory;
+  await assert.rejects(
+    withStockDistributionFile(
+      realPath,
+      bytes,
+      'source',
+      async (temporaryPath) => {
+        ownedDirectory = path.dirname(temporaryPath);
+        assert.notEqual(ownedDirectory, path.dirname(realPath));
+        assert.deepEqual(readdirSync(path.dirname(realPath)).sort(), before);
+        const source = bytes.toString('utf8');
+        const copied = readFileSync(temporaryPath, 'utf8');
+        assert.equal(
+          copied.slice(copied.indexOf('/**')),
+          source.slice(source.indexOf('/**')),
+        );
+        assert.doesNotMatch(copied, /^import .+ from "\./m);
+        const namespace = await import(pathToFileURL(temporaryPath).href);
+        assert.equal(typeof namespace.default, 'function');
+        throw failure;
+      },
+    ),
+    (error) => error === failure,
+  );
+  assert.equal(existsSync(ownedDirectory), false);
+  assert.deepEqual(readdirSync(path.dirname(realPath)).sort(), before);
+});
+
+test('stock source relocation rejects unsupported imports instead of silently changing dependency resolution', () => {
+  const realPath = distributionFile(
+    '@cesium/engine/Source/Scene/ScreenSpaceCameraController.js',
+  );
+  for (const source of [
+    'import Thing from "package";\nexport default Thing;',
+    'import Thing from "./Thing.js";\nexport default import("./Later.js");',
+  ])
+    assert.throws(
+      () => relocateSourceImports(Buffer.from(source), realPath),
+      /unsupported/,
+    );
+});
+
+function runTransitionSequence(namespace, Controller, documentTarget) {
+  setControlledTime();
+  const { canvas, camera, controller } = createController(
+    namespace,
+    Controller,
+    documentTarget,
+  );
+  const actionRecords = [];
+  for (const actionKind of ['rotate', 'zoom', 'tilt']) {
+    const button = actionKind === 'tilt' ? 1 : actionKind === 'zoom' ? 2 : 0;
+    const ctrlKey = false;
+    const input = (x, y) => eventAt(x, y, button, ctrlKey);
+    canvas.dispatch('mousedown', input(400, 300));
+    for (const point of [
+      [410, 307],
+      [420, 315],
+    ]) {
+      advanceFrame();
+      canvas.dispatch('mousemove', input(...point));
+      controller.update();
+    }
+    advanceFrame();
+    canvas.dispatch('mouseup', input(420, 315));
+    const beforeInertia = cameraPose(camera);
+    const inertiaPoses = [];
+    for (let index = 0; index < 4; index += 1) {
+      advanceFrame();
+      controller.update();
+      inertiaPoses.push(cameraPose(camera));
+    }
+    actionRecords.push({ beforeInertia, inertiaPoses });
+  }
+  controller.destroy();
+  return actionRecords;
+}
+
+test('disabled camera input cancels stale inertia across every Cesium 1.138 distribution', async () => {
+  const entries = [
+    {
+      kind: 'source',
+      relativePath:
+        '@cesium/engine/Source/Scene/ScreenSpaceCameraController.js',
+    },
+    { kind: 'cjs', relativePath: 'cesium/Build/Cesium/index.cjs' },
+    { kind: 'cjs', relativePath: 'cesium/Build/CesiumUnminified/index.cjs' },
+    { kind: 'iife', relativePath: 'cesium/Build/Cesium/Cesium.js' },
+    { kind: 'iife', relativePath: 'cesium/Build/CesiumUnminified/Cesium.js' },
+  ];
+  const previousDocument = globalThis.document;
+  const previousDate = globalThis.Date;
+  const previousLocation = globalThis.location;
+  const previousWindow = globalThis.window;
+  try {
+    for (const selection of entries) {
+      const entry = MANIFEST.files.find(
+        (candidate) => candidate.relativePath === selection.relativePath,
+      );
+      assert.ok(entry, `missing manifest entry for ${selection.relativePath}`);
+      await withDistribution(entry, selection.kind, async (distribution) => {
+        const {
+          stockNamespace,
+          patchedNamespace,
+          stockController,
+          patchedController,
+          documentTarget,
+        } = distribution;
+
+        const stockLocked = runLockedDrag(
+          stockNamespace,
+          stockController,
+          documentTarget,
+          true,
+        );
+        const patchedLocked = runLockedDrag(
+          patchedNamespace,
+          patchedController,
+          documentTarget,
+          true,
+        );
+        assert.ok(
+          stockLocked.totalMovementAfterUnlockM > 1,
+          `${selection.relativePath}: stock control did not reproduce stale inertia`,
+        );
+        assert.equal(
+          patchedLocked.totalMovementAfterUnlockM,
+          0,
+          `${selection.relativePath}: disabled drag resumed after unlock`,
+        );
+
+        const stockNoFrames = runLockedDrag(
+          stockNamespace,
+          stockController,
+          documentTarget,
+          false,
+        );
+        const patchedNoFrames = runLockedDrag(
+          patchedNamespace,
+          patchedController,
+          documentTarget,
+          false,
+        );
+        assert.equal(stockNoFrames.totalMovementAfterUnlockM, 0);
+        assert.equal(patchedNoFrames.totalMovementAfterUnlockM, 0);
+
+        const stockPriorInertia = runPriorInertiaThenLock(
+          stockNamespace,
+          stockController,
+          documentTarget,
+        );
+        const patchedPriorInertia = runPriorInertiaThenLock(
+          patchedNamespace,
+          patchedController,
+          documentTarget,
+        );
+        assert.ok(stockPriorInertia.postUnlockMovementM > 1);
+        assert.ok(stockPriorInertia.activeInertiaMovementM > 1);
+        assert.equal(patchedPriorInertia.postUnlockMovementM, 0);
+
+        assert.ok(
+          runActionDisabledStaleInertia(
+            stockNamespace,
+            stockController,
+            documentTarget,
+          ) > 1,
+          `${selection.relativePath}: stock per-action control did not move`,
+        );
+        assert.equal(
+          runActionDisabledStaleInertia(
+            patchedNamespace,
+            patchedController,
+            documentTarget,
+          ),
+          0,
+          `${selection.relativePath}: disabled action resumed stale inertia`,
+        );
+
+        const freshGesture = runFreshGestureAfterLock(
+          patchedNamespace,
+          patchedController,
+          documentTarget,
+        );
+        assert.ok(freshGesture.directMovementM > 1);
+        assert.ok(freshGesture.inertiaMovementM > 1);
+
+        for (const actionKind of ['rotate', 'zoom', 'tilt']) {
+          const stockManual = runManualGesture(
+            stockNamespace,
+            stockController,
+            documentTarget,
+            actionKind,
+          );
+          const patchedManual = runManualGesture(
+            patchedNamespace,
+            patchedController,
+            documentTarget,
+            actionKind,
+          );
+          assert.notDeepEqual(
+            stockManual.directPoses.at(-1),
+            stockManual.initialPose,
+            `${selection.relativePath}: pristine ${actionKind} gesture was a no-op`,
+          );
+          assert.notDeepEqual(
+            stockManual.inertiaPoses.at(-1),
+            stockManual.directPoses.at(-1),
+            `${selection.relativePath}: pristine ${actionKind} inertia was a no-op`,
+          );
+          assert.deepEqual(
+            patchedManual,
+            stockManual,
+            `${selection.relativePath}: ordinary ${actionKind} behavior changed`,
+          );
+        }
+
+        assert.deepEqual(
+          runTransitionSequence(
+            patchedNamespace,
+            patchedController,
+            documentTarget,
+          ),
+          runTransitionSequence(
+            stockNamespace,
+            stockController,
+            documentTarget,
+          ),
+          `${selection.relativePath}: cross-action inertia behavior changed`,
+        );
+      });
+    }
+  } finally {
+    globalThis.Date = previousDate;
+    if (previousLocation === undefined) delete globalThis.location;
+    else globalThis.location = previousLocation;
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+    if (previousDocument === undefined) delete globalThis.document;
+    else globalThis.document = previousDocument;
+  }
+});

@@ -1,0 +1,22 @@
+{
+  "candidate": "78e0417244856a2a3d2905ab618d32b909507eb6",
+  "verifiedAt": "2026-10-13T01:31:20.267Z",
+  "runs": [
+    {
+      "kind": "native-austin",
+      "id": "38332484324",
+      "conclusion": "",
+      "headSha": "78e0417244856a2a3d2905ab618d32b909507eb6",
+      "status": "in_progress",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38332484324"
+    },
+    {
+      "kind": "standard",
+      "id": "38332487577",
+      "conclusion": "",
+      "headSha": "78e0417244856a2a3d2905ab618d32b909507eb6",
+      "status": "in_progress",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38332487577"
+    }
+  ]
+}

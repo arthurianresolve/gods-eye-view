@@ -1,0 +1,44 @@
+{
+  "schema": "gev-tracking-integration-review/v1",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38275839280",
+  "testedCommit": "0d2324e64824b59b3b02fea50932deda4e572c08",
+  "sourceClean": true,
+  "passed": 111,
+  "failed": 0,
+  "skipped": 0,
+  "scope": "Hosted functional tracking regression with bundled imagery; not physical GPU performance or soak evidence",
+  "cleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 530394.60264,
+      "closeSettledHostMs": 531177.418197,
+      "closeElapsedMs": 782.8155569999944,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 750.2350039999001
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "log": {
+    "file": "tracking-38275839280.log.gz",
+    "compressedBytes": 7315,
+    "compressedSha256": "7048b58234306c80b813ee01a3c6e132bc271bad071048dfbeac8c8d0ef660ee",
+    "rawBytes": 25378,
+    "rawSha256": "9f5ef1041c1463b3ede874e69d9c23f2be1e58198ce9df75baca5ccfcd16ef15"
+  }
+}

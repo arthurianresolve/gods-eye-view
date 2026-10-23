@@ -1,0 +1,17 @@
+{
+  "schema": "gev-current-base-paint-allocation-rejection/v1",
+  "runtimeSha256": "d0f6ed537ea9a36a8172a35b092ec009156fb2619b0f23e35749edc4e11d0c9a",
+  "rawTapSha256": "2477f733aacfe3ff0af76ac97ab443ba7cde446a93ba152c1c0e164d2699db82",
+  "rawEncoding": "UTF-16LE with BOM from PowerShell capture; original bytes retained",
+  "decodedTapSha256": "750986f7cfda011e464206611495d362557d5d87e1e73da6f5817333d497e2b8",
+  "counts": {
+    "tests": 13,
+    "pass": 12,
+    "fail": 1,
+    "skipped": 0
+  },
+  "failures": [
+    "steady moving-source frames stay in budget with the bounded rocket-mission ambient cohort"
+  ],
+  "disposition": "Not accepted; isolated rocket row exceeds unchanged allocation budget. No budget increase and no runtime promotion."
+}

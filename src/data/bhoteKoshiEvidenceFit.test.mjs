@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The «{publisher} / OPEN» line is drawn on a canvas, so CSS cannot wrap it:
 // a long translation shrinks to fit the portrait card, action word whole.
 // English is drawn at full size.

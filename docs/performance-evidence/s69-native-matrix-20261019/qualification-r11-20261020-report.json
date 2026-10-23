@@ -1,0 +1,27 @@
+{
+  "schema": "gev-s69-r11-integration-report/v1",
+  "status": "not-accepted",
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "qaCommit": "324eebe10997474377899d0ee9b3b3154968fdb7",
+  "productionCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "integration": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/current190-final-review-20261020-r11",
+    "sha256": "1c46260d08248799d7ef0e4baf48ed20a7ec3a60247733c8a485cffaec1f5344"
+  },
+  "ci": {
+    "report": "qa-ci-324eebe1.json",
+    "sha256": "74d46cf7dbeac6313e292eb519353f83ade3508cdde2a04dbabc5522d51c3c7f",
+    "status": "passed",
+    "requiredJobs": 7
+  },
+  "soakReport": "ampfing-soak-190c5ab6-b843-20261020-report.json",
+  "remainingFailures": [
+    "dam-labelled empty-layer startup",
+    "local-control timing",
+    "full visual equivalence"
+  ],
+  "remainingPending": [
+    "cable idle comparison"
+  ],
+  "scope": "Integration status after the passed soak; no release activation or acceptance waiver."
+}

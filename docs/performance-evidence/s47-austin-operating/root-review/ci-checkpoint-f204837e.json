@@ -1,0 +1,50 @@
+{
+  "conclusion": "success",
+  "headSha": "f204837e224e8a7d5ae98a7ebe051365db24b0e0",
+  "jobs": [
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643141"
+    },
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643288"
+    },
+    {
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643452"
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643551"
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643558"
+    },
+    {
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643616"
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518/job/115054643733"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38322835518"
+}

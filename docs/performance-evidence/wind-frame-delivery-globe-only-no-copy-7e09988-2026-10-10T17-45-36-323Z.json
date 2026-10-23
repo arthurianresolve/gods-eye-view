@@ -1,0 +1,741 @@
+{
+  "schema": "gev-wind-frame-delivery/v1",
+  "applicationCommit": "7e09988616e3242eef0b2349416e36b523243441",
+  "harnessCommit": "7e09988616e3242eef0b2349416e36b523243441",
+  "capturedAt": "2026-10-10T17:45:36.323Z",
+  "fixture": "synthetic-360x181-wind-and-scalars/v1",
+  "control": {
+    "sceneMode": "globe-only",
+    "captureMode": "no-copy"
+  },
+  "comparisonScope": "Globe-only control omits the generated wind imagery; compare only frame and capture-path delivery.",
+  "pixelEquivalence": "Pixels are not copied or compared; no image-equivalence claim is made.",
+  "build": {
+    "recipe": "Vite development fixture",
+    "productionBundle": false
+  },
+  "desktopForegroundVerification": "unavailable",
+  "limits": {
+    "attempts": 3,
+    "interAttemptTimerMs": 20,
+    "frameDeadlineMs": 400
+  },
+  "timingSemantics": {
+    "frameWaitMs": "No-copy mode waits for postRender without allocating a copy canvas.",
+    "frameWaitAndCopyMs": "Copy mode combines the bounded postRender wait and synchronous drawImage copy; drawImage is not separately instrumented.",
+    "getImageDataMs": "Synchronous 2D pixel extraction after a successful copy.",
+    "hashMs": "SHA-256 after pixel extraction; outside the frame wait."
+  },
+  "status": "observed",
+  "attempts": [
+    {
+      "index": 0,
+      "declaredSpacingBeforeMs": null,
+      "actualSpacingBeforeMs": null,
+      "before": {
+        "sceneEvents": {
+          "preUpdate": 0,
+          "preRender": 0,
+          "postRender": 0
+        },
+        "page": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 888,
+            "height": 585,
+            "visualWidth": 888,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360,
+            "area": 230400
+          },
+          "canvasViewportIntersectionRatio": 1
+        },
+        "raf": {
+          "status": "observing",
+          "frames": 0,
+          "firstFrameDelayMs": null,
+          "maximumGapMs": null,
+          "sampleElapsedMs": []
+        }
+      },
+      "frameWaitMs": 90.10000002384186,
+      "frameWaitAndCopyMs": null,
+      "frameCompleted": true,
+      "copyRequested": false,
+      "copied": false,
+      "getImageDataMs": null,
+      "hashMs": null,
+      "pixelHash": null,
+      "after": {
+        "sceneEvents": {
+          "preUpdate": 1,
+          "preRender": 1,
+          "postRender": 1
+        },
+        "page": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 888,
+            "height": 585,
+            "visualWidth": 888,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360,
+            "area": 230400
+          },
+          "canvasViewportIntersectionRatio": 1
+        },
+        "raf": {
+          "status": "observing",
+          "frames": 0,
+          "firstFrameDelayMs": null,
+          "maximumGapMs": null,
+          "sampleElapsedMs": []
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "index": 1,
+      "declaredSpacingBeforeMs": 20,
+      "actualSpacingBeforeMs": 39.300000071525574,
+      "before": {
+        "sceneEvents": {
+          "preUpdate": 2,
+          "preRender": 2,
+          "postRender": 2
+        },
+        "page": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 888,
+            "height": 585,
+            "visualWidth": 888,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360,
+            "area": 230400
+          },
+          "canvasViewportIntersectionRatio": 1
+        },
+        "raf": {
+          "status": "observing",
+          "frames": 2,
+          "firstFrameDelayMs": 0,
+          "maximumGapMs": 99.87199999999575,
+          "sampleElapsedMs": [
+            0,
+            91.09999997615523
+          ]
+        }
+      },
+      "frameWaitMs": 3.8000000715255737,
+      "frameWaitAndCopyMs": null,
+      "frameCompleted": true,
+      "copyRequested": false,
+      "copied": false,
+      "getImageDataMs": null,
+      "hashMs": null,
+      "pixelHash": null,
+      "after": {
+        "sceneEvents": {
+          "preUpdate": 3,
+          "preRender": 3,
+          "postRender": 3
+        },
+        "page": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 888,
+            "height": 585,
+            "visualWidth": 888,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360,
+            "area": 230400
+          },
+          "canvasViewportIntersectionRatio": 1
+        },
+        "raf": {
+          "status": "observing",
+          "frames": 2,
+          "firstFrameDelayMs": 0,
+          "maximumGapMs": 99.87199999999575,
+          "sampleElapsedMs": [
+            0,
+            91.09999997615523
+          ]
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "index": 2,
+      "declaredSpacingBeforeMs": 20,
+      "actualSpacingBeforeMs": 20.699999928474426,
+      "before": {
+        "sceneEvents": {
+          "preUpdate": 3,
+          "preRender": 3,
+          "postRender": 3
+        },
+        "page": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 888,
+            "height": 585,
+            "visualWidth": 888,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360,
+            "area": 230400
+          },
+          "canvasViewportIntersectionRatio": 1
+        },
+        "raf": {
+          "status": "observing",
+          "frames": 3,
+          "firstFrameDelayMs": 0,
+          "maximumGapMs": 99.87199999999575,
+          "sampleElapsedMs": [
+            0,
+            91.09999997615523,
+            124.49999997615669
+          ]
+        }
+      },
+      "frameWaitMs": 58.60000002384186,
+      "frameWaitAndCopyMs": null,
+      "frameCompleted": true,
+      "copyRequested": false,
+      "copied": false,
+      "getImageDataMs": null,
+      "hashMs": null,
+      "pixelHash": null,
+      "after": {
+        "sceneEvents": {
+          "preUpdate": 4,
+          "preRender": 4,
+          "postRender": 4
+        },
+        "page": {
+          "visible": "visible",
+          "focused": true,
+          "viewport": {
+            "width": 888,
+            "height": 585,
+            "visualWidth": 888,
+            "visualHeight": 585,
+            "visualOffsetLeft": 0,
+            "visualOffsetTop": 0
+          },
+          "canvasRect": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360
+          },
+          "canvasViewportIntersection": {
+            "left": 8,
+            "top": 167,
+            "right": 648,
+            "bottom": 527,
+            "width": 640,
+            "height": 360,
+            "area": 230400
+          },
+          "canvasViewportIntersectionRatio": 1
+        },
+        "raf": {
+          "status": "observing",
+          "frames": 3,
+          "firstFrameDelayMs": 0,
+          "maximumGapMs": 99.87199999999575,
+          "sampleElapsedMs": [
+            0,
+            91.09999997615523,
+            124.49999997615669
+          ]
+        }
+      },
+      "status": "passed"
+    }
+  ],
+  "environment": {
+    "appCommit": "7e09988616e3242eef0b2349416e36b523243441",
+    "harnessCommit": "7e09988616e3242eef0b2349416e36b523243441",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "viewport": {
+      "width": 888,
+      "height": 585,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 640,
+      "height": 360
+    },
+    "layers": []
+  },
+  "renderer": {
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)"
+  },
+  "contextAttributes": {
+    "alpha": false,
+    "antialias": true,
+    "depth": true,
+    "desynchronized": false,
+    "failIfMajorPerformanceCaveat": false,
+    "powerPreference": "high-performance",
+    "premultipliedAlpha": true,
+    "preserveDrawingBuffer": true,
+    "stencil": true,
+    "xrCompatible": false
+  },
+  "setupStartedAtMs": 37231.89999997616,
+  "setupElapsedMs": 0.10000002384185791,
+  "sceneReadiness": {
+    "gpuReady": null,
+    "imageryActive": null,
+    "globeTilesLoaded": true,
+    "status": "ready",
+    "deadlineMs": 15000
+  },
+  "probe": {
+    "captureMode": "no-copy",
+    "requestedAttempts": 3,
+    "spacingMs": 20,
+    "timeoutMs": 400,
+    "attempts": [
+      {
+        "index": 0,
+        "declaredSpacingBeforeMs": null,
+        "actualSpacingBeforeMs": null,
+        "before": {
+          "sceneEvents": {
+            "preUpdate": 0,
+            "preRender": 0,
+            "postRender": 0
+          },
+          "page": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 888,
+              "height": 585,
+              "visualWidth": 888,
+              "visualHeight": 585,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360,
+              "area": 230400
+            },
+            "canvasViewportIntersectionRatio": 1
+          },
+          "raf": {
+            "status": "observing",
+            "frames": 0,
+            "firstFrameDelayMs": null,
+            "maximumGapMs": null,
+            "sampleElapsedMs": []
+          }
+        },
+        "frameWaitMs": 90.10000002384186,
+        "frameWaitAndCopyMs": null,
+        "frameCompleted": true,
+        "copyRequested": false,
+        "copied": false,
+        "getImageDataMs": null,
+        "hashMs": null,
+        "pixelHash": null,
+        "after": {
+          "sceneEvents": {
+            "preUpdate": 1,
+            "preRender": 1,
+            "postRender": 1
+          },
+          "page": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 888,
+              "height": 585,
+              "visualWidth": 888,
+              "visualHeight": 585,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360,
+              "area": 230400
+            },
+            "canvasViewportIntersectionRatio": 1
+          },
+          "raf": {
+            "status": "observing",
+            "frames": 0,
+            "firstFrameDelayMs": null,
+            "maximumGapMs": null,
+            "sampleElapsedMs": []
+          }
+        },
+        "status": "passed"
+      },
+      {
+        "index": 1,
+        "declaredSpacingBeforeMs": 20,
+        "actualSpacingBeforeMs": 39.300000071525574,
+        "before": {
+          "sceneEvents": {
+            "preUpdate": 2,
+            "preRender": 2,
+            "postRender": 2
+          },
+          "page": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 888,
+              "height": 585,
+              "visualWidth": 888,
+              "visualHeight": 585,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360,
+              "area": 230400
+            },
+            "canvasViewportIntersectionRatio": 1
+          },
+          "raf": {
+            "status": "observing",
+            "frames": 2,
+            "firstFrameDelayMs": 0,
+            "maximumGapMs": 99.87199999999575,
+            "sampleElapsedMs": [
+              0,
+              91.09999997615523
+            ]
+          }
+        },
+        "frameWaitMs": 3.8000000715255737,
+        "frameWaitAndCopyMs": null,
+        "frameCompleted": true,
+        "copyRequested": false,
+        "copied": false,
+        "getImageDataMs": null,
+        "hashMs": null,
+        "pixelHash": null,
+        "after": {
+          "sceneEvents": {
+            "preUpdate": 3,
+            "preRender": 3,
+            "postRender": 3
+          },
+          "page": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 888,
+              "height": 585,
+              "visualWidth": 888,
+              "visualHeight": 585,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360,
+              "area": 230400
+            },
+            "canvasViewportIntersectionRatio": 1
+          },
+          "raf": {
+            "status": "observing",
+            "frames": 2,
+            "firstFrameDelayMs": 0,
+            "maximumGapMs": 99.87199999999575,
+            "sampleElapsedMs": [
+              0,
+              91.09999997615523
+            ]
+          }
+        },
+        "status": "passed"
+      },
+      {
+        "index": 2,
+        "declaredSpacingBeforeMs": 20,
+        "actualSpacingBeforeMs": 20.699999928474426,
+        "before": {
+          "sceneEvents": {
+            "preUpdate": 3,
+            "preRender": 3,
+            "postRender": 3
+          },
+          "page": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 888,
+              "height": 585,
+              "visualWidth": 888,
+              "visualHeight": 585,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360,
+              "area": 230400
+            },
+            "canvasViewportIntersectionRatio": 1
+          },
+          "raf": {
+            "status": "observing",
+            "frames": 3,
+            "firstFrameDelayMs": 0,
+            "maximumGapMs": 99.87199999999575,
+            "sampleElapsedMs": [
+              0,
+              91.09999997615523,
+              124.49999997615669
+            ]
+          }
+        },
+        "frameWaitMs": 58.60000002384186,
+        "frameWaitAndCopyMs": null,
+        "frameCompleted": true,
+        "copyRequested": false,
+        "copied": false,
+        "getImageDataMs": null,
+        "hashMs": null,
+        "pixelHash": null,
+        "after": {
+          "sceneEvents": {
+            "preUpdate": 4,
+            "preRender": 4,
+            "postRender": 4
+          },
+          "page": {
+            "visible": "visible",
+            "focused": true,
+            "viewport": {
+              "width": 888,
+              "height": 585,
+              "visualWidth": 888,
+              "visualHeight": 585,
+              "visualOffsetLeft": 0,
+              "visualOffsetTop": 0
+            },
+            "canvasRect": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360
+            },
+            "canvasViewportIntersection": {
+              "left": 8,
+              "top": 167,
+              "right": 648,
+              "bottom": 527,
+              "width": 640,
+              "height": 360,
+              "area": 230400
+            },
+            "canvasViewportIntersectionRatio": 1
+          },
+          "raf": {
+            "status": "observing",
+            "frames": 3,
+            "firstFrameDelayMs": 0,
+            "maximumGapMs": 99.87199999999575,
+            "sampleElapsedMs": [
+              0,
+              91.09999997615523,
+              124.49999997615669
+            ]
+          }
+        },
+        "status": "passed"
+      }
+    ],
+    "status": "complete",
+    "completedAttempts": 3
+  },
+  "finishedAt": "2026-10-10T17:45:36.670Z",
+  "sceneEvents": {
+    "preUpdate": 4,
+    "preRender": 4,
+    "postRender": 4
+  },
+  "renderErrors": [],
+  "contextEvents": [],
+  "lifecycleEvents": [],
+  "foregroundUninterrupted": true,
+  "cleanup": {
+    "listenersRemoved": true,
+    "diagnosticsDisposed": true,
+    "windRenderingDestroyed": true,
+    "viewerDestroyed": true,
+    "errors": []
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-19T20:39:44.115Z",
+  "row": "infrastructure",
+  "candidateCommit": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 320.90000000596046,
+        "candidateMedianP95Ms": 328.70000000298023,
+        "changePct": 2.43066375720626,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "measured",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 5231,
+    "candidateMedianMs": 3952,
+    "baselineInitialSettleMedianMs": 5926,
+    "candidateInitialSettleMedianMs": 4879,
+    "initialSettleChangePct": -17.667904151198112,
+    "initialSettleRegressionOver10Pct": false,
+    "baselineRunsMs": [
+      6094,
+      5342,
+      3254,
+      4620,
+      5231
+    ],
+    "candidateRunsMs": [
+      5488,
+      3908,
+      3952,
+      3589,
+      4122
+    ],
+    "changePct": -24.450391894475242,
+    "regressionOver10Pct": false,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6707,
+      "sha256": "bb6477984503eca6828ebf1a9c645a2430ca17ae79ca945d1c1b7a8dd659d23f"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3938,
+      "sha256": "061fc7f779843e521bc85eaf769877a59011a894a2d3c02d5688da0628f72d08"
+    },
+    {
+      "name": "infrastructure-baseline.json",
+      "bytes": 387007,
+      "sha256": "a8ace691c85b87eed0b731a4ef41c645dc381c3dbc0afc76100743fcb040f892"
+    },
+    {
+      "name": "infrastructure-candidate.json",
+      "bytes": 388328,
+      "sha256": "841baa339d3900af64b60fba95a117cd3d16643a7f2f79a4a521ee068eb67dc8"
+    },
+    {
+      "name": "infrastructure-baseline.json.log",
+      "bytes": 678,
+      "sha256": "c523f3b759a6311d9a0d2f92c9c5d0e7d3f2b9c1de144e54258f93569a3193de"
+    },
+    {
+      "name": "infrastructure-baseline.json.invocation.json",
+      "bytes": 2427,
+      "sha256": "373c7a16be1c81bc360f6af9e4bf4e1540b93b2e739e9c05cb80a8ac2168e5e3"
+    },
+    {
+      "name": "infrastructure-candidate.json.log",
+      "bytes": 679,
+      "sha256": "04f9ce7a4740bd3af7916e326bd5996441446fa382c14cceb77e1d2f964e20b3"
+    },
+    {
+      "name": "infrastructure-candidate.json.invocation.json",
+      "bytes": 2437,
+      "sha256": "fb05b47b05484655ce6fd64512ac05a17c11990fea4160c1e2aaa6eacb5a89f2"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-b3c49b19-native155",
+  "productionChanged": false
+}

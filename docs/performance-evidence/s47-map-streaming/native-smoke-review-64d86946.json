@@ -1,0 +1,27 @@
+{
+  "schema": "gev-map-native-smoke-review/v1",
+  "implementationCommit": "64d8694678f7f85d0cbd3cbf6feb5ec71f0c948c",
+  "status": "correction-required-not-integrated",
+  "cancelledOnlyRequiredKind": {
+    "source": "actual fixture generator, delivery adapter and fixtureRequestCommand; every asset except the synthetic credit acknowledged before cancelling the credit request",
+    "manifestSha256": "36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f",
+    "requested": 72,
+    "acknowledged": 71,
+    "cancelled": 1,
+    "creditPath": "google/credit-placeholder.png",
+    "creditAcknowledged": 0,
+    "validatorWronglyAccepts": true
+  },
+  "noUndef": {
+    "source": "actual ESLint with the repository CAPTURE_NO_UNDEF_CONFIG against the frozen smoke source",
+    "errorCount": 5,
+    "undefinedIdentifiers": ["failure", "mapStreamingInterceptionRelease"],
+    "lines": [5274, 5275, 5276, 5277],
+    "impact": "The main finally block evaluates undefined failure even on success, masking results and skipping subsequent temporary-directory cleanup and report writing."
+  },
+  "sourceReview": {
+    "baselineFinalization": "The baseline still disposes delivery at line 4761 before closing its context and releasing interception in finally at line 4940.",
+    "requiredCorrection": "Use the same post-target-close and post-interception-release finalization path for both variants; require actual acknowledged bytes for every required asset kind; keep failure diagnostics in their owning scope."
+  },
+  "scope": "No browser launched. The cancellation false acceptance and lint errors were executed; baseline ordering is source review."
+}

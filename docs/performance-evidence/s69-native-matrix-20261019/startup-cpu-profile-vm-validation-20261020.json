@@ -1,0 +1,2298 @@
+{
+  "schema": "gev-startup-cpu-profile-vm-validation/v1",
+  "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-cpu-profile-20261020",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "1ade60e3ff7b3fb1183bc016c53f9ee46e3bc77687f041a127158a7ad0f58953"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "sha256": "b2a8ac7e8e9a15a6db36e88fc1d9902036b8cb160f9801332fb66250ffc424a3"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "sha256": "eed4380cdafec4c5b35d263f4d001a06da0c26c6a7aaeb15998c87fb6e6562a7"
+    },
+    {
+      "name": "scripts/format-scope.json",
+      "sha256": "10a00c382a65ff56cfc62e872c022b6bba857baf32bfb20100fa0a8df2ae0edc"
+    },
+    {
+      "name": "scripts/performance/boundedCpuProfile.mjs",
+      "sha256": "708eede3415e6df33a1e848958c4110883204977f7ec479895bb6b55abb43295"
+    },
+    {
+      "name": "scripts/performance/boundedCpuProfile.test.mjs",
+      "sha256": "bdf0d251e73990d0b3c1ef117cc0919f561723d07c77a259f9b9b46e2b4a76dd"
+    },
+    {
+      "name": "scripts/performance/startupCpuAttribution.mjs",
+      "sha256": "1358d423ee06e011099b35c6e1df18700a6817e661e4239ef3cf44b214b1b0c4"
+    },
+    {
+      "name": "scripts/performance/startupCpuAttribution.test.mjs",
+      "sha256": "cdec501416c691fb9109cc256bf2283d9e2a74045b08638c9a397509a7b76cc5"
+    },
+    {
+      "name": "scripts/performance/finalVisualQualificationState.mjs",
+      "sha256": "b9b432f7d5cef7b493e637d873894cff881f491c1bf336f8a5da1dfa83803267"
+    },
+    {
+      "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+      "sha256": "0782f40ae294359cc6ea200734fe91c733e6de1f52cc17f38566c259732da580"
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.mjs",
+      "sha256": "2a086732bd6047d3f4c555914c4d1de763e733eab32cba36097a13c4a7a8f0af"
+    },
+    {
+      "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+      "sha256": "4388e6c7be30f8139b33cc31fc9f1f61fa1034521501ce0ebb856f11d241fbbd"
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.mjs",
+      "sha256": "1e2e6e750a6b2a482a77f2b5ae0721e5c7dfc72567bffe993dfbe4eaaf4e5201"
+    },
+    {
+      "name": "scripts/performance/visualPresentationBoundary.test.mjs",
+      "sha256": "8785343d3e6e8729cb3fe3c1a4c62f21b4765f10723c37648caa2e6d6ce4c809"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "status": 0,
+      "summary": [
+        "✔ guard failure projection is self-contained, bounded, and omits page content (2.809155ms)",
+        "✔ ready surface does not hide enable, selection, or visual setting failures (1.525089ms)",
+        "✔ startup profile failure remains diagnostic and preserves failed readiness (0.245723ms)",
+        "✔ startup profile session setup failure still releases the bounded operation (15.714279ms)",
+        "ℹ tests 65",
+        "ℹ pass 65",
+        "ℹ fail 0",
+        "ℹ duration_ms 851.37075"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "status": 0,
+      "summary": [
+        "✔ guard failure projection is self-contained, bounded, and omits page content (1.753901ms)",
+        "✔ ready surface does not hide enable, selection, or visual setting failures (2.054069ms)",
+        "✔ startup profile failure remains diagnostic and preserves failed readiness (0.265142ms)",
+        "✔ startup profile session setup failure still releases the bounded operation (16.972755ms)",
+        "ℹ tests 65",
+        "ℹ pass 65",
+        "ℹ fail 0",
+        "ℹ duration_ms 859.683413"
+      ]
+    }
+  ],
+  "status": "passed",
+  "integration": {
+    "schema": "gev-startup-cpu-profile-integration-vm-validation/v1",
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-startup-cpu-integration-20261020-2c5f2f94-5077-47f0-8712-fe4a2465efa3",
+    "transferFileCount": 526,
+    "transferBytes": 7187770,
+    "checks": [
+      {
+        "label": "node24",
+        "kind": "test",
+        "name": "scripts/captureNoUndefConfig.test.mjs",
+        "status": 0,
+        "summary": [
+          "ℹ tests 4",
+          "ℹ pass 4",
+          "ℹ fail 0",
+          "ℹ duration_ms 209.939997"
+        ]
+      },
+      {
+        "label": "node24",
+        "kind": "test",
+        "name": "scripts/capture-scene-performance.test.mjs",
+        "status": 0,
+        "summary": [
+          "ℹ tests 22",
+          "ℹ pass 22",
+          "ℹ fail 0",
+          "ℹ duration_ms 5708.642761"
+        ]
+      },
+      {
+        "label": "node24",
+        "kind": "test",
+        "name": "scripts/run-unit-tests.test.mjs",
+        "status": 0,
+        "summary": [
+          "ℹ tests 2",
+          "ℹ pass 2",
+          "ℹ fail 0",
+          "ℹ duration_ms 62.833918"
+        ]
+      },
+      {
+        "label": "node24",
+        "kind": "lint",
+        "name": "check-capture-no-undef.mjs",
+        "status": 0,
+        "output": "Capture harness no-undef: 77 files passed.",
+        "stderr": ""
+      },
+      {
+        "label": "node26",
+        "kind": "test",
+        "name": "scripts/captureNoUndefConfig.test.mjs",
+        "status": 0,
+        "summary": [
+          "ℹ tests 4",
+          "ℹ pass 4",
+          "ℹ fail 0",
+          "ℹ duration_ms 202.886512"
+        ]
+      },
+      {
+        "label": "node26",
+        "kind": "test",
+        "name": "scripts/capture-scene-performance.test.mjs",
+        "status": 0,
+        "summary": [
+          "ℹ tests 22",
+          "ℹ pass 22",
+          "ℹ fail 0",
+          "ℹ duration_ms 5578.066128"
+        ]
+      },
+      {
+        "label": "node26",
+        "kind": "test",
+        "name": "scripts/run-unit-tests.test.mjs",
+        "status": 0,
+        "summary": [
+          "ℹ tests 2",
+          "ℹ pass 2",
+          "ℹ fail 0",
+          "ℹ duration_ms 83.364002"
+        ]
+      },
+      {
+        "label": "node26",
+        "kind": "lint",
+        "name": "check-capture-no-undef.mjs",
+        "status": 0,
+        "output": "Capture harness no-undef: 77 files passed.",
+        "stderr": ""
+      }
+    ],
+    "status": "passed",
+    "fileHashes": [
+      {
+        "name": "package.json",
+        "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f"
+      },
+      {
+        "name": ".prettierignore",
+        "sha256": "d029987a0e1c830a9d5bfa1c5b306ed616032c7bdc0f7d842d87e11d4cf7ece0"
+      },
+      {
+        "name": ".prettierrc.json",
+        "sha256": "d77193f01dffa58f3e766b73873a6d3d5b2291ee59916ddcc53c2e04a88a232d"
+      },
+      {
+        "name": "scripts/format-runtime.json",
+        "sha256": "4e461841c9266ab7293df616275e242967a8d2c00d080d7076d28d594bb682f8"
+      },
+      {
+        "name": "scripts/format-scope.json",
+        "sha256": "10a00c382a65ff56cfc62e872c022b6bba857baf32bfb20100fa0a8df2ae0edc"
+      },
+      {
+        "name": "scripts/performance/visualPresentationBoundary.test.mjs",
+        "sha256": "8785343d3e6e8729cb3fe3c1a4c62f21b4765f10723c37648caa2e6d6ce4c809"
+      },
+      {
+        "name": "scripts/performance/visualPresentationBoundary.mjs",
+        "sha256": "1e2e6e750a6b2a482a77f2b5ae0721e5c7dfc72567bffe993dfbe4eaaf4e5201"
+      },
+      {
+        "name": "scripts/performance/debuggerPausedCapture.test.mjs",
+        "sha256": "4388e6c7be30f8139b33cc31fc9f1f61fa1034521501ce0ebb856f11d241fbbd"
+      },
+      {
+        "name": "scripts/performance/debuggerPausedCapture.mjs",
+        "sha256": "2a086732bd6047d3f4c555914c4d1de763e733eab32cba36097a13c4a7a8f0af"
+      },
+      {
+        "name": "scripts/performance/runFinalVisualQualification.test.mjs",
+        "sha256": "0782f40ae294359cc6ea200734fe91c733e6de1f52cc17f38566c259732da580"
+      },
+      {
+        "name": "scripts/performance/finalVisualQualificationState.mjs",
+        "sha256": "b9b432f7d5cef7b493e637d873894cff881f491c1bf336f8a5da1dfa83803267"
+      },
+      {
+        "name": "scripts/performance/boundedCpuProfile.test.mjs",
+        "sha256": "bdf0d251e73990d0b3c1ef117cc0919f561723d07c77a259f9b9b46e2b4a76dd"
+      },
+      {
+        "name": "scripts/performance/boundedCpuProfile.mjs",
+        "sha256": "708eede3415e6df33a1e848958c4110883204977f7ec479895bb6b55abb43295"
+      },
+      {
+        "name": "server/providers/transitHistory.test.mjs",
+        "sha256": "8b6050c9f2974085240149cc1d3beef1e7984342d3cdb3ecaac27b77b721fc4c"
+      },
+      {
+        "name": "server/providers/transitHistory.js",
+        "sha256": "a318acdb9ad35af5472bb1cbd05f4eb890d3f1d037838bc4137ef6af4179c539"
+      },
+      {
+        "name": "src/sources/transitHistoryStore.js",
+        "sha256": "b3e39b85a0fce15fc1a179f81ad25b0c70b1d688b80083a19ba1a58cd675e334"
+      },
+      {
+        "name": "src/sources/transitHistory.js",
+        "sha256": "a23b757a7b9c487464bf4b767389f509fd88c3dddc9a655f958bf066db41da63"
+      },
+      {
+        "name": "server/providers/cctv-health.test.mjs",
+        "sha256": "0c9c4a1d7fcc907cb7b47cbb0f9767bf63f7911d3558af9c297f26c523aa7174"
+      },
+      {
+        "name": "server/providers/cctv.js",
+        "sha256": "b17e63b1c0050f662f9cc496d857eface7d2c1871a39a3556fcf7b7de228d28b"
+      },
+      {
+        "name": "server/providers/cctv/placeholders.js",
+        "sha256": "0f735d45ed2f75841cdccfbe04aa129e8b08fc989e737b485697ce72ae4f26e2"
+      },
+      {
+        "name": "src/evidence/evidence.js",
+        "sha256": "fd2098ebbd22fef89f2545ad0e8c3ad59a2d5df8c90dc950b968336a858feab6"
+      },
+      {
+        "name": "server/providers/places/google-key.js",
+        "sha256": "c045a6bf5421d7c792c6819e94e659315f614c209e52d01166903b9e7b5e89dd"
+      },
+      {
+        "name": "scripts/google-server-key.mjs",
+        "sha256": "1b0e29cde04c6134f243f9049c2e83a9ebd78203122c50dfc6bdabf0b5f4b416"
+      },
+      {
+        "name": "server/providers/cctv/stream.js",
+        "sha256": "48dc75ac45e8dd8d6c05fceb0a283a4ca8f90dcf144cdf4937b1684cc21cd664"
+      },
+      {
+        "name": "server/providers/cctv/range.js",
+        "sha256": "12e47b43211566d1e84af1974c64ca499eb28417d91224ead74e51d12cac6fce"
+      },
+      {
+        "name": "server/providers/cctv/constants.js",
+        "sha256": "b2b68efd84d7d9d3ae739aadd17d8bbc96a5cea7f7170d3152028351bf21fdd3"
+      },
+      {
+        "name": "server/providers/cctv/media.js",
+        "sha256": "22b4a048683d57d12a5376a8d7b7c4158bb46b78bddbec4dd9d9c62a1c9d7cb8"
+      },
+      {
+        "name": "server/providers/cctv/normalize.js",
+        "sha256": "55fdd775149abae020c3565a3df7bc40309536cd2090ef64eaea5588da7b114f"
+      },
+      {
+        "name": "server/providers/common/geo.js",
+        "sha256": "d21127a921b4228e8964acbaed264003761d67868581856c6838ac5d777f92a7"
+      },
+      {
+        "name": "src/data/directionText.js",
+        "sha256": "f3ea716def24660362da917ce0ca81ed63357694da153975a75a3f2f952ec64b"
+      },
+      {
+        "name": "src/sources/cctvTypes.js",
+        "sha256": "dcc3a9248c664e15c589a981a76fe7f049a1397e03665a2fb495b9c3d3c73719"
+      },
+      {
+        "name": "server/providers/cctv/catalog.js",
+        "sha256": "df60dc154998a2b862f691980b960cf99c71375e58a10516aa18664464f21072"
+      },
+      {
+        "name": "server/providers/cctv/sources.js",
+        "sha256": "489932cb6e870dc95e22f39201aee5b2ea0597125f519cee54cfb73d88442e10"
+      },
+      {
+        "name": "server/providers/common/http.js",
+        "sha256": "3aa8351de12b0e3c915957a7f4e9b5f932ef2f9c5ee93e74b070013c25420f5e"
+      },
+      {
+        "name": "src/sources/httpBody.js",
+        "sha256": "5113e8ef647b54431913b3521fc45014db9669668af447e1270c96243f171996"
+      },
+      {
+        "name": "src/i18n/marker.js",
+        "sha256": "8b9c5d7a233d59205e7e74428bf5c8a6bd8e916a45737e44b199c02593199c41"
+      },
+      {
+        "name": "server/providers/cctv/lithuania.js",
+        "sha256": "b4ba067698a0a5d06712270fcd63a8a17caea0ca362af947d6ba37e0fc3eaf2c"
+      },
+      {
+        "name": "server/providers/cctv/groundHeights.js",
+        "sha256": "d3fb5a2d417bb596843c9f6d2a15cc920574220440bbb5a465727cfb4a9ddf9d"
+      },
+      {
+        "name": "src/data/cctvFootprint.js",
+        "sha256": "e71888067656cf1d4eb0620ecfdc095ee5ffbe95451075de5ba310b8a98b09ec"
+      },
+      {
+        "name": "server/providers/cctv/cap.js",
+        "sha256": "f491277f46b840730b8e746c4617e92058d37a10362f2f078d0fdcd4046cbdda"
+      },
+      {
+        "name": "server/providers/evidenceArchive.test.mjs",
+        "sha256": "2022eeff8ef57975b7b3f4c1e1bfaaaf660c919089545570d098813130599276"
+      },
+      {
+        "name": "server/providers/evidenceArchive.js",
+        "sha256": "c855587a078b02188fa9010d59c1c02c7e997998c3bb8c36d90b0808b0ed268b"
+      },
+      {
+        "name": "server/providers/common/same-site.js",
+        "sha256": "9264cb05252850d64f836538695ea480176c8e860d041d8929936d82504fe8f6"
+      },
+      {
+        "name": "src/localRequestGate.mjs",
+        "sha256": "19c60ce12107dbbbb2887e67629920c37961baa14c38561328330cb13674e7e7"
+      },
+      {
+        "name": "src/evidence/archiveLookup.js",
+        "sha256": "3957670063ac6276f2e02d23771fba77d5cb3f2fc6506ce97d2defcddaedb79b"
+      },
+      {
+        "name": "scripts/run-unit-tests.test.mjs",
+        "sha256": "9906431c66a123c2bd7c11e6ba692f5a21a77ab42c77282479b292408be737c7"
+      },
+      {
+        "name": "scripts/run-unit-tests.mjs",
+        "sha256": "eed4380cdafec4c5b35d263f4d001a06da0c26c6a7aaeb15998c87fb6e6562a7"
+      },
+      {
+        "name": "scripts/capture-scene-performance.test.mjs",
+        "sha256": "b42e23c77f1e5506bdd9eeec6a28e3268a48c4789c719c6abee7e5802dccdea9"
+      },
+      {
+        "name": "scripts/performance/buildProvenance.mjs",
+        "sha256": "8cf0f6e23b8f0942ebc5d5a22b7f7a9d59ca218da022fed2eeab2f5dc37dc7ce"
+      },
+      {
+        "name": "scripts/performance/mapStreamingWorkloadContract.mjs",
+        "sha256": "f0fbc474cde873484e58ec3d2528ca42e0d3b87a15ed7132c78ac1fca306903f"
+      },
+      {
+        "name": "scripts/check-capture-no-undef.mjs",
+        "sha256": "5db1898978e4e631c13791bfc5292c7147ed338e65418f8142cd732d796030ed"
+      },
+      {
+        "name": "scripts/captureNoUndefConfig.mjs",
+        "sha256": "b2a8ac7e8e9a15a6db36e88fc1d9902036b8cb160f9801332fb66250ffc424a3"
+      },
+      {
+        "name": "scripts/captureNoUndefConfig.test.mjs",
+        "sha256": "c96ea633f97a3ff05bd8ed55e6848188ed6f820aec7cf3a8ec357f00860becb9"
+      },
+      {
+        "name": "src/overlays/worldOverlayAllocation.worker.mjs",
+        "sha256": "c2fe169f077e308e23cd28ea18ff9a50e832902ce8ced926e4b55426262de875"
+      },
+      {
+        "name": "src/data/detection.js",
+        "sha256": "8ca1a1a3e0989a3e6575e7b65fc51944c1426d13f92185f3ff3dda65761bb092"
+      },
+      {
+        "name": "src/cyberSonar.js",
+        "sha256": "ddf0ce1d9b4538d59bc8a88b72671d6115cb88eeeaf0b15b95d737480e99f356"
+      },
+      {
+        "name": "src/data/detectionPresentation.js",
+        "sha256": "cb3fe13a260aa80c589781a19715d13b0e2043f44ad68d0c3c4f0aa9a80245be"
+      },
+      {
+        "name": "src/data/detectionPolicy.js",
+        "sha256": "1a2346b27f0182050f5ed7bc2a71ec3a64b6717f130a281c2a0f3593d97a3edf"
+      },
+      {
+        "name": "src/data/detectionCohort.js",
+        "sha256": "a3c5ecddba212a244ac8470b93e6beb8761f7cde99b9ee4ffc6f1660e22a0afc"
+      },
+      {
+        "name": "src/data/labelArbiter.js",
+        "sha256": "da178072243462227e064ffcc3f0d79ac2956bf4de7a066d01ac82756d51b184"
+      },
+      {
+        "name": "src/overlays/worldOverlayDraw.js",
+        "sha256": "cf183af3f0c2ad34168e09d8e0a31b15a71cf44657c04463ba610c180b17248d"
+      },
+      {
+        "name": "src/overlays/worldOverlayTokens.js",
+        "sha256": "a17971c49ccac5179d40625dcefa34d30b2fe0d931298df4faeb18675d08ab75"
+      },
+      {
+        "name": "src/data/iconOrientation.js",
+        "sha256": "827ace4ca6ebb4f8c15e501c09826cac7cb25701c0d16464e68881dd8341bb69"
+      },
+      {
+        "name": "src/overlays/worldOverlay.js",
+        "sha256": "019beb9bc4c04e97a25e99987fc4cc58b4a27941191a63160223975455c7907c"
+      },
+      {
+        "name": "src/i18n/index.js",
+        "sha256": "695e596e29d2c79050432c28841909044a8c56259c7b8ef2e65dcb317fa32a79"
+      },
+      {
+        "name": "src/i18n/locale.js",
+        "sha256": "bafaeb98296093ac8676dc07eeeaa83fb416673c5d0782a80101b91b5ebc11c3"
+      },
+      {
+        "name": "src/celestialRing.js",
+        "sha256": "c9e09013b6fae865243f4261a3a3c57413900bde8af20d409f9ffa3c3ab66785"
+      },
+      {
+        "name": "src/renderGovernor.js",
+        "sha256": "6f75ce570cdfbcd056f2b50590eba0afbe9d380f020c616314bcdfd78d7dd836"
+      },
+      {
+        "name": "src/performance/cpuTimings.js",
+        "sha256": "f6282d0f1eca59760622e852448d9481d83a7005ab1febc9a7cf784c3108027c"
+      },
+      {
+        "name": "src/data/detectionDraw.js",
+        "sha256": "95ecf983ee707c9070a9959b7e8670453354e3de2dde4bb48cafb25931d40083"
+      },
+      {
+        "name": "src/data/detectionRenderDemand.js",
+        "sha256": "78119abb4e9ac632af2b3e05186b6391aea70717ae0e070d731637806193967a"
+      },
+      {
+        "name": "src/data/telegeographySubmarineCables.js",
+        "sha256": "ff069899e189f7b8ead45224dcc9a1199ce0b2481cf4fcc13f5d6bf4f2666326"
+      },
+      {
+        "name": "src/layers/submarineCables/index.js",
+        "sha256": "b5bf6ed4cd741ae62fd3e4d6e9c567387ed84f0806120693e3cad860eeb1bae5"
+      },
+      {
+        "name": "src/layers/submarineCables/policy.js",
+        "sha256": "801de83816882c4d1a72a9cc4f1aa4dc97199ea9b852f6b8173fb41bef7de084"
+      },
+      {
+        "name": "src/layers/submarineCables/surface.js",
+        "sha256": "42376c8e11a5d26b3067638c1b329eee7f1d3563cc1fe46cf212d6f5465b9011"
+      },
+      {
+        "name": "src/layers/submarineCables/overlay.js",
+        "sha256": "a808bb16d3b6d1dda2d0d3f13575f25e56e6f907ac1641fa491f0b55abaa9911"
+      },
+      {
+        "name": "src/layers/submarineCables/interaction.js",
+        "sha256": "4433b86b89140f9c7dec049a77130465a141d7d93f87c2ea07028f81b5c714af"
+      },
+      {
+        "name": "src/data/inputOwnership.js",
+        "sha256": "2ee8fa71db1d3049fdbd5299c563a94ea9e4bf08c6df29be4dd0a5e6b474dc03"
+      },
+      {
+        "name": "src/layers/submarineCables/ingestion.js",
+        "sha256": "af2e67354e5624f87f09db8af4893bda9aeb6e694b9ce08b74d3916f89f938d1"
+      },
+      {
+        "name": "src/layers/submarineCables/geometry.js",
+        "sha256": "43d6dfe6fc3dd2a7d7f553fb92a0c60b59956ae6a133665ef3d67a9c53abfa34"
+      },
+      {
+        "name": "src/layers/submarineCables/rendering.js",
+        "sha256": "645eb2224a36fa459bcf19484e81f5ad03a105eda23ca8ece0c14f6862007cb3"
+      },
+      {
+        "name": "src/layers/submarineCables/lifecycle.js",
+        "sha256": "cf6a2495252f5b3912c9e9ec7623883b15bee1fb56b2a28528cbcdf6513957c6"
+      },
+      {
+        "name": "src/layers/submarineCables/state.js",
+        "sha256": "a5dde13a24aadce6190a13d05e5b0a29086f2513b6f2e9e612c8b9d40717dfc4"
+      },
+      {
+        "name": "src/layers/submarineCables/bundledSource.js",
+        "sha256": "63d37051894bab2ef975af382942452c7264d758ef2af7ca715da682c838f940"
+      },
+      {
+        "name": "src/app/layers/overlayHost.js",
+        "sha256": "4d6e9f0ab07df27ab39e123a34a63ec061e32051ab2b23e78136703efaa73c2e"
+      },
+      {
+        "name": "src/app/layers/submarineCables.js",
+        "sha256": "8bd37f7817d7b24b26f4eb32720747c0a4a44ba52e7486e200bcb7d542fced97"
+      },
+      {
+        "name": "src/data/radio.js",
+        "sha256": "f94e8c41267fb1f8974c7c8a1b72e3b2d96e3e5c6b14796e6098d3e261216419"
+      },
+      {
+        "name": "src/ui/radioTunerModel.js",
+        "sha256": "39d3e7db6d2cc77ce1fd4fe54e65dcca95932e958375d6c1597b061d8e01cea6"
+      },
+      {
+        "name": "src/layers/radio/index.js",
+        "sha256": "cb01fe08481206181210f4ad3304ad8d2dbb65b10a4c39dc286f88d7ce57aeba"
+      },
+      {
+        "name": "src/data/radioCountry.js",
+        "sha256": "2c5623083145a670589a71b6711c76b4237519184e18bd42293f468459097ded"
+      },
+      {
+        "name": "src/layers/radio/source.js",
+        "sha256": "b25ba1ba91d4e820e5d318095e6f546c0a9bec6550593d6a8c5ecabff449617a"
+      },
+      {
+        "name": "src/layers/radio/policy.js",
+        "sha256": "32bb1ac06f144a1203f0b950a7c9a7da0318ae50d13b2d008b89afe37d855d2f"
+      },
+      {
+        "name": "src/layers/radio/state.js",
+        "sha256": "82b78b4d30f0a56fea4d396706c351b27b9f700f61334475265170f6613b0542"
+      },
+      {
+        "name": "src/layers/radio/ingestion.js",
+        "sha256": "b68601b277969450382fbc0604bf500bb4fb59b8ad4c21b4e149d04db3a10cdd"
+      },
+      {
+        "name": "src/layers/radio/lifecycle.js",
+        "sha256": "5f032761b01f3fe8f0dc4338060c66abb4610bc5509b2816a3f4608094240565"
+      },
+      {
+        "name": "src/layers/radio/controls.js",
+        "sha256": "0a50fb06df71b760a20f5f3c685450e8daa907802b524702c218ac5d2b86a05f"
+      },
+      {
+        "name": "src/layers/radio/selection.js",
+        "sha256": "1a2ceba2150b6351b4ddde5f9212d10e6ce81eef317ae4d9a9a4ac7a5206e069"
+      },
+      {
+        "name": "src/data/layerState.js",
+        "sha256": "5cc06c6a1d9fcef5e20dc76b3f43c3b17365015fbef5c206c3b2a74776b5b891"
+      },
+      {
+        "name": "src/data/idSwitches.js",
+        "sha256": "42e78e28517958cf3c5b2bd207e733c074d9167c09cf73b5cf8c9ba51951f155"
+      },
+      {
+        "name": "src/layers/radio/playback.js",
+        "sha256": "4ab8d18a157f0a5915b2dbea6029599f828f7810758fee17228d1882fe6f7513"
+      },
+      {
+        "name": "src/layers/radio/presentation.js",
+        "sha256": "b486471c9eab60e58f9a89bb360d0e56707c9fbf55231d99f85120ff6f0eb627"
+      },
+      {
+        "name": "src/layers/radio/rendering.js",
+        "sha256": "c3b18e82ff0236189cb7faabb0fd61cf0e8822ae871afe213a32647c1515b876"
+      },
+      {
+        "name": "src/layers/radio/tuningNoise.js",
+        "sha256": "dc456dfd24b9b71d511b82b9ad3e34cf6f7b6e723f4e82d15797cb9c46dadf28"
+      },
+      {
+        "name": "src/layers/radio/tuning.js",
+        "sha256": "54864fc10fd7b00f3ad744d0475e2ad63e8798d6d2aa7badacfa7fc09b2d3b4d"
+      },
+      {
+        "name": "src/layers/radio/interaction.js",
+        "sha256": "661ba7e48ead4ac82f08fa600bfbe70dd544a7f3cd388e251530eb1f0e684568"
+      },
+      {
+        "name": "src/layers/radio/queries.js",
+        "sha256": "e622689f7d4e8046e2b2d2370ddb85337229c43cc78f1a8d257dfbe128f8c9ad"
+      },
+      {
+        "name": "src/layers/radio/model.js",
+        "sha256": "29dc29060ab7e6447f789cefa75841c8675722db773e922c5f4c6e18c4149aca"
+      },
+      {
+        "name": "src/layers/radio/categories.js",
+        "sha256": "da552b4ffece3f2b8a5bc5e308bf97c4ddba6b23c57a548d16090b3e58e2a46d"
+      },
+      {
+        "name": "src/layers/radio/navigation.js",
+        "sha256": "2f712e7b0309472c7edc91cab047c93cc23fdd5df149a200beb5d19c2cbb586e"
+      },
+      {
+        "name": "src/layers/radio/volume.js",
+        "sha256": "3d2be5e55a8fac473031c95e8b4c94c168f18822fb4b990ba58e94bbdfbbe5c7"
+      },
+      {
+        "name": "src/layers/radio/clustering.js",
+        "sha256": "fe275fe77b115b98b78c0138332bb8de91d299802e5211fde7edd29654aa3f91"
+      },
+      {
+        "name": "src/layers/radio/labels.js",
+        "sha256": "a3bcde1cb8aa7e0209c2ce5ee72f75a06618a264c3d774853af9c775b31725a6"
+      },
+      {
+        "name": "src/layers/radio/catalogModel.js",
+        "sha256": "f8e9926d6fa48d32571c3c4e60ba01827446060cdc7f4e296a8992beb99b681f"
+      },
+      {
+        "name": "src/sources/sourceSlot.js",
+        "sha256": "588fa56e25b5300632116091aff8cb118ad0ae3a9cd5c0bb121f265f93a9fab7"
+      },
+      {
+        "name": "src/app/layers/radio.js",
+        "sha256": "8973a43d6f89d776527ff93c9e2a4e235f315a4121c4a047d4c9c3b093484590"
+      },
+      {
+        "name": "src/data/pickRegistry.js",
+        "sha256": "9c922151b13a5fdcc1e08016b404298e6b5431b1078f880939ad44457d72a4b5"
+      },
+      {
+        "name": "src/data/surfaceServices.js",
+        "sha256": "61ed01d18fa8d568fee4a300005afcf4f932313a3dd76393d80ca28ee90625de"
+      },
+      {
+        "name": "src/data/fireAnchors.js",
+        "sha256": "62c8f2dd4eb09b54f5baf240a613f5044eae91a13e2441cfa2a3be122e66da73"
+      },
+      {
+        "name": "src/layers/firms/anchors.js",
+        "sha256": "8f2117d4c319be85a84c842caa5c8728672bece90a4a7161d8eaeaf37abc2c2d"
+      },
+      {
+        "name": "src/data/groundFloor.js",
+        "sha256": "1e07754c768f2c408acb70bd12774cf2a193eb328b8db48b33dd497cccce20ee"
+      },
+      {
+        "name": "src/data/terrainHeights.js",
+        "sha256": "33774cd3e5c02f6b66d96c68dcb794879c8fba95f0f3621b6beb300b95461585"
+      },
+      {
+        "name": "src/services/application.js",
+        "sha256": "5526c0aec5f2934f28449b161a559dcf94152847a1b1572ea135355fbceec685"
+      },
+      {
+        "name": "src/services/requests.js",
+        "sha256": "696d06776dfd7a30ce8caa422c807d7c0fa2ce278faad9a2882cc8ae78d7ad3e"
+      },
+      {
+        "name": "src/sources/overpassFeatures.js",
+        "sha256": "424aeb4f2519e8fff57dab2a8f68172ceddd709f07714c261b5ada039952b0bf"
+      },
+      {
+        "name": "src/sources/overpassFeaturesRecords.js",
+        "sha256": "02c76a9d56f7949f0b788aee02fdaabdab33910f4a92c23f3d2cd5c8bac4e4b9"
+      },
+      {
+        "name": "src/sources/featureGeometry.js",
+        "sha256": "74a5147e5ce2c4f985015ab68c2c07dc7f667595e92e98fdbf03af2bbb3ceff3"
+      },
+      {
+        "name": "src/sources/featureSource.js",
+        "sha256": "c573266530ab2b37fa3f69aa04eb515f075d632e47bd6600ec7ac114ccb17bb9"
+      },
+      {
+        "name": "src/sources/capability.js",
+        "sha256": "c778bcc4a60ca3a1689de7c3e6c7c8378fc5f7d1a0353fef4b56327153270e62"
+      },
+      {
+        "name": "src/services/terrainHeights.js",
+        "sha256": "473532dee2660bff4a20c500dca50ced20fb8ca44d11aa8abbff6216945a2c6d"
+      },
+      {
+        "name": "src/data/geoid.js",
+        "sha256": "d4673a156760f2f9b6f0d98f8eda8fceaf1c4e60f1d9d4837a78aefd17a060ca"
+      },
+      {
+        "name": "src/services/groundFloor.js",
+        "sha256": "05b0b621dba099a7eb1459aa5012635738f8defcaee57f09617bbd5eda0c2313"
+      },
+      {
+        "name": "src/data/groundSnap.js",
+        "sha256": "f5929f8671144b1b89c04c6ed29ac4e5b28780c06c8264f2856d8ef2072a21de"
+      },
+      {
+        "name": "src/services/groundSnap.js",
+        "sha256": "264db762926f912390635dbe75189aa8bef8b38b946bcda26ad8827f51a9908d"
+      },
+      {
+        "name": "src/data/meshFloorSampler.js",
+        "sha256": "210fef814bc57b0e079339ce8064400fa583f81b55e27a0c47a4c52b63638d9a"
+      },
+      {
+        "name": "src/services/meshFloorSampler.js",
+        "sha256": "c512f6e6e3a1f4fb8a4dff66de6fe93e0ef48fb937b11ea887873ea212e2e885"
+      },
+      {
+        "name": "src/data/approxDistance.js",
+        "sha256": "b6d31c6a294fc4803dbcd13cafeee8aa4c4889dcd5b153003584549a0585c3fb"
+      },
+      {
+        "name": "src/data/rocketLaunches.js",
+        "sha256": "5216c39281815142e295df02428b13d221b3d40d9ba39e302285b01088a1b464"
+      },
+      {
+        "name": "src/layers/launches/index.js",
+        "sha256": "56874dbc63fd3101d013febf6c6e00d629179f9cdc48efc1f5c0b9bc2e378417"
+      },
+      {
+        "name": "src/layers/launches/source.js",
+        "sha256": "110abf21ff19b2e1c228ba8bd29b68c04a636ed42591936b558d14cd46a2876f"
+      },
+      {
+        "name": "src/layers/launches/policy.js",
+        "sha256": "c9360a9d524df98c118596bb0e3e4aafd96099dbe2c2883d63da3e88cd34fa11"
+      },
+      {
+        "name": "src/layers/launches/renderDemand.js",
+        "sha256": "40071aaebffa1a9fab5add46bcb089d1546b97259b1c9c194aa27cfdb6f9601f"
+      },
+      {
+        "name": "src/layers/launches/state.js",
+        "sha256": "65f7de8c5bb450b0f3d51e63276073b09ffcec971cb63777479b87c6ef98ceb8"
+      },
+      {
+        "name": "src/layers/launches/lifecycle.js",
+        "sha256": "ee3a10da98ef739c63055605c521696bce6fbf678d5753095516e101858491c6"
+      },
+      {
+        "name": "src/layers/launches/controls.js",
+        "sha256": "5548b5bb15b058334c9d00bb77fc5375c76ab023be9f06b51861140051741899"
+      },
+      {
+        "name": "src/layers/launches/testing.js",
+        "sha256": "4a89be75cca23ef92fc04846ac375698d8066c42151365d41d216e3d7777db1f"
+      },
+      {
+        "name": "src/layers/launches/rendering.js",
+        "sha256": "85c4cb538bf8df0cd8d5a6a86e0591f606375b7d1eb084ad71f4d4035b0efeec"
+      },
+      {
+        "name": "src/layers/launches/model.js",
+        "sha256": "50713d218d39c1495495b5a6b08732f669ad39e56c1af3522bfd1af49b5d7fff"
+      },
+      {
+        "name": "src/layers/launches/camera.js",
+        "sha256": "b1b4cd07e3d8f6a5aa6d95ad7480e0f0dcb3340640d4e721c6b575459cb5ba65"
+      },
+      {
+        "name": "src/layers/launches/launchPad.js",
+        "sha256": "996b5955d9b2bae6f45645f9e3a0cf3010f5de54605ff9c213e8d0344dc03884"
+      },
+      {
+        "name": "src/layers/launches/paths.js",
+        "sha256": "7bc45e2a532715e545834351ae7b382deab790c7233dd4b0ca225b5db4c8ec88"
+      },
+      {
+        "name": "src/layers/launches/panel.js",
+        "sha256": "0fd7a660cf7d2fc4c35e33f05bb317e74b405178a46e6571dec7f8984b782b60"
+      },
+      {
+        "name": "src/layers/launches/replay.js",
+        "sha256": "ebbd17d921ac6c0393f6c7357fa386241accb7d09bd8d3491e1485e94b615f41"
+      },
+      {
+        "name": "src/layers/launches/selection.js",
+        "sha256": "a4bb77ae30882fffd035dbfe909e480693482fb46ab88ec3ed1055a1ff667be7"
+      },
+      {
+        "name": "src/layers/launches/overlays.js",
+        "sha256": "770d84cf80aea27eaa1da4059430bb87a29e25c7d2d47c7df098115416653ce4"
+      },
+      {
+        "name": "src/layers/launches/orbitRendering.js",
+        "sha256": "db9c543c698be9e2b208448cf4299114ddef0a36704fa603d927ebce374b0a5c"
+      },
+      {
+        "name": "src/layers/launches/ingestion.js",
+        "sha256": "4c63d0dbfb17179912685c6f6ecb83245ad25cbf57b8b0439cfeb4993a81b827"
+      },
+      {
+        "name": "src/layers/launches/policyHelpers.js",
+        "sha256": "42bbe7d05af854223dcabf3060da17e676f2ae159d6b684450a868b9df9ea7ed"
+      },
+      {
+        "name": "src/data/satellites.js",
+        "sha256": "c74e7f262d61ad2df3c2241e8a870a02e59da3668f7b54f3241a66eeab6dff69"
+      },
+      {
+        "name": "src/layers/satellites/records.js",
+        "sha256": "ee872dcd52b31ea16efa9f470ea0ebf1ba016895c3b6f06dd64bbb10e86f5b19"
+      },
+      {
+        "name": "src/layers/satellites/evidence.js",
+        "sha256": "11c4ade38fa34a68a4d0ce147a87e558563bb6401d94997f9b47f412f5fb209b"
+      },
+      {
+        "name": "src/data/feedState.js",
+        "sha256": "818d826188d2f7752fac5d430603256a6b8a9fb0f14ff16f7a1c4d89373712b3"
+      },
+      {
+        "name": "src/loadingFeedback.js",
+        "sha256": "3653e7513385236a57bd9530a29d3bf5d6c91f820532ad77272a716e88f5b00b"
+      },
+      {
+        "name": "src/data/installationFeedback.js",
+        "sha256": "63b19aeb6c7c8af6a57ff9cf15b442d411f2d2176ef5435cc0004a6c99c56052"
+      },
+      {
+        "name": "src/layers/satellites/policy.js",
+        "sha256": "0d2cafeee341ead1c4054bdfee087fe140c35fb377597b8e7b0e3e50ab6cc39d"
+      },
+      {
+        "name": "src/data/satelliteClass.js",
+        "sha256": "c6c512a32a6d447d45352f51a3391c244c340435ba66d8ee3dc0b378d71b8810"
+      },
+      {
+        "name": "src/layers/satellites/index.js",
+        "sha256": "e14ebdaaa50d6ec52dc1e154ef52b0b709cf455fd725636fcb4c2121e6051ef3"
+      },
+      {
+        "name": "src/layers/satellites/source.js",
+        "sha256": "660719077bce7b26ed9da9f2d0d583249a66afe35c6687bb410d4c03a2269712"
+      },
+      {
+        "name": "src/layers/satellites/state.js",
+        "sha256": "f3269db3d252e15ec1e9c6f61e2d57300cd90cbf05eeb9984cfd9c332456c81a"
+      },
+      {
+        "name": "src/layers/satellites/ingestion.js",
+        "sha256": "c7e48dc4879a6bf7f8e98c364354e0335066602677536e761556d955122294ac"
+      },
+      {
+        "name": "src/sources/tle.js",
+        "sha256": "5fb055fb50d8740dba9e6509dd67412ad4cd603510dcb97d36afdeb3f79b0361"
+      },
+      {
+        "name": "src/layers/satellites/lifecycle.js",
+        "sha256": "7b38cf5e6fbee4c5a90a0e8dff7005ba92ff3ad5b2ba07d2a3aad01b72729a75"
+      },
+      {
+        "name": "src/layers/satellites/interaction.js",
+        "sha256": "be782452742cad99cd189b9287122d90ec69fdcf76b972a60371d7040608183e"
+      },
+      {
+        "name": "src/layers/satellites/testing.js",
+        "sha256": "4f6e8de512e374476669dc8444a9b7adcf604591010acf0561d7f7907f44fcc7"
+      },
+      {
+        "name": "src/layers/satellites/tracking.js",
+        "sha256": "2f03755d932a956afe9e73636851fc0848be61c60285da7964c730455d90a549"
+      },
+      {
+        "name": "src/ui/unitLabels.js",
+        "sha256": "c0f839e4e44645bcd08ae90d82ec0cfdbfa222c8cfe6cce3bb246049cde65f3d"
+      },
+      {
+        "name": "src/layers/satellites/rendering.js",
+        "sha256": "76ae53ab8eee09d6ba0222d2feb779282c65e9ef4de976bee23a36dc21674619"
+      },
+      {
+        "name": "src/layers/satellites/orbits.js",
+        "sha256": "4b8a46697e21a86ea6ea3209079ae009fa0ad288654490706d13b76bc8c44b01"
+      },
+      {
+        "name": "src/data/satellitePass.js",
+        "sha256": "d23c5820941c07884e448742675200ec383febd9eba4eb01fe0ea0819cab1720"
+      },
+      {
+        "name": "src/layers/satellites/labels.js",
+        "sha256": "5564127efff88bbdfaa8f3ba842bfc9a788ef9ef7aa2b1f1c12e7028a847217d"
+      },
+      {
+        "name": "src/layers/satellites/catalog.js",
+        "sha256": "2a70a3a865cc4c5b7cf45a66c86892f078b5a2f0e206a2fc0ef2c85c80ecfc66"
+      },
+      {
+        "name": "src/layers/satellites/controls.js",
+        "sha256": "c405e83fe28d9289ed71cb9fca943b361cff4e379cde91fef7513c3cc259b97c"
+      },
+      {
+        "name": "src/app/layers/satellites.js",
+        "sha256": "300bc8fe10d091dc823d5239a2a2c334499c8ad1e070313ef9b474f80963ac5c"
+      },
+      {
+        "name": "src/data/contextStore.js",
+        "sha256": "89aa6153f63ac556b51b659edc7d4b85cc7b2eaaad6015b86cc398172e7e7a6a"
+      },
+      {
+        "name": "src/data/trackedReadout.js",
+        "sha256": "a9203de51bfbd89d9f45c8b2430d8d135e9160d834dc635e7c8d7d6dab44f348"
+      },
+      {
+        "name": "src/data/focusDeemphasis.js",
+        "sha256": "246725a76eacdbb2e791c5c6b24ef4c8bd49c65f90ded6840a3dc4028d12aa74"
+      },
+      {
+        "name": "src/app/layers/rocketLaunches.js",
+        "sha256": "c65878bd267f29bd9fd0412ecf6f45e3c98938bc15bb52effec8a47aac96daf9"
+      },
+      {
+        "name": "src/data/cctv.js",
+        "sha256": "2a162d79a30adca28a6adeb91e24f294c59ced234d6aa7ac42132a8d660447e4"
+      },
+      {
+        "name": "src/layers/cctv/index.js",
+        "sha256": "7e1abba859d7248bb50feededb1e6905361fdbe3996ffee5c5660a871c53c01e"
+      },
+      {
+        "name": "src/data/cctvCards.js",
+        "sha256": "e4b12321793d9f2e0a372f8283b8d627f77f988f48722852c4cfde0c912bbe11"
+      },
+      {
+        "name": "src/data/cctvLod.js",
+        "sha256": "8a0c894abc1db086b68d8d7287c6ac19401811eac9d871d4e58e372ec6078405"
+      },
+      {
+        "name": "src/layers/cctv/source.js",
+        "sha256": "86e27a443081c88dcf5908892283b75543b07600e067e66879944c719cc0aca4"
+      },
+      {
+        "name": "src/layers/cctv/sourcePolicy.js",
+        "sha256": "f3081542d2ced0165504c9d486b85a9875e48a8861fde87a97e6e296485dc3e7"
+      },
+      {
+        "name": "src/layers/cctv/policy.js",
+        "sha256": "bee1c0b49500c813af3e8e84c63a3df9296eec1b13af62a490687c58924e186a"
+      },
+      {
+        "name": "src/layers/cctv/state.js",
+        "sha256": "6051265e71aec74e3ce7554a34b4d8c276a008fa8af80d3280a6a0e8f0fef76b"
+      },
+      {
+        "name": "src/layers/cctv/ingestion.js",
+        "sha256": "528417308a2d0a98789abcffbb516ad2ca422b2f431d057e1760c48a68a4f93e"
+      },
+      {
+        "name": "src/layers/cctv/controls.js",
+        "sha256": "4f4e3f596f1d5813df32bcaf514b348702dd5749194c39b48ce98ed54958891c"
+      },
+      {
+        "name": "src/layers/cctv/health.js",
+        "sha256": "316d72875f5e85e897808f604bc6394836207ee5d4f8fcb87ac0493c7b83857b"
+      },
+      {
+        "name": "src/layers/cctv/lifecycle.js",
+        "sha256": "75e6cc14a0092577d0143d475841d0c068dcfd9d3cf373403e7913796ca13996"
+      },
+      {
+        "name": "src/data/cctvGizmo.js",
+        "sha256": "0e3acb3c07722b5cef753c0e59120080db5291d99176709d35803f50bb00f12d"
+      },
+      {
+        "name": "src/data/cctvViewshed.js",
+        "sha256": "27fafe8121d6ae7b8fb84985b8182af421c1be8d82995226173ca445734fa7ef"
+      },
+      {
+        "name": "src/layers/cctv/presentation.js",
+        "sha256": "ec589c1e3b41b639630db09ceb1431a4844a75c974a1ec50bd88ab7897a73520"
+      },
+      {
+        "name": "src/layers/cctv/modelSpecs.js",
+        "sha256": "16803871443eee0d2e1081501544e3a9c464971d2d9eeaf58b7e7c2b8a90e6ec"
+      },
+      {
+        "name": "src/layers/cctv/healthPolicy.js",
+        "sha256": "0a3bf7cc604f051b6729956715e9c93f3727e0fb60bd6131639b8908187a1dd0"
+      },
+      {
+        "name": "src/layers/cctv/headingConfidence.js",
+        "sha256": "ec65a4312a31c10798df0ce20fa5e5feecb4eb6fe48d1ee766512f7dd11a22bc"
+      },
+      {
+        "name": "src/layers/cctv/navigation.js",
+        "sha256": "9b55b7f9a721e01af24c96b123b1224bded0e8e7e4799ffbfcabf5dc38e3e799"
+      },
+      {
+        "name": "src/layers/cctv/hover.js",
+        "sha256": "e56a8fe84ef711c10e3400f850f4b56d5955f861da80e941a9e6206a9c56e1bd"
+      },
+      {
+        "name": "src/layers/cctv/selection.js",
+        "sha256": "9546f7f1ed0ded634c281c1a03268b6834857b09a4dade7897d2902516ce1df8"
+      },
+      {
+        "name": "src/data/trackingClickGesture.js",
+        "sha256": "27640cbe2492a0046279334998c9cad3bd10bfc49fe1eee7f033bc045ec612ca"
+      },
+      {
+        "name": "src/layers/cctv/geometryQueue.js",
+        "sha256": "a58bec28903c03aafcce4243d05e4ad09fa590fc787dca8b3238fba68132d446"
+      },
+      {
+        "name": "src/layers/cctv/rendering.js",
+        "sha256": "3ec71fb0864d270bc89033830212de062c7e045c3d07d90ceb169997ccf25190"
+      },
+      {
+        "name": "src/layers/cctv/frames.js",
+        "sha256": "a1b7eda9f6c693e29ac09dd0c8d419b2120de9215198120819eeb0a61c3c4b51"
+      },
+      {
+        "name": "src/layers/cctv/catalog.js",
+        "sha256": "c7b54db597286f4eccb54440185b0d73eded8638fca97473e7a0eeebb94615b8"
+      },
+      {
+        "name": "src/layers/cctv/geometry.js",
+        "sha256": "15eaa10557a9be125289875a2aec924c21ba78dd989b69dd9bc2a4a68216efb5"
+      },
+      {
+        "name": "src/layers/cctv/ground.js",
+        "sha256": "89d9b91783d8fa253a8adcf7f9abda1ba3405ea21748f66dff97e7ec6e3b87e5"
+      },
+      {
+        "name": "src/layers/cctv/model.js",
+        "sha256": "cdf95f4e575e3484b39070ad60cfd99e97ef7b4be371855ba67930cfc179e256"
+      },
+      {
+        "name": "src/geoDistance.js",
+        "sha256": "ce84efc906c32175f0f2ab907ca876f59ffa1f10fc841fc80c30c8737e7e1506"
+      },
+      {
+        "name": "src/layers/cctv/cards.js",
+        "sha256": "4f3162da4b462141da8c79961d233e68b0c10940a84e1e213448120f7d50faf3"
+      },
+      {
+        "name": "src/layers/cctv/projection.js",
+        "sha256": "a97c115fe2f228bcae43659870099ae9e23c2464a56dc80c4c5099687d511c7f"
+      },
+      {
+        "name": "src/layers/cctv/videoPlayback.js",
+        "sha256": "6aef4bd5b164932cd0f317b503ac4e444fa1fba9097f2ba933e369dd9a182b13"
+      },
+      {
+        "name": "src/layers/cctv/testing.js",
+        "sha256": "7c6ddc374d0dc76d88656676dc6b06bbc805b6e0d1a271bdb4e50fcd49dd0656"
+      },
+      {
+        "name": "src/layers/cctv/calibration.js",
+        "sha256": "37f5bdb4a0c1d3d0dccf91e59256bee0b2d2aff7bc86bedef8f27d6437447ca9"
+      },
+      {
+        "name": "src/app/layers/cctv.js",
+        "sha256": "299a4798672a68cd3f0d6f413215b14e7d8a0f1a7800e95870f7e9f039c366d2"
+      },
+      {
+        "name": "src/cityPois.js",
+        "sha256": "cf004f10a6336df46ba1bfa4faa5b89a938d947ab78c2e43d6aac1d811603601"
+      },
+      {
+        "name": "src/cctvFocusRequest.js",
+        "sha256": "c5121976d0db8a932927fe4a0d910b6f3f364db2a7ddce1938e2c6a1f5475629"
+      },
+      {
+        "name": "src/data/spriteOrder.js",
+        "sha256": "d2ab8fc37e51d98ce5747071510b9e70e487f4031c6beed8b5761a7ed1501c8c"
+      },
+      {
+        "name": "src/data/dataCredits.js",
+        "sha256": "aa35091ce5bab1d77951eca8066e55e041cae832f28b871d42e5d763628c25d8"
+      },
+      {
+        "name": "src/data/bikeshare.js",
+        "sha256": "dffb70f42e6937f7911d13a7d105a34f201ed60ee6a68e3f440db41de9d1d2fe"
+      },
+      {
+        "name": "src/layers/bikeshare/index.js",
+        "sha256": "de59970befe9eff87dcb3a0312d12bba07e7591c4a0db7411806e197fe028b1c"
+      },
+      {
+        "name": "src/layers/bikeshare/source.js",
+        "sha256": "1a71c9ef3d70b7b41f111e6140d8d1262d5ff22c2948907891c58bd6a7af6171"
+      },
+      {
+        "name": "src/layers/bikeshare/policy.js",
+        "sha256": "b4fe3ad948455e74b08e02af4fd01334d6e879453d5e20ecf55aec28a4fa3454"
+      },
+      {
+        "name": "src/layers/bikeshare/state.js",
+        "sha256": "6a1ac2b14f0882d75ada00677926afcd290ddc6b06d158ccade0a353519af5c0"
+      },
+      {
+        "name": "src/layers/bikeshare/lifecycle.js",
+        "sha256": "bbbae5a821e8c46000c824cfbc67bb4907ee3cd0e1628d7724bd88f8582cfc99"
+      },
+      {
+        "name": "src/data/cameraSensitivity.js",
+        "sha256": "2ec513939a89a43cf3f3a35c95b3c19573af16ada05b370950f378c0443b93bd"
+      },
+      {
+        "name": "src/layers/bikeshare/registry.js",
+        "sha256": "0c3c128da6f3bc5d68e4819914c7f26c2608496c2d894c1d012219ff1ca3cff5"
+      },
+      {
+        "name": "src/layers/bikeshare/controls.js",
+        "sha256": "b28cef487d537d85bc3ee829ec6c827d30dcf0e23261681999898214147512f1"
+      },
+      {
+        "name": "src/layers/bikeshare/testing.js",
+        "sha256": "9aeacf71c417a2cae2d7bf6b95dea60bc1ea526ce038e9df288d4e596fc97538"
+      },
+      {
+        "name": "src/layers/bikeshare/queries.js",
+        "sha256": "296074d89f6449cd982f44239f9e7aaaff5055dbdd29615a30dbe6154faccae1"
+      },
+      {
+        "name": "src/layers/bikeshare/selection.js",
+        "sha256": "ca87b0326294d4c4606232da35d2131dba308938d532970479b5023bb8ca66cd"
+      },
+      {
+        "name": "src/layers/bikeshare/rendering.js",
+        "sha256": "47630cd96298b995b0d611d822a7efff4cff774460a5dd0046d8c873b8c23dce"
+      },
+      {
+        "name": "src/layers/bikeshare/viewport.js",
+        "sha256": "103c7257d2242605be854f8b54a09f0944b681811c286afba96dd269d98c94e7"
+      },
+      {
+        "name": "src/layers/bikeshare/model.js",
+        "sha256": "991d3de3b4e7e0e657018cb2839ff0dc5a9889d0750f4a4bbc5d2667c6ed490c"
+      },
+      {
+        "name": "src/sources/gbfsStations.js",
+        "sha256": "0493c4d1e8ea5be500b16c84bb078a7dcc5036f939162362f6e7f581251c5f07"
+      },
+      {
+        "name": "src/layers/bikeshare/ingestion.js",
+        "sha256": "5e62f886d88dfbcd86e7fe4b75bd39ba0d4243a7a6258e7e1618b109c0fe1ae6"
+      },
+      {
+        "name": "src/app/layers/bikeshare.js",
+        "sha256": "ef97d42f147c9441541b2797efbd965986b384f9ef2e48206343795ce094cd79"
+      },
+      {
+        "name": "src/data/earthquakes.js",
+        "sha256": "632c982429fbb12c0d47c602826031dbdd92d0dad598ba3da6482fd3a9817200"
+      },
+      {
+        "name": "src/layers/earthquakes/index.js",
+        "sha256": "23fc2dd38ff94bb87e24ccb5fc319bddf32dd0d902f1784bac490744a08f778a"
+      },
+      {
+        "name": "src/layers/earthquakes/source.js",
+        "sha256": "e756d0a87e8ab67901f9e427e2778020ec4df178f53275ebdc0493c421d3de60"
+      },
+      {
+        "name": "src/layers/earthquakes/records.js",
+        "sha256": "a35859b1cef9b6a5353aad1a62335444781ae7cb7191a1c975a05490e338aa56"
+      },
+      {
+        "name": "src/layers/earthquakes/model.js",
+        "sha256": "2b66518f9553bc029ce5bad89c2dcdc02f5f8df698d75b58faebfe759f0536c7"
+      },
+      {
+        "name": "src/layers/earthquakes/evidence.js",
+        "sha256": "314c7e05a04de485d3e0e8f36feda547d61b5c51cb6369c63a4331d848d970ef"
+      },
+      {
+        "name": "src/app/layers/earthquakes.js",
+        "sha256": "7374dedcd470314656b923ba079985e7897f32278e66af08d5e7f8e4c9dad41f"
+      },
+      {
+        "name": "src/layers/airQuality/model.js",
+        "sha256": "644ddbd58f9aa7bd7a3f51f8a6dea6b1c0be254f44da704a0bf824f3f56ae58c"
+      },
+      {
+        "name": "src/data/vesselLabels.js",
+        "sha256": "88861c32d29554e286919eca0ece72c2170cb7cde2eaeed661688d1506a98325"
+      },
+      {
+        "name": "src/data/firmsHeatmap.js",
+        "sha256": "964fae21f7b94b90fbb4b225c53bdeb5b89d8bc0f47a44c904fa6effc3628bce"
+      },
+      {
+        "name": "src/layers/firms/index.js",
+        "sha256": "05635bd4af99f8b9b6bc485c26f0520e4bd821231e5f2f5ffa38761ca3e8ad6b"
+      },
+      {
+        "name": "src/data/firmsLabels.js",
+        "sha256": "ae39f2a78d7bbf44b28147c26ec5cfdd22365655c8831687b8ba17c2a47a2c3e"
+      },
+      {
+        "name": "src/data/firmsAdapt.js",
+        "sha256": "b0b6b376255eefd0dcd0a76dae9e349b567fc06a157bc63213e7bbe2789a89f5"
+      },
+      {
+        "name": "src/layers/firms/source.js",
+        "sha256": "138e0c6423633e24822a7c105c497c5c3dba61fef44e90b8a40399ad056464e7"
+      },
+      {
+        "name": "src/data/firmsCsv.js",
+        "sha256": "0b632d72f2b9d970eb42775aeb612bd222ec116b7278c3e4b324f17c5995312f"
+      },
+      {
+        "name": "src/layers/firms/state.js",
+        "sha256": "c7476cec45bd59c0b65a778ee63e28eb1564e984cc9eebecdeb5385dffec4eb3"
+      },
+      {
+        "name": "src/layers/firms/queries.js",
+        "sha256": "e5c29726cdf6a89fa9966fbf3f85f31609c2e606bf0f76c738d4873e6abc37f2"
+      },
+      {
+        "name": "src/layers/firms/policy.js",
+        "sha256": "0b041d0ac883396197407758fc890e4c6efd451b6f11389084038c099c8cbb85"
+      },
+      {
+        "name": "src/layers/firms/evidence.js",
+        "sha256": "8688ace97d575075e28ca894374402d897b389658d00ad52e0bcb873e6f47789"
+      },
+      {
+        "name": "src/layers/firms/lifecycle.js",
+        "sha256": "4a7c4098ea991c8dcc1bd78a3a1f213daf2e85e19eb99e6c15a278a07da1497e"
+      },
+      {
+        "name": "src/layers/firms/viewport.js",
+        "sha256": "704b0690340372231fca7ddc38ca6ef812931826325f29c369b91eeffc337a11"
+      },
+      {
+        "name": "src/layers/firms/selection.js",
+        "sha256": "d9e03bcfe5adafaa632ec7943325e8ed169703b8e3604e4104a6f2ab0e212bac"
+      },
+      {
+        "name": "src/layers/firms/cards.js",
+        "sha256": "eaa2b0da252e74f4b7340c7a557616ae032e3f4fb7764d573949f1fdc71530b3"
+      },
+      {
+        "name": "src/layers/firms/rendering.js",
+        "sha256": "8fce950ab254cf40793412526382741b74df6c549d83f769ce2ca88d8b7725bc"
+      },
+      {
+        "name": "src/layers/firms/ingestion.js",
+        "sha256": "a6ad934447e37df113a9064b2ad49656c953bedeb543cafefcb815a4e1984166"
+      },
+      {
+        "name": "src/layers/firms/model.js",
+        "sha256": "c2e93e5c7de62f956f9b2b0958fa0094793e365370fd565308c33c6e1c4b7420"
+      },
+      {
+        "name": "src/app/layers/firms.js",
+        "sha256": "c68cb924ca724dd6de77c9b85fd75fa7f0ee9ea8e8e4330a35cab8ac5152f896"
+      },
+      {
+        "name": "src/worldFocus.js",
+        "sha256": "81ab2c6a47414960a6ed697f43b03746d020d967287d60bba1cd9febb5194119"
+      },
+      {
+        "name": "src/data/localGeojsonCore.js",
+        "sha256": "81a4e32bcc83ac8e0b5028b7bbfc8438b7082eb0dea410722fd2f1814634f778"
+      },
+      {
+        "name": "src/data/localGeojsonLod.js",
+        "sha256": "cdc4f1734711816d161bee4cb000947fcc4d30ca0e819cd202e7a0e1289573fc"
+      },
+      {
+        "name": "src/data/infrastructureOverlayEntry.js",
+        "sha256": "dec1ec7acbfcc618a60313ace9c68d8bb26a593fccf83351e65e9dcbbe7176e4"
+      },
+      {
+        "name": "src/sources/infrastructureData.js",
+        "sha256": "20631207abf0f97fa49dc8a9a1c6185f442cc0423ba6718ef6ce7df17b3fa64c"
+      },
+      {
+        "name": "scripts/performance/overlayAttribution.test.mjs",
+        "sha256": "a1b01d3102a0be61ab2c85a49ea0260a7b1679fae841ffcfa0ba6cf4d48e84fc"
+      },
+      {
+        "name": "scripts/performance/overlayAttributionContract.mjs",
+        "sha256": "9f7c112ab79236aeef118d122414a6608f4e00a474ec243f10fbbef319302166"
+      },
+      {
+        "name": "scripts/performance/overlayAttribution.mjs",
+        "sha256": "aeff06ae49c558d5397d04cac61dfe35e121f3f2b9f0c0c302217e6fc0c7973d"
+      },
+      {
+        "name": "scripts/performance/renderBoundaryObservation.mjs",
+        "sha256": "4af8dc017ae01748f21b1d75903a9157d3a26bc149d8b536201e9055425e2097"
+      },
+      {
+        "name": "scripts/performance/hostedRendererBackend.mjs",
+        "sha256": "96dd8ea97d17753ce306f92da1a928d99d0c3b7fa1792419e5f7ebdd32cdeea4"
+      },
+      {
+        "name": "scripts/performance/rendererEvidence.mjs",
+        "sha256": "beb229cba51f732e92fab7a9a805789821d774bf740fc47a6550060f57984f64"
+      },
+      {
+        "name": "scripts/performance/idleCadenceDisposition.test.mjs",
+        "sha256": "1e7ebf5e015ba185468499fea138b1ad8d5dd2b2970e88bcc9c9729419b28eb3"
+      },
+      {
+        "name": "scripts/performance/idleCadenceDisposition.mjs",
+        "sha256": "c7ccefffe1e76f8f7ac30f4ff4b6426da456c5cb504d7eac07cebb9a6f51e985"
+      },
+      {
+        "name": "scripts/qa-qualification-metrics-capture.mjs",
+        "sha256": "491c87641c1cdbeb771d230fd08ad7c509497ec2746b05e93f4672d1a5d7f253"
+      },
+      {
+        "name": "scripts/performance/windowsForegroundWindow.mjs",
+        "sha256": "7ad97316378b0d219fea4cf65ea7633d79f6ad87a589533e34f908af28fc6031"
+      },
+      {
+        "name": "scripts/qa-rendered-soak-driver.mjs",
+        "sha256": "b37886c3979af575fa136be6e70745c8e45d487047fac4f0fd629e2f0d96e814"
+      },
+      {
+        "name": "src/recording/bundle.js",
+        "sha256": "c62fd997eca99f372d742bceb8c14cea311288dced036ebaa79ca6090a425639"
+      },
+      {
+        "name": "src/storage/codec.js",
+        "sha256": "10825ceeae7cc6fec0e884bdb6a791fa3f0773b2dfcbbf9f7175db0e8c915c40"
+      },
+      {
+        "name": "src/recording/syntheticFixture.js",
+        "sha256": "f436c640456e319b2055d17ecc5deb82fedd0145170eeb7a45242a4f6c382433"
+      },
+      {
+        "name": "scripts/performance/cesiumWorkerProbeInPage.mjs",
+        "sha256": "453cb05945d1fba93232499d6297420d5248b0b2a615506672563f9f5aff9737"
+      },
+      {
+        "name": "scripts/performance/fixtureInterception.mjs",
+        "sha256": "b7a095598c501154e2cca8e2d8d442a2a5f3983c6cff7401bb94bb6615f1c946"
+      },
+      {
+        "name": "scripts/qa-application-fixtures.mjs",
+        "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37"
+      },
+      {
+        "name": "scripts/performance/startupDiagnostics.mjs",
+        "sha256": "9aad3887b5dc32355d7f191fdf64a597e42f1e98bfa4ddc9c77e8c868c2f9efe"
+      },
+      {
+        "name": "scripts/performance/consoleMessageOwnership.mjs",
+        "sha256": "30377088596290eb87562de03eafe42dfda65e4422c01dd8fe97e09d26a2041f"
+      },
+      {
+        "name": "scripts/performance/workspaceOpenProbe.mjs",
+        "sha256": "62b2bef8b007274b7f4828ad7ced8e4d56e567464d64d7ce56c425fddbcca32f"
+      },
+      {
+        "name": "scripts/performance/profileRecoveryFixtureContract.mjs",
+        "sha256": "87a1e78394f0f63dd4f91937be152a7c5df9e49c09a624032d5e295b94706aa2"
+      },
+      {
+        "name": "scripts/performance/fixtureNetworkProbe.mjs",
+        "sha256": "05ecd4a985b465bb8388370356eac3338af560d55f0d664a6dad23661e97837a"
+      },
+      {
+        "name": "scripts/performance/hostedSoakSession.mjs",
+        "sha256": "1ee8172bd9b7626c92ea3e670d415722a9cf7e01a9b0707e23edb3bbf5cb7d47"
+      },
+      {
+        "name": "scripts/performance/profileRecoveryPageOwnership.mjs",
+        "sha256": "6179c78cf5ee652f169786bec32652b9a1fa044e74f90856452ba7af348afaa2"
+      },
+      {
+        "name": "scripts/performance/workerDiagnostics.mjs",
+        "sha256": "e06dcbd2a951ea35b36e56a8d5e6140abf2ce98f25cbaa9d82c1a4fde12cae81"
+      },
+      {
+        "name": "scripts/performance/qualificationMetrics.test.mjs",
+        "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b"
+      },
+      {
+        "name": "scripts/performance/qualificationMetrics.mjs",
+        "sha256": "4be334b9c02c76f6a3ef3258db8f050100228bba3a01a0fcf5b279c4f659c6dd"
+      },
+      {
+        "name": "src/recording/index.js",
+        "sha256": "10b513cfc8fe3017384c7a0f461eaa3aa2d82dd00b0260ad21b5ef51fbcc6b0e"
+      },
+      {
+        "name": "src/recording/capture.js",
+        "sha256": "0de490f653c88a8661bd8f0a324b0d623efb1df31a8cd1c0062c5d1f8cc6d555"
+      },
+      {
+        "name": "src/recording/vesselSourceRouter.js",
+        "sha256": "4924d9972c31a3ca8419fef0ad074b5856af566e9b5f9af0ad62ac7818a91314"
+      },
+      {
+        "name": "src/recording/vesselReplaySource.js",
+        "sha256": "6c7bde4bdaf06d33c3a595311dad9c7bfe22b705e855e1834c440a4b0f04fa81"
+      },
+      {
+        "name": "src/recording/vessels.js",
+        "sha256": "de0a0a2e9c87f3f3d124c8a0d237dbaab401dfb42e85f40045becc98ac136dba"
+      },
+      {
+        "name": "src/recording/regions.js",
+        "sha256": "142ca18c9304aef15505f7ce2e2d7e62433fa0aa3390ff9179024064aeebfece"
+      },
+      {
+        "name": "src/recording/sourceRouter.js",
+        "sha256": "a04ab294d6bd19687124ea1097bb10ae3bd688314468a13a2325eacc2f05b657"
+      },
+      {
+        "name": "src/recording/replaySource.js",
+        "sha256": "95939ba44f2e96d2e812ef49b973c2bb170f4ca850c8c05c7e79dcb15b2b4c86"
+      },
+      {
+        "name": "src/recording/aircraft.js",
+        "sha256": "e66a2b0bd8c3935dc27a18c9d17b309d83d1a75f5696e0e7e57eb26e30a4798d"
+      },
+      {
+        "name": "src/storage/index.js",
+        "sha256": "367ee69d9cc5d97a88ec3b7a7ade537e150de516e5abe4264fe7f7ccab73dbab"
+      },
+      {
+        "name": "src/storage/indexedDb.js",
+        "sha256": "f251f4167a3556764be9dc522179cfb224569857f314eb88932b5b2d7169cf10"
+      },
+      {
+        "name": "scripts/performance/performanceMatrix.test.mjs",
+        "sha256": "d84237fa2de69d881815992d238321cc9e29233b312366b1fdbf47dd9ff8d68a"
+      },
+      {
+        "name": "scripts/performance/candidatePerformanceEvidence.mjs",
+        "sha256": "221de01b51245e4f221fa7414cc4dd4eb653bfa42a2c215b84e0db82dd80d976"
+      },
+      {
+        "name": "scripts/performance/weatherIdleCadenceDisposition.mjs",
+        "sha256": "7d312167ea5c00724d051a745e66acce579017c8637140896ff94dec238f3b6a"
+      },
+      {
+        "name": "scripts/performance/weatherVisibleWindProbe.mjs",
+        "sha256": "da655b52accde85fd9064208fa9a0650b5ae7cdd0b514c3eb182e264afd07c31"
+      },
+      {
+        "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+        "sha256": "c03a095f6c4bb5bf7614625ba50073ef1070452726f323647cfa7ba33cc695dd"
+      },
+      {
+        "name": "src/layers/weather/source.js",
+        "sha256": "1362d3e90adbf1c3da2bf414aaf57151d0581a7b89a6334b7df76a512d173656"
+      },
+      {
+        "name": "scripts/performance/captureIntegrity.mjs",
+        "sha256": "a304c27753a11d7567c2f41fcd655e9603d88d0d98d2dcd78dc3c2557944e91c"
+      },
+      {
+        "name": "scripts/performance/productionFlightFixture.mjs",
+        "sha256": "c03f903f8a1b45fcea4923335edeb184f100dc86434a756728898c4f4793fd42"
+      },
+      {
+        "name": "scripts/performance/routeEquivalence.mjs",
+        "sha256": "6fe7b8364d94711d594ef8c80642ed9a8eb63b913ae2111089d7c7c5231329d6"
+      },
+      {
+        "name": "scripts/performance/weatherBalancedQualification.mjs",
+        "sha256": "30a42e5f530be8a2ff6ffebfed94da0f716a2ddc5ffbbbac1ba508f179079116"
+      },
+      {
+        "name": "scripts/performance/pairedReport.mjs",
+        "sha256": "6ddb447d0fcaebdb4bbe16b122bafdcce80f67853b7500a88a358fbc77e135ad"
+      },
+      {
+        "name": "scripts/performance/weatherInterleavedDiagnosticContract.mjs",
+        "sha256": "c2bbb9dcc61692945ce5f0db7bcc74c12119946db3e2fc9fe518af33290bf2d4"
+      },
+      {
+        "name": "scripts/performance/nativeSharpnessProfile.mjs",
+        "sha256": "6dd903af050352370d9a7f62b39bac9ccdaf6c1b7f41ab779d29f2d677a40fb1"
+      },
+      {
+        "name": "scripts/performance/infrastructureWorkloadContract.mjs",
+        "sha256": "b185142277e8f5ee0431a1e9bc7b05a801c581023c0a358dc1c5e6c33b88ce42"
+      },
+      {
+        "name": "scripts/performance/austinOperatingDocumentEvidence.mjs",
+        "sha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545"
+      },
+      {
+        "name": "scripts/performance/austinSatelliteSampledEpoch.mjs",
+        "sha256": "f2a03f41c8f8109d4dcac19b3d21c41197bb0855869a9d97dc2d4bf5e8b482d2"
+      },
+      {
+        "name": "scripts/performance/austinOperatingPopulationEvidence.mjs",
+        "sha256": "501d0750bdf5924496696c142e6e11288b44e1cf92fe363697d65bc2e2793f4d"
+      },
+      {
+        "name": "scripts/performance/austinOperatingWorkloadContract.mjs",
+        "sha256": "a616d780352daa2f6d1dc3805a09eadac112a9aed5819ab9369a76dbbcaa8300"
+      },
+      {
+        "name": "scripts/performance/captureComparisonContract.mjs",
+        "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48"
+      },
+      {
+        "name": "scripts/performance/receiptOnlyWorkerAudit.mjs",
+        "sha256": "a879a13aba6df7c17e7609ac5ab0c6e365b76d7c8c1a71e6b24d6de178e52aee"
+      },
+      {
+        "name": "scripts/performance/soakStability.mjs",
+        "sha256": "996efb1f0bb20654bfcd41f7107524afe7b7a089237459f06f221ef979c1d634"
+      },
+      {
+        "name": "scripts/performance/performanceMatrix.mjs",
+        "sha256": "507fc930a26929f4fb0a211289c1ac65604481673ec719ccefad24607026051c"
+      },
+      {
+        "name": "scripts/performance/pairedReportTestFixtures.mjs",
+        "sha256": "800524eaabaf2b0295feb1fa14cc4e08b6c9797625abf49957050ef0189799e6"
+      },
+      {
+        "name": "scripts/performance/infrastructureWorkloadFixture.mjs",
+        "sha256": "fc2f925c7a1ae25a6c8624774de42ceacce30988931a5c7fed9d95267a190dad"
+      },
+      {
+        "name": "scripts/performance/pairedReport.test.mjs",
+        "sha256": "5172411bc9ff5ab71521247fc4c9420af77bd0c61eb4d3e933dbf91f1c03a006"
+      },
+      {
+        "name": "scripts/performance/motionBudget.mjs",
+        "sha256": "5282e84e12a539ca75f214370bbbc0d1731b0d90fb99fefe2730d14451ec9964"
+      },
+      {
+        "name": "scripts/performance/startupCpuAttribution.test.mjs",
+        "sha256": "cdec501416c691fb9109cc256bf2283d9e2a74045b08638c9a397509a7b76cc5"
+      },
+      {
+        "name": "scripts/performance/startupCpuAttribution.mjs",
+        "sha256": "1358d423ee06e011099b35c6e1df18700a6817e661e4239ef3cf44b214b1b0c4"
+      },
+      {
+        "name": "scripts/performance/startupAttribution.test.mjs",
+        "sha256": "1403411b3778d3e0834140eea59d91a83d0b3a074d06f500a4edfa80ca49a97a"
+      },
+      {
+        "name": "scripts/performance/startupAttribution.mjs",
+        "sha256": "b2c4d0f035704c0712dda1ed546a3fb0a5c13afa4df49e290bb4b477a6d86ae7"
+      },
+      {
+        "name": "scripts/performance/infrastructureRuntimeComparison.test.mjs",
+        "sha256": "cf54f84669c69a9dfc6dc633c72aa59c2422a1ddadd9aa30531aafda417fd5a4"
+      },
+      {
+        "name": "scripts/performance/infrastructureRuntimeComparison.mjs",
+        "sha256": "22f9f7719737d9dfc6cbaf67354817e363199b4afec2442959edaa449b250cc6"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.mjs",
+        "sha256": "7772cad3d44a20edca7c1581602bd4b75e7979521c9edb32080fb97044a718fa"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePickPathDiagnostic.mjs",
+        "sha256": "e74c5630129cc07fa68c926293a8fa9ef30621a971424c4dce61e869b045dbfa"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureFixtureLayer.mjs",
+        "sha256": "dfb2f912cccd31bfd14f0bddad32ad8bddc4bdd0963882a2ec46c89a5df832e9"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.test.mjs",
+        "sha256": "03909f7633259a784a0180dbe6331859a2e15291ce9f62730dd59353da4f132c"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePrimitiveReadinessDiagnostic.mjs",
+        "sha256": "2149fdb0f7e7c40380c9204935f88c40d4affb664e8b8dbcc06aa6ac42ee0ce5"
+      },
+      {
+        "name": "scripts/fixtures/infrastructurePickPathDiagnostic.test.mjs",
+        "sha256": "47689eae136d369a4486b1696b3491ee0513b4efc7a28bc5b6474bd1a1609467"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureNativePickOwnership.test.mjs",
+        "sha256": "0b82b949f9f91ae6d1cb4cf10f87f6e7c2e5918d341de365fa94f84376c41a18"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureNativePickOwnership.mjs",
+        "sha256": "1c8b74edb61b2a9975136f544032052833ee6c4bd968912f8a2d5d7c5dec35d1"
+      },
+      {
+        "name": "src/data/infrastructure.js",
+        "sha256": "21b3f8041ae3d562d11d4647fecb58921cb0edfdbfbf24e6628d93cfcd527c20"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureFixtureCamera.test.mjs",
+        "sha256": "323a1f9f43f6db41885a8e1afeab2e1680db0989d14545e1924337504f9d9306"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureFixtureCamera.mjs",
+        "sha256": "96bec8e5bc7542464e8f9058103ba9cb8b8beda362a5ee80245268c02044c27e"
+      },
+      {
+        "name": "scripts/fixtures/infrastructureCurrentUpdateReadiness.test.mjs",
+        "sha256": "f9855ca7ad24d5886e0243eb82050eb783d245edd203af8a76f49a2ee1a56e11"
+      },
+      {
+        "name": "scripts/fixtures/infrastructure-runtime-collections.mjs",
+        "sha256": "0d717f5ddbc40a8f0c1fae694c8d2c63e78cc5dc4fa07cdac8eb36917e59c478"
+      },
+      {
+        "name": "scripts/performance/importFrameDiagnostics.mjs",
+        "sha256": "0775128e3fc33ef7e834b7c2688c5d3b672874e81e09e32c60000b978512b4eb"
+      },
+      {
+        "name": "src/performance/performanceSnapshot.js",
+        "sha256": "702c3e4889f1c3d4022cc85fb42f2fbf0a9a4825fb224f01d1dbf80f04cf7fca"
+      },
+      {
+        "name": "src/freshFrame.js",
+        "sha256": "9c00b7f34b8b6734862feca2c1e1b0659a381ffcaa2e6d1cb72b28f80f3cae09"
+      },
+      {
+        "name": "src/app/localGeojsonServices.js",
+        "sha256": "b2edce7b92d408d072d0971cfb7e3d55fc673ac563a4c8e4975e536ba8d7c390"
+      },
+      {
+        "name": "src/app/viewer.js",
+        "sha256": "a7d3d9088b5719666a3825d40a45f6b339c95a1ef3726948dc6e65f07565cadb"
+      },
+      {
+        "name": "src/app/cameraAnglesCompat.js",
+        "sha256": "6253c2f3dfb3783a2b6582e8d39ac5653dccc942f35309544d1d9ee83896857b"
+      },
+      {
+        "name": "src/app/atmosphereCompat.js",
+        "sha256": "4682531175416e582d7992bffb6a32c7511e75042589068efa6bb50925be088b"
+      },
+      {
+        "name": "scripts/performance/hostedNavigationDiagnostics.test.mjs",
+        "sha256": "c6e4184dd7ec25c8c568509179176040abc66b649f9d896b1aa127ed9305d16c"
+      },
+      {
+        "name": "scripts/performance/hostedNavigationDiagnostics.mjs",
+        "sha256": "32a6bff116c07e2227e0e1246c45d7770a2b06cded48e4a92ec65d43ce1e64df"
+      },
+      {
+        "name": "scripts/qa-hosted-capture.mjs",
+        "sha256": "f7688f90440ca85105d18b3bd9b5bb18fd69b0b4a7a16fdb745df22773f37287"
+      },
+      {
+        "name": "scripts/performance/hostedSourceProvenance.mjs",
+        "sha256": "3736bf76178578ce5d3f6bff37c590609057a46f994f3120f9316f580bfed7c9"
+      },
+      {
+        "name": "scripts/performance/nativePointerFixture.mjs",
+        "sha256": "3f7b57da34c1395a578f2c1abc1ee4416a3ac32419eae4cabf5526d4a6aa8656"
+      },
+      {
+        "name": "scripts/performance/cctvViewshedRetention.mjs",
+        "sha256": "58e9a3aed7987af5194533eb6898e2e3319e9d428e137bbebb73980d7020eeef"
+      },
+      {
+        "name": "scripts/performance/cctvCalibrationDemand.mjs",
+        "sha256": "692bd7bc24115491e338f7be273ac35709a195bb419d553e7e63bac4548598fb"
+      },
+      {
+        "name": "scripts/performance/vesselRenderDemand.mjs",
+        "sha256": "0621108a2b013878a00066e5eea69d0743d336b246c510978f1e8474007fedd9"
+      },
+      {
+        "name": "src/layers/vessels/policy.js",
+        "sha256": "dd4f99ef0b902352f4d06175241db0cfc930cc5a6291518711520aa7c31d36ad"
+      },
+      {
+        "name": "src/layers/vessels/recordPolicy.js",
+        "sha256": "cf9f48855f8bad11904c99c92a69eff5573fb34a8143ca13af4e6fdeae65d16f"
+      },
+      {
+        "name": "scripts/performance/infrastructureCollectionExperiment.mjs",
+        "sha256": "7a40a42fee1632424a85ce5684f5bcac4623daba4b5b1c9fd5a0045deafca80d"
+      },
+      {
+        "name": "scripts/qa-mixed-use-soak.mjs",
+        "sha256": "8dff78b370559f56dd4cef9deb904896240f1f747d84575e35ae301473c378a9"
+      },
+      {
+        "name": "scripts/fixtures/cctv-calibration-demand.js",
+        "sha256": "74ccf2c6cf2c7bf4869c12bcb7d8c755515919dd266b5983c95caadfff6ce8c5"
+      },
+      {
+        "name": "scripts/performance/s58PostProcessStageCensus.test.mjs",
+        "sha256": "c6dbb8d5f6570ae2f3cd19c5d629e66b99cecece3a434e7d65082aabceb290c0"
+      },
+      {
+        "name": "scripts/performance/s58PostProcessStageCensus.mjs",
+        "sha256": "58e8595ee59a2dd85eb4af0c3cdee6b893c3d3b9427d213a019963b2e9bdcea2"
+      },
+      {
+        "name": "src/ui/visualPresets.js",
+        "sha256": "ab7373f91771e6cc2f797dee51a32cc20c178a56e86133e8bcda0a8ee2e4bac4"
+      },
+      {
+        "name": "src/bloom.js",
+        "sha256": "7d67152d956e2658c1de9262c337d086eb46031bb79c6d211acce5b8bfc2de1b"
+      },
+      {
+        "name": "src/styles/thermal.js",
+        "sha256": "eeac5eda3513675330c7c15cefcc88d95f460731503fabbcea360a8634377057"
+      },
+      {
+        "name": "src/styles/surveillance.js",
+        "sha256": "19b09b30b75fe0c17d844907e57d1225a3359f33e5aca6f12efcb87c674f89bf"
+      },
+      {
+        "name": "src/styles/snow.js",
+        "sha256": "f7fbb7dc79b3735f18f2812fc2b941ef1c426311e6ec8e6f15124dbf86fa407a"
+      },
+      {
+        "name": "src/styles/noir.js",
+        "sha256": "c97259f097d391e08f4f47cbbc7d4d326dccdc0d5bb22922e2f137cd1044056b"
+      },
+      {
+        "name": "src/styles/anime.js",
+        "sha256": "c112df56d6c10461a58c20ba73f6162ad4b4823d6ff25e1057114a124c57f4c7"
+      },
+      {
+        "name": "src/styles/retro.js",
+        "sha256": "758e9cc8adbec3a9ef22f0cfa0ca1569662ef05e0f4e557011716069590ec834"
+      },
+      {
+        "name": "src/ui/visualSettings.js",
+        "sha256": "eb496b606c631de6f8b0a5425e86f2adff74f7f87f93bea9d9f0a28828a024d3"
+      },
+      {
+        "name": "src/hudLayouts.js",
+        "sha256": "970ef879d04dfd0c8814a60ddb91368ab424225cc5f688deef47fdcaad4852c1"
+      },
+      {
+        "name": "src/hudLayoutPolicy.js",
+        "sha256": "540e05c8b73814a116c9f333735a01653db9344b6b6474a78317c8e7f0974e03"
+      },
+      {
+        "name": "src/ui/radioPanelPlacement.js",
+        "sha256": "fc469c1d80dc75cc5cb6012fc2a488a1a551047588f7cad5d645f0aac546e772"
+      },
+      {
+        "name": "src/contactsDetectionPolicy.js",
+        "sha256": "5fe76794e75e1d4ffbc285fe2fd7e156d576a502b4b411495aad3837f7f129d4"
+      },
+      {
+        "name": "src/cockpitVisionPolicy.js",
+        "sha256": "5dd5d3693d648511112ae2d602e75c0440828661b1f3624eb3c5f3ea3b577d92"
+      },
+      {
+        "name": "src/ui/visualInput.js",
+        "sha256": "8a8ca1c3449d52583b50ef9959675bb3fab39e831bddd85023df6244786445e2"
+      },
+      {
+        "name": "src/ui/styleParameters.js",
+        "sha256": "fe66f90077216684a72245e0440473c4262209eaa7c5cec3a9b2702b51ee57a2"
+      },
+      {
+        "name": "src/ui/applicationShortcuts.js",
+        "sha256": "f038bbe076f9e4bc3fd0f5e1893cc0f2e5da73e51e8709162d123d2417eee694"
+      },
+      {
+        "name": "src/ui/effects.js",
+        "sha256": "4d86dc58b975ef8e931e26bc46432515a44f83afc388fc863ebc58d7cc678b4a"
+      },
+      {
+        "name": "src/ui/visualEffects.js",
+        "sha256": "f593d95d3318b9b346395e7bdb44d11f07d522b3049c2aebcade95ea2b269309"
+      },
+      {
+        "name": "src/ui/uiLifetime.js",
+        "sha256": "6ea50eb1870538219836092af9ab540242fb22ca8e15db05a3f13095155399ac"
+      },
+      {
+        "name": "scripts/performance/cctvViewshedRetention.test.mjs",
+        "sha256": "8f089023ab6ca4c831715a3ff5349476e456baa0088a4b1c2779e3b5897ceb9b"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixtureDelivery.test.mjs",
+        "sha256": "d40b3144a7077a3085630a94ca376a6740b6e97a513e75654e696ac8eb089f48"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixtureDelivery.mjs",
+        "sha256": "16efcca87ea47bccfc4df0254cca1d549fb1511645f0204d5549346d8b4b59ae"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixture.mjs",
+        "sha256": "a3b5c0ba81dbff848aa42acb6b9bf771a45ac1273b0d653341a2a467dd73434a"
+      },
+      {
+        "name": "scripts/performance/mapStreamingCapture.mjs",
+        "sha256": "85278085a4cdbc466bd81c9843251e95baed53e7d3c806f9fcdf2394d61a8476"
+      },
+      {
+        "name": "scripts/performance/mapStreamingFixture.test.mjs",
+        "sha256": "16152515621cb8c58955a311f060b277bf904cf252b7eee5e7b61590b0b3ce53"
+      },
+      {
+        "name": "scripts/performance/mapStreamingCapture.test.mjs",
+        "sha256": "fd6681c1713ff1c03943b410ace7310fa145948ce22fab40027e478c1c13d226"
+      },
+      {
+        "name": "scripts/qa-performance-build-smoke.mjs",
+        "sha256": "1dce75a4766a0baa67adf0f326486895a6961546f1d5357957c46e4b26a39716"
+      },
+      {
+        "name": "scripts/performance/shaderProgramAttributionArtifact.mjs",
+        "sha256": "6f66783a5c3666390c0f4bdeb21d2378d20ae64243f3c521652e96473b44e403"
+      },
+      {
+        "name": "scripts/performance/earlyCesiumRendererProbe.mjs",
+        "sha256": "367d3fb6365addcb65535a7beb61a4fb4fb242db8bc64fd5128c04bc1a1ff13f"
+      },
+      {
+        "name": "scripts/performance/depthPickAttribution.mjs",
+        "sha256": "030a4d0a6bf75fba0490c404cab5166ffc0644121288b2f90be4481c86ab5788"
+      },
+      {
+        "name": "scripts/performance/terminalViewerObservation.mjs",
+        "sha256": "bfdee62563176e89dbd2779637cc927d8387003fbc3d3a5427179b25e9d1876c"
+      },
+      {
+        "name": "scripts/performance/captureFailureReport.mjs",
+        "sha256": "4554f378468f991f539b17e7cefe94f4ead4d7d829a6f8344f72b36e9bd80eec"
+      },
+      {
+        "name": "scripts/performance/cesiumWorkerBlobContract.mjs",
+        "sha256": "e5f6ea5caad41ebf8915e0a8368fbdeffdc78bec458fd7a33abdbad4417c8f26"
+      },
+      {
+        "name": "scripts/performance/commonSceneObserver.mjs",
+        "sha256": "0d6fbacbba819c9cc18786e052214edf7d4095275f8112fb3edfa92e92cf0dc3"
+      },
+      {
+        "name": "scripts/performance/buildSmokeContract.mjs",
+        "sha256": "595f0c9fa5e8a5db5808fcfbf08c9630573f947bb89201510308bdb6b91069b3"
+      },
+      {
+        "name": "scripts/performance/captureBuildProvenance.mjs",
+        "sha256": "ff12f861c12692521ef00298df29e313ec4c11058d78d8069ac44969b5927028"
+      },
+      {
+        "name": "src/camera.js",
+        "sha256": "44a93bc244a0f438b874a1606c4fbd2de5df82b03e88e5d3793cf253f0884649"
+      },
+      {
+        "name": "scripts/performance/aircraftFleetTickAudit.test.mjs",
+        "sha256": "6cb457c9a25c9069986925dd0fbe9901b1796fa27c663f795ddc9eefe5708bb5"
+      },
+      {
+        "name": "scripts/performance/aircraftFleetTickAudit.mjs",
+        "sha256": "cc81d0669e252819014372c523202dc352d8ef8e79cfb6446daa19b898f6eb01"
+      },
+      {
+        "name": "src/layers/military/policy.js",
+        "sha256": "3806fbf9f3ed5170536059ca73095a6981ffa8033372ba920b2031adf1660cb5"
+      },
+      {
+        "name": "src/data/aircraftEmergency.js",
+        "sha256": "34b4116da2120b375df2eab22de5f3319b9c5d6f69716449b7bf8899c7c9e35b"
+      },
+      {
+        "name": "src/layers/military/recordPolicy.js",
+        "sha256": "d7723e036ab2639d681a7ad051075ab3b480229ca43e73909ae9ebe6b29d9aa4"
+      },
+      {
+        "name": "src/layers/flights/policy.js",
+        "sha256": "f7a9f92917f78fc3ed6ac00ce5dd11484f5e9d80b9d209c89b978ee2715b36aa"
+      },
+      {
+        "name": "src/layers/flights/recordPolicy.js",
+        "sha256": "3d268e3a66b9e3202a33db9e0b85e8064a9c6fec8181756f7566095a730a3d9c"
+      },
+      {
+        "name": "src/data/aircraftRecession.js",
+        "sha256": "e1579b03ed4be8b842885e5f36f9d5980abb454a605b0cf771a3571cfae75ad9"
+      },
+      {
+        "name": "src/layers/military/records.js",
+        "sha256": "eba9c49653ad930f5a7a825c6051831bd294f590638e4f9b394ace4d7d968e32"
+      },
+      {
+        "name": "src/data/aircraftClass.js",
+        "sha256": "4fc4ea0d8e49f05ee139966c777a54002f185b37e5e2542706c19a744e167489"
+      },
+      {
+        "name": "src/data/aircraftMeta.js",
+        "sha256": "ffa50ad7028df38c357ce683261a2a321671c6bd6cc57723b7fd5c8bf6eeace4"
+      },
+      {
+        "name": "src/data/renderAltitude.js",
+        "sha256": "ee7f0aa6fd4267537fa2bfcaf615552a88fd1c8819d115032ad8bf3c56e5410c"
+      },
+      {
+        "name": "src/layers/flights/records.js",
+        "sha256": "705fa4a03eb825b41cb5e99c7899e3af50affc906026b5cd99d0f00258c29985"
+      },
+      {
+        "name": "src/layers/military/rendering.js",
+        "sha256": "6a83ea56e8d16894ba5745b54e3a5e93ddb5725990744e275823fc6e778b939b"
+      },
+      {
+        "name": "src/data/motionModel.js",
+        "sha256": "f6e6ed5ca1155f9202235c4cd69bc4ef0c7bff38cb12d7bf8efea92e75cb0f49"
+      },
+      {
+        "name": "src/data/aircraftIcons.js",
+        "sha256": "dc11724c90b94dd0f312c6a6251546edcff9fa2584b1388ec6f6a721749335ae"
+      },
+      {
+        "name": "src/data/cockpitContactDot.js",
+        "sha256": "e190c70ed84d60607018a99d5dd2f6e914df5e3e37459a4874f3a0349a245011"
+      },
+      {
+        "name": "src/data/modelEligibility.js",
+        "sha256": "55ec3a65ed088ac2ab371540e6d2b1e91b85c17d9d9aeb970cd54aab58d5f22f"
+      },
+      {
+        "name": "src/data/modelVisualAnchor.js",
+        "sha256": "4391165e7923cc32d400060b1bfd45a6c6302040863c80ac36819cabd33f4137"
+      },
+      {
+        "name": "src/layers/flights/rendering.js",
+        "sha256": "d322060b8d90d6a79082fb4daac6d2f52338c216edab4d25bbdc29ce79b251d2"
+      },
+      {
+        "name": "src/layers/flights/modelSpec.js",
+        "sha256": "11fad61ac2633e379a8ef03f0aa5779e78faa0720d04441860ad23918146e068"
+      },
+      {
+        "name": "scripts/performance/austinSatelliteSampledEpoch.test.mjs",
+        "sha256": "29f0b546d1afd5c0518129b3c76212b07ef9fed90c30fe1315a38245b796fa22"
+      },
+      {
+        "name": "scripts/performance/austinOperatingWorkloadFixture.mjs",
+        "sha256": "76e4f40b3ead874e035b138f4c265c46a559fa6393c02ad5756b5da847d0271e"
+      },
+      {
+        "name": "src/layers/alpr/tileRecords.js",
+        "sha256": "adee1c48c60132d56528ee58882f8b015639be12d1903483ef19ab818dbf4062"
+      },
+      {
+        "name": "src/layers/alpr/records.js",
+        "sha256": "c2c5670b065a305b5f60beaab9aeb8c8ae5e463828fc827e7716ecc390bd3dbe"
+      },
+      {
+        "name": "src/layers/alpr/policy.js",
+        "sha256": "26ce61f048b771bac86a0479333e13cf34ce784d5e2d51bc105de372cca78e6e"
+      },
+      {
+        "name": "scripts/performance/productionFlightFixture.test.mjs",
+        "sha256": "7c2d68f2a5c516794aa6a41fb85b81e4e06e37419ef6c9f15ced9f977c824eb9"
+      },
+      {
+        "name": "src/sources/live/standalone.js",
+        "sha256": "6f88c71c94075bc835268a438e06c14e5d190ea0c40f665e7ec6c473618d2a7e"
+      },
+      {
+        "name": "src/sources/live/vessels.js",
+        "sha256": "3f14d3f4f7c0f164a798af26b84605e677f2bbdc61c57c4d917b76f28b83a58d"
+      },
+      {
+        "name": "src/sources/live/contract.js",
+        "sha256": "dd4ccb14673dd56f6a5562ab7ff6edc94defb69d0773928bf58f6c95cec58d0d"
+      },
+      {
+        "name": "src/sources/live/aircraft.js",
+        "sha256": "e3f99f0bb68bf68b6ab7876131cdf93a89acf67c6cdb0d988715d073cc1e1980"
+      },
+      {
+        "name": "scripts/performance/weatherEffectsWorkloadFixture.test.mjs",
+        "sha256": "b72918f0ccee01eddf884db379101edb20e93a798277d8f5781c6b3f5fecf126"
+      },
+      {
+        "name": "src/time/weatherAdapter.js",
+        "sha256": "8d682ae639e88b92f79d20e3230473da32e5ccef267a90372e878c83bc792cef"
+      },
+      {
+        "name": "src/ui/railTestFixture.mjs",
+        "sha256": "c83cb81170b133199ba8d4122441870a1105767d5e845ede234e50e06798ca07"
+      },
+      {
+        "name": "src/ui/weatherPanel.js",
+        "sha256": "50c674f1b397dae47c9f10a852738d087e973bfe68aec93b03a3202b60614df9"
+      },
+      {
+        "name": "src/ui/railTimeline.js",
+        "sha256": "18b8fa4811421459799cbd33d85e409e7c6e6783b0f341fbdc921768a0307563"
+      },
+      {
+        "name": "src/ui/railCards.js",
+        "sha256": "39626da6cf0736328cd00bc1fc7f3a5900883b943d31b7f574528d9fd82e4fef"
+      },
+      {
+        "name": "src/ui/railCardBlocks.js",
+        "sha256": "b5e61fe66bc2a57c25ba67f56e4d97a657af32fc16bf0e9fe8202762fb5afe85"
+      },
+      {
+        "name": "src/ui/rowList.js",
+        "sha256": "01a385a5eefb160109924ccd6d62d20c77c014e17e8c1e5fd28293aa790787ae"
+      },
+      {
+        "name": "src/ui/chipGroup.js",
+        "sha256": "30c849e73a82eaef8de6432c3633ea2e1c24d5bcaca70c2095356a6f48a79fe7"
+      },
+      {
+        "name": "src/layers/weather/clock.js",
+        "sha256": "34ebabb2b11138de92fdaa06c73dc746e09837a47e749384c6c420af112a6584"
+      },
+      {
+        "name": "src/layers/wind/index.js",
+        "sha256": "08a4ed84e996af8ca812f8deaa814909a1491efdcce4b469a25011447abd0b5a"
+      },
+      {
+        "name": "src/layers/wind/evidence.js",
+        "sha256": "3ebdc6ac2e7e32fb6b56dffa90a82e5c12fcc306bf2164e2afff59c5fdd51d48"
+      },
+      {
+        "name": "src/layers/wind/inspection.js",
+        "sha256": "001a7377139fc5cda6353668643654b28cb1a96e7538e572c8ec60b45af15f6f"
+      },
+      {
+        "name": "src/layers/wind/fields.js",
+        "sha256": "9741c70fd587baf8f01483d98c8ef195d22fb3a2c154436afb0ebbf9ca4fd9f4"
+      },
+      {
+        "name": "src/layers/wind/model.js",
+        "sha256": "c298d8a2c852fc5087658c94de33f4cccd44ed558134ab86c27ee34660ac7f60"
+      },
+      {
+        "name": "src/layers/wind/presentation.js",
+        "sha256": "4407cc8d0416477eac979be28a3a8f8f7e47c97af1a2bb813233f6aa406e774f"
+      },
+      {
+        "name": "src/layers/wind/rendering.js",
+        "sha256": "6a01420964ce1afff9bf753861ada6b6acf824bec8ce94806beb1bb7283cb73f"
+      },
+      {
+        "name": "src/layers/wind/gpuRendering.js",
+        "sha256": "0eb1afea040652d361ef4a5a0eb87675ba6f13bff1c36b1c2ba25fa1ab2ef102"
+      },
+      {
+        "name": "src/layers/wind/streamlines.js",
+        "sha256": "c51aa80d93344d7c2bf1eaa78eb3406d0d3a8b62ab53f9f18a2152a7d311dbd6"
+      },
+      {
+        "name": "src/layers/weather/imageryHost.js",
+        "sha256": "ed7802916253b5a0871c12d155d25e347062e838f9526566e3976c9d34bb9b5b"
+      },
+      {
+        "name": "src/layers/weather/imageryOrder.js",
+        "sha256": "dafc2be82eff4bc146f7a6e1431e1810c3a124ea1f3e3f585604902864e30891"
+      },
+      {
+        "name": "src/layers/wind/relief.js",
+        "sha256": "3a0ff605797fcc5be33ee21150e6d327e4bc379fdcd5cdd035d09fbe4c6079f0"
+      },
+      {
+        "name": "src/layers/weather/shellRendering.js",
+        "sha256": "cba38585262be3453e5b294e3fe51161bd40e07973e27872e0f5c4296ceb789f"
+      },
+      {
+        "name": "src/layers/weather/infraredImage.js",
+        "sha256": "de0ca22839b50911f27b6c536072f0b953ca06cfd9d9ce3517622d461a0f6bcf"
+      },
+      {
+        "name": "src/layers/weather/infraredAlpha.js",
+        "sha256": "fa7ea79eb6b14ad15cca769a37385146b70d2fbde850fc6a7d51ea239a2f345d"
+      },
+      {
+        "name": "src/layers/wind/source.js",
+        "sha256": "e4c54f0b2443c8cda0c489cf866e6c7c9541aedba59d880d50b3bd9b72dc3ea8"
+      },
+      {
+        "name": "src/sources/windBody.js",
+        "sha256": "ea3056c54e1c173dc28926949d095948d6f7a35ea40502079f4761d638f0e3e1"
+      },
+      {
+        "name": "scripts/performance/austinOperatingWorkloadFixture.test.mjs",
+        "sha256": "f55e4e161c271303d7f7c5a514190bc4077613b2acbdf0989799c7582ec21750"
+      },
+      {
+        "name": "src/layers/installations/source.js",
+        "sha256": "9c74f8ac1e8b024153fae03f145d279891118f78cb15f776dd61b1b674274e7a"
+      },
+      {
+        "name": "src/data/militaryInstallationData.js",
+        "sha256": "a89d115107e6e30c63d3886488fb1567352889e4adb14146cbdd4671129beb6b"
+      },
+      {
+        "name": "src/data/installationNames.js",
+        "sha256": "b6e6abd9b126274a88f2c3479d59e5d661f550135eabdff8ca147283d163890d"
+      },
+      {
+        "name": "src/data/tomtomTiles.js",
+        "sha256": "0944fae86a12ae89213616f70c5cd784f886f07d39d1ec6d102c44eb779f3d9f"
+      },
+      {
+        "name": "src/sources/militaryTileGeometry.js",
+        "sha256": "d8319cbe97d4ccc6d05bec433dd3bd465e5af504017c5a426c214df5620b4414"
+      },
+      {
+        "name": "src/sources/openFreeMap.js",
+        "sha256": "0cd4da6426df7e3731dc81761ff96f75c46faf6f5c9cff5ee0b9f8da38ae69d9"
+      },
+      {
+        "name": "src/sources/vectorTiles.js",
+        "sha256": "b382f4d10687e0e964225db8a25cca9b94c8a61fc36fb470c9e5ba1f21bded3f"
+      },
+      {
+        "name": "src/sources/phaseTiming.js",
+        "sha256": "069bf655c7b48e2f31855dd203e8b138099a07cd779db0b9cfe2b9c2a3bca4c8"
+      },
+      {
+        "name": "src/data/militaryNames.js",
+        "sha256": "39f0c40fc0c2d3997ed5f4cb5f9dffff8ba85a3b2f6f91282bb3ee4430e8bb76"
+      },
+      {
+        "name": "src/data/retryableLoad.js",
+        "sha256": "a0f9a3d4bb65d76baf2d13ab62b00518bff2f0f84fc4474837cc27e3bd79ae34"
+      },
+      {
+        "name": "src/data/bundledJson.js",
+        "sha256": "db6fc76e7e768ba48aa3944edc1b5bb45cdb8525bd6dde46064fc100ff2315c7"
+      },
+      {
+        "name": "src/sources/requestDeadline.js",
+        "sha256": "12c5d18c2a3de111ca266f2d03640bc6bc8efe6601440b72bdcb120c62bbed69"
+      },
+      {
+        "name": "src/layers/alpr/presentation.js",
+        "sha256": "fadfc2cc6b288c597e7ec4c70cd0adf57df7bd5b7dddd7b6231f1555f8087057"
+      },
+      {
+        "name": "src/layers/alpr/visuals.js",
+        "sha256": "a495ac3d89bbcc6b0a5b2ea81c02a95bcfc621f1fecfb19610d18c2b617c51a9"
+      },
+      {
+        "name": "src/layers/alpr/model.js",
+        "sha256": "e36a89d62e466004f9b142b3f7594de12465e99b05aa02e4d6c8c0bcbfee2563"
+      },
+      {
+        "name": "src/layers/alpr/overlay.js",
+        "sha256": "7e9e73e379ff236166fea39ac5e733c481a0ebb3d4c334205288dabd59fc8cbb"
+      },
+      {
+        "name": "src/layers/alpr/floors.js",
+        "sha256": "be08743e3f582e4838b49d7c23ae159db8012b8ded1afde73d99182eace838c3"
+      },
+      {
+        "name": "src/layers/alpr/source.js",
+        "sha256": "ed642c36d47d4f34dea1fc1e63405e5414885f044f57d4cd9badbc76fa055219"
+      },
+      {
+        "name": "scripts/performance/austinOperatingReadinessHistory.test.mjs",
+        "sha256": "392f273d0c235175a421a45ef1b07bc1f5876ba96192fff47edba9f8347737bf"
+      },
+      {
+        "name": "scripts/performance/austinOperatingReadinessHistory.mjs",
+        "sha256": "ec43f7351dab232f6446446451ebacdf6953dd84dd97beaa7b736083cee8d007"
+      },
+      {
+        "name": "scripts/performance/austinOperatingPopulationEvidence.test.mjs",
+        "sha256": "c1403239e0d78b065b92e29da4e255bbcb9549e9b919591f490a759899d26107"
+      },
+      {
+        "name": "scripts/performance/austinOperatingDocumentEvidence.test.mjs",
+        "sha256": "ef6a28841f5122a79a24e799c5a27229ec01b3ba0634064a1db582814abbbd57"
+      },
+      {
+        "name": "scripts/performance/austinOperatingComparisonContract.test.mjs",
+        "sha256": "e62d1b01e246d1d0cd5c6818faaf88771545fa57c9e163c3ccfd969410a58e1a"
+      },
+      {
+        "name": "scripts/qa-application.mjs",
+        "sha256": "2b665818de31c01eef7078b916c1fbc41ec692424242c23b5e07de6b3edb9d46"
+      },
+      {
+        "name": "scripts/qa-performance-build-smoke.test.mjs",
+        "sha256": "d71bce701056c626ee48c33817a4827e9dbefd4015cd54045020268e76fa2e01"
+      },
+      {
+        "name": "scripts/capture-performance-matrix.mjs",
+        "sha256": "a28617412b53a14f55e6c51151a2166b55949dc0d1e1e081db34b89a6dcb8ba3"
+      },
+      {
+        "name": "scripts/performance/startupObservationMethod.test.mjs",
+        "sha256": "63106990a77928e684cad73d6a5d83797be9b3d821648a82ac5974ac1246a719"
+      },
+      {
+        "name": "scripts/performance/startupObservationMethod.mjs",
+        "sha256": "dd7399980cb99fbc15e00ab554d3e1f60a37c2d94fb4acf352d72a75cb224c21"
+      },
+      {
+        "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+        "sha256": "d5ca81209cfcd004c57342bafe480b0da80bce3680dddbaf25979077c16bb6b0"
+      },
+      {
+        "name": "scripts/performance/balancedStartupConfirmation.mjs",
+        "sha256": "578f0fd67f6bbb7318b9096972eb5126ffa660455a561132917f8d7792449465"
+      },
+      {
+        "name": "scripts/review-balanced-startup-confirmation.mjs",
+        "sha256": "d1811851fe44f66662ab6dafe9abb1678649b4e41c46ae233ac8cb8c3434fb2f"
+      },
+      {
+        "name": "scripts/capture-scene-performance.mjs",
+        "sha256": "1ade60e3ff7b3fb1183bc016c53f9ee46e3bc77687f041a127158a7ad0f58953"
+      },
+      {
+        "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+        "sha256": "3a848ec2fffb627931f724fd23fb5d07ab865e157b7d76f3f9c4c0c66f0710cf"
+      },
+      {
+        "name": "scripts/performance/foregroundSampleContinuity.mjs",
+        "sha256": "5dda78f1f4c566a8299ca1698244f123af1cea27d2b94255edf9a9102fd79ead"
+      },
+      {
+        "name": "scripts/performance/browserReadinessGate.mjs",
+        "sha256": "3ed2d907862aadb20e0e9ac723ef463e0c59507a85b22a2227246526812618d2"
+      },
+      {
+        "name": "scripts/performance/foregroundPageActivation.mjs",
+        "sha256": "6780bbfb3ebb350f144ea078a45af9ea0dea76928acf3b4b21341f0d34b55efd"
+      },
+      {
+        "name": "scripts/performance/postMeasurementSourceDrain.mjs",
+        "sha256": "a15eb234ade45e749a859970cf8bde60f8d3d4b78731cd144d7a51b588524a9f"
+      },
+      {
+        "name": "scripts/performance/providerDocumentRetirement.mjs",
+        "sha256": "93c8dcceaf3c601b632a52df23abe085d1ab974f9a1419eb1e108f28f12c9611"
+      },
+      {
+        "name": "scripts/performance/providerSampleCpuProfileWindow.mjs",
+        "sha256": "0d44c29a369356558f9481e9b28ba11a63b1c2c3af7498b2e21a62c57ab0e212"
+      },
+      {
+        "name": "scripts/performance/framebufferPreservationDiagnostic.mjs",
+        "sha256": "5186ea24cb8c48df2890de229d78a65bcb290be594a84ed753f462f03345c6f3"
+      },
+      {
+        "name": "scripts/performance/captureBrowserTrace.mjs",
+        "sha256": "a8825eff2cc3af9e34c94b717c0e98ec7084e59313698972fc3be9bf40208484"
+      },
+      {
+        "name": "scripts/performance/captureDiagnosticsControl.mjs",
+        "sha256": "80140290559d314f672ab5399d8beeddfefbdffad59ac7bfdd15922c1c6ae054"
+      },
+      {
+        "name": "scripts/performance/prewarmWorkerAuditBoundary.mjs",
+        "sha256": "19ccf0de8a7d545b61a681a5d3fa98873a274b119eae8d174f20afd751d7b2fc"
+      },
+      {
+        "name": "scripts/performance/trackingRoute.mjs",
+        "sha256": "a727fe19820a049896d1dec1b7f92075186168512fecdd99cda1a3ee9eed668a"
+      },
+      {
+        "name": "scripts/performance/settleCompletedRenderDiagnostic.mjs",
+        "sha256": "e0d3cb03f15c915b2c5b5b005024f13dac92331d50b4cf58c4d82eea24ebf083"
+      },
+      {
+        "name": "scripts/performance/sceneMeasurementDeadline.mjs",
+        "sha256": "12c1cfc141d7e148c7916db5d032bc9950a004a6c912e8ce22b00dc306619026"
+      },
+      {
+        "name": "scripts/performance/receiptOnlyPageClose.mjs",
+        "sha256": "598caefde1eed85f3853f69867158cd9e750dc1fc7bce21d4f48dda50fdf6bcf"
+      },
+      {
+        "name": "scripts/performance/mapFrameCaptureHome.mjs",
+        "sha256": "786c29f57af3d5956eab9b253e7db47c057377f207520a5427101cb84a1de3e4"
+      }
+    ]
+  }
+}

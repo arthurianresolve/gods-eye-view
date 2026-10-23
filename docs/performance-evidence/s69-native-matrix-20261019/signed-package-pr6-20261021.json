@@ -1,0 +1,57 @@
+{
+  "schema": "gev-private-signed-package-receipt/v1",
+  "date": "2026-10-21",
+  "status": "private-package-validated",
+  "applicationRuntimeCodeCommit": "33d3d72c4668d847af26606ca1fc3f53ffaa139c",
+  "reviewHeadAtBuild": "82d83475e7af3099b378a4064f7cfb52cc40e456",
+  "githubPrMergeCommit": "1f3e4a18829eba9b7b03809a1eaac78a23ba92c0",
+  "reviewAndMergeTree": "4e5101a570ac0a5e9b0203f2b0ccbf45d1773410",
+  "workflow": {
+    "repository": "arthurianresolve/gods-eye-view",
+    "path": ".github/workflows/release.yml",
+    "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39638226424",
+    "conclusion": "success",
+    "attestation": "verified for repository, workflow, merge commit and GitHub-hosted runner"
+  },
+  "archive": {
+    "name": "gods-eye-view-1f3e4a18829eba9b7b03809a1eaac78a23ba92c0.tar.gz",
+    "bytes": 55557137,
+    "sha256": "a22ccecdd9d6388b921e8a22acefd2041f467f8f993d93a9392bcff6843043e5",
+    "vm105Path": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-pr6-1f3e4a18",
+    "independentVmChecksum": "matched",
+    "manifestCommit": "1f3e4a18829eba9b7b03809a1eaac78a23ba92c0",
+    "manifestFilesVerified": 2129
+  },
+  "privateHost": {
+    "network": "127.0.0.1-only on VM105 through a temporary SSH tunnel",
+    "mainScriptPath": "/assets/index-kaonP8fb.js",
+    "mainScriptBytes": 3491688,
+    "mainScriptServedSha256": "7575411dd5721fb64bd20ce663467f27a3eddc7112f14c1befaf1e96f1d36b2c",
+    "mainScriptManifestSha256": "7575411dd5721fb64bd20ce663467f27a3eddc7112f14c1befaf1e96f1d36b2c",
+    "http": {
+      "root": 200,
+      "rootCache": "no-cache",
+      "rootCsp": true,
+      "hashedAsset": 200,
+      "hashedAssetCache": "public, max-age=31536000, immutable",
+      "unknownApi": 404,
+      "untrustedHost": 403,
+      "privateArchiveTarget": 400
+    },
+    "workspaceBrowserJourney": "passed: save, duplicate, conflict, reopen, GeoJSON import, synthetic demo",
+    "evidenceBrowserJourney": "passed: datacenter provenance, archive and PeeringDB reference attachment, pin, save/reload, cross-profile transfer, late response isolation",
+    "productionApiAndBrowserHarness": "Headless Chrome against the private signed package; live provider requests were blocked or fixture-served",
+    "cleanup": "temporary tunnel closed and VM105 port 4290 confirmed closed"
+  },
+  "production": {
+    "service": "gods-eye-view.service active",
+    "workingDirectory": "/opt/gods-eye-view-releases/e7a878e168bc97ffedddc27e13bf3e69b7ee6256-verified",
+    "publicHttps": "200 with HSTS; existing production only",
+    "changed": false
+  },
+  "scopeLimits": [
+    "The packaged build embeds the merge commit; its bytes differ from the earlier 33d3d72c visual-test build even though runtime source files are unchanged.",
+    "Private HTTP and browser recovery do not establish candidate HTTPS, physical GPU visual fidelity, paired latency or the final Ampfing soak.",
+    "The local archive download remains after automatic approval review rejected removal; VM105 has an independently verified copy."
+  ]
+}

@@ -1,0 +1,639 @@
+{
+  "rawSha256": "0871247e8908a58eeffb9a3c26a6b503415b468f9324be486a8560e8f3d764f2",
+  "rawBytes": 1315267,
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38194333722",
+  "commit": "12b2b6c9b17b8fca383f66444e47c4ba54c6aa6b",
+  "harnessCommit": "12b2b6c9b17b8fca383f66444e47c4ba54c6aa6b",
+  "status": "failed",
+  "failedPhase": "cross-mode-comparison",
+  "decodedImages": [
+    {
+      "image": "entities-default-style-0.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-1.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-2.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-3.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-default-style-4.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-0.png",
+      "pixelSha256": "2808d629a4fcd9f3ae1d781d27149f5bbd64df0048ccee786c4b354e5b5d2ac7",
+      "fileSha256": "07fb51154f1d12392c3a4cc5bf59db2471917d84665efce8aa11b87650c66fde",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-1.png",
+      "pixelSha256": "2808d629a4fcd9f3ae1d781d27149f5bbd64df0048ccee786c4b354e5b5d2ac7",
+      "fileSha256": "07fb51154f1d12392c3a4cc5bf59db2471917d84665efce8aa11b87650c66fde",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-2.png",
+      "pixelSha256": "2808d629a4fcd9f3ae1d781d27149f5bbd64df0048ccee786c4b354e5b5d2ac7",
+      "fileSha256": "07fb51154f1d12392c3a4cc5bf59db2471917d84665efce8aa11b87650c66fde",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-3.png",
+      "pixelSha256": "2808d629a4fcd9f3ae1d781d27149f5bbd64df0048ccee786c4b354e5b5d2ac7",
+      "fileSha256": "07fb51154f1d12392c3a4cc5bf59db2471917d84665efce8aa11b87650c66fde",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "entities-camera-change-4.png",
+      "pixelSha256": "2808d629a4fcd9f3ae1d781d27149f5bbd64df0048ccee786c4b354e5b5d2ac7",
+      "fileSha256": "07fb51154f1d12392c3a4cc5bf59db2471917d84665efce8aa11b87650c66fde",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-0.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-1.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-2.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-3.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-default-style-4.png",
+      "pixelSha256": "5ed98a774b091ad90a171cca096d93079d99f4d88e99b172018661c00f3e6060",
+      "fileSha256": "d97ded131db34c1b92417969e4f580c43ceb2e27bf00fbe3f90769437468d9c8",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-0.png",
+      "pixelSha256": "e6d1d08eeea5df705da22ca923240dcbcf335de7774dcd9256429fe25897bc0c",
+      "fileSha256": "8521855463dc0093e27d7adfe878d84e75c9ae13c4bb8bf4cd838eaad483dbe1",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-1.png",
+      "pixelSha256": "e6d1d08eeea5df705da22ca923240dcbcf335de7774dcd9256429fe25897bc0c",
+      "fileSha256": "8521855463dc0093e27d7adfe878d84e75c9ae13c4bb8bf4cd838eaad483dbe1",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-2.png",
+      "pixelSha256": "e6d1d08eeea5df705da22ca923240dcbcf335de7774dcd9256429fe25897bc0c",
+      "fileSha256": "8521855463dc0093e27d7adfe878d84e75c9ae13c4bb8bf4cd838eaad483dbe1",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-3.png",
+      "pixelSha256": "e6d1d08eeea5df705da22ca923240dcbcf335de7774dcd9256429fe25897bc0c",
+      "fileSha256": "8521855463dc0093e27d7adfe878d84e75c9ae13c4bb8bf4cd838eaad483dbe1",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "image": "collections-camera-change-4.png",
+      "pixelSha256": "e6d1d08eeea5df705da22ca923240dcbcf335de7774dcd9256429fe25897bc0c",
+      "fileSha256": "8521855463dc0093e27d7adfe878d84e75c9ae13c4bb8bf4cd838eaad483dbe1",
+      "width": 960,
+      "height": 640
+    }
+  ],
+  "comparisons": [
+    {
+      "caseId": "default-style",
+      "sample": 0,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameCamera": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 1,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameCamera": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 2,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameCamera": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 3,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameCamera": true
+    },
+    {
+      "caseId": "default-style",
+      "sample": 4,
+      "pixelDifferenceCount": 0,
+      "sameGeometry": true,
+      "sameCamera": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 0,
+      "pixelDifferenceCount": 114,
+      "sameGeometry": false,
+      "sameCamera": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 1,
+      "pixelDifferenceCount": 114,
+      "sameGeometry": false,
+      "sameCamera": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 2,
+      "pixelDifferenceCount": 114,
+      "sameGeometry": false,
+      "sameCamera": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 3,
+      "pixelDifferenceCount": 114,
+      "sameGeometry": false,
+      "sameCamera": true
+    },
+    {
+      "caseId": "camera-change",
+      "sample": 4,
+      "pixelDifferenceCount": 114,
+      "sameGeometry": false,
+      "sameCamera": true
+    }
+  ],
+  "mapTransitions": [
+    {
+      "mode": "entities",
+      "stage": "map-stack-same-classification-control",
+      "elapsedMs": 9162.300000000017,
+      "rowTransitions": {
+        "immediate": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 0,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        },
+        "settled": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 0,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        }
+      },
+      "groundPrimitiveOwners": {
+        "before": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": false,
+            "show": false
+          }
+        ],
+        "afterDispatch": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": false,
+            "show": false
+          }
+        ],
+        "settled": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ]
+      }
+    },
+    {
+      "mode": "entities",
+      "stage": "map-stack-photoreal",
+      "elapsedMs": 7691.899999999994,
+      "rowTransitions": {
+        "immediate": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          }
+        },
+        "settled": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          }
+        }
+      },
+      "groundPrimitiveOwners": {
+        "before": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "afterDispatch": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "settled": [
+          {
+            "fixtureOwnerId": "ground-polyline-2",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ]
+      }
+    },
+    {
+      "mode": "entities",
+      "stage": "map-stack-terrain-restore",
+      "elapsedMs": 6519.899999999994,
+      "rowTransitions": {
+        "immediate": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        },
+        "settled": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        }
+      },
+      "groundPrimitiveOwners": {
+        "before": [
+          {
+            "fixtureOwnerId": "ground-polyline-2",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "afterDispatch": [
+          {
+            "fixtureOwnerId": "ground-polyline-2",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "settled": [
+          {
+            "fixtureOwnerId": "ground-polyline-3",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ]
+      }
+    },
+    {
+      "mode": "collections",
+      "stage": "map-stack-same-classification-control",
+      "elapsedMs": 4969.599999999977,
+      "rowTransitions": {
+        "immediate": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 0,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        },
+        "settled": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 0,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        }
+      },
+      "groundPrimitiveOwners": {
+        "before": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": false,
+            "show": false
+          }
+        ],
+        "afterDispatch": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": false,
+            "show": false
+          }
+        ],
+        "settled": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ]
+      }
+    },
+    {
+      "mode": "collections",
+      "stage": "map-stack-photoreal",
+      "elapsedMs": 6392.599999999977,
+      "rowTransitions": {
+        "immediate": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          }
+        },
+        "settled": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          }
+        }
+      },
+      "groundPrimitiveOwners": {
+        "before": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "afterDispatch": [
+          {
+            "fixtureOwnerId": "ground-polyline-1",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "settled": [
+          {
+            "fixtureOwnerId": "ground-polyline-2",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ]
+      }
+    },
+    {
+      "mode": "collections",
+      "stage": "map-stack-terrain-restore",
+      "elapsedMs": 6860.299999999988,
+      "rowTransitions": {
+        "immediate": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        },
+        "settled": {
+          "beforeCount": 1913,
+          "afterCount": 1913,
+          "identityOrderStable": true,
+          "changedEntityCount": 1913,
+          "addedEntityCount": 0,
+          "removedEntityCount": 0,
+          "before": {
+            "TERRAIN": 0,
+            "CESIUM_3D_TILE": 1913,
+            "BOTH": 0
+          },
+          "after": {
+            "TERRAIN": 1913,
+            "CESIUM_3D_TILE": 0,
+            "BOTH": 0
+          }
+        }
+      },
+      "groundPrimitiveOwners": {
+        "before": [
+          {
+            "fixtureOwnerId": "ground-polyline-2",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "afterDispatch": [
+          {
+            "fixtureOwnerId": "ground-polyline-2",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ],
+        "settled": [
+          {
+            "fixtureOwnerId": "ground-polyline-3",
+            "path": "groundPrimitives/0/1/z-group-0/0",
+            "ready": true,
+            "show": true
+          }
+        ]
+      }
+    }
+  ]
+}

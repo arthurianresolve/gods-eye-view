@@ -1,0 +1,25 @@
+{
+  "schema": "gev-paint-baseline-independent-review/v1",
+  "reviewedAt": "2026-10-11T01:28:04.542Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38101675504",
+  "application": "698752adcd27b59040affc0d0a1a9bd643025833",
+  "harness": "d5ed890c0087cae98cc01a7968825fc290540d61",
+  "reportSha256": "2ddc324a7d0b6c9c955fa31973bc6d1fc3163ca272b6431d53d3eff18dfeccd3",
+  "pairs": 5,
+  "cases": 38,
+  "imagesVerified": 760,
+  "allPngPixelsDecodedAndHashed": true,
+  "exactWithinAndAcrossPairs": true,
+  "sourceAndHarnessHashesVerified": true,
+  "fontWidths": [
+    283,
+    299
+  ],
+  "scope": "Same-commit baseline repeatability and fixture validation only; no optimization or performance acceptance.",
+  "cleanup": {
+    "browserClosed": true,
+    "serversClosed": true,
+    "fixturesRemoved": true,
+    "unchangedSources": true
+  }
+}

@@ -39,6 +39,7 @@ export function createMilitaryFlightLayer({
   parts.ingestion = createIngestion({
     feed: flightState.feed,
     applySnapshot,
+    syncRenderDemand: parts.lifecycle.syncRenderDemand,
     setSourceLabel: (source) => {
       layer.source = source;
     },

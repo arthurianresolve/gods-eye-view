@@ -1,0 +1,97 @@
+{
+  "schema": "gev-weather-confirmation-summary/v1",
+  "reviewedAt": "2026-10-19T07:01:24.984Z",
+  "status": "motion-regression-unresolved",
+  "independentReview": {
+    "sha256": "544adcd98f59497434fbd2655e6515e6173c01f1cde74eeb3d70ff86f7037948",
+    "consumerCommit": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+    "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/weather-confirmation-1792390961304"
+  },
+  "protocol": {
+    "order": [
+      "candidate",
+      "control"
+    ],
+    "runsPerScenario": 5,
+    "warmupMs": 30000,
+    "measurementMs": 60000,
+    "profile": "native-sharpness-v1",
+    "instrumented": false
+  },
+  "captures": [
+    {
+      "role": "candidate",
+      "sha256": "1c17f5a571086955f1facd13d5c210b8228198d72db55624c0c075b0a923de07",
+      "applicationCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "harnessCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+      "integrity": {
+        "status": "passed",
+        "sampleCount": 10
+      },
+      "sourcePhases": 30,
+      "maxLatenessMs": 3555.199999999255,
+      "motionP95Ms": [
+        285.1000000014901,
+        325.3999999985099,
+        308,
+        244.19999999925494,
+        330.29999999701977
+      ],
+      "idleInterRenderP95Ms": [
+        1058.5,
+        1313.4000000022352,
+        3293.89999999851,
+        2116.099999997765,
+        1235.3999999985099
+      ]
+    },
+    {
+      "role": "control",
+      "sha256": "8e8afa58851cca3a6c729fa42894efe070e7ddff4294959c47690f8bfb64f687",
+      "applicationCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "harnessCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+      "integrity": {
+        "status": "passed",
+        "sampleCount": 10
+      },
+      "sourcePhases": 30,
+      "maxLatenessMs": 3315.800000000745,
+      "motionP95Ms": [
+        251.30000000074506,
+        274.19999999925494,
+        318.5999999977648,
+        241.5,
+        281.1000000014901
+      ],
+      "idleInterRenderP95Ms": [
+        6575.800000000745,
+        6894.699999999255,
+        7302.60000000149,
+        6446,
+        7110.60000000149
+      ]
+    }
+  ],
+  "comparison": {
+    "idle": {
+      "status": "measured",
+      "baselineMedianP95Ms": 6894.699999999255,
+      "candidateMedianP95Ms": 1313.4000000022352,
+      "changePct": -80.95058523210035,
+      "regressionOver10Pct": false
+    },
+    "scripted-motion": {
+      "status": "measured",
+      "baselineMedianP95Ms": 274.19999999925494,
+      "candidateMedianP95Ms": 308,
+      "changePct": 12.326768782216229,
+      "regressionOver10Pct": true
+    }
+  },
+  "regressionsOver10Pct": [
+    "scripted-motion"
+  ],
+  "interpretation": "The earlier 17.0% motion flag repeats at 12.3%. Source-time correctness passes, but weather performance is not accepted. Idle gaps include intentional request-render intervals and are not CPU/GPU execution time. The ABBA trace diagnostic is separate; it does not waive this uninstrumented result.",
+  "conditions": "No concurrent GPU capture or local build/test suite. Light evidence/document maintenance occurred during the candidate capture; preserve this condition when judging attribution. Dedicated owned Chrome foreground checks passed.",
+  "productionChanged": false
+}

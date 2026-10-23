@@ -8,6 +8,7 @@ import { createModel } from './model.js';
 import { createIngestion } from './ingestion.js';
 import { createControls } from './controls.js';
 import { createLifecycle } from './lifecycle.js';
+import { createLaunchRenderDemand } from './renderDemand.js';
 import { layerFeedState } from '../../data/feedState.js';
 
 const noop = () => {};
@@ -88,13 +89,15 @@ async function fixture({ legacySource = false } = {}) {
       renderMissionPanel: noop,
       clearMissionRosterHover: noop,
     },
-    replay: { stopMissionReplay: noop },
+    replay: { stopMissionReplay: noop, destroy: noop },
     selection: {
       setSelectedMission: noop,
       focusMission: noop,
       stopMissionZoomAnchor: noop,
     },
     orbitRendering: {
+      resetOrbitCadence: noop,
+      destroyOrbitCadence: noop,
       removeMissionOrbitPrimitives: noop,
       syncMissionOrbitPrimitiveVisibility: noop,
     },
@@ -121,6 +124,7 @@ async function fixture({ legacySource = false } = {}) {
     },
   };
   const context = { state, services, parts, source };
+  parts.renderDemand = createLaunchRenderDemand(services.render, state);
   parts.model = createModel(context);
   parts.ingestion = createIngestion(context);
   parts.controls = createControls(context);

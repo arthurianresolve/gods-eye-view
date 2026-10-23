@@ -1,0 +1,124 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-19T22:55:46.434Z",
+  "row": "infrastructure-dams",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 299.7000000011176,
+        "candidateMedianP95Ms": 289.29999999701977,
+        "changePct": -3.4701368048245036,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "failed",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 3884,
+    "candidateMedianMs": 5563,
+    "baselineInitialSettleMedianMs": 4811,
+    "candidateInitialSettleMedianMs": 6463,
+    "initialSettleChangePct": 34.33797547287466,
+    "initialSettleRegressionOver10Pct": true,
+    "baselineRunsMs": [
+      4545,
+      3912,
+      3118,
+      3259,
+      3884
+    ],
+    "candidateRunsMs": [
+      5563,
+      5773,
+      5748,
+      4769,
+      4503
+    ],
+    "changePct": 43.228630278063854,
+    "regressionOver10Pct": true,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3237,
+      "sha256": "550012fe50401580d0a32806dee8ae2f1cf0ebf980888e0a4d511e83115a5b92"
+    },
+    {
+      "name": "infrastructure-dams-baseline.json",
+      "bytes": 370488,
+      "sha256": "8b0bc3dfbd0578a9bbe56265a1b4bd3a58ec60e00057eed77f31c1faa7044c32"
+    },
+    {
+      "name": "infrastructure-dams-candidate.json",
+      "bytes": 371010,
+      "sha256": "20948e3eaf765d9f5c325263e8443b8d85c76ed2f115e5b423516c052b7befcc"
+    },
+    {
+      "name": "infrastructure-dams-candidate.json.log",
+      "bytes": 678,
+      "sha256": "dadf2200d8a48b69f30e4571aeb37989438c1a1beeec2ed8aabe40a590df6da9"
+    },
+    {
+      "name": "infrastructure-dams-candidate.json.invocation.json",
+      "bytes": 2433,
+      "sha256": "cf79193e6f49a512b092df76edb9f9aa5a0e705268e974572ddb67f4d846d730"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-dams-190c5ab6-native155",
+  "productionChanged": false
+}

@@ -1,0 +1,131 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-20T02:11:04.484Z",
+  "row": "operating-view",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 265.3999999985099,
+        "candidateMedianP95Ms": 1015.6000000089407,
+        "changePct": 282.66767144485414,
+        "regressionOver10Pct": true
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 299.6000000014901,
+        "candidateMedianP95Ms": 254.5,
+        "changePct": -15.053404539808346,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [
+      "idle"
+    ],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "measured",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 3276,
+    "candidateMedianMs": 2713,
+    "baselineInitialSettleMedianMs": 3954,
+    "candidateInitialSettleMedianMs": 3477,
+    "initialSettleChangePct": -12.06373292867982,
+    "initialSettleRegressionOver10Pct": false,
+    "baselineRunsMs": [
+      4254,
+      4192,
+      3204,
+      3014,
+      3276
+    ],
+    "candidateRunsMs": [
+      3329,
+      2737,
+      2713,
+      2500,
+      2613
+    ],
+    "changePct": -17.185592185592185,
+    "regressionOver10Pct": false,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6745,
+      "sha256": "71d82e3a206876579393d6048a589fa4765c37cc30458f903ff278b14b1082ee"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3237,
+      "sha256": "550012fe50401580d0a32806dee8ae2f1cf0ebf980888e0a4d511e83115a5b92"
+    },
+    {
+      "name": "retry-reuse-protocol.json",
+      "bytes": 7207,
+      "sha256": "5444de0ae27676d71f6bbc75823958649cebe479f20bd7355bb09c6291fb9c02"
+    },
+    {
+      "name": "operating-view-baseline.json",
+      "bytes": 13194119,
+      "sha256": "b793812c40a64c76927e97c513baf0ee998b00b50be61a7d6b18de14dcb859c9"
+    },
+    {
+      "name": "operating-view-candidate.json",
+      "bytes": 13502228,
+      "sha256": "a7a51e9d772a48fb572ef908ee369f1a2e6951cd12172fd5fc92b93ebd3f15fa"
+    },
+    {
+      "name": "operating-view-candidate.json.log",
+      "bytes": 692,
+      "sha256": "eb5b98d5568558dbd5461ca023a1fa83b477112807c750c33bc62d35ea581f63"
+    },
+    {
+      "name": "operating-view-candidate.json.invocation.json",
+      "bytes": 2487,
+      "sha256": "d6af39ce6fd2c70827a04810e66b0c9a092cd480792e2f1e65708343bbd8f746"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/operating-view-190c5ab6-native155-foreground-ready-2",
+  "productionChanged": false
+}

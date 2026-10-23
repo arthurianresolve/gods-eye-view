@@ -1,0 +1,47 @@
+{
+  "rawSha256": "28526a023bb7572c9e4b22a505c4540352f612be5868a3c004cf10f7c6cf0e1d",
+  "rawBytes": 206559,
+  "appCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "harnessCommit": "c21b3f21a8fd7933dc0e52698e2b1175165ef7db",
+  "independentReview": "Retained complete raw capture was passed again through validateCaptureCliReport from the tested c21b3f21 revision; assertions passed. No truncated projection.",
+  "sampleCount": 4,
+  "diagnosticDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    },
+    {
+      "documentRole": "main-setup",
+      "documentId": "main-measured-document",
+      "requested": true,
+      "hookAvailable": true,
+      "disabled": true
+    }
+  ],
+  "workerDocuments": [
+    {
+      "documentRole": "startup-1",
+      "documentId": "startup-document-1",
+      "validatedWorkerCount": 4,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    },
+    {
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "validatedWorkerCount": 8,
+      "sourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322"
+    }
+  ],
+  "comparisonEligible": false,
+  "readinessReasons": [
+    "warmup-is-not-30-seconds",
+    "measurement-is-not-60-seconds",
+    "capture-does-not-have-five-runs-per-scenario",
+    "hardware-performance-acceptance-was-not-requested-or-verified",
+    "receipt-worker-blob-audit-retains-bodies-during-capture-and-is-instrumented",
+    "latency-comparison-remains-disabled-pending-uninstrumented-capture"
+  ]
+}

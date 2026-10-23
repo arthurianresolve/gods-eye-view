@@ -1,0 +1,74 @@
+{
+  "schema": "gev-weather-idle-disposition-validation/v1",
+  "status": "failed",
+  "startedAt": "2026-10-19T23:14:59.300Z",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 325339,
+      "sha256": "8710bbfc1717ad71060977813f8af7a7d50fdd9b61c3e73bff48edee36a651a0",
+      "submittedSha256": "8710bbfc1717ad71060977813f8af7a7d50fdd9b61c3e73bff48edee36a651a0"
+    },
+    {
+      "name": "scripts/capture-scene-performance.test.mjs",
+      "bytes": 30983,
+      "sha256": "b42e23c77f1e5506bdd9eeec6a28e3268a48c4789c719c6abee7e5802dccdea9",
+      "submittedSha256": "b42e23c77f1e5506bdd9eeec6a28e3268a48c4789c719c6abee7e5802dccdea9"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "bytes": 27022,
+      "sha256": "3a848ec2fffb627931f724fd23fb5d07ab865e157b7d76f3f9c4c0c66f0710cf",
+      "submittedSha256": "3a848ec2fffb627931f724fd23fb5d07ab865e157b7d76f3f9c4c0c66f0710cf"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.mjs",
+      "bytes": 37571,
+      "sha256": "221de01b51245e4f221fa7414cc4dd4eb653bfa42a2c215b84e0db82dd80d976",
+      "submittedSha256": "221de01b51245e4f221fa7414cc4dd4eb653bfa42a2c215b84e0db82dd80d976"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.test.mjs",
+      "bytes": 41286,
+      "sha256": "e61ad1f7f1d6b88a946754781e2fb01921f912de6e0c063a16d51a3782cc3a13",
+      "submittedSha256": "d3a02071f35b018090410132f4b789064d50e422c379a7853f26866fc419e2dd"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "bytes": 12426,
+      "sha256": "4528e87366ab43cc955a515bf5b7c17b857be0c88e4f8bab017eb00294dc8d12",
+      "submittedSha256": "4528e87366ab43cc955a515bf5b7c17b857be0c88e4f8bab017eb00294dc8d12"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.mjs",
+      "bytes": 31144,
+      "sha256": "7d312167ea5c00724d051a745e66acce579017c8637140896ff94dec238f3b6a",
+      "submittedSha256": "7d312167ea5c00724d051a745e66acce579017c8637140896ff94dec238f3b6a"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.test.mjs",
+      "bytes": 29488,
+      "sha256": "14887b385dd7534d0dbc2a24b29edc0ba89d5735d52bb6f1b2fb2e74eab673e8",
+      "submittedSha256": "c8af3868781eba93cda04f83ce70821cc900da04adbefa94b41c206bc4cd2324"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "832738d6f969b32507879078768c2f2038602bf5765a02ce10249680120838d8",
+      "summary": "scripts/capture-scene-performance.mjs 421ms (unchanged)\nscripts/capture-scene-performance.test.mjs 57ms (unchanged)\nscripts/performance/weatherIdleDiagnostic.mjs 38ms (unchanged)\nscripts/performance/candidatePerformanceEvidence.mjs 54ms (unchanged)\nscripts/performance/candidatePerformanceEvidence.test.mjs 50ms\nscripts/run-unit-tests.mjs 12ms (unchanged)\nscripts/performance/weatherIdleCadenceDisposition.mjs 34ms (unchanged)\nscripts/performance/weatherIdleCadenceDisposition.test.mjs 32ms\n"
+    },
+    {
+      "label": "node24",
+      "code": 1,
+      "signal": null,
+      "sha256": "73e8e3e4b2ee84803ff86590e4f9828b70dceb085cceffb00662265e43b657b2",
+      "summary": "22ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.062729ms)\n✔ unit runner serializes only GC-bracketed allocation microbenchmarks (1.400511ms)\n✔ the runner discovers every test file in the repository (28.034733ms)\n✔ allocation runtime calibration is explicit and pinned to Node 24 (0.244802ms)\n✔ npm test stays green on every supported engine, not only the calibrated one (0.538308ms)\nℹ tests 119\nℹ suites 0\nℹ pass 118\nℹ fail 1\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9526.63173\n\n✖ failing tests:\n\ntest at scripts/performance/weatherIdleCadenceDisposition.test.mjs:715:1\n✖ weather idle disposition resolves only the named idle metric with complete paired evidence (110.331701ms)\n  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n  + actual - expected\n  \n  + undefined\n  - 30000\n  \n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout/scripts/performance/weatherIdleCadenceDisposition.test.mjs:730:10)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1306:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)\n      at Test.postRun (node:internal/test_runner/test:1447:19)\n      at Test.run (node:internal/test_runner/test:1372:12)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: 30000,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "error": " is digest-bound, recomputed, and remains pending for uncovered workloads (33.22458ms)\n✔ native manifest review cannot upgrade a declared map contract without full native evidence (612.138885ms)\n✔ digest tampering, missing files, duplicate roles and wrong app commits fail closed (11.717713ms)\n✔ 20% objective misses are reported without failing the regression gate (42.690992ms)\n✔ achieved objective percentages remain visible from validated measurements (19.148842ms)\n✔ unverified idle dispositions fail instead of hiding the original comparison (11.336999ms)\n✔ weather idle disposition cannot attach to a standalone weather comparison (40.836928ms)\n✔ missing dense and tracking measurements stay pending and do not imply coverage (108.394335ms)\n✔ infrastructure evaluator coverage rejects a tampered producer asset identity (31.476009ms)\n✔ lifecycle stress is a retention mode and cannot fill timed workload coverage (16.697755ms)\n✔ software-only comparisons cannot satisfy primary objective cover",
+  "completedAt": "2026-10-19T23:15:09.697Z"
+}

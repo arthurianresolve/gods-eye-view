@@ -57,8 +57,8 @@ function forwardedProtocol(req) {
 }
 
 /**
- * Cross-site gate for keyless routes the map needs in order to render
- * (`/api/terrain/heights`). It refuses the same cross-site browser shapes as
+ * Cross-site gate for keyless map and camera routes
+ * (`/api/terrain/heights` and `/api/cctv/*`). It refuses the same browser shapes as
  * `admitSameSite` (a `Sec-Fetch-Site` other than same-origin/none, a foreign
  * or opaque `Origin`) but does not refuse reverse-proxy forwarding headers:
  * those protect credentials and spend, which a keyless route has neither of,

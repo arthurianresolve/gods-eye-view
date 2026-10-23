@@ -1,0 +1,1 @@
+Benchmark profile verification now follows canvas integer conversion for fractional Windows DPR, passes legacy profiles explicitly to capture commands, and requires native-sharpness evidence at map-journey boundaries.

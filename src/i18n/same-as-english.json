@@ -120,7 +120,8 @@
     "{value} KM/S",
     "ΔE",
     "ΔN",
-    "▲ {frp} MW"
+    "▲ {frp} MW",
+    "Manual"
   ],
   "ru": [
     "AIS: --",

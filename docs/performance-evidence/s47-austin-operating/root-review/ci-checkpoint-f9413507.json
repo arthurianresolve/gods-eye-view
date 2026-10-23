@@ -1,0 +1,57 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262",
+  "testedCommit": "f9413507bf66a1734e4abb59c6db756c30a232f3",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 115067267980,
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067267980"
+    },
+    {
+      "id": 115067268223,
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067268223"
+    },
+    {
+      "id": 115067268342,
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067268342"
+    },
+    {
+      "id": 115067268411,
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067268411"
+    },
+    {
+      "id": 115067268447,
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067268447"
+    },
+    {
+      "id": 115067268524,
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067268524"
+    },
+    {
+      "id": 115067268564,
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38326809262/job/115067268564"
+    }
+  ]
+}

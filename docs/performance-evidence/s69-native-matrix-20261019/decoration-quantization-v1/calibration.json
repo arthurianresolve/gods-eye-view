@@ -1,0 +1,428 @@
+{
+  "schema": "gev-decoration-calibration/v1",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "headerPaintSha256": "8543d1a4c93f12c60c911a8817a29b9fb5c8631bc292942b797dafa9939534b5",
+  "sourceFiles": {
+    "public/logo.svg": "9984443bf385b0f2eb41401ff0416cf2250db3c176e8ddd8a6d5d91c93a6b880",
+    "src/logoGaze.js": "61c630088e7b3c0dfdb4734e4adc02a65f1b4e299fc46b1d002243f0ecf68284",
+    "src/ui/styles/foundation.css": "5a8afb7246a09fc7766b776a13eac5b0f292d775a2b9c9c4da1ef3649faa46c1",
+    "src/ui/styles/cctv.css": "73362eab2185bf7eca1b206cc9534c98d8578eff458932763e788e4bc8251b2d",
+    "src/ui/templates/scene-chrome.html": "8142cf9bc94c0478c131e67c0cab887dcaa3e6d261ade32b036b5c6080d51bea",
+    "src/ui/cctvFrames.js": "8d4b4f06014f3602a7c6ca7a447201b0cd4bb1324f3cceb1103cf16b5a19e110",
+    "src/ui/templates/layer-panels.html": "65636d124425322f05ef3850d534d4fa60c6d738fcf7c9008cb17ab079df59f7",
+    "index.html": "e166e40e73e92547317dedf26244121c23904e2f53396db108818e0baf2cf7aa"
+  },
+  "support": {
+    "dpr": 2,
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "svgRect": {
+      "x": 36,
+      "y": 32,
+      "width": 52,
+      "height": 34.8828125
+    },
+    "logoHalfOpenDeviceRect": {
+      "left": 0,
+      "top": 0,
+      "right": 248,
+      "bottom": 206
+    },
+    "shadowSigmaCssPx": 12,
+    "shadowSpreadSigma": 3,
+    "opaquePathDeviceGuard": 1.01,
+    "curveErrorDevicePx": 0.01,
+    "protectedOpaquePixels": 2026,
+    "badgeBorderCssPx": 1,
+    "badgeAntialiasDevicePx": 1
+  },
+  "logo": {
+    "maximumRgbDelta": 2,
+    "basis": "All 66 pairs of 12 historical e7 baseline images; outside the source SVG viewport plus one-pixel AA guard. Old core maximum103 is NOT a calibration allowance.",
+    "analysisSha256": "dcf80e235a93b72b6d4167bbee16542d23a62f85a9e68161db14e6aea46849db",
+    "rawArchive": "repeated-visual-190c5ab6-79d555cf-complete-20261020",
+    "images": [
+      {
+        "id": "1-baseline-still-settled",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+      },
+      {
+        "id": "1-baseline-hud-visible",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+      },
+      {
+        "id": "1-baseline-hud-hidden",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "64e7eef1af606767f66b68a08d7099a5ab316a57e31966e6fee2400b4b4ffb19"
+      },
+      {
+        "id": "1-baseline-hud-restored",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+      },
+      {
+        "id": "2-baseline-still-settled",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+      },
+      {
+        "id": "2-baseline-hud-visible",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "57cebfc7bc95132fdf0e765f7c4237249a4cc7854b8db395a5ed08478f6c431a"
+      },
+      {
+        "id": "2-baseline-hud-hidden",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "ac23e7f088ba83dcb3ac17a233fbf07e14dc73a9c08d20a4457b8767acf994a5"
+      },
+      {
+        "id": "2-baseline-hud-restored",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "3eac28f874e1d5a55af2a08262c6e9085380ff67da35ba3b0a34beeb1802bbb8"
+      },
+      {
+        "id": "3-baseline-still-settled",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+      },
+      {
+        "id": "3-baseline-hud-visible",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+      },
+      {
+        "id": "3-baseline-hud-hidden",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "68572f7b3ef55510d3e873f7b12c790024ab4793222dec5c6fdf006ae3d4045e"
+      },
+      {
+        "id": "3-baseline-hud-restored",
+        "paintEqualsReference": true,
+        "svgMarkupEqualsReference": true,
+        "svgRectEqualsReference": true,
+        "width": 2880,
+        "height": 1800,
+        "pngSha256": "b49e9484dc0fb15a4e6bf51db05d7b0c560f1bbd818501717b720eb55850fc2a"
+      }
+    ],
+    "maximumObservedHaloDelta": 2
+  },
+  "badge": {
+    "maximumRgbDelta": 7,
+    "basis": "Only the three unchanged e7 baseline documents in each state from the complete preserved cohort; eight rounded-border pixels. Future support is computed from measured CSS geometry, never these differences.",
+    "analysisSha256": "2b64dfcea10633ee59a8c2751569a6a5ef1cf85d97d6ff4105e3f9e5d6e506e9",
+    "rawArchive": "repeated-full-extent-c373d91b-3cd4d528-complete-20261020",
+    "states": [
+      {
+        "id": "still-settled",
+        "images": [
+          {
+            "id": "pair-1-baseline-still-settled",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "7ff0f4971b1cf1b2df1cadbc4162f5a4fbe2db6f1762b28161e3d4158e333648",
+            "rgbaSha256": "8d5e79a8aca1ed21ba71f4e3215ab9def8f3e07328ef676da614b30181927f0f"
+          },
+          {
+            "id": "pair-2-baseline-still-settled",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "cfca3fbb1326a7b02a943b476f79c7420c11ee486bbc6d9b5bb16f25c02572dc",
+            "rgbaSha256": "d8111a275f82e7f9b95e278e7addca61689f7cc3608231fd5ceefacedcd00681"
+          },
+          {
+            "id": "pair-3-baseline-still-settled",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "93fe5c0cbabdf9b13cba394157014e905b0db752115d5d26af3158814ec52d29",
+            "rgbaSha256": "ca7cba987e43de4c70bcd166ee412b8886e55182c6ec43e4c39b56b35d293727"
+          }
+        ],
+        "comparisons": [
+          {
+            "left": "pair-1-baseline-still-settled",
+            "right": "pair-2-baseline-still-settled",
+            "changedPixels": 28,
+            "maximumChannelDelta": 7,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-1-baseline-still-settled",
+            "right": "pair-3-baseline-still-settled",
+            "changedPixels": 20,
+            "maximumChannelDelta": 1,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-2-baseline-still-settled",
+            "right": "pair-3-baseline-still-settled",
+            "changedPixels": 8,
+            "maximumChannelDelta": 7,
+            "alphaDifferences": 0
+          }
+        ]
+      },
+      {
+        "id": "hud-visible",
+        "images": [
+          {
+            "id": "pair-1-baseline-hud-visible",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "d8ce3c6b53cac3436c151ed429d3c2109c7e8e336632a6d046e73281001ff25b",
+            "rgbaSha256": "170721b43b7a11ae696df2a0c4e31ec69c335a999e8f6b77a8e7339e59d57289"
+          },
+          {
+            "id": "pair-2-baseline-hud-visible",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "93fe5c0cbabdf9b13cba394157014e905b0db752115d5d26af3158814ec52d29",
+            "rgbaSha256": "ca7cba987e43de4c70bcd166ee412b8886e55182c6ec43e4c39b56b35d293727"
+          },
+          {
+            "id": "pair-3-baseline-hud-visible",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "950f6e12c5be7053b38e4988c11a907a2474728eb65b347aeee22767ff817321",
+            "rgbaSha256": "781f4e4fef7f6fb1e602e6ce1cba4269447cae772835b0a76eb202dde169f0c0"
+          }
+        ],
+        "comparisons": [
+          {
+            "left": "pair-1-baseline-hud-visible",
+            "right": "pair-2-baseline-hud-visible",
+            "changedPixels": 43,
+            "maximumChannelDelta": 7,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-1-baseline-hud-visible",
+            "right": "pair-3-baseline-hud-visible",
+            "changedPixels": 44,
+            "maximumChannelDelta": 1,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-2-baseline-hud-visible",
+            "right": "pair-3-baseline-hud-visible",
+            "changedPixels": 37,
+            "maximumChannelDelta": 7,
+            "alphaDifferences": 0
+          }
+        ]
+      },
+      {
+        "id": "hud-hidden",
+        "images": [
+          {
+            "id": "pair-1-baseline-hud-hidden",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "a79535d2d780c50b01f0f7022333b00f569258bc13f9cd43e18c8a3b837bf5c5",
+            "rgbaSha256": "8586277821a65597409d164412ab3cfa3c1089c079b57234d1025f5bcde9446d"
+          },
+          {
+            "id": "pair-2-baseline-hud-hidden",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "9c0be8f3d63149085f23e5ff914f71773b51cf98981e0ee662bfe7e6389b77d3",
+            "rgbaSha256": "25c23643fae10f9c88d7395b67bdc2bd1b691fe806e31d73110521632b385f0c"
+          },
+          {
+            "id": "pair-3-baseline-hud-hidden",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "9c0be8f3d63149085f23e5ff914f71773b51cf98981e0ee662bfe7e6389b77d3",
+            "rgbaSha256": "25c23643fae10f9c88d7395b67bdc2bd1b691fe806e31d73110521632b385f0c"
+          }
+        ],
+        "comparisons": [
+          {
+            "left": "pair-1-baseline-hud-hidden",
+            "right": "pair-2-baseline-hud-hidden",
+            "changedPixels": 20,
+            "maximumChannelDelta": 1,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-1-baseline-hud-hidden",
+            "right": "pair-3-baseline-hud-hidden",
+            "changedPixels": 20,
+            "maximumChannelDelta": 1,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-2-baseline-hud-hidden",
+            "right": "pair-3-baseline-hud-hidden",
+            "changedPixels": 0,
+            "maximumChannelDelta": 0,
+            "alphaDifferences": 0
+          }
+        ]
+      },
+      {
+        "id": "hud-restored",
+        "images": [
+          {
+            "id": "pair-1-baseline-hud-restored",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "13724136702bcf998e2ba0a542344066d1018103fc344543be8ea06194cfe065",
+            "rgbaSha256": "950079cce5e28c4aa3b7fcded04c1452ff75b8336c20828dc4e297d88d16c5c9"
+          },
+          {
+            "id": "pair-2-baseline-hud-restored",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "251e733a3db0b85ddd63be9d484577456b4c6b9501b8ff5f33b730bce7998167",
+            "rgbaSha256": "a31508a5820c3d667fea2a2b755ac3f2e44466093c959d00334b8eec5cce6400"
+          },
+          {
+            "id": "pair-3-baseline-hud-restored",
+            "role": "baseline",
+            "info": {
+              "width": 2880,
+              "height": 1800,
+              "channels": 4,
+              "format": "raw"
+            },
+            "pngSha256": "93fe5c0cbabdf9b13cba394157014e905b0db752115d5d26af3158814ec52d29",
+            "rgbaSha256": "ca7cba987e43de4c70bcd166ee412b8886e55182c6ec43e4c39b56b35d293727"
+          }
+        ],
+        "comparisons": [
+          {
+            "left": "pair-1-baseline-hud-restored",
+            "right": "pair-2-baseline-hud-restored",
+            "changedPixels": 52,
+            "maximumChannelDelta": 7,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-1-baseline-hud-restored",
+            "right": "pair-3-baseline-hud-restored",
+            "changedPixels": 25,
+            "maximumChannelDelta": 1,
+            "alphaDifferences": 0
+          },
+          {
+            "left": "pair-2-baseline-hud-restored",
+            "right": "pair-3-baseline-hud-restored",
+            "changedPixels": 27,
+            "maximumChannelDelta": 7,
+            "alphaDifferences": 0
+          }
+        ]
+      }
+    ]
+  },
+  "opaqueCore": {
+    "analysisSha256": "2812cd557f35e531abd989fd961b5f996305b52e7a8256214aa89a4dbcbfe8e3",
+    "count": 2026,
+    "differingPixels": 0
+  },
+  "historicalResultsSuperseded": false
+}

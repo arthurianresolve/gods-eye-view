@@ -184,6 +184,13 @@ export function _syncCctvSourceBadge(activeCamera, enabled) {
     this._cctvSourceBadge.dataset.frameState = 'error';
     return;
   }
+  if (activeCamera.videoFallback) {
+    this._cctvSourceBadge.textContent = hasDisplayedFrame
+      ? t('STILL FRAME · FALLBACK')
+      : t('STILL FALLBACK');
+    this._cctvSourceBadge.dataset.frameState = 'fallback';
+    return;
+  }
   const kind = cctvSourceKindLabel(
     activeCamera.sourceKind || activeCamera.feedType || 'unknown',
   );

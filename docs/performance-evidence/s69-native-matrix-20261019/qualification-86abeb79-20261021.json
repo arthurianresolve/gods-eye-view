@@ -1,0 +1,47 @@
+{
+  "schema": "gev-candidate-qualification-receipt/v1",
+  "recordedDate": "2026-10-21",
+  "candidateCommit": "86abeb79989c055e36d01850e1ee700155379e2f",
+  "baselineCommit": "e7a878e",
+  "visual": {
+    "environment": "Windows Chrome physical GPU",
+    "plan": "repeated-full-image-controls-v1",
+    "planSha256": "682829f500f61b887f818ec2f7f0ce272551431c456fff94e628632dbff84061",
+    "pairCount": 3,
+    "pngCount": 24,
+    "validation": "failed",
+    "reason": "baseline pair-1-baseline-still-settled has no independently reproduced complete-image control",
+    "browserClosed": true,
+    "interceptionDrain": "confirmed",
+    "pairReportSha256": [
+      "930d44b8e4e71c6ef65d733abbab70509b99b46ea1997fed85fbd6abdebf7c16",
+      "69d20594ee27ac34cb07a9c7206b3f74292104865d74e040981bd43a3a7b3e02",
+      "00df9ae254c03d11b949c82eec5ea07116d450d77cf4b20805f7a4be09ffe48c"
+    ],
+    "evidenceArchive": {
+      "machine": "VM105",
+      "path": "/opt/gods-eye-view-validation/s61-s70-20261018/staged-release-86abeb79/repeated-visual-86ab-v1.tar",
+      "bytes": 67482624,
+      "sha256": "7ce45e4a07a92aff45ebf4287f22a3e44077bbede2dfc99d5f01e1bf83095902",
+      "independentReadback": "archive SHA-256, three extracted pair-report SHA-256 values, and 24 PNG count verified on VM105"
+    }
+  },
+  "localWorkspaceJourney": {
+    "environment": "Windows Chrome, exact-commit source build on loopback host",
+    "result": "passed",
+    "coverage": [
+      "save and duplicate/open",
+      "stale two-tab conflict",
+      "reload and reopen",
+      "command palette",
+      "GeoJSON preview, apply, save, reload, and render",
+      "synthetic demo"
+    ],
+    "limits": "This is not signed-package browser recovery, public HTTPS, or production verification."
+  },
+  "storage": {
+    "localE": "unreliable: a previously parsed report later read back as zero bytes; no further writes or builds",
+    "evidenceMaster": "independently verified VM105 archive"
+  },
+  "acceptance": "not accepted: strict visual equivalence fails and native latency, startup, matrix, signed-package recovery, and final soak remain open"
+}

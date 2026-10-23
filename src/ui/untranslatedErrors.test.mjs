@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // Refusals and failures that source modules produce in English reach
 // the page translated — through a placeholder at the point of display, or
 // through a catalog entry when the text is stored as data.

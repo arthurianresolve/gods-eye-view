@@ -12,6 +12,7 @@ export function createCalibration({
   parts,
   source,
 }) {
+  const requestRender = services.render?.governorRequestRender || (() => {});
   /**
    * Returns whether a calibration patch moves the camera's ground anchor.
    * Rotational, optical, range, and manual-height edits preserve the existing
@@ -261,6 +262,9 @@ export function createCalibration({
     // §9.1: touching range takes manual control — clear the activation clamp.
     if ('rangeScale' in patch) {
       record.probeClampRangeM = null;
+      record.probeClampSource = null;
+      record.probeClampPendingSource = null;
+      record.probeClampPendingMapSwitch = false;
     }
     const anchorMoved = calibrationPatchMovesAnchor(patch);
     if (options.transient === true && anchorMoved) {
@@ -273,6 +277,7 @@ export function createCalibration({
         parts.ground.groundAltFor(record),
       );
       parts.presentation.notifyListenersThrottled();
+      requestRender('cctv-calibration-drag');
       return true;
     }
     if (anchorMoved) {
@@ -286,6 +291,7 @@ export function createCalibration({
     // The edited pose has a new footprint; resolve the ground under it once.
     void parts.ground.resolveFootprintGround(record);
     parts.frames.refreshProjectionImage(record, true);
+    requestRender('cctv-calibration-patch');
     return true;
   }
 
@@ -336,7 +342,9 @@ export function createCalibration({
         parts.frames.refreshProjectionImage(record, true);
         parts.rendering.refreshCoverageStyles();
         parts.presentation.notifyListeners();
+        requestRender('cctv-calibration-release');
       },
+      requestRender,
     });
   }
   return {

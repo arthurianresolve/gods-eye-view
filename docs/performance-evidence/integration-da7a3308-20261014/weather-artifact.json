@@ -1,0 +1,20 @@
+{
+  "id": 11874616452,
+  "node_id": "MDg6QXJ0aWZhY3QxMTg3NDYxNjQ1Mg==",
+  "name": "performance-build-smoke-38522610432",
+  "size_in_bytes": 45553,
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11874616452",
+  "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11874616452/zip",
+  "expired": false,
+  "digest": "sha256:11f6b8107199ff4a6e7cc7dd8e8f12347d56bf59b8604e59968e20c788727e3b",
+  "created_at": "2026-10-14T06:36:27Z",
+  "updated_at": "2026-10-14T06:36:27Z",
+  "expires_at": "2026-10-17T06:36:26Z",
+  "workflow_run": {
+    "id": 38522610432,
+    "repository_id": 1362432886,
+    "head_repository_id": 1362432886,
+    "head_branch": "qa/startup-diagnostics-20261014",
+    "head_sha": "da7a33082644d6c1200dc7df66d300941170ce8c"
+  }
+}

@@ -1,0 +1,870 @@
+{
+  "label": "dev",
+  "url": "http://127.0.0.1:4175?welcome=0",
+  "env": {
+    "basemap": "keyless-globe",
+    "globeShown": true,
+    "canvas": "1200x886",
+    "dpr": 2,
+    "ua": "Chrome/152.0.0.0",
+    "msaa": 4,
+    "resolutionScale": 1
+  },
+  "results": [
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 1,
+      "setup": {
+        "ready": true,
+        "readyMs": 4701,
+        "layers": {
+          "weather-radar": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 673,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 998,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T12:15:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 367,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "zoom-in",
+      "seconds": 6,
+      "renders": 85,
+      "fps": 14.2,
+      "rafHz": 14.2,
+      "p50": 66.4,
+      "p95": 183.3,
+      "max": 383.3,
+      "longTasks": 10,
+      "longTaskMs": 1697,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 1,
+      "setup": {
+        "ready": true,
+        "readyMs": 4701,
+        "layers": {
+          "weather-radar": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 673,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 998,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T12:15:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 367,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "close-idle",
+      "seconds": 6.02,
+      "renders": 102,
+      "fps": 16.9,
+      "rafHz": 16.9,
+      "p50": 66.4,
+      "p95": 100,
+      "max": 166.8,
+      "longTasks": 8,
+      "longTaskMs": 563,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 1,
+      "setup": {
+        "ready": true,
+        "readyMs": 4701,
+        "layers": {
+          "weather-radar": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 673,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 998,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T12:15:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 367,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "orbit",
+      "seconds": 8,
+      "renders": 106,
+      "fps": 13.2,
+      "rafHz": 13.4,
+      "p50": 66.6,
+      "p95": 133.3,
+      "max": 316.5,
+      "longTasks": 23,
+      "longTaskMs": 1888,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 1,
+      "setup": {
+        "ready": true,
+        "readyMs": 4701,
+        "layers": {
+          "weather-radar": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 673,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 998,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T12:15:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 367,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "zoom-out",
+      "seconds": 6.09,
+      "renders": 56,
+      "fps": 9.2,
+      "rafHz": 9.2,
+      "p50": 66.6,
+      "p95": 633.2,
+      "max": 783.1,
+      "longTasks": 11,
+      "longTaskMs": 3458,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 1,
+      "setup": {
+        "ready": true,
+        "readyMs": 4701,
+        "layers": {
+          "weather-radar": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 673,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": null,
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 998,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T12:15:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 367,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "globe-idle",
+      "seconds": 6.01,
+      "renders": 53,
+      "fps": 8.8,
+      "rafHz": 8.8,
+      "p50": 100.1,
+      "p95": 435.2,
+      "max": 799.2,
+      "longTasks": 13,
+      "longTaskMs": 2920,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 2,
+      "setup": {
+        "ready": true,
+        "readyMs": 2626,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:36:13.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 1581,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:33:00.000Z",
+            "playing": true,
+            "loading": true,
+            "loadedTiles": 7,
+            "imageryCount": 2,
+            "frameLoadMs": 2355,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T14:30:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 20,
+            "imageryCount": 1,
+            "frameLoadMs": 659,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "zoom-in",
+      "seconds": 6.18,
+      "renders": 73,
+      "fps": 11.8,
+      "rafHz": 11.8,
+      "p50": 66.5,
+      "p95": 266.5,
+      "max": 466.7,
+      "longTasks": 13,
+      "longTaskMs": 2419,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 2,
+      "setup": {
+        "ready": true,
+        "readyMs": 2626,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:36:13.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 1581,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:33:00.000Z",
+            "playing": true,
+            "loading": true,
+            "loadedTiles": 7,
+            "imageryCount": 2,
+            "frameLoadMs": 2355,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T14:30:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 20,
+            "imageryCount": 1,
+            "frameLoadMs": 659,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "close-idle",
+      "seconds": 6.03,
+      "renders": 93,
+      "fps": 15.4,
+      "rafHz": 15.4,
+      "p50": 66.5,
+      "p95": 116.7,
+      "max": 266.9,
+      "longTasks": 12,
+      "longTaskMs": 1040,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 2,
+      "setup": {
+        "ready": true,
+        "readyMs": 2626,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:36:13.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 1581,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:33:00.000Z",
+            "playing": true,
+            "loading": true,
+            "loadedTiles": 7,
+            "imageryCount": 2,
+            "frameLoadMs": 2355,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T14:30:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 20,
+            "imageryCount": 1,
+            "frameLoadMs": 659,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "orbit",
+      "seconds": 8.07,
+      "renders": 121,
+      "fps": 15,
+      "rafHz": 15,
+      "p50": 66.5,
+      "p95": 116.6,
+      "max": 416.4,
+      "longTasks": 11,
+      "longTaskMs": 1018,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 2,
+      "setup": {
+        "ready": true,
+        "readyMs": 2626,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:36:13.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 1581,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:33:00.000Z",
+            "playing": true,
+            "loading": true,
+            "loadedTiles": 7,
+            "imageryCount": 2,
+            "frameLoadMs": 2355,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T14:30:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 20,
+            "imageryCount": 1,
+            "frameLoadMs": 659,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "zoom-out",
+      "seconds": 6.21,
+      "renders": 59,
+      "fps": 9.5,
+      "rafHz": 9.5,
+      "p50": 66.6,
+      "p95": 366.4,
+      "max": 583.1,
+      "longTasks": 20,
+      "longTaskMs": 3525,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 2,
+      "setup": {
+        "ready": true,
+        "readyMs": 2626,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:36:13.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 7,
+            "imageryCount": 1,
+            "frameLoadMs": 1581,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:33:00.000Z",
+            "playing": true,
+            "loading": true,
+            "loadedTiles": 7,
+            "imageryCount": 2,
+            "frameLoadMs": 2355,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T14:30:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 20,
+            "imageryCount": 1,
+            "frameLoadMs": 659,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "globe-idle",
+      "seconds": 6.3,
+      "renders": 73,
+      "fps": 11.6,
+      "rafHz": 11.6,
+      "p50": 82.9,
+      "p95": 333.4,
+      "max": 483.1,
+      "longTasks": 16,
+      "longTaskMs": 2709,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 3,
+      "setup": {
+        "ready": true,
+        "readyMs": 95,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:59:58.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 11,
+            "imageryCount": 1,
+            "frameLoadMs": 570,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:58:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 13,
+            "imageryCount": 1,
+            "frameLoadMs": 1148,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T15:00:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 1691,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "zoom-in",
+      "seconds": 6.01,
+      "renders": 104,
+      "fps": 17.3,
+      "rafHz": 17.5,
+      "p50": 50.1,
+      "p95": 100,
+      "max": 216.7,
+      "longTasks": 10,
+      "longTaskMs": 782,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 3,
+      "setup": {
+        "ready": true,
+        "readyMs": 95,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:59:58.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 11,
+            "imageryCount": 1,
+            "frameLoadMs": 570,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:58:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 13,
+            "imageryCount": 1,
+            "frameLoadMs": 1148,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T15:00:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 1691,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "close-idle",
+      "seconds": 6.03,
+      "renders": 101,
+      "fps": 16.8,
+      "rafHz": 16.8,
+      "p50": 50.1,
+      "p95": 100.1,
+      "max": 483.1,
+      "longTasks": 9,
+      "longTaskMs": 724,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 3,
+      "setup": {
+        "ready": true,
+        "readyMs": 95,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:59:58.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 11,
+            "imageryCount": 1,
+            "frameLoadMs": 570,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:58:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 13,
+            "imageryCount": 1,
+            "frameLoadMs": 1148,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T15:00:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 1691,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "orbit",
+      "seconds": 8.01,
+      "renders": 116,
+      "fps": 14.5,
+      "rafHz": 14.5,
+      "p50": 66.5,
+      "p95": 133.4,
+      "max": 399.2,
+      "longTasks": 12,
+      "longTaskMs": 1551,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 3,
+      "setup": {
+        "ready": true,
+        "readyMs": 95,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:59:58.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 11,
+            "imageryCount": 1,
+            "frameLoadMs": 570,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:58:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 13,
+            "imageryCount": 1,
+            "frameLoadMs": 1148,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T15:00:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 1691,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "zoom-out",
+      "seconds": 6.13,
+      "renders": 63,
+      "fps": 10.3,
+      "rafHz": 10.3,
+      "p50": 66.5,
+      "p95": 366.5,
+      "max": 499.7,
+      "longTasks": 14,
+      "longTaskMs": 3421,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    },
+    {
+      "phase": "route",
+      "state": "history-playing",
+      "run": 3,
+      "setup": {
+        "ready": true,
+        "readyMs": 95,
+        "layers": {
+          "weather-radar": {
+            "time": "2026-10-08T14:59:58.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 11,
+            "imageryCount": 1,
+            "frameLoadMs": 570,
+            "error": null,
+            "suspended": null
+          },
+          "weather-satellite": {
+            "time": "2026-10-08T14:58:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 13,
+            "imageryCount": 1,
+            "frameLoadMs": 1148,
+            "error": null,
+            "suspended": null
+          },
+          "weather-lightning": {
+            "time": "2026-10-08T15:00:00.000Z",
+            "playing": true,
+            "loading": false,
+            "loadedTiles": 8,
+            "imageryCount": 1,
+            "frameLoadMs": 1691,
+            "error": null,
+            "suspended": null
+          }
+        }
+      },
+      "window": "globe-idle",
+      "seconds": 6.05,
+      "renders": 74,
+      "fps": 12.2,
+      "rafHz": 12.2,
+      "p50": 66.7,
+      "p95": 333.2,
+      "max": 399.8,
+      "longTasks": 13,
+      "longTaskMs": 2375,
+      "mutations": 0,
+      "heightChanges": 0,
+      "heightMin": null,
+      "heightMax": null,
+      "canvasStable": true,
+      "canvas": "1200x886"
+    }
+  ]
+}

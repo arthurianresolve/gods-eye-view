@@ -1,0 +1,29 @@
+{
+  "schema": "gev-paint-self-unregister-failure-control/v1",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "scope": "Unit command/output correctness, not native pixel or performance evidence.",
+  "diagnosis": "Frame-end active painter counts do not prove the frame had no custom shared paint or post-label mutation. Self-unregistration hides both from cache eligibility.",
+  "appendixSha256": "e8b4b4e0f5ad7e68c804e3a8880938c7cca5ea3bf945a997815df8423b524bb8",
+  "rows": [
+    {
+      "side": "production",
+      "sourceSha256": "a938f3acdfb56ba7801e76c7449c934d2b5c232ae375590aef47c405b29f2582",
+      "stdoutSha256": "406a38a521e1b53045f457a8661d96e782d303ead960b1621ba939f67156ae07",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 0,
+      "failures": []
+    },
+    {
+      "side": "prototype",
+      "sourceSha256": "89962db8616688264abb552268965cbb6657a66fa401d13fea1ce07a23b868e5",
+      "stdoutSha256": "844b34dd26dcab66d39a4f820754325a4a732703ff9b1e3eacd4649ced62a0d0",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "exitCode": 1,
+      "failures": [
+        "root paint cache clears pixels after a shared painter unregisters itself",
+        "root paint cache observes a self-releasing late callback mutation on the next frame"
+      ]
+    }
+  ]
+}

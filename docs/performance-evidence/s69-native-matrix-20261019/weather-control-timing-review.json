@@ -1,0 +1,115 @@
+{
+  "schema": "gev-weather-control-reviewed-comparison/v1",
+  "reviewedAt": "2026-10-19T05:15:02.018Z",
+  "status": "functional-control-passed-timing-regressions-unresolved",
+  "baselineCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+  "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "producer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "raw": {
+    "baseline": {
+      "path": "baseline-native155.json",
+      "sha256": "f328798a87daf4fd1371eb992ee058506377c7904774f519d8462978ea6347e2"
+    },
+    "candidate": {
+      "path": "matrix-55639cc7-native-a783-chrome155/weather-effects-candidate.json",
+      "sha256": "ac54ddd788b23ae35667c1b1cc8d5f2d956431b5115260f01812ca353ad25701"
+    },
+    "process": {
+      "path": "baseline-native155.json.process.json",
+      "sha256": "a4a0d20e978c6e84fdd829c333f1ecdf6297d685676c154fb46d2f918ca5eba4"
+    }
+  },
+  "compatibilityProjection": "Missing top-level native profile label derived only after verifying every observed boundary and actual dimensions; raw files unchanged.",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 2398.5999999996275,
+        "candidateMedianP95Ms": 3235.5,
+        "changePct": 34.89118652549414,
+        "regressionOver10Pct": true
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 241.59999999962747,
+        "candidateMedianP95Ms": 282.69999999925494,
+        "changePct": 17.011589403845548,
+        "regressionOver10Pct": true
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "fulfilledResponseCount": 771,
+        "perSample": null
+      },
+      "candidate": {
+        "fulfilledResponseCount": 771,
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": ["idle", "scripted-motion"]
+  },
+  "productionChanged": false,
+  "validation": {
+    "samples": 10,
+    "phaseChecks": 30,
+    "maximumPhaseLatenessMs": 3309.800000000745,
+    "maximumAllowedPhaseLatenessMs": 5000
+  },
+  "next": "Bounded native ABBA browser/frame diagnostic after the map recapture; do not waive motion or apply a broad idle exemption.",
+  "phaseTimingFollowup": {
+    "reviewedAt": "2026-10-19T05:56:23.138Z",
+    "scope": "Observed source-phase completion relative to declared schedule; separate from rendered-frame intervals, no timing-flag waiver.",
+    "builds": {
+      "control": [
+        {
+          "scenario": "idle",
+          "count": 15,
+          "p50Ms": 2470.5,
+          "p95Ms": 3268.5999999996275,
+          "maxMs": 3268.5999999996275
+        },
+        {
+          "scenario": "scripted-motion",
+          "count": 15,
+          "p50Ms": 2777.199999999255,
+          "p95Ms": 3309.800000000745,
+          "maxMs": 3309.800000000745
+        }
+      ],
+      "candidate": [
+        {
+          "scenario": "idle",
+          "count": 15,
+          "p50Ms": 2466.5,
+          "p95Ms": 3158.2999999998137,
+          "maxMs": 3158.2999999998137
+        },
+        {
+          "scenario": "scripted-motion",
+          "count": 15,
+          "p50Ms": 2791.699999999255,
+          "p95Ms": 3506.9000000003725,
+          "maxMs": 3506.9000000003725
+        }
+      ]
+    }
+  }
+}

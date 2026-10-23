@@ -1,0 +1,103 @@
+{
+  "schema": "gev-import-input-attribution/v1",
+  "commit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+  "capturedAt": "2026-10-14T04:42:53.521Z",
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz"
+  },
+  "scope": "Node synchronous decode/parse and preview-prefix attribution; total preview includes cooperative timer waits. No forced GC, browser, rendered scene, interaction percentile or GPU claim.",
+  "performanceAcceptanceEligible": false,
+  "trials": 5,
+  "warmupTrials": 1,
+  "workloads": [
+    {
+      "kind": "csv",
+      "records": 50000,
+      "bytes": 2477807,
+      "sha256": "08fd9f3332affc16a600018b7648b0a90c5b8dbcb29758a16e3864200b089e5d",
+      "samples": [
+        {
+          "trial": 0,
+          "decodeMs": 0.6522000000001071,
+          "parseMs": 50.58330000000001,
+          "synchronousPreviewPrefixMs": 91.00749999999994,
+          "totalPreviewMs": 261.3284
+        },
+        {
+          "trial": 1,
+          "decodeMs": 0.6335000000001401,
+          "parseMs": 76.02359999999999,
+          "synchronousPreviewPrefixMs": 68.60379999999986,
+          "totalPreviewMs": 254.92079999999987
+        },
+        {
+          "trial": 2,
+          "decodeMs": 0.8833999999999378,
+          "parseMs": 53.66720000000009,
+          "synchronousPreviewPrefixMs": 92.27049999999986,
+          "totalPreviewMs": 260.0643
+        },
+        {
+          "trial": 3,
+          "decodeMs": 1.1394000000000233,
+          "parseMs": 199.86839999999984,
+          "synchronousPreviewPrefixMs": 91.41589999999997,
+          "totalPreviewMs": 242.98289999999974
+        },
+        {
+          "trial": 4,
+          "decodeMs": 0.619300000000294,
+          "parseMs": 49.00460000000021,
+          "synchronousPreviewPrefixMs": 89.50700000000006,
+          "totalPreviewMs": 234.2455
+        }
+      ]
+    },
+    {
+      "kind": "geojson",
+      "records": 25000,
+      "bytes": 3527821,
+      "sha256": "8c2077a1ab3d030c4327558cb66a2bc58bffd01e08642310a9fa480e25a1f756",
+      "samples": [
+        {
+          "trial": 0,
+          "decodeMs": 1.3079999999999927,
+          "parseMs": 24.37519999999995,
+          "synchronousPreviewPrefixMs": 23.890600000000177,
+          "totalPreviewMs": 118.56899999999996
+        },
+        {
+          "trial": 1,
+          "decodeMs": 0.9106999999999061,
+          "parseMs": 24.26050000000032,
+          "synchronousPreviewPrefixMs": 25.49499999999989,
+          "totalPreviewMs": 115.5909999999999
+        },
+        {
+          "trial": 2,
+          "decodeMs": 1.131800000000112,
+          "parseMs": 24.597000000000207,
+          "synchronousPreviewPrefixMs": 25.225900000000365,
+          "totalPreviewMs": 130.83130000000028
+        },
+        {
+          "trial": 3,
+          "decodeMs": 0.759900000000016,
+          "parseMs": 24.21259999999984,
+          "synchronousPreviewPrefixMs": 27.790700000000015,
+          "totalPreviewMs": 150.17329999999993
+        },
+        {
+          "trial": 4,
+          "decodeMs": 1.392699999999877,
+          "parseMs": 25.623799999999846,
+          "synchronousPreviewPrefixMs": 24.871599999999944,
+          "totalPreviewMs": 115.24289999999974
+        }
+      ]
+    }
+  ]
+}

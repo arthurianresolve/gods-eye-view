@@ -1,0 +1,137 @@
+{
+  "schema": "gev-traffic-fixture-failure-record/v1",
+  "entries": [
+    {
+      "run": "38119550844",
+      "commit": "bbe6161740471bd47e59596d93889675d05926bf",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38119550844",
+      "file": "traffic-38119550844.json",
+      "sha256": "90ff4b38201c29b439ab26327997bb6fc4d04c734c6a250a6944bc8c7a6646c9",
+      "status": "failed",
+      "error": {
+        "name": "AssertionError",
+        "message": "baseline renderer acceleration was not verified\n\nfalse !== true\n"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38119931432",
+      "commit": "81b1b080f11f60e8ada7044ade597e22c445460b",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38119931432",
+      "file": "traffic-38119931432.json",
+      "sha256": "1535acfeda86488b1e97fb1efcc4eedb7bb890d5148aac689cbdd30a74392feb",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Local fixture tiles did not settle"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38120492292",
+      "commit": "da493e8b7f7d27212a8d47e18cbd573586a8ff65",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38120492292",
+      "file": "traffic-38120492292.json",
+      "sha256": "e90bab9837d9b2a040ff35ce9daa4c780bcbfa406006798429b69fd10f4fddff",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Local fixture tiles did not settle"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38120874379",
+      "commit": "6e27601c349ce9c2d6fdae88d8016e58855858ad",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38120874379",
+      "file": "traffic-38120874379.json",
+      "sha256": "b1487f45c525cda83218cfffbd5e3a9061aa43cb8f801b3da5b5ef04cfd2b5e0",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Timed out waiting for retention reconciliation"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38121171275",
+      "commit": "d2d247674f0abfc4fb32a7be06dd180ab0a1faa3",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121171275",
+      "file": "traffic-38121171275.json",
+      "sha256": "92b21441f97004b1d1222ebf277094a7ef78b89b2a2d5d5f6070ddeb7349afa6",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Local fixture tiles did not settle"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38121572694",
+      "commit": "5bf1bd5dbed9e70753bd575170563e40a3a89a46",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121572694",
+      "file": "traffic-38121572694.json",
+      "sha256": "fc8f1500d8800d469f29c9544b6bf38b634e60fcabcf82fdc32225c75742bbd2",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Timed out waiting for heatline geometry ready for visual control"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38121758352",
+      "commit": "52b32d1330cb488061dd785e6a6b03cfeb3ed43f",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121758352",
+      "file": "traffic-38121758352.json",
+      "sha256": "47ff0df321ac26cc2f754c6817b817ce13f9d040f5f12d8353cdc0cba2b51390",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture failed: Timed out waiting for heatline geometry ready for visual control"
+      },
+      "completedTrials": 0
+    },
+    {
+      "run": "38121981675",
+      "commit": "6ef933df3ca98369bd0cf6174021bc57d76f7129",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38121981675",
+      "file": "traffic-38121981675.json",
+      "sha256": "9c533e1335981ab0e12767b929672ffb6a4348df9dbd74b07ecebf40c47cf038",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic fixture clock was not frozen at the requested time in fading-retained-dots"
+      },
+      "completedTrials": 1
+    },
+    {
+      "run": "38122209754",
+      "commit": "168a5020723bca208461d9736371929112962252",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38122209754",
+      "file": "traffic-38122209754.json",
+      "sha256": "19379802dfc05b80651c19666429dbad60353980a71dc4fa65364c64f6c90b53",
+      "status": "failed",
+      "error": {
+        "name": "Error",
+        "message": "Traffic rendered output differs in return-arrival"
+      },
+      "completedTrials": 4,
+      "completedMatchingPairs": 1
+    },
+    {
+      "run": "38122836856",
+      "commit": "c06dec128c5ebba560ecace143fa857fb9aea0b4",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38122836856",
+      "file": "traffic-38122836856.json",
+      "sha256": "7276daa3a1c4d0bc37d67ce5220589ee038c0b237963c3789b7054a094bada5a",
+      "status": "failed",
+      "error": {
+        "name": "AssertionError",
+        "message": "Expected candidate change in src/layers/traffic/model.js"
+      },
+      "completedTrials": 0
+    }
+  ],
+  "acceptance": "These failed runs do not establish an accepted five-pair traffic comparison or physical desktop coverage. Run 38122209754 completed one matching pair before failing the second pair."
+}

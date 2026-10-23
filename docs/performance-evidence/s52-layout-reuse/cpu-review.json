@@ -1,0 +1,122 @@
+{
+  "schema": "gev-overlay-layout-cpu-review/v1",
+  "reviewedAt": "2026-10-10T23:48:47.690Z",
+  "rawSha256": "9dd53e5152e246e5eb05d99262626285cbfea99494dab7702554ad6be681cd5a",
+  "sources": {
+    "baseline": {
+      "commit": "0d431f22a9cf0f5df186ef6b5c34c7a3ed81eabb",
+      "overlaySha256": "59c0b7f98d8a7911f2c62ddf2c95c30022a9176db8f23d4e09c2d16e6f2a43de",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+    },
+    "candidate": {
+      "commit": "f25154a61326e881e2223f2238d94b06cf231df8",
+      "overlaySha256": "b6344025f66949eafc84f56b40d45254d56394bbcd8cf4cb50c6f3a4e54b6e4f",
+      "lockfileSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6"
+    }
+  },
+  "harnessCommit": "f25154a61326e881e2223f2238d94b06cf231df8",
+  "independentChecks": {
+    "exactSourceFixtureLockAndHarnessHashes": true,
+    "fortyPairsConditionParity": true,
+    "fortyPairsRatiosRecomputed": true,
+    "fiveInstrumentationDisabledTimedSamplesPerSide": true,
+    "all35OrdinaryPairsImprove": true,
+    "noIndividualRegressionExceedsTenPercent": true
+  },
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "linux",
+    "osRelease": "6.17.0-1022-azure",
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "conditions": {
+    "warmupFrames": 3000,
+    "pairs": 5,
+    "sampleFrames": 600,
+    "samplesPerProcess": 10,
+    "measuredFramesPerProcess": 6000,
+    "virtualFrameMs": 16,
+    "latencyUsesForcedGc": false,
+    "cadence": "0: fixed after first tick; 1: every tick; 60: every 960 ms of virtual time"
+  },
+  "workloads": [
+    {
+      "profile": "generic",
+      "entries": 250,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -16.297590306260133,
+      "minDeltaPercent": -17.337880534143892,
+      "maxDeltaPercent": -14.804451431582189
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -11.244776629267639,
+      "minDeltaPercent": -14.249529484201307,
+      "maxDeltaPercent": -9.521110403598465
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -9.254101278977833,
+      "minDeltaPercent": -10.085084118537758,
+      "maxDeltaPercent": -6.009445350241627
+    },
+    {
+      "profile": "phase6-detection",
+      "entries": 5000,
+      "cadence": 1,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": 0.4976361156912912,
+      "minDeltaPercent": -0.9876515113610762,
+      "maxDeltaPercent": 4.570842013964427
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 0,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -12.956506308200611,
+      "minDeltaPercent": -13.290647560486512,
+      "maxDeltaPercent": -10.791870487730682
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 0,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -11.370304258340324,
+      "minDeltaPercent": -14.591773313588163,
+      "maxDeltaPercent": -8.888120183318826
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "cadence": 60,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -12.372562313217983,
+      "minDeltaPercent": -14.670569253351239,
+      "maxDeltaPercent": -10.239397932136873
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "cadence": 60,
+      "pairCount": 5,
+      "pairedMedianDeltaPercent": -9.880270521934909,
+      "minDeltaPercent": -12.224334568331763,
+      "maxDeltaPercent": -7.852407021281904
+    }
+  ],
+  "ordinaryImprovementPercent": {
+    "min": 6.009445350241627,
+    "max": 17.337880534143892
+  },
+  "disposition": "Accept normalized-entry layout reuse as a scoped algorithm optimization alongside separate exact-pixel and native font checks. Full S52, physical GPU, whole-scene motion p95 and browser benefit remain pending.",
+  "scope": "Node synchronous overlay algorithm, mock Canvas2D and fixed camera; no rendered visual-equivalence, GPU or browser FPS claim"
+}

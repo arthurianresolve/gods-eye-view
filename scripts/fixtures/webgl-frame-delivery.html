@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <title>WebGL frame-delivery diagnostic</title>
+  <style>
+    body {
+      font:
+        16px system-ui,
+        sans-serif;
+      margin: 0.5rem;
+    }
+    h1 {
+      font-size: 1.15rem;
+      margin: 0 0 0.25rem;
+    }
+    p {
+      margin: 0.25rem 0;
+      max-width: 56rem;
+    }
+    .controls {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 0.65rem;
+      margin: 0.35rem 0;
+    }
+    button,
+    select {
+      font: inherit;
+      font-size: 0.9rem;
+    }
+    canvas {
+      display: block;
+      height: min(360px, calc(100vh - 190px));
+      max-width: calc(100vw - 16px);
+      width: 640px;
+      border: 1px solid #667;
+      object-fit: contain;
+    }
+    pre {
+      max-width: 80rem;
+      white-space: pre-wrap;
+    }
+    @media (max-height: 620px) {
+      body {
+        margin: 0.25rem;
+      }
+      p {
+        font-size: 0.8rem;
+        line-height: 1.1;
+      }
+    }
+  </style>
+  <body>
+    <h1>WebGL frame-delivery diagnostic</h1>
+    <p>
+      Five-second scheduling diagnostic only (not GPU performance acceptance).
+      Pixel mode uses one shader/uniform path; animation changes cyan only.
+    </p>
+    <p>
+      Keep Chrome foreground and uncovered during a run. Page focus and
+      visibility cannot verify desktop occlusion; preserve failed reports, as a
+      later pass is separate evidence.
+    </p>
+    <div class="controls">
+      <label>
+        Mode
+        <select id="mode">
+          <option value="webgl2">WebGL2: 5,000 points</option>
+          <option value="plain-raf">Plain RAF: no WebGL</option>
+        </select>
+      </label>
+      <label>
+        preserveDrawingBuffer
+        <select id="preserve-drawing-buffer">
+          <option value="true" selected>true (default)</option>
+          <option value="false">false</option>
+        </select>
+      </label>
+      <label>
+        Pixels
+        <select id="pixel-mode">
+          <option value="static" selected>static cyan</option>
+          <option value="animated">animated cyan</option>
+        </select>
+      </label>
+      <label>
+        Start
+        <select id="start-delay">
+          <option value="0" selected>immediate</option>
+          <option value="10000">after 10 seconds</option>
+        </select>
+      </label>
+      <button id="run">Run for five seconds</button>
+      <button id="cancel" disabled>Cancel preparation</button>
+      <button id="download" disabled>Download report</button>
+    </div>
+    <p id="status" role="status">Ready</p>
+    <canvas id="surface" width="640" height="360"></canvas>
+    <pre id="result"></pre>
+    <script type="module" src="./webgl-frame-delivery.js"></script>
+  </body>
+</html>

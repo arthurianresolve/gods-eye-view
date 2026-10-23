@@ -1,0 +1,186 @@
+{
+  "schema": "gev-performance-capture-failure/v1",
+  "captureSchema": "gev-performance-capture/v1",
+  "status": "failed",
+  "capturedAt": "2026-10-12T13:41:04.269Z",
+  "comparisonEligible": false,
+  "comparisonReadiness": {
+    "status": "not-ready",
+    "reason": "Failed or incomplete captures are never comparison evidence."
+  },
+  "source": {
+    "harnessCommit": "5441b0386e318d4cd1e57800cfd0f163f6a15461",
+    "harnessDirtyWorktree": false,
+    "appCommit": "5441b0386e318d4cd1e57800cfd0f163f6a15461",
+    "appWorktreeState": "clean",
+    "provenanceStatus": "pre-capture-served-assets-verified",
+    "reason": null,
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "pre-capture-served-assets-verified",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "7a8c5487a5ff53160c2259262f56ab7f65d41f5ec45df06790ba5ede55f101bd",
+      "appCommit": "5441b0386e318d4cd1e57800cfd0f163f6a15461",
+      "harnessCommit": "5441b0386e318d4cd1e57800cfd0f163f6a15461",
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "7a8c5487a5ff53160c2259262f56ab7f65d41f5ec45df06790ba5ede55f101bd",
+        "assetCount": 434,
+        "totalAssetBytes": 43980091
+      },
+      "after": null
+    }
+  },
+  "fixture": {
+    "id": "opensky-dense-investigation-v1",
+    "count": 2500,
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "sha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+    "byteLength": 348905
+  },
+  "workload": {
+    "rendererProbeCleanup": [
+      {
+        "schema": "gev-early-renderer-registration-removal/v1",
+        "confirmed": false,
+        "timeoutMs": 1000,
+        "elapsedMs": 1000.4914290000006,
+        "currentDocumentUntouched": true,
+        "scriptRegistration": {
+          "status": "timeout",
+          "elapsedMs": 1000.4914290000006,
+          "pageExecutionElapsedMs": null,
+          "errorKind": "operation-timeout",
+          "errorDetail": null,
+          "lateCompletion": "confirmed",
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "phase": "startup-navigation",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1"
+      },
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 249.8838539999997,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 249.60291899999993,
+          "pageExecutionElapsedMs": 0,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "not-applicable-no-viewer",
+            "before": null,
+            "after": null,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "already-confirmed",
+          "elapsedMs": 0.0332220000000234,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "phase": "capture-final-document-close",
+        "documentRole": "retired-document",
+        "documentId": null
+      }
+    ],
+    "rendererProbeCleanupOmittedCount": 0,
+    "rendererLoopRetirements": [],
+    "rendererLoopRetirementsOmittedCount": 0,
+    "warmupMs": 1000,
+    "durationPerSampleMs": 1000,
+    "runsPerScenario": 2,
+    "startupRuns": 1,
+    "qualityMode": "manual",
+    "expectedDensityPct": 75,
+    "detectionMode": "DENSE",
+    "mixedLayers": true,
+    "sceneFrameDiagnostics": {
+      "enabled": true,
+      "scope": "first scripted-motion run; installed before warmup and stopped after its measurement boundary",
+      "eligibleForComparison": false
+    },
+    "providerSampleCpuProfiles": {
+      "enabled": true,
+      "targets": [
+        {
+          "scenario": "idle",
+          "run": 1
+        },
+        {
+          "scenario": "idle",
+          "run": 2
+        },
+        {
+          "scenario": "scripted-motion",
+          "run": 1
+        }
+      ],
+      "scope": "first two idle samples and first scripted-motion sample, each from immediately before warmup through its measurement-boundary completion or failure; sampled main-thread stacks include idle and garbage collection, and are not precise CPU execution or GPU timing",
+      "performanceAcceptanceEligible": false,
+      "status": "pending",
+      "profiles": []
+    },
+    "depthPickAttribution": {
+      "enabled": true,
+      "schema": "gev-depth-pick-attribution/v1",
+      "performanceAcceptanceEligible": false,
+      "scope": "opt-in caller-tagged application depth-pick/cache observations during dense provider sample documents; pickElapsedMs is browser main-thread API wall time, not CPU execution or GPU duration",
+      "status": "pending",
+      "samples": []
+    },
+    "scenarios": []
+  },
+  "failure": {
+    "phase": "startup-navigation",
+    "scenario": null,
+    "run": 1,
+    "message": "Early Cesium renderer future-document registration removal was not confirmed.",
+    "operator": null
+  },
+  "fixtureDelivery": null,
+  "progress": {
+    "startupSampleCount": 0,
+    "startupSamples": [],
+    "completedSampleCount": 0,
+    "completedSamples": [],
+    "current": null,
+    "completedSamplesRetained": 0,
+    "startupSamplesRetained": 0
+  },
+  "evidenceTruncated": false
+}

@@ -313,7 +313,8 @@ test('GBFS relays only JSON, re-serialized under a fixed type, through both serv
       let handler;
       gbfsProxy()[hook]({
         middlewares: {
-          use(_path, callback) {
+          use(path, callback) {
+            assert.equal(path, '/api/gbfs');
             handler = callback;
           },
         },
@@ -354,7 +355,10 @@ test('GBFS relays only JSON, re-serialized under a fixed type, through both serv
         }),
       );
       assert.equal(res.status, 200);
-      assert.equal(res.headers['Content-Type'], 'application/json; charset=utf-8');
+      assert.equal(
+        res.headers['Content-Type'],
+        'application/json; charset=utf-8',
+      );
       assert.equal(res.headers['Cache-Control'], 'no-store');
       assert.equal(res.body, STATION_BODY);
     }

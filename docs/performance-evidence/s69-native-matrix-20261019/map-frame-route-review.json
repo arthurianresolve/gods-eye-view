@@ -1,0 +1,78 @@
+{
+  "schema": "gev-map-frame-route-review/v1",
+  "recordedAt": "2026-10-19T05:05:55.463Z",
+  "status": "rejected-unmatched-frame-routes",
+  "reports": {
+    "baseline": {
+      "path": "map-streaming-baseline.json",
+      "sha256": "437c3a0b44a7183258f39f28fe6d439114a8dfcb0e35262f6b881f228964db25",
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+      "start": {
+        "position": {
+          "x": -743948.9920340148,
+          "y": -5471364.944852647,
+          "z": 3200849.1597626214
+        },
+        "direction": {
+          "x": 0.23260303882945974,
+          "y": 0.9647014385430477,
+          "z": 0.12347858437913523
+        },
+        "up": {
+          "x": 0.11017865674415107,
+          "y": -0.15228098458316747,
+          "z": 0.9821767485195503
+        },
+        "transform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+      },
+      "rawMotionP95": [
+        317.69999999925494, 282.5, 342.1000000014901, 356.5, 323.7000000011176
+      ]
+    },
+    "candidate": {
+      "path": "map-streaming-candidate.json",
+      "sha256": "268abc72a547917388d3fc4b20ed5bd8db64c9093ccc3f245c9d8bb5ca6a324f",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "harnessCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+      "start": {
+        "position": {
+          "x": -745339.1685081313,
+          "y": -5481588.982937362,
+          "z": 3206870.6595896194
+        },
+        "direction": {
+          "x": 0.130329475833543,
+          "y": 0.9187986815816941,
+          "z": -0.37258986896142887
+        },
+        "up": {
+          "x": 0.08605301890516501,
+          "y": 0.36389439342527197,
+          "z": 0.9274566018800884
+        },
+        "transform": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+      },
+      "rawMotionP95": [
+        356.90000000037253, 377.2999999988824, 347.09999999962747,
+        370.59999999962747, 361.2000000011176
+      ]
+    }
+  },
+  "rawDifferencePct": 11.584800741479,
+  "interpretation": "Different initial camera poses invalidate the extra idle and motion comparison; the raw difference is not evidence of an application regression. Independently matched switching journeys are preserved, but do not qualify frame performance.",
+  "cause": "Home saved during startup flight and reused after fixed map journeys; map paired consumer returned before validating supplied frame samples.",
+  "correction": "Use the map fixture start at -97.72,30.27,6000m with heading0/pitch-90 and speed120m/s; use shared frame integrity and pair comparison; expose historical frame coverage as not-collected.",
+  "validation": {
+    "node24": {
+      "passed": 135
+    },
+    "node26": {
+      "passed": 135
+    },
+    "rejection": "idle run 1: baseline and candidate routes differ beyond camera pose roundoff",
+    "vmReceipt": "map-frame-qualification-fix-1792386260456-validation/validation.json"
+  },
+  "archive": "map-frame-mismatch-a783-20261019",
+  "productionChanged": false
+}

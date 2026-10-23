@@ -117,6 +117,26 @@ export function extractMessages() {
         add(unquote(match[6]), where, { one: unquote(match[5]) });
       }
     }
+    // UI panels sometimes build their markup in a template literal rather
+    // than a standalone file. Honor the same data-i18n contract there.
+    for (const match of source.matchAll(/`((?:\\.|[^`])*)`/gs)) {
+      const markup = match[1].replace(/\$\{(?:[^{}]|\{[^{}]*\})*\}/g, ' ');
+      if (!/<[a-z][\s>]/i.test(markup) || !/\sdata-i18n(?:[\s=]|$)/.test(markup))
+        continue;
+      const lineOffset = source.slice(0, match.index).split('\n').length - 1;
+      const TAG = /<([a-zA-Z][\w-]*)(\s[^>]*?)\/?>([^<]*)/gs;
+      for (const [, tag, attrs, text] of markup.matchAll(TAG)) {
+        const where = `${file}:${lineOffset + markup.slice(0, markup.indexOf(`<${tag}${attrs}`)).split('\n').length} <${tag}>`;
+        if (/\sdata-i18n(\s|=|$)/.test(attrs))
+          add(normalize(decodeHtml(text)), where);
+        for (const [, name] of attrs.matchAll(
+          /\sdata-i18n-(title|aria-label|placeholder)\b/g,
+        )) {
+          const value = attrs.match(new RegExp(String.raw`\s${name}="([^"]*)"`));
+          if (value) add(decodeHtml(value[1]), where);
+        }
+      }
+    }
   }
 
   const markup = trackedFiles('index.html', 'src/ui/templates/*.html');
@@ -385,6 +405,16 @@ export function unmarkedScript(file, original) {
         continue;
       const html = /HTML/.test(match[0]);
       for (const literal of valueLiterals(expressionAt(source, start))) {
+        if (html && literal[0] === '`') {
+          const markup = unquote(literal).replace(
+            /\$\{(?:[^{}]|\{[^{}]*\})*\}/g,
+            ' ',
+          );
+          if (/<[a-z][\s>]/i.test(markup)) {
+            found.push(...unmarkedMarkup(file, markup));
+            continue;
+          }
+        }
         const text = visibleText(literal, html);
         if (text) found.push({ where: `${file}:${line}`, text });
       }

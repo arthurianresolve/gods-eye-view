@@ -1,0 +1,19 @@
+{
+  ".gitattributes": "09518f741b318afc3a3cee29798b548a273535adf2cc19aa53e98a221f0f8bbb",
+  "failure-review.json": "24950ddfc79e0290e064362d21c5cd36a7ac04f30ef21c2f5b2b218690a0029f",
+  "failure-production.stdout.txt": "406a38a521e1b53045f457a8661d96e782d303ead960b1621ba939f67156ae07",
+  "failure-production.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "failure-prototype.stdout.txt": "844b34dd26dcab66d39a4f820754325a4a732703ff9b1e3eacd4649ced62a0d0",
+  "failure-prototype.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "corrected-review.json": "55f23c9cf254a3ebbb4cf800fb69fc81fb7cb5c064dec26465b706363173ded5",
+  "corrected-corrected-prototype.stdout.txt": "cbd8f4990b750fd49c27a526358affb7c9368d012017cd5d583ce76e6d9941c8",
+  "corrected-corrected-prototype.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "corrected-production-focused.stdout.txt": "7aaba766c38863133647be2ada5e7f0455728a9274cc4790e56556914f3488ef",
+  "corrected-production-focused.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "regression.append.mjs.txt": "e8b4b4e0f5ad7e68c804e3a8880938c7cca5ea3bf945a997815df8423b524bb8",
+  "prototype-01-worldOverlay.js.txt": "89962db8616688264abb552268965cbb6657a66fa401d13fea1ce07a23b868e5",
+  "prototype-02-worldOverlay.js.txt": "2cf2d2c0cbaa22e17e6b32736c461c8a05331129bc7809ceeea5d680bfa1c523",
+  "production-full-test.mjs.txt": "3169b0cc5087ae4d04c6a8967088b8efefc2d7b96188f755ea5ae58f5ded55f2",
+  "failure-control.mjs.txt": "0ee9ee4f01e12dbcad749a80de8ad3386ffc2af74ea6e511053ea051de7d93e2",
+  "corrected-control.mjs.txt": "60de996640b3756ef2c4084f7c5e7266bb08c583f2c533f199dcaa3a5fa91cf8"
+}

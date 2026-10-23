@@ -1,0 +1,51 @@
+{
+  "schema": "gev-wind-material-ownership-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-19T23:03:00.321Z",
+  "files": [
+    {
+      "name": "scripts/performance/weatherVisibleWindProbe.mjs",
+      "bytes": 31437,
+      "sha256": "da655b52accde85fd9064208fa9a0650b5ae7cdd0b514c3eb182e264afd07c31",
+      "submittedSha256": "d4d600629673b39939d536e28bd1452308b873b9da90b27489f72e24a06a78b9"
+    },
+    {
+      "name": "scripts/performance/weatherVisibleWindProbe.test.mjs",
+      "bytes": 16107,
+      "sha256": "2affa7453a6f0fb107ed629fc4b059ac8baa55d4aed0e118df098062e129b083",
+      "submittedSha256": "99e11bafe77f5672a7e26adabf45456ff051be35d891fb5576bd2aa42ec972cd"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "06e58dbc5deb8ca950a7bc04614abccbca2e5c03f9696f813c5837d1a448c30c",
+      "summary": "scripts/performance/weatherVisibleWindProbe.mjs 109ms\nscripts/performance/weatherVisibleWindProbe.test.mjs 43ms\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "dc506ab91326600824a193f69a1b491b2e1565f97dcaa9fffe5a204d212f140b",
+      "summary": "✔ visible wind probe proves visible GPU flow, pause stability, resume, and restoration (6.094648ms)\n✔ visible wind probe rejects absent GPU readiness and zero visible geometry (8.930781ms)\n✔ visible wind probe requires normalized settled population counts (1.354253ms)\n✔ visible wind probe requires one explicitly identified streamline material (2.495685ms)\n✔ visible wind probe counts a material shared across spatial cells once (1.959049ms)\n✔ visible wind probe never treats a truncated primitive traversal as unique ownership (12.231219ms)\n✔ visible wind probe rejects phase drift while paused and a stuck resumed phase (3.489953ms)\n✔ visible wind probe restores camera and pause state when observation throws (1.201648ms)\n✔ camera restoration checks orientation and records refused owned navigation (2.294597ms)\n✔ probe temporarily resumes pre-paused wind and restores the original pause state (1.320478ms)\n✔ page evaluation failure is retained as failed with cleanup unknown (0.346228ms)\n✔ host cancellation is bounded and reports page cleanup as unknown (0.282364ms)\n✔ probe deadline fails closed and still restores owned page state (1.006452ms)\n✔ probe timing and returned diagnostic report fail closed (0.437404ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.056088ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 94.615831\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "b4fa5095e2491e8486c68074a2634e1b0aca5f98d99efcc71f7f10c0c926910d",
+      "summary": "✔ visible wind probe proves visible GPU flow, pause stability, resume, and restoration (5.481697ms)\n✔ visible wind probe rejects absent GPU readiness and zero visible geometry (4.770344ms)\n✔ visible wind probe requires normalized settled population counts (1.228319ms)\n✔ visible wind probe requires one explicitly identified streamline material (2.610816ms)\n✔ visible wind probe counts a material shared across spatial cells once (2.601038ms)\n✔ visible wind probe never treats a truncated primitive traversal as unique ownership (13.910249ms)\n✔ visible wind probe rejects phase drift while paused and a stuck resumed phase (2.854598ms)\n✔ visible wind probe restores camera and pause state when observation throws (1.215265ms)\n✔ camera restoration checks orientation and records refused owned navigation (2.183273ms)\n✔ probe temporarily resumes pre-paused wind and restores the original pause state (1.229232ms)\n✔ page evaluation failure is retained as failed with cleanup unknown (0.341289ms)\n✔ host cancellation is bounded and reports page cleanup as unknown (0.276713ms)\n✔ probe deadline fails closed and still restores owned page state (0.95905ms)\n✔ probe timing and returned diagnostic report fail closed (0.410973ms)\n✔ probe evaluator is self-contained when serialized into an isolated page realm (1.066589ms)\nℹ tests 15\nℹ suites 0\nℹ pass 15\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 96.948853\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "sha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "completedAt": "2026-10-19T23:03:03.035Z"
+}

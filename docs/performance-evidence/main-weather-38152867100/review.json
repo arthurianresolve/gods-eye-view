@@ -1,0 +1,48 @@
+{
+  "testedCommit": "7ef32a74afc7574d5fcad0dc19d2b4b33c49e815",
+  "mainCommit": "591f299d11f38a612629a274463196d57ae3862e",
+  "previousDev": "a14ebe81888a0ec538460f43561d952dd8290435",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38152867100",
+  "standardJobsPassed": 7,
+  "recoveryCheckpointsVerified": 15,
+  "accessibleNamesVerified": 61,
+  "status": "automatic-integration-passed",
+  "acceptedForDev": true,
+  "hardwareValidated": false,
+  "windowsShutdownRootCauseResolved": false,
+  "performanceAcceptanceEligible": false,
+  "artifacts": [
+    {
+      "file": "run.json",
+      "sha256": "0912e33578e4d7bb11dba690e535f6eeb36bfb0a2b676bb80c79a6d5b9ba7bbc"
+    },
+    {
+      "file": "windows-recovery.json",
+      "sha256": "aa148001942ade8d54ca748c7c4570a2ace27030957dcabaf5397e024d9d71d1"
+    },
+    {
+      "file": "macos-recovery.json",
+      "sha256": "785193bbb5610e7ae9f8c5fc37e49016fd7058ac5d585b74c48e002a17b02ac5"
+    },
+    {
+      "file": "linux-recovery.json",
+      "sha256": "9c1019dc97cffd0d13d516f800b750ba59fcb7c18d0990661188d3801dd3fdf7"
+    },
+    {
+      "file": "accessibility.json",
+      "sha256": "0bedc943b6805951cd1ddeb57a75d5fe08240dcc6423075e36141dbaf3b47084"
+    },
+    {
+      "file": "layer-tokens.json",
+      "sha256": "a27195fdb7f0b26d258812938bcedfa586c44193b8e3fd206a3d399528da557e"
+    }
+  ],
+  "limits": [
+    "Recovery artifacts use hosted SwiftShader, not physical GPU rendering.",
+    "Accessibility report comes from completed job logs, not a successful uploaded screenshot artifact.",
+    "Human screen-reader and actual browser-zoom reviews remain pending.",
+    "Local layer-token checks do not replace representative pull-request runs.",
+    "Earlier Windows shutdown failure remains unresolved.",
+    "Physical frame delivery and current-candidate soak/comparisons remain pending."
+  ]
+}

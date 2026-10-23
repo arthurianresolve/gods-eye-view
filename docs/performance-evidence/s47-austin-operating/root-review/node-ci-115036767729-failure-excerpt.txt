@@ -1,0 +1,36 @@
+✖ failing tests:
+2026-10-12T22:35:36.5021663Z 
+2026-10-12T22:35:36.5021901Z test at scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs:236:1
+2026-10-12T22:35:36.5022381Z ✖ capture CLI stops and drains the real fixture interceptor before closing its target (623.6071ms)
+2026-10-12T22:35:36.5023017Z   [Error: ENOENT: no such file or directory, open '/tmp/gev-fixture-release-cli-Cx4Eom/lifecycle.txt'] { errno: -2, code: 'ENOENT', syscall: 'open', path: '/tmp/gev-fixture-release-cli-Cx4Eom/lifecycle.txt' }
+2026-10-12T22:35:36.5023430Z 
+2026-10-12T22:35:36.5023652Z test at scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs:266:1
+2026-10-12T22:35:36.5024113Z ✖ capture CLI keeps a rejected close acknowledgement failed after target closure (623.458193ms)
+2026-10-12T22:35:36.5024711Z   [Error: ENOENT: no such file or directory, open '/tmp/gev-fixture-release-cli-Ecaua0/lifecycle.txt'] { errno: -2, code: 'ENOENT', syscall: 'open', path: '/tmp/gev-fixture-release-cli-Ecaua0/lifecycle.txt' }
+2026-10-12T22:35:36.5026110Z 
+2026-10-12T22:35:36.5026369Z test at scripts/performance/captureRendererProbeRetirementIntegration.test.mjs:15:1
+2026-10-12T22:35:36.5027071Z ✖ capture CLI removes the future-document registration only after document retirement (627.544401ms)
+2026-10-12T22:35:36.5027617Z   AssertionError [ERR_ASSERTION]: The input did not match the regular expression /sentinel-after-domcontentloaded/. Input:
+2026-10-12T22:35:36.5027925Z   
+2026-10-12T22:35:36.5028190Z   'file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/capture-scene-performance.mjs:7\n' +
+2026-10-12T22:35:36.5028536Z     "import puppeteer, { CDPSessionEvent } from 'puppeteer';\n" +
+2026-10-12T22:35:36.5028768Z     '                    ^^^^^^^^^^^^^^^\n' +
+2026-10-12T22:35:36.5029079Z     "SyntaxError: The requested module 'puppeteer' does not provide an export named 'CDPSessionEvent'\n" +
+2026-10-12T22:35:36.5029556Z     '    at #asyncInstantiate (node:internal/modules/esm/module_job:463:21)\n' +
+2026-10-12T22:35:36.5029864Z     '    at async ModuleJob.run (node:internal/modules/esm/module_job:561:5)\n' +
+2026-10-12T22:35:36.5030130Z     '    at async node:internal/modules/esm/loader:650:26\n' +
+2026-10-12T22:35:36.5030438Z     '    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)\n' +
+2026-10-12T22:35:36.5030686Z     '\n' +
+2026-10-12T22:35:36.5030810Z     'Node.js v26.11.1\n'
+2026-10-12T22:35:36.5030941Z   
+2026-10-12T22:35:36.5031353Z       at TestContext.<anonymous> (file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/performance/captureRendererProbeRetirementIntegration.test.mjs:104:10)
+2026-10-12T22:35:36.5032086Z       at async Test.run (node:internal/test_runner/test:1409:7)
+2026-10-12T22:35:36.5032584Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+2026-10-12T22:35:36.5032997Z     generatedMessage: true,
+2026-10-12T22:35:36.5033233Z     code: 'ERR_ASSERTION',
+2026-10-12T22:35:36.5035587Z     actual: "file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/capture-scene-performance.mjs:7\nimport puppeteer, { CDPSessionEvent } from 'puppeteer';\n                    ^^^^^^^^^^^^^^^\nSyntaxError: The requested module 'puppeteer' does not provide an export named 'CDPSessionEvent'\n    at #asyncInstantiate (node:internal/modules/esm/module_job:463:21)\n    at async ModuleJob.run (node:internal/modules/esm/module_job:561:5)\n    at async node:internal/modules/esm/loader:650:26\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:105:5)\n\nNode.js v26.11.1\n",
+2026-10-12T22:35:36.5037461Z     expected: /sentinel-after-domcontentloaded/,
+2026-10-12T22:35:36.5037742Z     operator: 'match',
+2026-10-12T22:35:36.5037943Z     diff: 'simple'
+2026-10-12T22:35:36.5038122Z   }
+2026-10-12T22:35:36.5076901Z ##[error]Process completed with exit code 1.

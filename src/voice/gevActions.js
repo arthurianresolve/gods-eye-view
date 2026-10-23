@@ -41,11 +41,20 @@ import {
   adjustOrbitRange,
 } from '../cameraVerbs.js';
 import * as defaultFloorServices from '../data/groundFloor.js';
-import { isPickedWorldPosition } from '../data/scenePick.js';
+import {
+  isPickedWorldPosition,
+  pickPositionWithAttribution,
+  recordViewTargetCacheAttribution,
+} from '../data/scenePick.js';
 import { unavailablePlaceSearch } from '../search/placeSearch.js';
 import * as defaultAnnotationResolver from '../annotations/annotationResolver.js';
 import { normalizeRadioCountryInput } from '../data/radioCountry.js';
 import { TR3B_CLASS } from '../data/tr3bRegistry.js';
+import {
+  createEvidenceEnvelope,
+  knownEvidenceSourceUrl,
+} from '../evidence/evidence.js';
+
 import {
   getWorldPacket,
   withContextModeVocabulary,
@@ -228,6 +237,7 @@ function cachesFor(service) {
 const VISIBLE_ENTITY_SHORTLIST = 64;
 const BASEMAP_CONTEXT_WAIT_MS = 1500;
 const viewTargetCache = new WeakMap();
+const viewTargetPrewarmOwners = new WeakMap();
 
 /** Create application actions over the supplied scene and services. */
 export function createGevActionRunner({
@@ -242,6 +252,7 @@ export function createGevActionRunner({
   searchNavigation = searchAndFlyTo,
   speechBuilders = null,
   deixis = null,
+  investigationTime = null,
 }) {
   // Voice enable times and analyst follow-up memory belong to this runner.
   // Speech builders turn results into say/display envelopes; callers extend
@@ -259,9 +270,10 @@ export function createGevActionRunner({
         placeSearch,
         resolveRegionRing,
         isWarming: (layerKey) => layerIsWarming(_layerEnabledAt, layerKey),
+        investigationTime,
       }),
     ));
-  installViewTargetPrewarm(viewer);
+  const releaseViewTargetPrewarm = installViewTargetPrewarm(viewer);
   initCameraVerbs(viewer, getViewTargetCartesian);
   // Nested calls (select_nearest_aircraft composing layer + flight) use the
   // raw runner; only the outer call gets a voice envelope.
@@ -563,6 +575,7 @@ export function createGevActionRunner({
           recordLimitByLayer: { [layerId]: Number.MAX_SAFE_INTEGER },
           placeSearch,
           resolveRegionRing,
+          investigationTime,
         }),
       ).query({
         layers: [layerId],
@@ -1207,8 +1220,12 @@ export function createGevActionRunner({
   /** Voice was removed: nothing may run or write again. */
   runVoiceAction.dispose = () => {
     if (disposed) return;
-    runVoiceAction.resetConversation();
     disposed = true;
+    try {
+      runVoiceAction.resetConversation();
+    } finally {
+      releaseViewTargetPrewarm();
+    }
   };
   return runVoiceAction;
 }
@@ -2398,7 +2415,9 @@ async function frameOverhead(viewer, dataManager, styleManager, args = {}) {
       ? 120
       : 150;
   const radiusKm = clampNumber(args.radiusKm, 10, 20000, defaultRadiusKm);
-  const center = getViewTargetCartesian(viewer) || viewer.camera.positionWC;
+  const center =
+    getViewTargetCartesian(viewer, 'voice-frame-overhead') ||
+    viewer.camera.positionWC;
 
   let entries = [];
   if (typeof module.getNearby === 'function') {
@@ -2503,12 +2522,12 @@ function runManagedVoiceNavigation(
 export async function getBasemapLabelContext(
   viewer,
   service = defaultGeospatial,
-  { cachedOnly = false } = {},
+  { cachedOnly = false, caller = 'voice-basemap-label-context' } = {},
 ) {
   const { reverseGeocodeCache, nearbyPlacesCache } = cachesFor(service);
   const samples = sampleViewportCartographics(viewer);
   const cameraHeightM = viewer.camera.positionCartographic.height;
-  const target = getViewTargetCartographic(viewer);
+  const target = getViewTargetCartographic(viewer, caller);
   if (!target) {
     return {
       placeLabels: [],
@@ -2580,38 +2599,101 @@ export async function getBasemapLabelContext(
 }
 
 function installViewTargetPrewarm(viewer) {
-  if (viewer.__gevViewTargetPrewarmInstalled) return;
-  viewer.__gevViewTargetPrewarmInstalled = true;
-  let timer = null;
-  let reportedPrewarmFailure = false;
-  viewer.camera.moveEnd.addEventListener(() => {
-    if (timer) window.clearTimeout(timer);
-    timer = window.setTimeout(() => {
-      timer = null;
-      // Belt and braces. Validating the pick is the fix; this catch exists
-      // because an idle callback is an UNCAUGHT context — nothing above it can
-      // handle a surprise from the scene graph, and a red console error on a
-      // plain camera flight is worse than a cold cache. Reported once per
-      // viewer so a repeating cause cannot spam the console.
-      const warm = () => {
+  let owner = viewTargetPrewarmOwners.get(viewer);
+  if (!owner) {
+    const win = globalThis.window;
+    owner = {
+      active: true,
+      references: 0,
+      timer: null,
+      idle: null,
+      idleGeneration: 0,
+      reportedPrewarmFailure: false,
+      removeMoveEnd: null,
+    };
+    const cancelIdle = () => {
+      owner.idleGeneration += 1;
+      const pending = owner.idle;
+      owner.idle = null;
+      if (pending && typeof win?.cancelIdleCallback === 'function') {
         try {
-          getViewTargetCartographic(viewer);
-        } catch (error) {
-          if (reportedPrewarmFailure) return;
-          reportedPrewarmFailure = true;
-          console.debug(
-            '[Voice] view-target prewarm skipped:',
-            error?.message || error,
-          );
+          win.cancelIdleCallback(pending.id);
+        } catch {
+          // Generation invalidation still prevents a delivered callback.
         }
-      };
-      if (typeof window.requestIdleCallback === 'function') {
-        window.requestIdleCallback(warm, { timeout: 500 });
-      } else {
-        warm();
       }
-    }, 120);
-  });
+    };
+    const cancelTimer = () => {
+      if (owner.timer === null) return;
+      try {
+        win?.clearTimeout?.(owner.timer);
+      } catch {
+        // The callback's active/generation checks remain authoritative.
+      }
+      owner.timer = null;
+    };
+    const onMoveEnd = () => {
+      if (!owner.active) return;
+      cancelTimer();
+      cancelIdle();
+      const generation = owner.idleGeneration;
+      owner.timer = win.setTimeout(() => {
+        if (!owner.active || generation !== owner.idleGeneration) return;
+        owner.timer = null;
+        // Belt and braces. Validating the pick is the fix; this catch exists
+        // because an idle callback is an UNCAUGHT context — nothing above it
+        // can handle a surprise from the scene graph.
+        const warm = () => {
+          if (!owner.active || generation !== owner.idleGeneration) return;
+          owner.idle = null;
+          try {
+            getViewTargetCartographic(viewer, 'voice-move-end-prewarm');
+          } catch (error) {
+            if (owner.reportedPrewarmFailure) return;
+            owner.reportedPrewarmFailure = true;
+            console.debug(
+              '[Voice] view-target prewarm skipped:',
+              error?.message || error,
+            );
+          }
+        };
+        if (typeof win.requestIdleCallback === 'function') {
+          const id = win.requestIdleCallback(warm, { timeout: 500 });
+          owner.idle = { id, generation };
+        } else {
+          warm();
+        }
+      }, 120);
+    };
+    const remove = viewer.camera.moveEnd.addEventListener(onMoveEnd);
+    owner.removeMoveEnd =
+      typeof remove === 'function'
+        ? remove
+        : () => viewer.camera.moveEnd.removeEventListener?.(onMoveEnd);
+    owner.cancelIdle = cancelIdle;
+    owner.cancelTimer = cancelTimer;
+    viewTargetPrewarmOwners.set(viewer, owner);
+    viewer.__gevViewTargetPrewarmInstalled = true;
+  }
+  owner.references += 1;
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    owner.references = Math.max(0, owner.references - 1);
+    if (owner.references > 0 || !owner.active) return;
+    owner.active = false;
+    owner.cancelTimer?.();
+    owner.cancelIdle?.();
+    try {
+      owner.removeMoveEnd?.();
+    } finally {
+      if (viewTargetPrewarmOwners.get(viewer) === owner)
+        viewTargetPrewarmOwners.delete(viewer);
+      if (viewer.__gevViewTargetPrewarmInstalled === true)
+        delete viewer.__gevViewTargetPrewarmInstalled;
+    }
+  };
 }
 
 function adjustCameraZoom(viewer, args) {
@@ -2631,7 +2713,7 @@ function adjustCameraZoom(viewer, args) {
   const camera = viewer.camera;
   const beforePosition = Cesium.Cartesian3.clone(camera.positionWC);
   const beforeHeightM = camera.positionCartographic.height;
-  const target = getViewTargetCartesian(viewer);
+  const target = getViewTargetCartesian(viewer, 'voice-adjust-camera-zoom');
   const targetDistanceM = target
     ? Cesium.Cartesian3.distance(beforePosition, target)
     : Math.max(100, beforeHeightM);
@@ -3161,7 +3243,7 @@ async function getEntityContext(
   const limit = Math.round(clampNumber(args.limit, 1, 12, 5));
   const selected = selectedEntityContext(dataManager);
   const cameraHeightM = viewer.camera.positionCartographic.height;
-  const viewTarget = getViewTargetCartographic(viewer);
+  const viewTarget = getViewTargetCartographic(viewer, 'voice-entity-context');
   const scenePromise = getSceneContext(
     viewer,
     styleManager,
@@ -3331,7 +3413,7 @@ async function getTargetContext(
   const hasPosition = Number.isFinite(lat) && Number.isFinite(lon);
   const viewTarget = hasPosition
     ? Cesium.Cartographic.fromDegrees(lon, lat)
-    : getViewTargetCartographic(viewer);
+    : getViewTargetCartographic(viewer, 'voice-entity-context-pointer');
   const selected = describeTargetEntity(dataManager, target);
   const scene = await getSceneContext(
     viewer,
@@ -3959,16 +4041,19 @@ function coarseBasemapPlace(
   };
 }
 
-function getViewTargetCartographic(viewer) {
+function getViewTargetCartographic(viewer, caller = 'voice-view-target') {
   const signature = cameraViewSignature(viewer);
   const cached = viewTargetCache.get(viewer);
-  if (
-    cached?.signature === signature &&
-    performance.now() - cached.cachedAt < 2500
-  ) {
+  let cacheAgeMs = null;
+  if (cached?.signature === signature) {
+    cacheAgeMs = performance.now() - cached.cachedAt;
+  }
+  if (cached?.signature === signature && cacheAgeMs < 2500) {
+    recordViewTargetCacheAttribution(viewer, caller, true, cacheAgeMs);
     return cached.target;
   }
-  const position = getViewTargetCartesian(viewer);
+  recordViewTargetCacheAttribution(viewer, caller, false, cacheAgeMs);
+  const position = getViewTargetCartesian(viewer, caller);
   // `fromCartesian` still returns undefined for a point too near the ellipsoid
   // center to project; normalize that to the same "no target" null the callers
   // already handle for a missed pick.
@@ -4003,7 +4088,7 @@ function cameraViewSignature(viewer) {
  * MISSED pick, so it falls through to the next stage rather than poisoning
  * every caller downstream.
  */
-function getViewTargetCartesian(viewer) {
+function getViewTargetCartesian(viewer, caller = 'voice-view-target') {
   const scene = viewer.scene;
   const canvas = scene.canvas;
   const width = canvas.clientWidth || canvas.width || 0;
@@ -4013,7 +4098,7 @@ function getViewTargetCartesian(viewer) {
 
   if (scene.pickPositionSupported && typeof scene.pickPosition === 'function') {
     try {
-      position = scene.pickPosition(center);
+      position = pickPositionWithAttribution(viewer, caller, center);
     } catch {
       position = null;
     }
@@ -4542,11 +4627,19 @@ function analystProviders(
         placeSearch,
       ),
     isWarming = () => false,
+    investigationTime = null,
   } = {},
 ) {
   // Per-layer truncation seen by the last getRecords call.
   const truncatedBy = new Map();
   return {
+    now: () => investigationTime?.now?.() ?? Date.now(),
+    getTemporalContext() {
+      return {
+        ...(investigationTime?.getState?.() || {}),
+        ...(investigationTime?.getTemporalContext?.() || {}),
+      };
+    },
     getRecords(layerKey) {
       truncatedBy.delete(layerKey);
       const layer = dataManager.layers.get(layerKey);
@@ -4679,6 +4772,54 @@ function compactAnalystItem(r) {
     } else compact[key] = r[key];
   }
   if (present(r.ageHours)) compact.ageHours = r.ageHours;
+  if (r.evidence && typeof r.evidence === 'object')
+    compact.evidence = r.evidence;
+  if (
+    ['flights', 'military'].includes(r.layerKey) &&
+    present(r.icao24) &&
+    Number.isFinite(r.lat) &&
+    Number.isFinite(r.lon)
+  ) {
+    const provenance = r.provenance || {};
+    const freshness = String(provenance.sourceFreshness || '').toLowerCase();
+    const feedState =
+      {
+        fresh: 'nominal',
+        nominal: 'nominal',
+        partial: 'partial',
+        stale: 'stale',
+        degraded: 'degraded',
+        fallback: 'fallback',
+        unavailable: 'unavailable',
+        off: 'off',
+      }[freshness] || 'unknown';
+    const regional = /regional/i.test(provenance.sourceCoverage || '');
+    compact.evidence = createEvidenceEnvelope({
+      entityRef: { layerKey: r.layerKey, id: r.icao24 },
+      sourceId: provenance.sourceId,
+      sourceUrl: knownEvidenceSourceUrl(provenance.sourceId),
+      sourceRecordId: provenance.sourceRecordId || r.icao24,
+      observedAt: provenance.positionObservedAtMs,
+      receivedAt: provenance.receivedAtMs,
+      snapshotAt: provenance.sourceSnapshotObservedAtMs,
+      method: 'observed',
+      displayMethod: 'observed',
+      feedState,
+      coverage: {
+        area: provenance.sourceCoverage,
+        completeness:
+          provenance.sourceComplete === true && !regional
+            ? 'complete'
+            : freshness === 'partial' || regional
+              ? 'partial'
+              : 'unknown',
+      },
+      limitations:
+        provenance.positionObservedAtMs == null
+          ? ['The source did not provide a per-aircraft position time.']
+          : [],
+    });
+  }
   return compact;
 }
 
@@ -4867,6 +5008,7 @@ async function runAnalystQuery(
     // On-screen detail (scope, feed window, caveats); not for recital.
     display: result.display,
     coverage: result.coverage,
+    resultMetadata: result.resultMetadata,
     feedProvenance: result.coverage?.feedProvenance || null,
     feedState: result.coverage?.feedProvenance?.overall || null,
     // The panel's own numbers, carried so the answer can match what the

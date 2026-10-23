@@ -1,0 +1,4685 @@
+{
+  "schema": "gev-overlay-cpu/v2",
+  "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "capturedAt": "2026-10-14T04:36:12.647Z",
+  "scope": "Matched isolated Node overlay CPU instrumentation; mock canvas, no browser, GPU, or rendered-frame claim",
+  "pairing": {
+    "arms": [
+      "disabled",
+      "enabled"
+    ],
+    "independentWorkerProcessPerArm": true,
+    "virtualClock": "starts at zero and advances 16 ms per identical frame",
+    "alternatingArmOrder": true
+  },
+  "workloads": [
+    {
+      "profile": "generic",
+      "entries": 250,
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "profile": "generic",
+          "entryCount": 250,
+          "fixtureSha256": "71d50a31e831f22180974c4dcb7c10ac55f2d8eb61997a9b64c7c1ec09787499",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.4093431666666667,
+          "enabledCpuMsPerFrame": 0.5892198333333333,
+          "instrumentationRatio": 0.43942755446835746,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 250,
+            "paintedCount": 96,
+            "paintedBySource": {
+              "alloc-probe": 96
+            },
+            "workloadSourceIds": [
+              "alloc-probe"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 0,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "71d50a31e831f22180974c4dcb7c10ac55f2d8eb61997a9b64c7c1ec09787499"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 245.60590000000002,
+            "cpuMsPerFrame": 0.4093431666666667,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 0,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "71d50a31e831f22180974c4dcb7c10ac55f2d8eb61997a9b64c7c1ec09787499"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 353.53189999999995,
+            "cpuMsPerFrame": 0.5892198333333333,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 336.13420000000406,
+                  "maxMs": 5.819400000000314,
+                  "sampleCount": 120,
+                  "p50Ms": 0.5606000000007043,
+                  "p95Ms": 1.4989000000005035
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 220.63620000000174,
+                  "maxMs": 5.600199999999859,
+                  "sampleCount": 120,
+                  "p50Ms": 0.3650000000006912,
+                  "p95Ms": 0.9045999999998457
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 52.097600000005514,
+                  "maxMs": 0.3155000000006112,
+                  "sampleCount": 120,
+                  "p50Ms": 0.09040000000004511,
+                  "p95Ms": 0.2062999999998283
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 51.978599999993094,
+                  "maxMs": 0.8963000000003376,
+                  "sampleCount": 120,
+                  "p50Ms": 0.037599999999656575,
+                  "p95Ms": 0.5105000000003201
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 1,
+          "profile": "generic",
+          "entryCount": 250,
+          "fixtureSha256": "bd368b544a9fa54adbfac214bc0d01f135961e9363a908c7c4723b408018cac4",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.4729878333333333,
+          "enabledCpuMsPerFrame": 0.6413181666666666,
+          "instrumentationRatio": 0.3558872374095601,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 250,
+            "paintedCount": 96,
+            "paintedBySource": {
+              "alloc-probe": 96
+            },
+            "workloadSourceIds": [
+              "alloc-probe"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 1,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "bd368b544a9fa54adbfac214bc0d01f135961e9363a908c7c4723b408018cac4"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 283.79269999999997,
+            "cpuMsPerFrame": 0.4729878333333333,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 1,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "bd368b544a9fa54adbfac214bc0d01f135961e9363a908c7c4723b408018cac4"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 384.79089999999997,
+            "cpuMsPerFrame": 0.6413181666666666,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 370.612600000014,
+                  "maxMs": 4.0231000000003405,
+                  "sampleCount": 120,
+                  "p50Ms": 0.4063000000005559,
+                  "p95Ms": 0.8522000000002663
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 237.97650000000885,
+                  "maxMs": 3.1067999999995664,
+                  "sampleCount": 120,
+                  "p50Ms": 0.28360000000066066,
+                  "p95Ms": 0.5707999999995081
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 60.335699999994176,
+                  "maxMs": 1.6953000000003158,
+                  "sampleCount": 120,
+                  "p50Ms": 0.07359999999971478,
+                  "p95Ms": 0.12049999999999272
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 59.04140000000825,
+                  "maxMs": 0.9218000000000757,
+                  "sampleCount": 120,
+                  "p50Ms": 0.029199999999946158,
+                  "p95Ms": 0.394800000000032
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 2,
+          "profile": "generic",
+          "entryCount": 250,
+          "fixtureSha256": "a079d8872e19ea16d648e418ce444f9773db02a18b8f1eb57308ba62d219e715",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.4790539999999995,
+          "enabledCpuMsPerFrame": 0.47129416666666657,
+          "instrumentationRatio": -0.01619824348264065,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 250,
+            "paintedCount": 96,
+            "paintedBySource": {
+              "alloc-probe": 96
+            },
+            "workloadSourceIds": [
+              "alloc-probe"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 2,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "a079d8872e19ea16d648e418ce444f9773db02a18b8f1eb57308ba62d219e715"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 287.4323999999997,
+            "cpuMsPerFrame": 0.4790539999999995,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 2,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "a079d8872e19ea16d648e418ce444f9773db02a18b8f1eb57308ba62d219e715"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 282.77649999999994,
+            "cpuMsPerFrame": 0.47129416666666657,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 269.65309999999226,
+                  "maxMs": 3.128600000000006,
+                  "sampleCount": 120,
+                  "p50Ms": 0.3859999999995125,
+                  "p95Ms": 0.8284000000003289
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 172.19349999999758,
+                  "maxMs": 3.0054000000000087,
+                  "sampleCount": 120,
+                  "p50Ms": 0.2716000000000349,
+                  "p95Ms": 0.47299999999995634
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 45.048299999991286,
+                  "maxMs": 0.3286000000007334,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0717000000004191,
+                  "p95Ms": 0.11160000000018044
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 45.00880000000325,
+                  "maxMs": 0.6458000000002357,
+                  "sampleCount": 120,
+                  "p50Ms": 0.028800000000046566,
+                  "p95Ms": 0.39390000000003056
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 3,
+          "profile": "generic",
+          "entryCount": 250,
+          "fixtureSha256": "f9d143470269db01d2bbd679acc0160a6a4bb3cd2e25b5ab03acb11e61cb282f",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.4641120000000001,
+          "enabledCpuMsPerFrame": 0.47753466666666555,
+          "instrumentationRatio": 0.028921179945068154,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 250,
+            "paintedCount": 96,
+            "paintedBySource": {
+              "alloc-probe": 96
+            },
+            "workloadSourceIds": [
+              "alloc-probe"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 3,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "f9d143470269db01d2bbd679acc0160a6a4bb3cd2e25b5ab03acb11e61cb282f"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 278.46720000000005,
+            "cpuMsPerFrame": 0.4641120000000001,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 3,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "f9d143470269db01d2bbd679acc0160a6a4bb3cd2e25b5ab03acb11e61cb282f"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 286.5207999999993,
+            "cpuMsPerFrame": 0.47753466666666555,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 272.8058999999985,
+                  "maxMs": 3.1109999999998763,
+                  "sampleCount": 120,
+                  "p50Ms": 0.37660000000050786,
+                  "p95Ms": 0.7291000000004715
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 177.31370000000607,
+                  "maxMs": 2.9904999999998836,
+                  "sampleCount": 120,
+                  "p50Ms": 0.26789999999982683,
+                  "p95Ms": 0.4654000000000451
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 45.08860000000095,
+                  "maxMs": 0.254399999999805,
+                  "sampleCount": 120,
+                  "p50Ms": 0.07039999999960855,
+                  "p95Ms": 0.10969999999997526
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 42.56269999998676,
+                  "maxMs": 0.6502000000000407,
+                  "sampleCount": 120,
+                  "p50Ms": 0.027299999999740976,
+                  "p95Ms": 0.34579999999914435
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 4,
+          "profile": "generic",
+          "entryCount": 250,
+          "fixtureSha256": "404ff5f1667199c6b3823fad4396d2a7bc4c3a14a7423c7d26d89972b94be88f",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.612487833333333,
+          "enabledCpuMsPerFrame": 0.5605138333333344,
+          "instrumentationRatio": -0.08485719580279882,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 250,
+            "paintedCount": 96,
+            "paintedBySource": {
+              "alloc-probe": 96
+            },
+            "workloadSourceIds": [
+              "alloc-probe"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 4,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "404ff5f1667199c6b3823fad4396d2a7bc4c3a14a7423c7d26d89972b94be88f"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 367.4926999999998,
+            "cpuMsPerFrame": 0.612487833333333,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "generic",
+            "entryCount": 250,
+            "pairIndex": 4,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "generic",
+                "entryCount": 250,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "404ff5f1667199c6b3823fad4396d2a7bc4c3a14a7423c7d26d89972b94be88f"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 250,
+                "paintedCount": 96,
+                "paintedBySource": {
+                  "alloc-probe": 96
+                },
+                "workloadSourceIds": [
+                  "alloc-probe"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 336.3083000000006,
+            "cpuMsPerFrame": 0.5605138333333344,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 320.2646999999979,
+                  "maxMs": 3.3762000000006083,
+                  "sampleCount": 120,
+                  "p50Ms": 0.4074000000000524,
+                  "p95Ms": 0.7794000000003507
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 205.75590000000648,
+                  "maxMs": 3.240799999999581,
+                  "sampleCount": 120,
+                  "p50Ms": 0.28839999999945576,
+                  "p95Ms": 0.42009999999936554
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 53.097600000001876,
+                  "maxMs": 2.8257999999996173,
+                  "sampleCount": 120,
+                  "p50Ms": 0.030099999999947613,
+                  "p95Ms": 0.4000999999998385
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 51.686900000002424,
+                  "maxMs": 0.3379000000004453,
+                  "sampleCount": 120,
+                  "p50Ms": 0.07650000000012369,
+                  "p95Ms": 0.1010999999998603
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "disabledMedianCpuMsPerFrame": 0.4729878333333333,
+      "enabledMedianCpuMsPerFrame": 0.5605138333333344,
+      "medianInstrumentationRatio": 0.028921179945068154
+    },
+    {
+      "profile": "local-infrastructure",
+      "entries": 320,
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "profile": "local-infrastructure",
+          "entryCount": 320,
+          "fixtureSha256": "3d0e52ef23dcd0f6f2bbc8d79f1c73b83aa23e30e4191a6126c7ed9e4ffecc47",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.646866333333334,
+          "enabledCpuMsPerFrame": 0.7271321666666669,
+          "instrumentationRatio": 0.1240841101123924,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 320,
+            "paintedCount": 192,
+            "paintedBySource": {
+              "local-dams": 96,
+              "local-datacenters": 96
+            },
+            "workloadSourceIds": [
+              "local-dams",
+              "local-datacenters"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 0,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "3d0e52ef23dcd0f6f2bbc8d79f1c73b83aa23e30e4191a6126c7ed9e4ffecc47"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 388.1198000000004,
+            "cpuMsPerFrame": 0.646866333333334,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 0,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "3d0e52ef23dcd0f6f2bbc8d79f1c73b83aa23e30e4191a6126c7ed9e4ffecc47"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 436.27930000000015,
+            "cpuMsPerFrame": 0.7271321666666669,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 422.1313999999984,
+                  "maxMs": 6.726500000000669,
+                  "sampleCount": 120,
+                  "p50Ms": 0.5853000000006432,
+                  "p95Ms": 1.0016999999998006
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 246.79829999999856,
+                  "maxMs": 3.2547999999997046,
+                  "sampleCount": 120,
+                  "p50Ms": 0.3761999999996988,
+                  "p95Ms": 0.4260000000003856
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 97.35270000000855,
+                  "maxMs": 0.3999000000003434,
+                  "sampleCount": 120,
+                  "p50Ms": 0.1495999999997366,
+                  "p95Ms": 0.173200000000179
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 69.32300000000578,
+                  "maxMs": 6.135199999999713,
+                  "sampleCount": 120,
+                  "p50Ms": 0.049399999999877764,
+                  "p95Ms": 0.4584999999997308
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 1,
+          "profile": "local-infrastructure",
+          "entryCount": 320,
+          "fixtureSha256": "c63cd1c03f3e0a109e36eb6c11e93777b2d307373b72f29942c8ba71b71593b6",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.6838358333333326,
+          "enabledCpuMsPerFrame": 0.9239750000000003,
+          "instrumentationRatio": 0.35116493602875143,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 320,
+            "paintedCount": 192,
+            "paintedBySource": {
+              "local-dams": 96,
+              "local-datacenters": 96
+            },
+            "workloadSourceIds": [
+              "local-dams",
+              "local-datacenters"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 1,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "c63cd1c03f3e0a109e36eb6c11e93777b2d307373b72f29942c8ba71b71593b6"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 410.3014999999996,
+            "cpuMsPerFrame": 0.6838358333333326,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 1,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "c63cd1c03f3e0a109e36eb6c11e93777b2d307373b72f29942c8ba71b71593b6"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 554.3850000000002,
+            "cpuMsPerFrame": 0.9239750000000003,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 534.65110000001,
+                  "maxMs": 31.90229999999974,
+                  "sampleCount": 120,
+                  "p50Ms": 0.7133000000003449,
+                  "p95Ms": 1.2613000000001193
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 298.9560999999967,
+                  "maxMs": 3.4173000000000684,
+                  "sampleCount": 120,
+                  "p50Ms": 0.43659999999999854,
+                  "p95Ms": 0.6537999999991371
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 112.02549999998973,
+                  "maxMs": 31.158400000000256,
+                  "sampleCount": 120,
+                  "p50Ms": 0.06410000000050786,
+                  "p95Ms": 0.5060000000003129
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 111.72559999998975,
+                  "maxMs": 0.4997000000003027,
+                  "sampleCount": 120,
+                  "p50Ms": 0.16820000000006985,
+                  "p95Ms": 0.23220000000037544
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 2,
+          "profile": "local-infrastructure",
+          "entryCount": 320,
+          "fixtureSha256": "f41bb0599c992ce4f535ef98466776bdea096fb49684f9d413e353e94d0e2eaf",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.6383313333333338,
+          "enabledCpuMsPerFrame": 0.6598593333333338,
+          "instrumentationRatio": 0.03372543203790723,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 320,
+            "paintedCount": 192,
+            "paintedBySource": {
+              "local-dams": 96,
+              "local-datacenters": 96
+            },
+            "workloadSourceIds": [
+              "local-dams",
+              "local-datacenters"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 2,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "f41bb0599c992ce4f535ef98466776bdea096fb49684f9d413e353e94d0e2eaf"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 382.9988000000003,
+            "cpuMsPerFrame": 0.6383313333333338,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 2,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "f41bb0599c992ce4f535ef98466776bdea096fb49684f9d413e353e94d0e2eaf"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 395.91560000000027,
+            "cpuMsPerFrame": 0.6598593333333338,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 381.74719999999706,
+                  "maxMs": 6.233499999999367,
+                  "sampleCount": 120,
+                  "p50Ms": 0.5460999999995693,
+                  "p95Ms": 0.9699000000000524
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 223.02690000000712,
+                  "maxMs": 3.084600000000137,
+                  "sampleCount": 120,
+                  "p50Ms": 0.3491999999996551,
+                  "p95Ms": 0.486800000000585
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 88.29940000000624,
+                  "maxMs": 0.3642999999992753,
+                  "sampleCount": 120,
+                  "p50Ms": 0.14030000000002474,
+                  "p95Ms": 0.18730000000050495
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 62.73739999999543,
+                  "maxMs": 5.709700000000339,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0455999999994674,
+                  "p95Ms": 0.43580000000019936
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 3,
+          "profile": "local-infrastructure",
+          "entryCount": 320,
+          "fixtureSha256": "c0a0712cd5cd3fbb07543e1dcb66cb53418980c44c2805011c2af139a04f304c",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.7080366666666669,
+          "enabledCpuMsPerFrame": 0.6327681666666679,
+          "instrumentationRatio": -0.10630593519167875,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 320,
+            "paintedCount": 192,
+            "paintedBySource": {
+              "local-dams": 96,
+              "local-datacenters": 96
+            },
+            "workloadSourceIds": [
+              "local-dams",
+              "local-datacenters"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 3,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "c0a0712cd5cd3fbb07543e1dcb66cb53418980c44c2805011c2af139a04f304c"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 424.8220000000001,
+            "cpuMsPerFrame": 0.7080366666666669,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 3,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "c0a0712cd5cd3fbb07543e1dcb66cb53418980c44c2805011c2af139a04f304c"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 379.66090000000077,
+            "cpuMsPerFrame": 0.6327681666666679,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 367.31779999999435,
+                  "maxMs": 6.644400000000132,
+                  "sampleCount": 120,
+                  "p50Ms": 0.5324000000000524,
+                  "p95Ms": 0.8977000000004409
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 215.06649999999354,
+                  "maxMs": 3.258100000000013,
+                  "sampleCount": 120,
+                  "p50Ms": 0.34209999999984575,
+                  "p95Ms": 0.3790999999991982
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 84.91390000000501,
+                  "maxMs": 0.3158999999996013,
+                  "sampleCount": 120,
+                  "p50Ms": 0.1368000000002212,
+                  "p95Ms": 0.1544000000003507
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 59.6306999999988,
+                  "maxMs": 6.0702000000001135,
+                  "sampleCount": 120,
+                  "p50Ms": 0.04290000000037253,
+                  "p95Ms": 0.3908999999994194
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 4,
+          "profile": "local-infrastructure",
+          "entryCount": 320,
+          "fixtureSha256": "7abfb17c237e23ce2d0d0a735f6a56253a37c31f07e79733b0fab185d84f67a4",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 0.6960260000000001,
+          "enabledCpuMsPerFrame": 0.745319166666668,
+          "instrumentationRatio": 0.07082086971847001,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 320,
+            "paintedCount": 192,
+            "paintedBySource": {
+              "local-dams": 96,
+              "local-datacenters": 96
+            },
+            "workloadSourceIds": [
+              "local-dams",
+              "local-datacenters"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 4,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "7abfb17c237e23ce2d0d0a735f6a56253a37c31f07e79733b0fab185d84f67a4"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 417.6156000000001,
+            "cpuMsPerFrame": 0.6960260000000001,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "local-infrastructure",
+            "entryCount": 320,
+            "pairIndex": 4,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "local-infrastructure",
+                "entryCount": 320,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "7abfb17c237e23ce2d0d0a735f6a56253a37c31f07e79733b0fab185d84f67a4"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 320,
+                "paintedCount": 192,
+                "paintedBySource": {
+                  "local-dams": 96,
+                  "local-datacenters": 96
+                },
+                "workloadSourceIds": [
+                  "local-dams",
+                  "local-datacenters"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 447.1915000000008,
+            "cpuMsPerFrame": 0.745319166666668,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 430.0756999999903,
+                  "maxMs": 6.788199999999961,
+                  "sampleCount": 120,
+                  "p50Ms": 0.5857999999998356,
+                  "p95Ms": 1.0308999999997468
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 251.44110000000273,
+                  "maxMs": 3.2812999999996464,
+                  "sampleCount": 120,
+                  "p50Ms": 0.3710000000000946,
+                  "p95Ms": 0.4709000000002561
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 98.71859999998287,
+                  "maxMs": 0.7807999999995445,
+                  "sampleCount": 120,
+                  "p50Ms": 0.14989999999943393,
+                  "p95Ms": 0.20159999999941647
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 69.85599999999886,
+                  "maxMs": 6.191800000000512,
+                  "sampleCount": 120,
+                  "p50Ms": 0.046000000000276486,
+                  "p95Ms": 0.4936999999999898
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "disabledMedianCpuMsPerFrame": 0.6838358333333326,
+      "enabledMedianCpuMsPerFrame": 0.7271321666666669,
+      "medianInstrumentationRatio": 0.07082086971847001
+    },
+    {
+      "profile": "all-live-radio",
+      "entries": 864,
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "profile": "all-live-radio",
+          "entryCount": 864,
+          "fixtureSha256": "a60571f9f83b176f075f495297b05e09b67878e7d756ac40bcdc6d5af9b23141",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.6214199999999983,
+          "enabledCpuMsPerFrame": 2.654897000000001,
+          "instrumentationRatio": 0.012770559467770504,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 864,
+            "paintedCount": 396,
+            "paintedBySource": {
+              "radio": 25,
+              "cctv": 20,
+              "bikeshare-selected": 1,
+              "cctv-projection": 1,
+              "tracked": 1,
+              "earthquakes": 25,
+              "rocket-missions": 23,
+              "satellites-iss": 1,
+              "telegeography-submarine-cables": 23,
+              "ais-live-vessels": 47,
+              "firms": 10,
+              "local-dams": 109,
+              "local-datacenters": 110
+            },
+            "workloadSourceIds": [
+              "ais-live-vessels",
+              "bikeshare-selected",
+              "cctv",
+              "cctv-projection",
+              "earthquakes",
+              "firms",
+              "local-dams",
+              "local-datacenters",
+              "radio",
+              "rocket-missions",
+              "satellites-iss",
+              "telegeography-submarine-cables",
+              "tracked"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 0,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "a60571f9f83b176f075f495297b05e09b67878e7d756ac40bcdc6d5af9b23141"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1572.851999999999,
+            "cpuMsPerFrame": 2.6214199999999983,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 0,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "a60571f9f83b176f075f495297b05e09b67878e7d756ac40bcdc6d5af9b23141"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1592.9382000000005,
+            "cpuMsPerFrame": 2.654897000000001,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1560.4394000000102,
+                  "maxMs": 8.111399999999776,
+                  "sampleCount": 120,
+                  "p50Ms": 2.240799999999581,
+                  "p95Ms": 4.856399999998757
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 669.6288000000113,
+                  "maxMs": 3.74120000000039,
+                  "sampleCount": 120,
+                  "p50Ms": 1.0032999999984895,
+                  "p95Ms": 1.7392999999992753
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 598.7476000000115,
+                  "maxMs": 3.7334000000009837,
+                  "sampleCount": 120,
+                  "p50Ms": 0.9402000000009139,
+                  "p95Ms": 1.2705999999998312
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 270.4290999999921,
+                  "maxMs": 4.293299999999363,
+                  "sampleCount": 120,
+                  "p50Ms": 0.12440000000060536,
+                  "p95Ms": 2.37670000000071
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 1,
+          "profile": "all-live-radio",
+          "entryCount": 864,
+          "fixtureSha256": "376b0ef667e46ebe361f6512bea2cebbf26919176f33c2d696c8b9681008a1ed",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.848521833333334,
+          "enabledCpuMsPerFrame": 2.670226833333333,
+          "instrumentationRatio": -0.06259211283325883,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 864,
+            "paintedCount": 396,
+            "paintedBySource": {
+              "radio": 25,
+              "cctv": 20,
+              "bikeshare-selected": 1,
+              "cctv-projection": 1,
+              "tracked": 1,
+              "earthquakes": 25,
+              "rocket-missions": 23,
+              "satellites-iss": 1,
+              "telegeography-submarine-cables": 23,
+              "ais-live-vessels": 47,
+              "firms": 10,
+              "local-dams": 109,
+              "local-datacenters": 110
+            },
+            "workloadSourceIds": [
+              "ais-live-vessels",
+              "bikeshare-selected",
+              "cctv",
+              "cctv-projection",
+              "earthquakes",
+              "firms",
+              "local-dams",
+              "local-datacenters",
+              "radio",
+              "rocket-missions",
+              "satellites-iss",
+              "telegeography-submarine-cables",
+              "tracked"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 1,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "376b0ef667e46ebe361f6512bea2cebbf26919176f33c2d696c8b9681008a1ed"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1709.1131000000005,
+            "cpuMsPerFrame": 2.848521833333334,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 1,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "376b0ef667e46ebe361f6512bea2cebbf26919176f33c2d696c8b9681008a1ed"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1602.1360999999997,
+            "cpuMsPerFrame": 2.670226833333333,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1565.3177000000378,
+                  "maxMs": 10.077799999999115,
+                  "sampleCount": 120,
+                  "p50Ms": 2.041400000000067,
+                  "p95Ms": 4.316200000001118
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 666.469000000041,
+                  "maxMs": 4.156499999999141,
+                  "sampleCount": 120,
+                  "p50Ms": 0.931800000000294,
+                  "p95Ms": 1.4014999999999418
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 609.2852999999686,
+                  "maxMs": 3.684799999999086,
+                  "sampleCount": 120,
+                  "p50Ms": 0.9164999999993597,
+                  "p95Ms": 1.1921999999995023
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 267.3903999999875,
+                  "maxMs": 5.015699999999924,
+                  "sampleCount": 120,
+                  "p50Ms": 0.11599999999998545,
+                  "p95Ms": 2.3215999999993073
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 2,
+          "profile": "all-live-radio",
+          "entryCount": 864,
+          "fixtureSha256": "1c7c8d02a596ee7c20cf7e6912a8831ea8b85d2d895a04e0fde70818005e7340",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.648167,
+          "enabledCpuMsPerFrame": 2.7859763333333345,
+          "instrumentationRatio": 0.05203951764874892,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 864,
+            "paintedCount": 396,
+            "paintedBySource": {
+              "radio": 25,
+              "cctv": 20,
+              "bikeshare-selected": 1,
+              "cctv-projection": 1,
+              "tracked": 1,
+              "earthquakes": 25,
+              "rocket-missions": 23,
+              "satellites-iss": 1,
+              "telegeography-submarine-cables": 23,
+              "ais-live-vessels": 47,
+              "firms": 10,
+              "local-dams": 109,
+              "local-datacenters": 110
+            },
+            "workloadSourceIds": [
+              "ais-live-vessels",
+              "bikeshare-selected",
+              "cctv",
+              "cctv-projection",
+              "earthquakes",
+              "firms",
+              "local-dams",
+              "local-datacenters",
+              "radio",
+              "rocket-missions",
+              "satellites-iss",
+              "telegeography-submarine-cables",
+              "tracked"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 2,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "1c7c8d02a596ee7c20cf7e6912a8831ea8b85d2d895a04e0fde70818005e7340"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1588.9002,
+            "cpuMsPerFrame": 2.648167,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 2,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "1c7c8d02a596ee7c20cf7e6912a8831ea8b85d2d895a04e0fde70818005e7340"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1671.5858000000007,
+            "cpuMsPerFrame": 2.7859763333333345,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1638.1484999999848,
+                  "maxMs": 6.798399999999674,
+                  "sampleCount": 120,
+                  "p50Ms": 2.3458000000009633,
+                  "p95Ms": 4.933100000000195
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 713.5395999999764,
+                  "maxMs": 5.2303999999985535,
+                  "sampleCount": 120,
+                  "p50Ms": 1.0600999999987835,
+                  "p95Ms": 1.7739999999994325
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 621.5191000000159,
+                  "maxMs": 3.8065999999998894,
+                  "sampleCount": 120,
+                  "p50Ms": 0.96389999999883,
+                  "p95Ms": 1.3240000000005239
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 279.68709999998464,
+                  "maxMs": 3.8744000000006054,
+                  "sampleCount": 120,
+                  "p50Ms": 0.131600000000617,
+                  "p95Ms": 2.536099999999351
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 3,
+          "profile": "all-live-radio",
+          "entryCount": 864,
+          "fixtureSha256": "7868b010a110afb6662653ad296edbef3dea1fc134162a740ba75e631dab917c",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.680068333333332,
+          "enabledCpuMsPerFrame": 2.605422166666667,
+          "instrumentationRatio": -0.027852337098369317,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 864,
+            "paintedCount": 396,
+            "paintedBySource": {
+              "radio": 25,
+              "cctv": 20,
+              "bikeshare-selected": 1,
+              "cctv-projection": 1,
+              "tracked": 1,
+              "earthquakes": 25,
+              "rocket-missions": 23,
+              "satellites-iss": 1,
+              "telegeography-submarine-cables": 23,
+              "ais-live-vessels": 47,
+              "firms": 10,
+              "local-dams": 109,
+              "local-datacenters": 110
+            },
+            "workloadSourceIds": [
+              "ais-live-vessels",
+              "bikeshare-selected",
+              "cctv",
+              "cctv-projection",
+              "earthquakes",
+              "firms",
+              "local-dams",
+              "local-datacenters",
+              "radio",
+              "rocket-missions",
+              "satellites-iss",
+              "telegeography-submarine-cables",
+              "tracked"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 3,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "7868b010a110afb6662653ad296edbef3dea1fc134162a740ba75e631dab917c"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1608.0409999999993,
+            "cpuMsPerFrame": 2.680068333333332,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 3,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "7868b010a110afb6662653ad296edbef3dea1fc134162a740ba75e631dab917c"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1563.2533000000003,
+            "cpuMsPerFrame": 2.605422166666667,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1525.5747000000265,
+                  "maxMs": 9.520599999999831,
+                  "sampleCount": 120,
+                  "p50Ms": 2.0307000000011612,
+                  "p95Ms": 4.399999999999636
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 654.5348000000049,
+                  "maxMs": 3.6783000000014,
+                  "sampleCount": 120,
+                  "p50Ms": 0.9350999999987835,
+                  "p95Ms": 1.5239999999994325
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 587.7972999999874,
+                  "maxMs": 3.6961000000010245,
+                  "sampleCount": 120,
+                  "p50Ms": 0.9028999999991356,
+                  "p95Ms": 1.0792999999994208
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 261.4504999999608,
+                  "maxMs": 4.583200000000943,
+                  "sampleCount": 120,
+                  "p50Ms": 0.12559999999939464,
+                  "p95Ms": 2.192699999999604
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 4,
+          "profile": "all-live-radio",
+          "entryCount": 864,
+          "fixtureSha256": "04e0ce5849987bc5f47e68ab6cfec25da4f5a8c5b62423d4fd1eaed9b4bc5c99",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.7195564999999986,
+          "enabledCpuMsPerFrame": 2.837142333333331,
+          "instrumentationRatio": 0.043237135662867354,
+          "population": {
+            "kind": "world-overlay",
+            "candidateCount": 864,
+            "paintedCount": 396,
+            "paintedBySource": {
+              "radio": 25,
+              "cctv": 20,
+              "bikeshare-selected": 1,
+              "cctv-projection": 1,
+              "tracked": 1,
+              "earthquakes": 25,
+              "rocket-missions": 23,
+              "satellites-iss": 1,
+              "telegeography-submarine-cables": 23,
+              "ais-live-vessels": 47,
+              "firms": 10,
+              "local-dams": 109,
+              "local-datacenters": 110
+            },
+            "workloadSourceIds": [
+              "ais-live-vessels",
+              "bikeshare-selected",
+              "cctv",
+              "cctv-projection",
+              "earthquakes",
+              "firms",
+              "local-dams",
+              "local-datacenters",
+              "radio",
+              "rocket-missions",
+              "satellites-iss",
+              "telegeography-submarine-cables",
+              "tracked"
+            ]
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 4,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "04e0ce5849987bc5f47e68ab6cfec25da4f5a8c5b62423d4fd1eaed9b4bc5c99"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1631.7338999999993,
+            "cpuMsPerFrame": 2.7195564999999986,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "all-live-radio",
+            "entryCount": 864,
+            "pairIndex": 4,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "all-live-radio",
+                "entryCount": 864,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "04e0ce5849987bc5f47e68ab6cfec25da4f5a8c5b62423d4fd1eaed9b4bc5c99"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 402,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 19,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 45,
+                  "firms": 10,
+                  "local-dams": 114,
+                  "local-datacenters": 114
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "world-overlay",
+                "candidateCount": 864,
+                "paintedCount": 396,
+                "paintedBySource": {
+                  "radio": 25,
+                  "cctv": 20,
+                  "bikeshare-selected": 1,
+                  "cctv-projection": 1,
+                  "tracked": 1,
+                  "earthquakes": 25,
+                  "rocket-missions": 23,
+                  "satellites-iss": 1,
+                  "telegeography-submarine-cables": 23,
+                  "ais-live-vessels": 47,
+                  "firms": 10,
+                  "local-dams": 109,
+                  "local-datacenters": 110
+                },
+                "workloadSourceIds": [
+                  "ais-live-vessels",
+                  "bikeshare-selected",
+                  "cctv",
+                  "cctv-projection",
+                  "earthquakes",
+                  "firms",
+                  "local-dams",
+                  "local-datacenters",
+                  "radio",
+                  "rocket-missions",
+                  "satellites-iss",
+                  "telegeography-submarine-cables",
+                  "tracked"
+                ]
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1702.2853999999988,
+            "cpuMsPerFrame": 2.837142333333331,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1667.0356000000156,
+                  "maxMs": 7.387800000000425,
+                  "sampleCount": 120,
+                  "p50Ms": 2.351199999999153,
+                  "p95Ms": 5.109099999999671
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 730.082600000027,
+                  "maxMs": 3.974999999998545,
+                  "sampleCount": 120,
+                  "p50Ms": 1.065599999999904,
+                  "p95Ms": 1.9068000000006577
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 629.2390999999934,
+                  "maxMs": 4.013899999999921,
+                  "sampleCount": 120,
+                  "p50Ms": 0.9685000000008586,
+                  "p95Ms": 1.2639999999992142
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 282.7164999999786,
+                  "maxMs": 4.5033000000003085,
+                  "sampleCount": 120,
+                  "p50Ms": 0.13410000000112632,
+                  "p95Ms": 2.603499999999258
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "disabledMedianCpuMsPerFrame": 2.680068333333332,
+      "enabledMedianCpuMsPerFrame": 2.670226833333333,
+      "medianInstrumentationRatio": 0.012770559467770504
+    },
+    {
+      "profile": "phase6-detection",
+      "entries": 5000,
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "profile": "phase6-detection",
+          "entryCount": 5000,
+          "fixtureSha256": "9d0fa2f5b64665ad4172890cfca845acea1968be7edeeb37195ce6784df7d00b",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.8456245000000004,
+          "enabledCpuMsPerFrame": 3.7568664999999997,
+          "instrumentationRatio": 0.32022566575456435,
+          "population": {
+            "kind": "detection-observations",
+            "profile": "DENSE",
+            "densityPct": 100,
+            "observationCount": 5000,
+            "candidateCount": 224,
+            "visibleCount": 5000,
+            "selectedCount": 56,
+            "collectiveLabelBudget": 56,
+            "solveRevision": 475
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 0,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "9d0fa2f5b64665ad4172890cfca845acea1968be7edeeb37195ce6784df7d00b"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1707.3747000000003,
+            "cpuMsPerFrame": 2.8456245000000004,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 0,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 0,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "9d0fa2f5b64665ad4172890cfca845acea1968be7edeeb37195ce6784df7d00b"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 2254.1198999999997,
+            "cpuMsPerFrame": 3.7568664999999997,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 2029.9407000000174,
+                  "maxMs": 20.732500000000073,
+                  "sampleCount": 120,
+                  "p50Ms": 3.771999999999025,
+                  "p95Ms": 10.862800000000789
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 2011.115899999997,
+                  "maxMs": 20.682800000000498,
+                  "sampleCount": 120,
+                  "p50Ms": 3.662799999998242,
+                  "p95Ms": 10.839500000000044
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 7.372500000052241,
+                  "maxMs": 3.742000000000189,
+                  "sampleCount": 120,
+                  "p50Ms": 0.008100000000922591,
+                  "p95Ms": 0.014300000000730506
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 1.1937000000361877,
+                  "maxMs": 0.471400000000358,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0014000000010128133,
+                  "p95Ms": 0.004399999999805004
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 1,
+          "profile": "phase6-detection",
+          "entryCount": 5000,
+          "fixtureSha256": "b69917e21b7ba1482a2535581d41c1e5f8a10f064f229a7ae5c4122bc59c609f",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.9565075000000007,
+          "enabledCpuMsPerFrame": 2.8102340000000003,
+          "instrumentationRatio": -0.04947509857492338,
+          "population": {
+            "kind": "detection-observations",
+            "profile": "DENSE",
+            "densityPct": 100,
+            "observationCount": 5000,
+            "candidateCount": 224,
+            "visibleCount": 5000,
+            "selectedCount": 56,
+            "collectiveLabelBudget": 56,
+            "solveRevision": 475
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 1,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "b69917e21b7ba1482a2535581d41c1e5f8a10f064f229a7ae5c4122bc59c609f"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1773.9045000000006,
+            "cpuMsPerFrame": 2.9565075000000007,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 1,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 1,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "b69917e21b7ba1482a2535581d41c1e5f8a10f064f229a7ae5c4122bc59c609f"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1686.1404000000002,
+            "cpuMsPerFrame": 2.8102340000000003,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1493.3343999999615,
+                  "maxMs": 8.639999999999418,
+                  "sampleCount": 120,
+                  "p50Ms": 1.84020000000055,
+                  "p95Ms": 6.047899999999572
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 1480.1113000000114,
+                  "maxMs": 8.626800000000003,
+                  "sampleCount": 120,
+                  "p50Ms": 1.8299999999999272,
+                  "p95Ms": 6.03859999999986
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 5.155600000045524,
+                  "maxMs": 2.7713999999996304,
+                  "sampleCount": 120,
+                  "p50Ms": 0.002800000000206637,
+                  "p95Ms": 0.007700000000113505
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 0.9705999999969208,
+                  "maxMs": 0.46600000000034925,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0005999999993946403,
+                  "p95Ms": 0.001699999998891144
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 2,
+          "profile": "phase6-detection",
+          "entryCount": 5000,
+          "fixtureSha256": "c1a53c74db9ec2a5136c0ed5532ee2310211f1233b7445663727620cdbe03b7e",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.7370880000000004,
+          "enabledCpuMsPerFrame": 2.672135500000001,
+          "instrumentationRatio": -0.023730512135524906,
+          "population": {
+            "kind": "detection-observations",
+            "profile": "DENSE",
+            "densityPct": 100,
+            "observationCount": 5000,
+            "candidateCount": 224,
+            "visibleCount": 5000,
+            "selectedCount": 56,
+            "collectiveLabelBudget": 56,
+            "solveRevision": 475
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 2,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "c1a53c74db9ec2a5136c0ed5532ee2310211f1233b7445663727620cdbe03b7e"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1642.2528000000002,
+            "cpuMsPerFrame": 2.7370880000000004,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 2,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 2,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "c1a53c74db9ec2a5136c0ed5532ee2310211f1233b7445663727620cdbe03b7e"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1603.2813000000006,
+            "cpuMsPerFrame": 2.672135500000001,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1427.7556999999706,
+                  "maxMs": 10.561399999998685,
+                  "sampleCount": 120,
+                  "p50Ms": 1.799300000000585,
+                  "p95Ms": 5.537500000000364
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 1415.7043000000012,
+                  "maxMs": 10.550100000000384,
+                  "sampleCount": 120,
+                  "p50Ms": 1.7906999999995605,
+                  "p95Ms": 5.524999999999636
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 4.691099999985454,
+                  "maxMs": 2.7106999999996333,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0024999999986903276,
+                  "p95Ms": 0.007900000000518048
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 0.9642999999814492,
+                  "maxMs": 0.44290000000000873,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0005999999993946403,
+                  "p95Ms": 0.0019000000011146767
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 3,
+          "profile": "phase6-detection",
+          "entryCount": 5000,
+          "fixtureSha256": "8e2d2a6287e3eacb930dfde01e609521447212642ef5252f6dc460cbb74cf55b",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 2.9755425000000013,
+          "enabledCpuMsPerFrame": 2.8931344999999995,
+          "instrumentationRatio": -0.027695117781043832,
+          "population": {
+            "kind": "detection-observations",
+            "profile": "DENSE",
+            "densityPct": 100,
+            "observationCount": 5000,
+            "candidateCount": 224,
+            "visibleCount": 5000,
+            "selectedCount": 56,
+            "collectiveLabelBudget": 56,
+            "solveRevision": 475
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 3,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "8e2d2a6287e3eacb930dfde01e609521447212642ef5252f6dc460cbb74cf55b"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1785.3255000000008,
+            "cpuMsPerFrame": 2.9755425000000013,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 3,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 3,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "8e2d2a6287e3eacb930dfde01e609521447212642ef5252f6dc460cbb74cf55b"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1735.8806999999997,
+            "cpuMsPerFrame": 2.8931344999999995,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1541.4286999999968,
+                  "maxMs": 8.05290000000059,
+                  "sampleCount": 120,
+                  "p50Ms": 1.9516999999996187,
+                  "p95Ms": 6.272400000001653
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 1528.4104000000152,
+                  "maxMs": 8.04070000000138,
+                  "sampleCount": 120,
+                  "p50Ms": 1.940599999999904,
+                  "p95Ms": 6.26220000000103
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 5.1172999999907915,
+                  "maxMs": 2.9099000000005617,
+                  "sampleCount": 120,
+                  "p50Ms": 0.002599999999802094,
+                  "p95Ms": 0.0072000000000116415
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 1.004899999985355,
+                  "maxMs": 0.4801000000006752,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0005999999993946403,
+                  "p95Ms": 0.001399999999193824
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pairIndex": 4,
+          "profile": "phase6-detection",
+          "entryCount": 5000,
+          "fixtureSha256": "98b3876a843cadee44dfee4844c8ccec86c2019ed5a7c21286e92ecfc39651c8",
+          "frames": 600,
+          "disabledCpuMsPerFrame": 3.7946923333333324,
+          "enabledCpuMsPerFrame": 2.986581166666668,
+          "instrumentationRatio": -0.21295828375018844,
+          "population": {
+            "kind": "detection-observations",
+            "profile": "DENSE",
+            "densityPct": 100,
+            "observationCount": 5000,
+            "candidateCount": 224,
+            "visibleCount": 5000,
+            "selectedCount": 56,
+            "collectiveLabelBudget": 56,
+            "solveRevision": 475
+          },
+          "disabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 4,
+            "timingEnabled": false,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "98b3876a843cadee44dfee4844c8ccec86c2019ed5a7c21286e92ecfc39651c8"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 2276.8153999999995,
+            "cpuMsPerFrame": 3.7946923333333324,
+            "cpuTimings": null
+          },
+          "enabled": {
+            "ok": true,
+            "schema": "gev-overlay-cpu-arm/v1",
+            "status": "complete",
+            "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+            "profile": "phase6-detection",
+            "entryCount": 5000,
+            "pairIndex": 4,
+            "timingEnabled": true,
+            "fixture": {
+              "schema": "gev-overlay-attribution-fixture/v1",
+              "descriptor": {
+                "schema": "gev-overlay-attribution-fixture/v1",
+                "sourceCommit": "b29fd471df314b5bf803617b63e645b7fe3885af",
+                "profile": "phase6-detection",
+                "entryCount": 5000,
+                "pairIndex": 4,
+                "viewportWidth": 1600,
+                "viewportHeight": 900,
+                "dpr": 2,
+                "frameMs": 16,
+                "virtualStartTimeMs": 0,
+                "solveIntervalMs": 125,
+                "warmupFrames": 3000,
+                "settleFrames": 200,
+                "measuredFrames": 600,
+                "cameraPath": "fixed-scene-camera",
+                "motionPath": "seeded-sinusoidal-frame-v1"
+              },
+              "sha256": "98b3876a843cadee44dfee4844c8ccec86c2019ed5a7c21286e92ecfc39651c8"
+            },
+            "start": {
+              "frame": 3200,
+              "virtualTimeMs": 51200,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 400
+              }
+            },
+            "end": {
+              "frame": 3800,
+              "virtualTimeMs": 60800,
+              "population": {
+                "kind": "detection-observations",
+                "profile": "DENSE",
+                "densityPct": 100,
+                "observationCount": 5000,
+                "candidateCount": 224,
+                "visibleCount": 5000,
+                "selectedCount": 56,
+                "collectiveLabelBudget": 56,
+                "solveRevision": 475
+              }
+            },
+            "frames": 600,
+            "cpuMs": 1791.9487000000008,
+            "cpuMsPerFrame": 2.986581166666668,
+            "cpuTimings": {
+              "enabled": true,
+              "overflow": false,
+              "scope": "synchronous-application-cpu",
+              "series": [
+                {
+                  "owner": "overlay",
+                  "phase": "frame",
+                  "count": 600,
+                  "totalMs": 1590.2284000000182,
+                  "maxMs": 13.313500000000204,
+                  "sampleCount": 120,
+                  "p50Ms": 1.9403000000002066,
+                  "p95Ms": 6.246399999999994
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "paint",
+                  "count": 600,
+                  "totalMs": 1576.1343000000033,
+                  "maxMs": 13.288300000000163,
+                  "sampleCount": 120,
+                  "p50Ms": 1.9299000000009983,
+                  "p95Ms": 6.230199999999968
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "projection",
+                  "count": 600,
+                  "totalMs": 5.532000000010157,
+                  "maxMs": 2.942699999999604,
+                  "sampleCount": 120,
+                  "p50Ms": 0.002800000000206637,
+                  "p95Ms": 0.006699999999909778
+                },
+                {
+                  "owner": "overlay",
+                  "phase": "placement",
+                  "count": 600,
+                  "totalMs": 1.064300000001822,
+                  "maxMs": 0.4596000000001368,
+                  "sampleCount": 120,
+                  "p50Ms": 0.0006000000012136297,
+                  "p95Ms": 0.0015000000003055902
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "disabledMedianCpuMsPerFrame": 2.9565075000000007,
+      "enabledMedianCpuMsPerFrame": 2.8931344999999995,
+      "medianInstrumentationRatio": -0.027695117781043832
+    }
+  ]
+}

@@ -4,6 +4,9 @@ import * as Cesium from 'cesium';
 import { gstime } from 'satellite.js';
 import { createModel } from '../layers/launches/model.js';
 import rocketLaunchesLayer, {
+  _clearRocketMissionPreviewForTest,
+  _observeRocketRenderInvalidationForTest,
+  _previewRocketMissionForTest,
   _setRocketMissionOverlayHostForTest,
   _setSelectedRocketMissionForTest,
   approximateOrbitPath,
@@ -1307,6 +1310,7 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
   };
   _setRocketMissionOverlayHostForTest(host);
   let initialized = false;
+  let stopRenderInvalidationObservation = () => {};
   try {
     rocketLaunchesLayer.init(viewer);
     initialized = true;
@@ -1333,6 +1337,15 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
       launchEntity.position.getValue(Cesium.JulianDate.now()),
       'ambient host marker must reuse the entity anchor Cartesian',
     );
+    let renderInvalidations = 0;
+    stopRenderInvalidationObservation = _observeRocketRenderInvalidationForTest(() => {
+      renderInvalidations += 1;
+    });
+    const beforeQuickHover = renderInvalidations;
+    _previewRocketMissionForTest(0);
+    assert.equal(renderInvalidations, beforeQuickHover + 1, 'hover requests a frame before delayed camera preview');
+    _clearRocketMissionPreviewForTest();
+    assert.equal(renderInvalidations, beforeQuickHover + 2, 'quick leave requests the final cleared frame');
     const frameTime = Cesium.JulianDate.now();
     scene.preRender.raiseEvent(scene, frameTime);
     assert.equal(launchEntity.point.show.getValue(frameTime), true);
@@ -1351,7 +1364,9 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
       'mission dot must return when its surface anchor faces the camera again',
     );
 
+    const beforeSelection = renderInvalidations;
     _setSelectedRocketMissionForTest('mission-runtime');
+    assert.ok(renderInvalidations > beforeSelection, 'selection invalidates the idle scene');
     const selectedPublication = hostCalls.findLast(([type, sourceId]) => (
       type === 'entries' && sourceId === ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_ID
     ));
@@ -1442,7 +1457,9 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
     assert.equal(refreshPublication[2][0].title, 'MISSION REFRESH');
     assert.deepEqual(refreshPublication[2][0].details, ['LAUNCH SITE · 39A']);
 
+    const beforeDeselection = renderInvalidations;
     _setSelectedRocketMissionForTest(null);
+    assert.ok(renderInvalidations > beforeDeselection, 'deselection requests its final frame');
     const deselectedPublication = hostCalls.findLast(([type, sourceId]) => (
       type === 'entries' && sourceId === ROCKET_MISSION_AMBIENT_OVERLAY_SOURCE_ID
     ));
@@ -1466,6 +1483,7 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
       ['visible', ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_ID, false],
     ]);
   } finally {
+    stopRenderInvalidationObservation();
     if (initialized) await rocketLaunchesLayer.destroy(viewer);
     _setRocketMissionOverlayHostForTest();
     globalThis.fetch = realFetch;

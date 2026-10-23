@@ -1,0 +1,154 @@
+{
+  "schema": "gev-cctv-gizmo-rendered-comparison/v1",
+  "status": "passed",
+  "generatedAt": "2026-10-10T20:29:08.051Z",
+  "scope": "Exact rendered fixture endpoints, geometry, calibration and pick identity across the pre-gizmo and gizmo-reuse commits. Hosted paravirtual acceleration, not physical Windows or motion-performance evidence.",
+  "baseline": {
+    "commit": "aea307c211e99f2f23a538a8356825723edd0097",
+    "path": "docs/performance-evidence/calibration-38082567573.json",
+    "sha256": "f98a6a036d050cb13cec7cb6bebd8e0c50622efd898cd2ab1aa14f54b7c00aed",
+    "validation": {
+      "status": "passed",
+      "pairCount": 5,
+      "legacyIdleFrames": 1276,
+      "candidateIdleFrames": 0
+    }
+  },
+  "candidate": {
+    "commit": "996a8d3b8b73da0d3f64392b993bdff81a1e857f",
+    "path": "docs/performance-evidence/calibration-38083654918.json",
+    "sha256": "a43ee102064303d365385c761b85dd09266114cb29ced862345c72ba9fa0fbe0",
+    "validation": {
+      "status": "passed",
+      "pairCount": 5,
+      "legacyIdleFrames": 1433,
+      "candidateIdleFrames": 0
+    }
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "comparedRunFields": [
+    "viewport",
+    "environment",
+    "camera",
+    "initialCalibration",
+    "renderingSettings"
+  ],
+  "comparedDragFields": [
+    "from",
+    "to",
+    "calibrationBefore",
+    "calibrationAfter",
+    "changedFields",
+    "pickIdentity",
+    "geometrySha256After"
+  ],
+  "trialCount": 10,
+  "pixelComparisons": 20,
+  "results": [
+    {
+      "pair": 0,
+      "mode": "legacy-control",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 0,
+      "mode": "candidate",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 1,
+      "mode": "legacy-control",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 1,
+      "mode": "candidate",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 2,
+      "mode": "legacy-control",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 2,
+      "mode": "candidate",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 3,
+      "mode": "legacy-control",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 3,
+      "mode": "candidate",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 4,
+      "mode": "legacy-control",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    },
+    {
+      "pair": 4,
+      "mode": "candidate",
+      "beforePixelsSha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+      "afterPixelsSha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+      "geometryBeforeSha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+      "geometryAfterSha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+      "exact": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "gev-release-artifact-rest-metadata/v1",
+  "artifactId": 11849726610,
+  "runId": 38467537591,
+  "repositoryId": 1362432886,
+  "name": "gev-candidate-8e9cb12d007ff282309f629ad8b34b575ccc70ce",
+  "sizeInBytes": 19864914,
+  "digest": "06a0620c09c04efea84b5577aa428a53e0c77b7ed20177c6a0fb32ca31bf3d47",
+  "sourceCommit": "c5802408c7612857d5e1f09c3a938e0bda824ca7",
+  "repository": "arthurianresolve/gods-eye-view"
+}

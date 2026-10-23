@@ -1,0 +1,485 @@
+{
+  "reviewedAt": "2026-10-13T03:36:22.724Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120",
+  "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38341548120/job/115113436043",
+  "candidateCommit": "9dfff5b47691ebb9b2a8c5895e7c0c0972d43a47",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "source": "exact QA_EVIDENCE log payload plus final newline",
+  "rawBytes": 12512,
+  "rawSha256": "ea9314d029571eacfd06756f1e15df0cdbd62d13fbe08beb17b4555ec73f8ffe",
+  "status": "failed",
+  "platform": "win32",
+  "browserVersion": "Chrome/152.0.7977.75",
+  "hardwareRenderingValidated": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "closeCompleted": true,
+      "close": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 156318.4188,
+        "closeSettledHostMs": 156801.0623,
+        "closeElapsedMs": 482.6434999999765,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry",
+          "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 501.5039000000106
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.4120999999868218,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 3.3280999999842606,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 14.4146999999939,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 3,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "shutdownDiagnostics": {
+          "targetTypeCounts": {
+            "beforeClose": {
+              "status": "available",
+              "source": "browser.targets",
+              "targetCount": 1,
+              "counts": {
+                "background_page": 0,
+                "browser": 1,
+                "page": 0,
+                "service_worker": 0,
+                "shared_worker": 0,
+                "webview": 0,
+                "worker": 0,
+                "other": 0
+              },
+              "malformedTargetCount": 0
+            },
+            "atDisconnect": {
+              "status": "unavailable",
+              "reason": "browser-disconnected"
+            }
+          },
+          "browserProcessInfoBeforeClose": {
+            "status": "available",
+            "source": "SystemInfo.getProcessInfo",
+            "processCount": 7,
+            "rows": [
+              {
+                "id": 2516,
+                "role": "renderer"
+              },
+              {
+                "id": 3472,
+                "role": "gpu"
+              },
+              {
+                "id": 5164,
+                "role": "other"
+              },
+              {
+                "id": 7676,
+                "role": "browser"
+              },
+              {
+                "id": 8564,
+                "role": "other"
+              },
+              {
+                "id": 8784,
+                "role": "renderer"
+              },
+              {
+                "id": 9024,
+                "role": "renderer"
+              }
+            ],
+            "truncated": false,
+            "retainedFields": [
+              "id",
+              "role"
+            ]
+          },
+          "preCloseDiagnosticsElapsedMs": 18.61620000001858,
+          "ownedPidPresence": {},
+          "processTreeBeforeForce": null
+        },
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null,
+        "stderr": []
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "closeCompleted": true,
+      "close": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 178010.0515,
+        "closeSettledHostMs": 178438.9382,
+        "closeElapsedMs": 428.88670000000275,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry",
+          "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 443.59520000001066
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.11160000000381842,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 13.846400000009453,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 20.26610000000801,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 3,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "shutdownDiagnostics": {
+          "targetTypeCounts": {
+            "beforeClose": {
+              "status": "available",
+              "source": "browser.targets",
+              "targetCount": 1,
+              "counts": {
+                "background_page": 0,
+                "browser": 1,
+                "page": 0,
+                "service_worker": 0,
+                "shared_worker": 0,
+                "webview": 0,
+                "worker": 0,
+                "other": 0
+              },
+              "malformedTargetCount": 0
+            },
+            "atDisconnect": {
+              "status": "unavailable",
+              "reason": "browser-disconnected"
+            }
+          },
+          "browserProcessInfoBeforeClose": {
+            "status": "available",
+            "source": "SystemInfo.getProcessInfo",
+            "processCount": 6,
+            "rows": [
+              {
+                "id": 4588,
+                "role": "other"
+              },
+              {
+                "id": 5400,
+                "role": "renderer"
+              },
+              {
+                "id": 5996,
+                "role": "other"
+              },
+              {
+                "id": 6020,
+                "role": "gpu"
+              },
+              {
+                "id": 7028,
+                "role": "renderer"
+              },
+              {
+                "id": 7040,
+                "role": "browser"
+              }
+            ],
+            "truncated": false,
+            "retainedFields": [
+              "id",
+              "role"
+            ]
+          },
+          "preCloseDiagnosticsElapsedMs": 14.789600000018254,
+          "ownedPidPresence": {},
+          "processTreeBeforeForce": null
+        },
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null,
+        "stderr": []
+      }
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "closeCompleted": true,
+      "close": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 340540.8604,
+        "closeSettledHostMs": 340887.0702,
+        "closeElapsedMs": 346.20980000001146,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry",
+          "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 355.52939999999944
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.1190000000060536,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 14.817099999985658,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 21.558099999965634,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 3,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "shutdownDiagnostics": {
+          "targetTypeCounts": {
+            "beforeClose": {
+              "status": "available",
+              "source": "browser.targets",
+              "targetCount": 1,
+              "counts": {
+                "background_page": 0,
+                "browser": 1,
+                "page": 0,
+                "service_worker": 0,
+                "shared_worker": 0,
+                "webview": 0,
+                "worker": 0,
+                "other": 0
+              },
+              "malformedTargetCount": 0
+            },
+            "atDisconnect": {
+              "status": "unavailable",
+              "reason": "browser-disconnected"
+            }
+          },
+          "browserProcessInfoBeforeClose": {
+            "status": "available",
+            "source": "SystemInfo.getProcessInfo",
+            "processCount": 6,
+            "rows": [
+              {
+                "id": 5728,
+                "role": "other"
+              },
+              {
+                "id": 5904,
+                "role": "renderer"
+              },
+              {
+                "id": 6248,
+                "role": "renderer"
+              },
+              {
+                "id": 7100,
+                "role": "browser"
+              },
+              {
+                "id": 9104,
+                "role": "gpu"
+              },
+              {
+                "id": 9824,
+                "role": "other"
+              }
+            ],
+            "truncated": false,
+            "retainedFields": [
+              "id",
+              "role"
+            ]
+          },
+          "preCloseDiagnosticsElapsedMs": 9.378599999996368,
+          "ownedPidPresence": {},
+          "processTreeBeforeForce": null
+        },
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null,
+        "stderr": []
+      }
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "failed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "closeCompleted": false,
+      "close": {
+        "closeStatus": "timed-out",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 498270.1491,
+        "closeSettledHostMs": 503276.6018,
+        "closeElapsedMs": 5006.4527000000235,
+        "timingOrigins": {
+          "closeElapsedMs": "browser.close invocation",
+          "processExitElapsedMs": "closeRecoveryBrowser entry",
+          "preCloseDiagnosticsElapsedMs": "bounded shutdown diagnostics before Browser.close invocation"
+        },
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 1,
+          "signal": null,
+          "elapsedMs": 8040.949100000027
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.1300000000046566,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 16.211400000029244,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 25.65570000000298,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 2,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "shutdownDiagnostics": {
+          "targetTypeCounts": {
+            "beforeClose": {
+              "status": "available",
+              "source": "browser.targets",
+              "targetCount": 1,
+              "counts": {
+                "background_page": 0,
+                "browser": 1,
+                "page": 0,
+                "service_worker": 0,
+                "shared_worker": 0,
+                "webview": 0,
+                "worker": 0,
+                "other": 0
+              },
+              "malformedTargetCount": 0
+            },
+            "atDisconnect": {
+              "status": "unavailable",
+              "reason": "browser-disconnected"
+            },
+            "atTimeout": {
+              "status": "unavailable",
+              "reason": "browser-disconnected"
+            }
+          },
+          "browserProcessInfoBeforeClose": {
+            "status": "available",
+            "source": "SystemInfo.getProcessInfo",
+            "processCount": 6,
+            "rows": [
+              {
+                "id": 892,
+                "role": "browser"
+              },
+              {
+                "id": 5372,
+                "role": "renderer"
+              },
+              {
+                "id": 5800,
+                "role": "renderer"
+              },
+              {
+                "id": 7036,
+                "role": "other"
+              },
+              {
+                "id": 7596,
+                "role": "other"
+              },
+              {
+                "id": 8332,
+                "role": "gpu"
+              }
+            ],
+            "truncated": false,
+            "retainedFields": [
+              "id",
+              "role"
+            ]
+          },
+          "preCloseDiagnosticsElapsedMs": 15.213899999973364,
+          "ownedPidPresence": {
+            "atTimeout": {
+              "status": "present",
+              "pid": 892,
+              "source": "owned-pid-presence-only",
+              "identityConfirmed": false,
+              "pidReusePossible": true
+            },
+            "afterForceCheckpoint": {
+              "status": "exited",
+              "pid": 892,
+              "source": "child-exit-observed"
+            }
+          },
+          "processTreeBeforeForce": {
+            "status": "unavailable",
+            "reason": "process-snapshot-timeout"
+          }
+        },
+        "forceProcessStatus": "confirmed",
+        "forceProcessAttempted": true,
+        "forceProcessCallbackInvoked": true,
+        "forceProcessElapsedMs": 958.8037999999942,
+        "stderr": []
+      }
+    }
+  ],
+  "conclusion": "Persistence succeeds at all four attempted stages; the upgraded application shutdown times out. Three previous stages exit normally. SystemInfo identifies process roles before shutdown, and the owned parent PID remains present at timeout, without proving PID identity. Forced cleanup later confirms exit code 1. This narrows observation but does not establish the root cause or a fix. The fifth recovery stage was not reached."
+}

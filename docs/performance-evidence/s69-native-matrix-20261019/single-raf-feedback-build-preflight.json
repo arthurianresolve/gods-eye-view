@@ -1,0 +1,135 @@
+{
+  "schema": "gev-single-raf-feedback-windows-input-preflight/v1",
+  "status": "verified-inputs-only",
+  "createdAt": "2026-10-20T12:16:30.108Z",
+  "application": {
+    "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+    "candidate": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f"
+  },
+  "previousCandidate": "e6e1abc10b154b5317101d6e1b9bb18779e469ce",
+  "buildHarness": {
+    "commit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "checkout": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-weather-candidate-55639cc7"
+  },
+  "builds": {
+    "baseline": {
+      "checkout": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-workspace-control-76cc760b",
+      "root": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\workspace-correctness-control-76cc760b\\standard",
+      "receipt": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\workspace-correctness-control-76cc760b\\standard.receipt.json",
+      "receiptFileSha256": "654a6ff911f95cd1bd758715a501a1fcf59af5c36d14b7145632f276e65ad989",
+      "receiptSha256": "24211852d088712eb5dc571aefdc5bb4062175cc572bd4b9118d73e3dca75dcf",
+      "baseUrl": "http://127.0.0.1:4300/",
+      "profile": "standard"
+    },
+    "candidate": {
+      "checkout": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-qualification-a18c6a76",
+      "root": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\single-raf-feedback-a18c6a76-vm\\visual-assets\\standard",
+      "receipt": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\single-raf-feedback-a18c6a76-vm\\standard.receipt.json",
+      "receiptFileSha256": "085b860b64970bdfc92c2499b7bc35594232a5aa33b9be40fc24f13e60e43a07",
+      "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+      "baseUrl": "http://127.0.0.1:4316/",
+      "profile": "standard"
+    }
+  },
+  "checks": {
+    "baseline": {
+      "startedAt": "2026-10-20T12:15:50.586Z",
+      "completedAt": "2026-10-20T12:16:07.412Z",
+      "sourceHead": "76cc760b384da27e7cfc848a76f317112574826a",
+      "sourceStatus": "clean",
+      "receiptFileSha256": "654a6ff911f95cd1bd758715a501a1fcf59af5c36d14b7145632f276e65ad989",
+      "receiptSha256": "24211852d088712eb5dc571aefdc5bb4062175cc572bd4b9118d73e3dca75dcf",
+      "verified": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "24211852d088712eb5dc571aefdc5bb4062175cc572bd4b9118d73e3dca75dcf",
+        "assetCount": 443,
+        "totalAssetBytes": 44858168
+      }
+    },
+    "candidate": {
+      "startedAt": "2026-10-20T12:16:07.547Z",
+      "completedAt": "2026-10-20T12:16:27.139Z",
+      "sourceHead": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "sourceStatus": "clean",
+      "receiptFileSha256": "085b860b64970bdfc92c2499b7bc35594232a5aa33b9be40fc24f13e60e43a07",
+      "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+      "verified": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+        "assetCount": 886,
+        "totalAssetBytes": 68599376
+      }
+    }
+  },
+  "localToolchain": {
+    "node": "C:\\Program Files\\nodejs\\node.exe",
+    "nodeVersion": "v24.16.0",
+    "npmCli": "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js",
+    "npmVersion": "11.13.0"
+  },
+  "materialization": {
+    "file": "visual-assets.materialization.json",
+    "sha256": "eee56dbada6b8ccc39881c6a2171c3cd0011b0d4fb52751e46ff3da9ff09b9c5",
+    "reusedFiles": 873,
+    "downloadedFiles": 13,
+    "downloadedBytes": 6028178,
+    "originalBytesChanged": false
+  },
+  "preview": {
+    "file": "previews.json",
+    "sha256": "430df98f874460ccea765afb05547d16e3c95db14fa54824025d6638f1ca89ac",
+    "vmPid": 319245,
+    "bindAddress": "127.0.0.1",
+    "port": 4316,
+    "htmlSha256": "c4b7189f2751d17d710db40721b9d66ee810b6530aa8954e5133d53f23b9a00f"
+  },
+  "tunnel": {
+    "pid": 36316,
+    "name": "ssh.exe",
+    "commandLine": "\"C:\\Windows\\System32\\OpenSSH\\ssh.exe\" -N -T -i C:/Users/Privat/.ssh/gev-validation-20261018 -o IdentitiesOnly=yes -o UserKnownHostsFile=qa-artifacts/vm105-known-hosts -o StrictHostKeyChecking=yes -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -L 127.0.0.1:4316:127.0.0.1:4316 ubuntu@192.168.178.35",
+    "execSession": 18245,
+    "local": "127.0.0.1:4316",
+    "remote": "127.0.0.1:4316",
+    "ownership": "Created for this task; preserve until root-owned captures finish."
+  },
+  "metadata": [
+    {
+      "file": "build-progress.json",
+      "bytes": 2585,
+      "sha256": "0cbfea6442f53a7a337e7c4d3d1c418ec8ec0f1188ec0004e6e8e8e02446c113"
+    },
+    {
+      "file": "standard.receipt.json",
+      "bytes": 206353,
+      "sha256": "085b860b64970bdfc92c2499b7bc35594232a5aa33b9be40fc24f13e60e43a07"
+    },
+    {
+      "file": "previews.json",
+      "bytes": 2162,
+      "sha256": "430df98f874460ccea765afb05547d16e3c95db14fa54824025d6638f1ca89ac"
+    },
+    {
+      "file": "standard.log",
+      "bytes": 194,
+      "sha256": "e08b5c4f863321cdcfe3bcfed53c5f2d889b53a40e86687b3523dadeba9980f2"
+    }
+  ],
+  "sourceDelta": {
+    "runtime": [
+      "src/data/visibilityPaint.js"
+    ],
+    "test": [
+      "src/data/visibilityPaint.test.mjs"
+    ],
+    "uncommittedRailOrQaChangesIncluded": false
+  },
+  "gpuStarted": false,
+  "browserStarted": false,
+  "capturePlanFrozen": false,
+  "comparisonEligible": false,
+  "performanceEligible": false,
+  "productionChanged": false,
+  "limits": "Fresh exact source/build/served-asset input verification only. No native-window/renderer/settings observation for a18, no capture or performance credit. New formal plan waits for independently validated QA continuity proof."
+}

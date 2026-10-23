@@ -1,0 +1,100 @@
+{
+  "conclusion": "success",
+  "databaseId": 38099702643,
+  "headSha": "698752adcd27b59040affc0d0a1a9bd643025833",
+  "jobs": [
+    {
+      "completedAt": "2026-10-11T00:50:16Z",
+      "conclusion": "success",
+      "databaseId": 114352909678,
+      "name": "font-wake",
+      "startedAt": "2026-10-11T00:49:04Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-11T00:49:05Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-11T00:49:04Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:12Z",
+          "conclusion": "success",
+          "name": "Check out comparison harness",
+          "number": 2,
+          "startedAt": "2026-10-11T00:49:05Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:17Z",
+          "conclusion": "success",
+          "name": "Use supported Node.js",
+          "number": 3,
+          "startedAt": "2026-10-11T00:49:12Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:29Z",
+          "conclusion": "success",
+          "name": "Install locked dependencies and fixture browser",
+          "number": 4,
+          "startedAt": "2026-10-11T00:49:17Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:49:31Z",
+          "conclusion": "success",
+          "name": "Prepare immutable source checkouts",
+          "number": 5,
+          "startedAt": "2026-10-11T00:49:29Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:50:13Z",
+          "conclusion": "success",
+          "name": "Run two alternating real-font correctness pairs",
+          "number": 6,
+          "startedAt": "2026-10-11T00:49:31Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:50:13Z",
+          "conclusion": "success",
+          "name": "Print bounded raw evidence to the job log",
+          "number": 7,
+          "startedAt": "2026-10-11T00:50:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:50:13Z",
+          "conclusion": "success",
+          "name": "Post Use supported Node.js",
+          "number": 13,
+          "startedAt": "2026-10-11T00:50:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:50:14Z",
+          "conclusion": "success",
+          "name": "Post Check out comparison harness",
+          "number": 14,
+          "startedAt": "2026-10-11T00:50:13Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-11T00:50:14Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 15,
+          "startedAt": "2026-10-11T00:50:14Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099702643/job/114352909678"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38099702643"
+}

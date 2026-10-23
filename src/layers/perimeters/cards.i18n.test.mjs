@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The selected-fire card of Fire Perimeters and its accessible
 // label follow the UI language, like the legend of the same layer
 // (perimeters/index.js). cards.test.mjs pins the English card.

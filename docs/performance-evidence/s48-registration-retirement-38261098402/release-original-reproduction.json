@@ -1,0 +1,36 @@
+{
+  "schema": "gev-fixture-release-original-reproduction/v1",
+  "scope": "real interception implementation with controlled responder and protocol-session stub; no browser or network",
+  "sourceSha256": "89365407493cae3e2502346b843f2734d2e0d046ddf41a79ad62f2b38d3ead7f",
+  "commands": [
+    {
+      "method": "Fetch.enable",
+      "enabled": false,
+      "stage": "active"
+    },
+    {
+      "method": "Fetch.disable",
+      "enabled": true,
+      "stage": "releasing"
+    },
+    {
+      "method": "Fetch.continueRequest",
+      "enabled": false,
+      "stage": "releasing"
+    },
+    {
+      "method": "Fetch.failRequest",
+      "enabled": false,
+      "stage": "releasing"
+    }
+  ],
+  "errors": [
+    {
+      "message": "Protocol error (Fetch.continueRequest): Fetch domain is not enabled",
+      "lifecycleStage": "releasing",
+      "phase": "command-send"
+    }
+  ],
+  "listenerCountAfterDisable": 1,
+  "reproduced": true
+}

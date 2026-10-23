@@ -12,9 +12,14 @@ import {
   localDatasetError,
   localInfrastructureOverlayCopy,
   selectLocalInfrastructureOverlayCohort,
+  localGeoJsonServices,
 } from './localGeojson.js';
+import { createLocalGeoJsonLayer as createCoreLocalGeoJsonLayer } from './localGeojsonCore.js';
 import { layerFeedState } from './manager.js';
-import { INFRA_LOD_ACTIVE_MIN, INFRA_LOD_ACTIVE_MAX } from './localGeojsonLod.js';
+import {
+  INFRA_LOD_ACTIVE_MIN,
+  INFRA_LOD_ACTIVE_MAX,
+} from './localGeojsonLod.js';
 import {
   installRenderGovernor,
   getRenderGovernorDiagnostics,
@@ -53,44 +58,133 @@ class MockLayerEvent {
  */
 async function createRealLocalLayerHarness({
   sampleHeightSupported = false,
-  sampleHeight = () => { throw new Error('tiles not sampleable yet'); },
+  sampleHeight = () => {
+    throw new Error('tiles not sampleable yet');
+  },
+  surfaceRenderer = 'entities',
+  primitiveAddThrowsAfterAttach = false,
+  featureCount = 1,
+  featureSpacingDegrees = 0.03,
+  initialCameraHeightM = 100_000,
+  initialGlobe = null,
+  autoEnable = true,
+  projectToWindow = () => ({ x: 400, y: 300 }),
+  servicesOverrides = null,
+  osmDerived = false,
+  onOverlayEntries = null,
+  onOverlayClear = null,
 } = {}) {
   const originalFetch = globalThis.fetch;
   const originalWindow = globalThis.window;
+  const originalHtmlCanvasElement = globalThis.HTMLCanvasElement;
+  const originalHtmlImageElement = globalThis.HTMLImageElement;
+  const originalImageBitmap = globalThis.ImageBitmap;
+  const originalOffscreenCanvas = globalThis.OffscreenCanvas;
+  if (surfaceRenderer !== 'entities') {
+    globalThis.HTMLCanvasElement ??= class HTMLCanvasElement {};
+    globalThis.HTMLImageElement ??= class HTMLImageElement {};
+    globalThis.ImageBitmap ??= class ImageBitmap {};
+    globalThis.OffscreenCanvas ??= class OffscreenCanvas {};
+  }
+  let browserStubsRestored = false;
+  const restoreBrowserClassStubs = () => {
+    if (browserStubsRestored) return;
+    browserStubsRestored = true;
+    if (originalHtmlCanvasElement === undefined)
+      delete globalThis.HTMLCanvasElement;
+    else globalThis.HTMLCanvasElement = originalHtmlCanvasElement;
+    if (originalHtmlImageElement === undefined)
+      delete globalThis.HTMLImageElement;
+    else globalThis.HTMLImageElement = originalHtmlImageElement;
+    if (originalImageBitmap === undefined) delete globalThis.ImageBitmap;
+    else globalThis.ImageBitmap = originalImageBitmap;
+    if (originalOffscreenCanvas === undefined)
+      delete globalThis.OffscreenCanvas;
+    else globalThis.OffscreenCanvas = originalOffscreenCanvas;
+  };
   const preRender = new MockLayerEvent();
   const moveEnd = new MockLayerEvent();
   const dataSources = [];
   const hostCalls = [];
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    text: async () => JSON.stringify({
+  const primitiveOwners = [];
+  let clickAction = null;
+  let picked = null;
+  const flyToCalls = [];
+  const primitives = {
+    add(primitive) {
+      primitiveOwners.push(primitive);
+      if (primitiveAddThrowsAfterAttach)
+        throw new Error('scene primitive add failed after partial attach');
+      return primitive;
+    },
+    remove(primitive) {
+      const index = primitiveOwners.indexOf(primitive);
+      if (index < 0) return false;
+      primitiveOwners.splice(index, 1);
+      if (!primitive.isDestroyed()) primitive.destroy();
+      return true;
+    },
+    contains(primitive) {
+      return primitiveOwners.includes(primitive);
+    },
+  };
+  const features = Array.from({ length: featureCount }, (_, index) => {
+    const shift = index * featureSpacingDegrees;
+    return {
       type: 'Feature',
-      id: 'real-dam',
-      properties: { name: 'Runtime Dam', tags: { associated_river: 'Test River' } },
+      id: index === 0 ? 'real-dam' : `real-dam-${index}`,
+      properties: {
+        name: index === 0 ? 'Runtime Dam' : `Runtime Dam ${index}`,
+        tags: { associated_river: 'Test River' },
+      },
       geometry: {
         type: 'Polygon',
-        coordinates: [[
-          [-97.70, 30.20],
-          [-97.69, 30.20],
-          [-97.69, 30.21],
-          [-97.70, 30.20],
-        ]],
+        coordinates: [
+          [
+            [-97.7 + shift, 30.2],
+            [-97.69 + shift, 30.2],
+            [-97.69 + shift, 30.21],
+            [-97.7 + shift, 30.2],
+          ],
+        ],
       },
-    }),
+    };
+  });
+  const geojsonLines = features
+    .map((feature) => JSON.stringify(feature))
+    .join('\n');
+  const serveFixture = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => geojsonLines,
   });
   globalThis.window = { dispatchEvent() {} };
   let sampleHeightImpl = sampleHeight;
-  const sampleCalls = { count: 0 };
+  const sampleCalls = { count: 0, records: [] };
+  const publications = [];
   const overlayHost = {
     setVisible: (...args) => hostCalls.push(['visible', ...args]),
-    setEntries: (...args) => hostCalls.push(['entries', ...args]),
-    clearSource: (...args) => hostCalls.push(['clear', ...args]),
+    setEntries: (...args) => {
+      hostCalls.push(['entries', ...args]);
+      onOverlayEntries?.(...args, {
+        layer,
+        viewer,
+        dataSources,
+        primitiveOwners,
+      });
+    },
+    clearSource: (...args) => {
+      hostCalls.push(['clear', ...args]);
+      onOverlayClear?.(...args);
+    },
   };
   const viewer = {
     selectedEntity: undefined,
     dataSources: {
-      add(dataSource) { dataSources.push(dataSource); return dataSource; },
+      add(dataSource) {
+        dataSources.push(dataSource);
+        return dataSource;
+      },
       remove(dataSource) {
         const index = dataSources.indexOf(dataSource);
         if (index >= 0) dataSources.splice(index, 1);
@@ -98,57 +192,1393 @@ async function createRealLocalLayerHarness({
       },
     },
     camera: {
-      positionWC: Cesium.Cartesian3.fromDegrees(-97.695, 30.205, 100_000),
+      positionWC: Cesium.Cartesian3.fromDegrees(
+        -97.695,
+        30.205,
+        initialCameraHeightM,
+      ),
       frustum: { fov: Math.PI / 3 },
       moveEnd,
-      flyTo() {},
+      flyTo(options) {
+        flyToCalls.push(options);
+      },
     },
     scene: {
       canvas: { clientWidth: 800, clientHeight: 600 },
+      primitives,
       preRender,
+      globe: initialGlobe,
       sampleHeightSupported,
       sampleHeight: (...args) => {
         sampleCalls.count += 1;
+        sampleCalls.records.push({
+          cartographic: args[0],
+          exclusions: args[1],
+          dataSourcesHidden: dataSources.every(
+            (source) => source.show === false,
+          ),
+          primitiveOwnersHidden: primitiveOwners.every(
+            (owner) => owner.show === false,
+          ),
+          dataSourcesShown: dataSources.every(source => source.show === true),
+          primitiveOwnersShown: primitiveOwners.every(owner => owner.show === true),
+        });
         return sampleHeightImpl(...args);
       },
       screenSpaceCameraController: { enableInputs: true },
-      pick() { return null; },
-      requestRender() {},
+      pick() {
+        return picked;
+      },
+      requestRender() {
+        publications.push(
+          dataSources.map((source) => ({
+            show: source.show,
+            entities: source.entities.values.map((entity) => ({
+              id: entity.id,
+              base: Cesium.Cartesian3.clone(entity.__localBaseCartesian),
+              tip: Cesium.Cartesian3.clone(
+                entity.position.getValue(Cesium.JulianDate.now()),
+              ),
+            })),
+          })),
+        );
+      },
     },
   };
-  const layer = createLocalGeoJsonLayer({
+  const layerOptions = {
     id: 'local-dams',
     url: '/runtime-dam.geojsonl',
     name: 'Runtime Dams',
     color: '#0088ff',
+    surfaceRenderer,
+    osmDerived,
     overlayHost,
-    projectToWindow: () => ({ x: 400, y: 300 }),
+    projectToWindow,
     screenSpaceEventHandlerFactory: () => ({
-      setInputAction() {},
+      setInputAction(action) {
+        clickAction = action;
+      },
       destroy() {},
     }),
-  });
-  try {
-    await layer.enable(viewer);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-  return {
+  };
+  const layer = servicesOverrides
+    ? createCoreLocalGeoJsonLayer(layerOptions, {
+        ...localGeoJsonServices,
+        ...servicesOverrides,
+        overlayHost,
+      })
+    : createLocalGeoJsonLayer(layerOptions);
+  const environment = {
     layer,
     viewer,
     dataSources,
     hostCalls,
+    primitiveOwners,
+    flyToCalls,
     preRender,
     moveEnd,
     sampleCalls,
+    publications,
+    async enable() {
+      globalThis.fetch = serveFixture;
+      try {
+        await layer.enable(viewer);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    },
     /** Swap scene.sampleHeight mid-test (e.g. tiles finally arrive). */
-    setSampleHeight(next) { sampleHeightImpl = next; },
+    setSampleHeight(next) {
+      sampleHeightImpl = next;
+    },
+    setPicked(next) {
+      picked = next;
+    },
+    click(position = {}) {
+      clickAction?.({ position });
+    },
     cleanup() {
+      globalThis.fetch = originalFetch;
       if (originalWindow === undefined) delete globalThis.window;
       else globalThis.window = originalWindow;
+      restoreBrowserClassStubs();
     },
   };
+  if (autoEnable) await environment.enable();
+  return environment;
 }
+
+function renderLocalFrames(env, count) {
+  for (let frame = 0; frame < count; frame++) env.preRender.raise();
+}
+
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
+  test(`${surfaceRenderer} ground cohort advances once per frame without delaying untouched records`, async (t) => {
+    const clock = installFakeClock(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const reasons = [];
+    const env = await createRealLocalLayerHarness({
+      surfaceRenderer,
+      featureCount: 8,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 180,
+      initialGlobe: { show: true, tilesLoaded: true, getHeight: () => 117 },
+      servicesOverrides: {
+        governorRequestRender: (reason) => reasons.push(reason),
+      },
+    });
+    const cluster =
+      surfaceRenderer === 'primitive-collections'
+        ? null
+        : new Cesium.EntityCluster();
+    const visualizer = cluster
+      ? new Cesium.PointVisualizer(cluster, env.dataSources[0].entities)
+      : null;
+    t.after(() => {
+      visualizer?.destroy();
+      cluster?.destroy();
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    const entities = [...env.dataSources[0].entities.values];
+    const distances = entities.map((entity) =>
+      Cesium.Cartesian3.distance(
+        env.viewer.camera.positionWC,
+        entity.__localBaseCartesian,
+      ),
+    );
+
+    for (let frame = 0; frame < entities.length; frame++) {
+      visualizer?.update(Cesium.JulianDate.now());
+      env.preRender.raise();
+      assert.equal(
+        env.sampleCalls.count,
+        frame + 1,
+        'one expensive readback per natural frame',
+      );
+      assert.equal(
+        env.layer.getPerformanceDiagnostics().timers,
+        0,
+        'untouched records must not arm the two-second retry',
+      );
+      assert.deepEqual(
+        reasons,
+        Array(Math.min(frame + 1, entities.length - 1))
+          .fill('local-ground-continuation:local-dams')
+          .concat(
+            frame === entities.length - 1
+              ? ['local-ground-settle:local-dams']
+              : [],
+          ),
+      );
+      assert.equal(env.dataSources[0].show, true);
+      assert.ok(entities.every((entity) => entity.show));
+      assert.ok(env.primitiveOwners.every((owner) => owner.show));
+      if (frame + 1 < entities.length) {
+        assert.ok(
+          Math.abs(
+            Cesium.Cartographic.fromCartesian(
+              entities[frame + 1].__localBaseCartesian,
+            ).height,
+          ) < 0.01,
+          'the visible fallback stays available while later ground queries wait',
+        );
+      }
+      clock.advance(16);
+    }
+    if (cluster) {
+      const lastEntity = entities.at(-1);
+      assert.ok(
+        !Cesium.Cartesian3.equals(
+          cluster.getPoint(lastEntity).position,
+          lastEntity.position.getValue(Cesium.JulianDate.now()),
+        ),
+        'the last point still has its pre-query position until the requested settle frame',
+      );
+      visualizer.update(Cesium.JulianDate.now());
+      env.preRender.raise();
+      for (const entity of entities) {
+        assert.ok(
+          Cesium.Cartesian3.equals(
+            cluster.getPoint(entity).position,
+            entity.position.getValue(Cesium.JulianDate.now()),
+          ),
+          'the real Cesium point visualizer consumes final positions on the settle frame',
+        );
+      }
+    }
+
+    for (const [index, entity] of entities.entries()) {
+      const query = env.sampleCalls.records[index];
+      assert.equal(query.cartographic, entity.__localBaseCarto);
+      assert.deepEqual(query.exclusions, [entity]);
+      assert.equal(query.dataSourcesShown, true);
+      assert.equal(query.primitiveOwnersShown, true);
+      assert.ok(
+        Math.abs(
+          Cesium.Cartographic.fromCartesian(entity.__localBaseCartesian)
+            .height - 180,
+        ) < 0.01,
+      );
+      const tipHeight =
+        180 + distances[index] * 2 * Math.tan(Math.PI / 6) * (65 / 600);
+      const expectedTip = Cesium.Cartesian3.fromRadians(
+        query.cartographic.longitude,
+        query.cartographic.latitude,
+        tipHeight,
+      );
+      assert.ok(
+        Cesium.Cartesian3.distance(
+          entity.position.getValue(Cesium.JulianDate.now()),
+          expectedTip,
+        ) < 1e-6,
+        'the final tip uses the same exact sampled height and screen-size equation',
+      );
+    }
+    assert.deepEqual(env.dataSources[0].entities.values, entities);
+    assert.equal(env.layer.getAnalystRecords().length, 8);
+    renderLocalFrames(env, 8);
+    clock.advance(5_000);
+    t.mock.timers.tick(5_000);
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 8);
+    assert.equal(
+      reasons.length,
+      8,
+      'a drained cohort requests no further frames',
+    );
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  });
+}
+
+test('a ground miss waits for retry only after untouched records drain', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const reasons = [];
+  let missedEntity;
+  let sampleReady = false;
+  const env = await createRealLocalLayerHarness({
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (_cartographic, [entity]) => {
+      if (entity === missedEntity && !sampleReady)
+        throw new Error('surface pending');
+      return 180;
+    },
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = [...env.dataSources[0].entities.values];
+  missedEntity = entities[0];
+  for (let frame = 0; frame < entities.length; frame++) {
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, frame + 1);
+    assert.equal(env.sampleCalls.records[frame].exclusions[0], entities[frame]);
+    assert.equal(
+      env.layer.getPerformanceDiagnostics().timers,
+      frame === 2 ? 1 : 0,
+    );
+    clock.advance(16);
+  }
+  assert.deepEqual(reasons, [
+    ...Array(2).fill('local-ground-continuation:local-dams'),
+    'local-ground-settle:local-dams',
+  ]);
+  clock.advance(1_999);
+  t.mock.timers.tick(1_999);
+  assert.equal(reasons.length, 3);
+  sampleReady = true;
+  clock.advance(1);
+  t.mock.timers.tick(1);
+  assert.equal(reasons.at(-1), 'local-ground-retry:local-dams');
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 4);
+  assert.equal(env.sampleCalls.records[3].exclusions[0], missedEntity);
+  assert.ok(
+    entities.every(
+      (entity) =>
+        Math.abs(
+          Cesium.Cartographic.fromCartesian(entity.__localBaseCartesian)
+            .height - 180,
+        ) < 0.01,
+    ),
+  );
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  clock.advance(5_000);
+  t.mock.timers.tick(5_000);
+  assert.equal(
+    reasons.length,
+    5,
+    'successful retry leaves only its one settle frame and no timer chain',
+  );
+});
+
+test('successful grounding on a free frame cancels a previously armed retry', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const reasons = [];
+  const env = await createRealLocalLayerHarness({
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  env.preRender.raise();
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 1);
+  env.setSampleHeight(() => 180);
+  clock.advance(2_100);
+  env.preRender.raise();
+  assert.ok(Math.abs(baseHeightM(env) - 180) < 0.01);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  t.mock.timers.tick(5_000);
+  assert.deepEqual(
+    reasons,
+    ['local-ground-settle:local-dams'],
+    'an obsolete retry must not wake the idle scene',
+  );
+});
+
+test('slow failed queries cannot retry earlier records before the ground cohort drains', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const reasons = [];
+  const env = await createRealLocalLayerHarness({
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => {
+      clock.advance(2_100);
+      throw new Error('slow unavailable surface');
+    },
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = [...env.dataSources[0].entities.values];
+  for (let frame = 0; frame < entities.length; frame++) {
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, frame + 1);
+    assert.equal(env.sampleCalls.records[frame].exclusions[0], entities[frame]);
+  }
+  assert.deepEqual(
+    reasons,
+    Array(2).fill('local-ground-continuation:local-dams'),
+  );
+  assert.equal(
+    env.layer.getPerformanceDiagnostics().timers,
+    1,
+    'a fully missed cohort reaches the bounded delayed retry instead of continuing forever',
+  );
+  t.mock.timers.tick(2_000);
+  assert.equal(reasons.at(-1), 'local-ground-retry:local-dams');
+  renderLocalFrames(env, 3);
+  assert.equal(env.sampleCalls.count, 6);
+  assert.deepEqual(
+    env.sampleCalls.records.slice(3).map((query) => query.exclusions[0]),
+    entities,
+  );
+});
+
+for (const cancel of ['disable', 'destroy']) {
+  test(`${cancel} releases an unfinished ground cohort and its continuations`, async (t) => {
+    const clock = installFakeClock(t);
+    t.mock.timers.enable({ apis: ['setTimeout'] });
+    const reasons = [];
+    const env = await createRealLocalLayerHarness({
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 180,
+      servicesOverrides: {
+        governorRequestRender: (reason) => reasons.push(reason),
+      },
+    });
+    t.after(() => {
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    const oldEntities = [...env.dataSources[0].entities.values];
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 1);
+    assert.equal(reasons.length, 1);
+    env.layer[cancel](env.viewer);
+    renderLocalFrames(env, 4);
+    clock.advance(5_000);
+    t.mock.timers.tick(5_000);
+    assert.equal(env.sampleCalls.count, 1);
+    assert.equal(reasons.length, 1);
+    assert.equal(env.dataSources.length, 0);
+    assert.equal(env.preRender.listeners.size, 0);
+    assert.equal(env.moveEnd.listeners.size, 0);
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+    if (cancel === 'disable') {
+      await env.enable();
+      assert.ok(
+        env.dataSources[0].entities.values.every(
+          (entity, index) => entity !== oldEntities[index],
+        ),
+      );
+      renderLocalFrames(env, 3);
+      assert.equal(env.sampleCalls.count, 4);
+      assert.equal(
+        reasons.length,
+        4,
+        'only the rebuilt cohort owns new continuations',
+      );
+      assert.ok(
+        env.sampleCalls.records
+          .slice(1)
+          .every((query) => !oldEntities.includes(query.exclusions[0])),
+      );
+    }
+  });
+}
+
+test('reentrant cancellation on a continuation cannot commit its sample or request another frame', async (t) => {
+  installFakeClock(t);
+  const reasons = [];
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'stem-collection',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 180,
+    servicesOverrides: {
+      governorRequestRender: (reason) => reasons.push(reason),
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entity = env.dataSources[0].entities.values[1];
+  const originalBase = Cesium.Cartesian3.clone(entity.__localBaseCartesian);
+  const owner = env.primitiveOwners[0];
+  env.preRender.raise();
+  env.setSampleHeight(() => {
+    env.layer.disable(env.viewer);
+    return 180;
+  });
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 2);
+  assert.deepEqual(entity.__localBaseCartesian, originalBase);
+  assert.equal(owner.isDestroyed(), true);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  assert.deepEqual(reasons, ['local-ground-continuation:local-dams']);
+});
+
+for (const change of ['capability', 'range']) {
+  test(`ground continuation stops when ${change} disappears and resumes on a later eligible frame`, async (t) => {
+    const clock = installFakeClock(t);
+    const reasons = [];
+    const env = await createRealLocalLayerHarness({
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 180,
+      servicesOverrides: {
+        governorRequestRender: (reason) => reasons.push(reason),
+      },
+    });
+    t.after(() => {
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    env.preRender.raise();
+    if (change === 'capability') env.viewer.scene.sampleHeightSupported = false;
+    else {
+      setCameraAltitude(env, 400_000);
+      env.moveEnd.raise();
+    }
+    clock.advance(16);
+    env.preRender.raise();
+    assert.equal(env.sampleCalls.count, 1);
+    assert.equal(reasons.length, 1);
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+    if (change === 'capability') env.viewer.scene.sampleHeightSupported = true;
+    else {
+      setCameraAltitude(env, 20_000);
+      env.moveEnd.raise();
+    }
+    clock.advance(500);
+    renderLocalFrames(env, 2);
+    assert.equal(env.sampleCalls.count, 3);
+    assert.equal(reasons.length, 3);
+    assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+  });
+}
+
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
+  for (const [terrainHeight, sampledHeight, expectedHeight, globeShown] of [
+    [117, -2238, 117, true],
+    [-400, -410, -400, true],
+    [117, 180, 180, true],
+    [117, -20, -20, false],
+  ]) {
+    test(`consecutive natural ${surfaceRenderer} frames keep visible query semantics and exact surface ${expectedHeight}`, async (t) => {
+      installFakeClock(t);
+      const env = await createRealLocalLayerHarness({
+        autoEnable: false,
+        surfaceRenderer,
+        featureCount: 3,
+        initialCameraHeightM: 20_000,
+        sampleHeightSupported: true,
+        sampleHeight: () => sampledHeight,
+        initialGlobe: {
+          show: globeShown,
+          tilesLoaded: true,
+          getHeight: () => terrainHeight,
+        },
+      });
+      t.after(() => {
+        env.layer.destroy(env.viewer);
+        env.cleanup();
+      });
+      await env.enable();
+      assert.equal(env.sampleCalls.count, 0, 'Enable must not sample before the normal visualizer/render update');
+      assert.equal(env.layer.getLodDiagnostics().computed, false);
+      assert.equal(env.dataSources[0].show, true);
+      assert.ok(env.primitiveOwners.every(owner => owner.show === true));
+      env.preRender.raise();
+      assert.equal(
+        env.sampleCalls.count,
+        1,
+        'first visible frame waits for only one depth sample',
+      );
+      assert.equal(env.dataSources[0].show, true);
+      renderLocalFrames(env, 2);
+      assert.equal(env.sampleCalls.count, 3);
+      assert.ok(
+        env.sampleCalls.records.every(
+          (record) => record.dataSourcesShown && record.primitiveOwnersShown,
+        ),
+      );
+      assert.equal(env.dataSources.length, 1);
+      assert.equal(env.dataSources[0].show, true);
+      assert.ok(env.primitiveOwners.every((owner) => owner.show === true));
+      assert.equal(env.layer.getLodDiagnostics().active, 3);
+      assert.equal(env.layer.getLodDiagnostics().computed, true);
+      assert.equal(env.layer.getAnalystRecords().length, 3);
+      const published = { show: env.dataSources[0].show,
+        entities: env.dataSources[0].entities.values.map(entity => ({ id: entity.id,
+          base: Cesium.Cartesian3.clone(entity.__localBaseCartesian),
+          tip: Cesium.Cartesian3.clone(entity.position.getValue(Cesium.JulianDate.now())),
+        })),
+      };
+      assert.equal(published.show, true);
+      assert.equal(published.entities.length, 3);
+      for (const [
+        index,
+        entity,
+      ] of env.dataSources[0].entities.values.entries()) {
+        const query = env.sampleCalls.records[index];
+        assert.equal(
+          query.cartographic,
+          entity.__localBaseCarto,
+          'same exact sample cartographic',
+        );
+        assert.deepEqual(
+          query.exclusions,
+          [entity],
+          'same native pick exclusion identity',
+        );
+        const initialBase = Cesium.Cartesian3.fromRadians(
+          query.cartographic.longitude,
+          query.cartographic.latitude,
+          0,
+        );
+        const distance = Cesium.Cartesian3.distance(
+          env.viewer.camera.positionWC,
+          initialBase,
+        );
+        const tipHeight =
+          expectedHeight + distance * 2 * Math.tan(Math.PI / 6) * (65 / 600);
+        const expectedTip = Cesium.Cartesian3.fromRadians(
+          query.cartographic.longitude,
+          query.cartographic.latitude,
+          tipHeight,
+        );
+        assert.ok(
+          Cesium.Cartesian3.distance(
+            published.entities[index].tip,
+            expectedTip,
+          ) < 1e-6,
+          'final tip matches unchanged ground and screen-size equation',
+        );
+        assert.ok(
+          Math.abs(
+            Cesium.Cartographic.fromCartesian(published.entities[index].base)
+              .height - expectedHeight,
+          ) < 0.01,
+        );
+        assert.equal(published.entities[index].id, entity.id);
+      }
+      env.preRender.raise();
+      assert.equal(
+        env.sampleCalls.count,
+        3,
+        'a repeated unchanged frame does not repeat successful readbacks',
+      );
+    });
+  }
+  test(`coincident ${surfaceRenderer} features retain separate identities and exact queries`, async (t) => {
+    installFakeClock(t);
+    const env = await createRealLocalLayerHarness({
+      autoEnable: false, surfaceRenderer, featureCount: 3, featureSpacingDegrees: 0,
+      initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117,
+    });
+    t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+    await env.enable();
+    assert.equal(env.sampleCalls.count, 0);
+    renderLocalFrames(env, 3);
+    const entities = env.dataSources[0].entities.values;
+    assert.equal(entities.length, 3);
+    assert.equal(new Set(entities.map(entity => entity.id)).size, 3);
+    assert.equal(env.layer.getAnalystRecords().length, 3);
+    assert.equal(new Set(env.layer.getAnalystRecords().map(record => record.sourceRecordId)).size, 3);
+    assert.equal(env.layer.getLodDiagnostics().active, 3);
+    assert.equal(env.sampleCalls.count, 3, 'no coordinate-key coalescing or hidden shared cache');
+    const [first] = env.sampleCalls.records;
+    for (const [index, record] of env.sampleCalls.records.entries()) {
+      assert.deepEqual(record.cartographic, first.cartographic);
+      assert.equal(record.cartographic, entities[index].__localBaseCarto);
+      assert.deepEqual(record.exclusions, [entities[index]]);
+      assert.equal(record.dataSourcesShown, true);
+      assert.equal(record.primitiveOwnersShown, true);
+    }
+  });
+}
+
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
+  test(`${surfaceRenderer} attachment observes completed graphics without setup notifications`, async (t) => {
+    installFakeClock(t);
+    const env = await createRealLocalLayerHarness({
+      autoEnable: false,
+      surfaceRenderer,
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 117,
+    });
+    const removeObservers = [];
+    t.after(() => {
+      for (const remove of removeObservers) remove();
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    });
+    const originalAdd = env.viewer.dataSources.add;
+    let attachedEntities;
+    let collectionChanges = 0;
+    let setupChanges = 0;
+    let visibilityChanges = 0;
+    env.viewer.dataSources.add = (source) => {
+      assert.equal(source.show, false);
+      assert.equal(env.preRender.listeners.size, 0);
+      assert.equal(env.sampleCalls.count, 0);
+      attachedEntities = [...source.entities.values];
+      assert.equal(attachedEntities.length, 3);
+      for (const entity of attachedEntities) {
+        assert.equal(entity.__localLayerId, 'local-dams');
+        assert.ok(entity.__localBaseCarto);
+        assert.ok(entity.__localBaseCartesian);
+        assert.ok(entity.position instanceof Cesium.ConstantPositionProperty);
+        if (surfaceRenderer !== 'primitive-collections') {
+          assert.ok(entity.point instanceof Cesium.PointGraphics);
+          if (surfaceRenderer === 'entities')
+            assert.ok(entity.polyline instanceof Cesium.PolylineGraphics);
+          else assert.equal(entity.polyline, undefined);
+        } else {
+          assert.equal(entity.point, undefined);
+          assert.equal(entity.polyline, undefined);
+        }
+        removeObservers.push(
+          entity.definitionChanged.addEventListener((_entity, property) => {
+            if (property === 'isShowing') visibilityChanges++;
+            else setupChanges++;
+          }),
+        );
+      }
+      removeObservers.push(
+        source.entities.collectionChanged.addEventListener(() => {
+          collectionChanges++;
+        }),
+      );
+      return originalAdd(source);
+    };
+
+    await env.enable();
+    assert.equal(setupChanges, 0, 'Attached visualizers need no setup graphics notifications');
+    assert.equal(visibilityChanges, 3, 'Final source visibility must still reach each entity');
+    assert.deepEqual(env.dataSources[0].entities.values, attachedEntities);
+    assert.equal(env.sampleCalls.count, 0);
+    renderLocalFrames(env, 3);
+    assert.equal(env.sampleCalls.count, 3);
+    for (const [index, query] of env.sampleCalls.records.entries()) {
+      assert.equal(query.cartographic, attachedEntities[index].__localBaseCarto);
+      assert.deepEqual(query.exclusions, [attachedEntities[index]]);
+      assert.equal(query.dataSourcesShown, true);
+      assert.equal(query.primitiveOwnersShown, true);
+    }
+    assert.ok(setupChanges > 0, 'Natural grounding must still update the live graphics');
+    assert.ok(collectionChanges > 1, 'The real Cesium collection observer sees publication and geometry changes');
+  });
+
+  test(`${surfaceRenderer} staged insertion is adopted only by the latest activation`, async (t) => {
+    installFakeClock(t);
+    const env = await createRealLocalLayerHarness({
+      autoEnable: false,
+      surfaceRenderer,
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeightSupported: true,
+      sampleHeight: () => 117,
+    });
+    t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+    let finishAdd;
+    let stagedSource;
+    env.viewer.dataSources.add = (source) => {
+      stagedSource = source;
+      return new Promise((resolve) => {
+        finishAdd = () => {
+          env.dataSources.push(source);
+          resolve(source);
+        };
+      });
+    };
+    const obsolete = env.enable();
+    for (let turn = 0; turn < 32 && !finishAdd; turn++) await Promise.resolve();
+    assert.ok(finishAdd);
+    assert.equal(env.sampleCalls.count, 0);
+    env.layer.disable(env.viewer);
+    const latest = env.layer.enable(env.viewer);
+    finishAdd();
+    await Promise.all([obsolete, latest]);
+    assert.deepEqual(env.dataSources, [stagedSource]);
+    assert.equal(stagedSource.show, true);
+    assert.equal(env.preRender.addCount, 1);
+    assert.equal(env.moveEnd.addCount, 1);
+    assert.equal(env.publications.length, 1);
+    assert.equal(env.sampleCalls.count, 0);
+    renderLocalFrames(env, 3);
+    assert.equal(env.sampleCalls.count, 3);
+    assert.equal(env.layer.getAnalystRecords().length, 3);
+    for (const [index, query] of env.sampleCalls.records.entries()) {
+      assert.deepEqual(query.exclusions, [stagedSource.entities.values[index]]);
+      assert.equal(query.dataSourcesShown, true);
+      assert.equal(query.primitiveOwnersShown, true);
+    }
+  });
+}
+
+test('destroy during staged context registration prevents attachment and later graphics writes', async (t) => {
+  let env;
+  let registrations = 0;
+  let changesAfterDestroy = 0;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    featureCount: 3,
+    servicesOverrides: {
+      registerEntityContext(entity) {
+        registrations++;
+        entity.definitionChanged.addEventListener(() => { changesAfterDestroy++; });
+        env.layer.destroy(env.viewer);
+      },
+    },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  let addCalls = 0;
+  env.viewer.dataSources.add = () => { addCalls++; };
+  await env.enable();
+  assert.equal(registrations, 1);
+  assert.equal(changesAfterDestroy, 0);
+  assert.equal(addCalls, 0);
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().pendingJobs, 0);
+  assert.equal(env.layer.getLodDiagnostics().total, 0);
+});
+
+test('aborted activation never samples or publishes its completed load', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const pending = env.enable();
+  env.layer.disable(env.viewer);
+  await pending;
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(env.layer.getLodDiagnostics().total, 0);
+});
+
+test('only the latest activation samples and publishes a shared pending load', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const stale = env.enable();
+  const latest = env.layer.enable(env.viewer);
+  await Promise.all([stale, latest]);
+  assert.equal(env.sampleCalls.count, 0);
+  env.preRender.raise();
+  assert.equal(
+    env.sampleCalls.count,
+    1,
+    'superseded continuation cannot run another grounding pass',
+  );
+  assert.equal(env.publications.length, 1);
+  assert.equal(env.dataSources.length, 1);
+  assert.equal(env.preRender.listeners.size, 1);
+  assert.equal(env.moveEnd.listeners.size, 1);
+  assert.equal(env.dataSources[0].show, true);
+});
+
+test('disable after publication cancels the first normal frame without any query', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({ autoEnable: false, initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117 });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.sampleCalls.count, 0);
+  env.layer.disable(env.viewer);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('destroy during asynchronous scene insertion removes the exact late owner without sampling', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  let finishAdd;
+  env.viewer.dataSources.add = (source) =>
+    new Promise((resolve) => {
+      finishAdd = () => {
+        env.dataSources.push(source);
+        resolve(source);
+      };
+    });
+  const pending = env.enable();
+  for (let turn = 0; turn < 32 && !finishAdd; turn++) await Promise.resolve();
+  assert.ok(
+    finishAdd,
+    'fixture reached the real asynchronous insertion boundary',
+  );
+  env.layer.destroy(env.viewer);
+  finishAdd();
+  await pending;
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('first normal-frame failure releases owned resources and permits a clean retry', async (t) => {
+  installFakeClock(t);
+  let failProjection = true;
+  const credits = [];
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'primitive-collections',
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    osmDerived: true,
+    servicesOverrides: {
+      showOsmCredit: () => credits.push('show'),
+      hideOsmCredit: () => credits.push('hide'),
+    },
+    projectToWindow: () => {
+      if (failProjection) throw new Error('initial projection failed');
+      return { x: 400, y: 300 };
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.throws(() => env.preRender.raise(), /initial projection failed/);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(env.publications.length, 1, 'Only the original enable requested a frame');
+  assert.equal(env.layer.getStats().count, 0);
+  assert.equal(env.layer.getStats().lastUpdate, null);
+  assert.match(env.layer.getStats().error, /initial projection failed/);
+  assert.deepEqual(credits, ['show', 'hide']);
+  assert.equal(
+    env.hostCalls.some((call) => call[0] === 'entries'),
+    false,
+    'failed projection cannot publish an overlay cohort',
+  );
+  assert.deepEqual(
+    env.hostCalls
+      .filter((call) => call[0] === 'visible')
+      .map((call) => call[2]),
+    [true, false],
+  );
+  failProjection = false;
+  await env.enable();
+  env.preRender.raise();
+  assert.equal(env.dataSources.length, 1);
+  assert.equal(env.primitiveOwners.length, 1);
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.primitiveOwners[0].show, true);
+  assert.equal(env.layer.getStats().error, null);
+});
+
+for (const surfaceRenderer of [
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]) {
+  test(`fresh and cached ${surfaceRenderer} rebuilds preserve the same completed grounding domain`, async (t) => {
+    installFakeClock(t);
+    const snapshot = (env) => ({
+      lod: env.layer.getLodDiagnostics(),
+      analyst: env.layer.getAnalystRecords(),
+      entities: env.dataSources[0].entities.values.map((entity) => ({
+        id: entity.id,
+        show: entity.show,
+        base: [
+          entity.__localBaseCartesian.x,
+          entity.__localBaseCartesian.y,
+          entity.__localBaseCartesian.z,
+        ],
+        tip: Object.values(
+          Cesium.Cartesian3.clone(
+            entity.position.getValue(Cesium.JulianDate.now()),
+          ),
+        ),
+      })),
+      queries: env.sampleCalls.records.map((record) => ({
+        position: [
+          record.cartographic.longitude,
+          record.cartographic.latitude,
+          record.cartographic.height,
+        ],
+        excludedIds: record.exclusions.map((entity) => entity.id),
+      })),
+      cohort: env.hostCalls
+        .filter((call) => call[0] === 'entries')
+        .at(-1)?.[2]
+        .map((entry) => ({
+          id: entry.id,
+          title: entry.title,
+          source: entry.source,
+          details: entry.details,
+          position: [entry.position.x, entry.position.y, entry.position.z],
+        })),
+    });
+    const common = {
+      autoEnable: false,
+      surfaceRenderer,
+      featureCount: 3,
+      initialCameraHeightM: 20_000,
+      sampleHeight: () => 180,
+      initialGlobe: { show: true, tilesLoaded: true, getHeight: () => 117 },
+    };
+    const prepared = await createRealLocalLayerHarness({
+      ...common,
+      sampleHeightSupported: true,
+    });
+    t.after(() => { prepared.layer.destroy(prepared.viewer); prepared.cleanup(); });
+    await prepared.enable();
+    assert.equal(prepared.sampleCalls.count, 0);
+    renderLocalFrames(prepared, 3);
+    const expected = snapshot(prepared);
+    const firstEntities = [...prepared.dataSources[0].entities.values];
+    prepared.layer.disable(prepared.viewer);
+    prepared.sampleCalls.records.length = 0;
+    prepared.sampleCalls.count = 0;
+    await prepared.enable();
+    assert.equal(prepared.sampleCalls.count, 0);
+    assert.equal(prepared.layer.getLodDiagnostics().computed, false);
+    assert.ok(prepared.dataSources[0].entities.values.every((entity, index) => entity !== firstEntities[index]), 'Cached source data still rebuilds its owned render entities');
+    renderLocalFrames(prepared, 3);
+    assert.deepEqual(
+      snapshot(prepared),
+      expected,
+      'same exact geometry, selection, evidence, query order, exclusions and cohort after grounding',
+    );
+  });
+}
+
+test('overlay publication sees visible owners and a reentrant disable cannot resurrect them', async (t) => {
+  installFakeClock(t);
+  let published = [];
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'primitive-collections',
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    onOverlayEntries: (id, entries, options, context) => {
+      assert.ok(context.dataSources.every((source) => source.show === true));
+      assert.ok(context.primitiveOwners.every((owner) => owner.show === true));
+      published = entries;
+      context.layer.disable(context.viewer);
+    },
+    onOverlayClear: () => {
+      published = [];
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  env.preRender.raise();
+  assert.deepEqual(published, []);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  assert.equal(
+    env.publications.length,
+    1,
+    'reentrant disable must not request another publication render',
+  );
+});
+
+test('a partially successful overlay host write is cleared when publication fails', async (t) => {
+  installFakeClock(t);
+  let published = [];
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    onOverlayEntries: (id, entries) => {
+      published = entries;
+      throw new Error('host write failed');
+    },
+    onOverlayClear: () => {
+      published = [];
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.throws(() => env.preRender.raise(), /host write failed/);
+  assert.deepEqual(published, []);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('reentrant cancellation during a query prevents later queries and stale primitive writes', async (t) => {
+  installFakeClock(t);
+  let env;
+  let queriedEntity;
+  let originalBase;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'primitive-collections',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (cartographic, [entity]) => {
+      queriedEntity = entity;
+      originalBase = Cesium.Cartesian3.clone(entity.__localBaseCartesian);
+      env.layer.disable(env.viewer);
+      return 117;
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
+  assert.equal(
+    env.sampleCalls.count,
+    1,
+    'an already-entered public query may finish; cancellation prevents every later query',
+  );
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 1);
+  assert.deepEqual(queriedEntity.__localBaseCartesian, originalBase, 'cancelled readback must not mutate its released Entity');
+});
+
+test('terrain-floor callback cancellation does not write the released ground record', async (t) => {
+  installFakeClock(t);
+  let env;
+  let releasedEntity;
+  let originalBase;
+  const globe = { show: true, tilesLoaded: true, getHeight() {
+    releasedEntity = env.dataSources[0].entities.values[0];
+    originalBase = Cesium.Cartesian3.clone(releasedEntity.__localBaseCartesian);
+    env.layer.disable(env.viewer);
+    return 180;
+  } };
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, surfaceRenderer: 'primitive-collections', initialCameraHeightM: 20_000,
+    sampleHeightSupported: true, sampleHeight: () => 117, initialGlobe: globe,
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.deepEqual(releasedEntity.__localBaseCartesian, originalBase);
+  assert.equal(env.dataSources.length, 0); assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 1); assert.equal(env.preRender.listeners.size, 0);
+});
+
+test('real position definitionChanged cancellation prevents every following primitive write', async (t) => {
+  installFakeClock(t);
+  let env;
+  let positionEvents = 0;
+  let primitiveWrites = 0;
+  let releasedOwner;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, surfaceRenderer: 'primitive-collections', initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (cartographic, [entity]) => {
+      releasedOwner = env.primitiveOwners[0];
+      const point = releasedOwner.get(0).get(0);
+      const stem = releasedOwner.get(1).get(0);
+      for (const [primitive, property] of [[point, 'position'], [stem, 'positions']]) {
+        let value = primitive[property];
+        Object.defineProperty(primitive, property, { configurable: true,
+          get: () => value, set(next) { primitiveWrites += 1; value = next; },
+        });
+      }
+      entity.position.definitionChanged.addEventListener(() => {
+        positionEvents += 1;
+        assert.equal(releasedOwner.show, true, 'callback occurs during the visible normal pass');
+        env.layer.disable(env.viewer);
+      });
+      return 117;
+    },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
+  assert.equal(positionEvents, 1, 'real ConstantPositionProperty raised the synchronous callback');
+  assert.equal(releasedOwner.isDestroyed(), true);
+  assert.equal(primitiveWrites, 0, 'no attempted point or stem writes after callback teardown');
+  assert.equal(env.dataSources.length, 0); assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.publications.length, 1); assert.equal(env.preRender.listeners.size, 0);
+});
+
+test('projection callback cancellation cannot publish or dereference a released source', async (t) => {
+  installFakeClock(t);
+  let env;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117,
+    projectToWindow: () => { env.layer.disable(env.viewer); return { x: 400, y: 300 }; },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
+  assert.equal(env.layer.getStats().error, null);
+  assert.equal(env.dataSources.length, 0); assert.equal(env.publications.length, 1);
+  assert.equal(env.hostCalls.some(call => call[0] === 'entries'), false);
+  assert.equal(env.preRender.listeners.size, 0); assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('an older normal-pass failure cannot release a reentrant newer activation', async (t) => {
+  installFakeClock(t);
+  let env;
+  let successor;
+  let firstProjection = true;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false, initialCameraHeightM: 20_000, sampleHeightSupported: true, sampleHeight: () => 117,
+    projectToWindow: () => {
+      if (firstProjection) {
+        firstProjection = false;
+        successor = env.layer.enable(env.viewer);
+        throw new Error('superseded projection failed');
+      }
+      return { x: 400, y: 300 };
+    },
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.throws(() => env.preRender.raise(), /superseded projection failed/);
+  await successor;
+  assert.equal(env.dataSources.length, 1);
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.layer.getStats().error, null);
+  assert.equal(env.preRender.listeners.size, 1);
+  assert.equal(env.moveEnd.listeners.size, 1);
+  env.preRender.raise();
+  assert.equal(env.layer.getLodDiagnostics().computed, true);
+});
+
+test('an unavailable camera preserves the existing deferred visibility path', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  env.viewer.camera.positionWC = undefined;
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.dataSources[0].show, true);
+  env.preRender.raise();
+});
+
+test('an initial depth miss keeps the existing visible fallback and bounded retry', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0, 'The initial readbacks belong to the normal preRender');
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.equal(env.dataSources[0].show, true);
+  assert.equal(env.layer.getStats().error, null);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 1);
+  env.setSampleHeight(() => 117);
+  clock.advance(2_100);
+  t.mock.timers.tick(2_100);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 2);
+  assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+  env.layer.disable(env.viewer);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 0);
+});
+
+test('streaming initial terrain keeps the existing deferred pass and bounded retry', async (t) => {
+  const clock = installFakeClock(t);
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const globe = { show: true, tilesLoaded: false, getHeight: () => 117 };
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+    initialGlobe: globe,
+  });
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.layer.getLodDiagnostics().computed, false);
+  assert.equal(env.dataSources[0].show, true);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().timers, 1);
+  globe.tilesLoaded = true;
+  clock.advance(2_100);
+  t.mock.timers.tick(2_100);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+});
+
+test('a failed empty-cohort host write retains cleanup ownership of its previous cohort', () => {
+  let entries = [];
+  let clearCount = 0;
+  const publisher = createLocalInfrastructureOverlayPublisher({
+    sourceId: 'local-dams',
+    host: {
+      setVisible() {},
+      setEntries(id, next) {
+        if (next.length === 0) throw new Error('empty write failed');
+        entries = next;
+      },
+      clearSource() { entries = []; clearCount += 1; },
+    },
+  });
+  publisher.show();
+  publisher.publish([{ id: 'owned' }]);
+  assert.throws(() => publisher.publish([]), /empty write failed/);
+  publisher.hide();
+  assert.equal(clearCount, 1);
+  assert.deepEqual(entries, []);
+});
 
 test('local infrastructure card copy uses the owner-approved source fields', () => {
   assert.deepEqual(localInfrastructureOverlayCopy({
@@ -341,6 +1771,662 @@ test('slow parked frames do not keep republishing the same local overlay cohort'
   assert.equal(publications().length, 3, 're-enable must republish after clearing the host');
 });
 
+test('opt-in surface collections retain Entity metadata and native pick identity', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'primitive-collections',
+    featureCount: 100,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+
+  const entity = env.dataSources[0].entities.values[0];
+  const diagnostics = env.layer.getSurfaceRendererDiagnostics();
+  assert.deepEqual(diagnostics, {
+    mode: 'primitive-collections',
+    owners: 1,
+    points: 100,
+    stems: 100,
+    attached: true,
+  });
+  assert.equal(env.primitiveOwners.length, 1);
+  assert.equal(
+    entity.polygon?.hierarchy != null,
+    true,
+    'polygon metadata/rendering remains on the Entity',
+  );
+  assert.equal(entity.name, 'Runtime Dam');
+  assert.ok(
+    entity.properties,
+    'feature properties remain available for analysis',
+  );
+  assert.equal(
+    entity.point,
+    undefined,
+    'point Graphics are released in candidate mode',
+  );
+  assert.equal(
+    entity.polyline,
+    undefined,
+    'polyline Graphics are released in candidate mode',
+  );
+
+  const owner = env.primitiveOwners[0];
+  const pointIndex = Array.from(
+    { length: owner.get(0).length },
+    (_, index) => index,
+  ).find((index) => owner.get(0).get(index).id === entity);
+  const point = owner.get(0).get(pointIndex);
+  const stem = owner.get(1).get(pointIndex);
+  assert.equal(point.id, entity, 'point picks resolve to the original Entity');
+  assert.equal(stem.id, entity, 'stem picks resolve to the original Entity');
+  assert.ok(
+    Cesium.Cartesian3.equals(
+      point.position,
+      entity.position.getValue(Cesium.JulianDate.now()),
+    ),
+  );
+  assert.equal(point.pixelSize, 10);
+  assert.equal(point.outlineWidth, 2);
+  assert.equal(point.disableDepthTestDistance, Number.POSITIVE_INFINITY);
+  assert.equal(stem.width, 3.5);
+  const rgba = Cesium.ColorGeometryInstanceAttribute.toValue(
+    Cesium.Color.fromCssColorString('#0088ff'),
+  );
+  const byteColor = Cesium.Color.fromBytes(...rgba);
+  assert.ok(
+    Cesium.Color.equals(stem.material.uniforms.color, byteColor),
+    'stem material uses the validated RGBA8-encoded color',
+  );
+
+  env.preRender.raise();
+  assert.equal(
+    point.show,
+    entity.show,
+    'collection visibility follows entity LOD/horizon state',
+  );
+  assert.equal(
+    stem.show,
+    entity.show,
+    'stem visibility follows entity LOD/horizon state',
+  );
+  env.setPicked({ id: entity });
+  env.click({ x: 4, y: 9 });
+  assert.equal(env.viewer.selectedEntity, entity);
+  assert.equal(
+    env.flyToCalls.length,
+    1,
+    'collection pick uses the existing Entity selection path',
+  );
+  assert.ok(
+    Math.abs(
+      Cesium.Cartographic.fromCartesian(env.flyToCalls[0].destination).height -
+        5000,
+    ) < 0.001,
+  );
+
+  const previousTip = Cesium.Cartesian3.clone(point.position);
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.ok(
+    Cesium.Cartesian3.distance(previousTip, point.position) > 1,
+    'camera/LOD geometry refresh updates the owned point primitive',
+  );
+  assert.ok(
+    Cesium.Cartesian3.equals(stem.positions[1], point.position),
+    'the stem endpoint and point remain on the same mutable tip',
+  );
+
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    50_000_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  const highAltitudeLod = env.layer.getLodDiagnostics();
+  assert.ok(
+    highAltitudeLod.active < highAltitudeLod.total,
+    'the distant camera excludes at least one test surface from the production LOD budget',
+  );
+  assert.ok(
+    Array.from({ length: owner.get(0).length }, (_, index) =>
+      owner.get(0).get(index),
+    ).some((candidate) => !candidate.show),
+    'out-of-LOD collection points are hidden',
+  );
+  assert.ok(
+    Array.from({ length: owner.get(1).length }, (_, index) =>
+      owner.get(1).get(index),
+    ).some((candidate) => !candidate.show),
+    'out-of-LOD collection stems are hidden',
+  );
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(
+    point.show,
+    entity.show,
+    'collection point becomes eligible when LOD returns',
+  );
+  assert.equal(
+    stem.show,
+    entity.show,
+    'collection stem becomes eligible when LOD returns',
+  );
+
+  const originalOwner = owner;
+  env.layer.disable(env.viewer);
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().owners, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(
+    originalOwner.isDestroyed(),
+    true,
+    'disable releases the primitive owner',
+  );
+  await env.layer.enable(env.viewer);
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().owners, 1);
+  assert.equal(
+    env.primitiveOwners.length,
+    1,
+    're-enable creates one fresh owner',
+  );
+  assert.notEqual(env.primitiveOwners[0], originalOwner);
+});
+
+test('default Entity mode retains native point and stem Graphics', async (t) => {
+  const env = await createRealLocalLayerHarness({ featureCount: 3 });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = env.dataSources[0].entities.values;
+  assert.equal(entities.length, 3);
+  assert.ok(
+    entities.every((entity) => entity.point instanceof Cesium.PointGraphics),
+  );
+  assert.ok(
+    entities.every(
+      (entity) => entity.polyline instanceof Cesium.PolylineGraphics,
+    ),
+  );
+});
+
+test('opt-in stem collection preserves Entity points, other Graphics and native selection through grounding and teardown', async (t) => {
+  installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    featureCount: 8,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: () => 180,
+    initialGlobe: { show: true, tilesLoaded: true, getHeight: () => 117 },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const otherGraphics = new Map();
+  const addSource = env.viewer.dataSources.add;
+  env.viewer.dataSources.add = (source) => {
+    for (const entity of source.entities.values) {
+      entity.billboard = new Cesium.BillboardGraphics({
+        image: 'retained-marker.png',
+      });
+      otherGraphics.set(entity, {
+        polygon: entity.polygon,
+        billboard: entity.billboard,
+      });
+    }
+    return addSource(source);
+  };
+  await env.enable();
+  assert.equal(env.sampleCalls.count, 0);
+  assert.deepEqual(env.layer.getSurfaceRendererDiagnostics(), {
+    mode: 'stem-collection',
+    owners: 1,
+    points: 0,
+    stems: 8,
+    attached: true,
+  });
+  assert.equal(env.layer.getPerformanceDiagnostics().surfacePoints, 0);
+  assert.equal(env.layer.getPerformanceDiagnostics().surfaceStems, 8);
+  const owner = env.primitiveOwners[0];
+  assert.equal(owner.length, 1, 'no replacement point collection is allocated');
+  const stems = owner.get(0);
+  assert.ok(stems instanceof Cesium.PolylineCollection);
+  const entities = env.dataSources[0].entities.values;
+  const points = entities.map((entity) => entity.point);
+  const color = Cesium.Color.fromBytes(
+    ...Cesium.ColorGeometryInstanceAttribute.toValue(
+      Cesium.Color.fromCssColorString('#0088ff'),
+    ),
+  );
+  for (const [index, entity] of entities.entries()) {
+    const stem = stems.get(index);
+    assert.ok(entity.point instanceof Cesium.PointGraphics);
+    assert.equal(
+      entity.position.isConstant,
+      true,
+      'the point keeps its bounded constant-property update path',
+    );
+    assert.equal(
+      entity.polyline,
+      undefined,
+      'Entity updater cannot start a duplicate static stem build',
+    );
+    assert.equal(entity.polygon, otherGraphics.get(entity).polygon);
+    assert.equal(entity.billboard, otherGraphics.get(entity).billboard);
+    assert.equal(stem.id, entity);
+    assert.equal(stem.width, 3.5);
+    assert.ok(Cesium.Color.equals(stem.material.uniforms.color, color));
+    assert.equal(entity.point.pixelSize.getValue(), 10);
+    assert.equal(entity.point.outlineWidth.getValue(), 2);
+    assert.equal(
+      entity.point.disableDepthTestDistance.getValue(),
+      Number.POSITIVE_INFINITY,
+    );
+  }
+  renderLocalFrames(env, 8);
+  assert.equal(env.sampleCalls.count, 8);
+  for (const [index, entity] of entities.entries()) {
+    const stem = stems.get(index);
+    assert.equal(entity.point, points[index]);
+    assert.ok(
+      Cesium.Cartesian3.equals(stem.positions[0], entity.__localBaseCartesian),
+    );
+    assert.ok(
+      Cesium.Cartesian3.equals(
+        stem.positions[1],
+        entity.position.getValue(Cesium.JulianDate.now()),
+      ),
+    );
+    assert.equal(stem.show, entity.show);
+    assert.deepEqual(env.sampleCalls.records[index].exclusions, [entity]);
+  }
+  const entity = entities[0];
+  env.setPicked({ id: entity });
+  env.click({ x: 4, y: 9 });
+  assert.equal(env.viewer.selectedEntity, entity);
+  assert.equal(
+    env.flyToCalls.length,
+    1,
+    'stem pick still flies to its original Entity base',
+  );
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(entity.point, points[0]);
+  assert.ok(
+    Cesium.Cartesian3.equals(
+      stems.get(0).positions[1],
+      entity.position.getValue(Cesium.JulianDate.now()),
+    ),
+  );
+  env.layer.disable(env.viewer);
+  assert.equal(owner.isDestroyed(), true);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+  await env.enable();
+  assert.equal(env.primitiveOwners.length, 1);
+  assert.notEqual(
+    env.primitiveOwners[0],
+    owner,
+    'parsed features are reused, destroyed render owners are not',
+  );
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().points, 0);
+});
+
+test('stem collection rollback destroys the exact partially attached owner', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    primitiveAddThrowsAfterAttach: true,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.layer.getSurfaceRendererDiagnostics().owners, 0);
+  assert.equal(env.layer.getStats().count, 0);
+});
+
+test('stem collection cancellation during a depth query cannot mutate the released source or continue sampling', async (t) => {
+  installFakeClock(t);
+  let env;
+  let queriedEntity;
+  let originalBase;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (cartographic, [entity]) => {
+      queriedEntity = entity;
+      originalBase = Cesium.Cartesian3.clone(entity.__localBaseCartesian);
+      env.layer.disable(env.viewer);
+      return 180;
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  const owner = env.primitiveOwners[0];
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1);
+  assert.deepEqual(queriedEntity.__localBaseCartesian, originalBase);
+  assert.equal(owner.isDestroyed(), true);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('stem collection and retained Entity points follow the same LOD and horizon eligibility', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'stem-collection',
+    featureCount: 100,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  const entities = env.dataSources[0].entities.values;
+  const stems = env.primitiveOwners[0].get(0);
+  const points = entities.map((entity) => entity.point);
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    50_000_000,
+  );
+  env.viewer.camera.positionCartographic = Cesium.Cartographic.fromCartesian(
+    env.viewer.camera.positionWC,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  const lod = env.layer.getLodDiagnostics();
+  assert.ok(lod.active < lod.total);
+  assert.ok(entities.some((entity) => !entity.show));
+  for (const [index, entity] of entities.entries()) {
+    assert.equal(entity.point, points[index]);
+    assert.equal(stems.get(index).show, entity.show);
+  }
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.viewer.camera.positionCartographic = Cesium.Cartographic.fromCartesian(
+    env.viewer.camera.positionWC,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.ok(env.layer.getLodDiagnostics().active > lod.active);
+  for (const [index, entity] of entities.entries()) {
+    assert.equal(stems.get(index).show, entity.show);
+    assert.equal(entity.point, points[index]);
+  }
+});
+
+test('stem collection changes positions only on the existing geometry cadence despite Cesium dirtying equal assignments', async (t) => {
+  const clock = installFakeClock(t);
+  const env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  const entity = env.dataSources[0].entities.values[0];
+  const stem = env.primitiveOwners[0].get(0).get(0);
+  const positions = Object.getOwnPropertyDescriptor(
+    Object.getPrototypeOf(stem),
+    'positions',
+  );
+  assert.equal(
+    typeof positions?.set,
+    'function',
+    'exercise the real Cesium Polyline setter',
+  );
+  const dirtyBefore = stem._propertiesChanged[0];
+  positions.set.call(stem, positions.get.call(stem));
+  assert.equal(
+    stem._propertiesChanged[0],
+    dirtyBefore + 1,
+    'Cesium itself marks even an equal positions assignment dirty',
+  );
+  let positionWrites = 0;
+  const writtenArrays = [];
+  Object.defineProperty(stem, 'positions', {
+    configurable: true,
+    get: () => positions.get.call(stem),
+    set(value) {
+      positionWrites++;
+      writtenArrays.push(value);
+      positions.set.call(stem, value);
+    },
+  });
+  env.preRender.raise();
+  assert.equal(positionWrites, 1);
+  for (let index = 0; index < 4; index++) {
+    clock.advance(1000);
+    env.preRender.raise();
+  }
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(
+    positionWrites,
+    1,
+    'unchanged walks and moveEnd do not dirty the collection',
+  );
+  env.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(
+    -97.695,
+    30.205,
+    250_000,
+  );
+  env.moveEnd.raise();
+  env.preRender.raise();
+  assert.equal(
+    positionWrites,
+    2,
+    'a genuine camera-derived tip change writes once',
+  );
+  assert.notEqual(
+    writtenArrays[0],
+    writtenArrays[1],
+    'existing two position buffers alternate',
+  );
+  assert.ok(writtenArrays.every((array) => array.length === 2));
+  assert.equal(entity.position.isConstant, true);
+  assert.equal(entity.polyline, undefined);
+});
+
+test('stem-only Entity materialization avoids the real Cesium asynchronous static polyline batch', async (t) => {
+  for (const surfaceRenderer of ['entities', 'stem-collection']) {
+    const env = await createRealLocalLayerHarness({
+      surfaceRenderer,
+      featureCount: 3,
+    });
+    const scene = {
+      primitives: new Cesium.PrimitiveCollection(),
+      groundPrimitives: new Cesium.PrimitiveCollection(),
+      ellipsoid: Cesium.Ellipsoid.WGS84,
+      frameState: { context: { depthTexture: false } },
+    };
+    const visualizer = new Cesium.PolylineVisualizer(
+      scene,
+      env.dataSources[0].entities,
+    );
+    try {
+      const ready = visualizer.update(Cesium.JulianDate.now());
+      if (surfaceRenderer === 'entities') {
+        assert.equal(ready, false);
+        assert.equal(scene.primitives.length, 1);
+        assert.ok(scene.primitives.get(0) instanceof Cesium.Primitive);
+        assert.equal(scene.primitives.get(0).asynchronous, true);
+      } else {
+        assert.equal(ready, true);
+        assert.equal(
+          scene.primitives.length,
+          0,
+          'no Entity polyline exists to start a static worker build',
+        );
+        assert.equal(
+          env.primitiveOwners[0].get(0).length,
+          3,
+          'all owned stems still exist',
+        );
+      }
+    } finally {
+      visualizer.destroy();
+      scene.primitives.destroy();
+      scene.groundPrimitives.destroy();
+      env.layer.destroy(env.viewer);
+      env.cleanup();
+    }
+  }
+});
+
+test('stem collection respects real point definitionChanged cancellation before any following stem write', async (t) => {
+  installFakeClock(t);
+  let env;
+  let releasedOwner;
+  let positionEvents = 0;
+  let stemWrites = 0;
+  env = await createRealLocalLayerHarness({
+    autoEnable: false,
+    surfaceRenderer: 'stem-collection',
+    featureCount: 3,
+    initialCameraHeightM: 20_000,
+    sampleHeightSupported: true,
+    sampleHeight: (_cartographic, [entity]) => {
+      releasedOwner = env.primitiveOwners[0];
+      const stem = releasedOwner.get(0).get(0);
+      const positions = Object.getOwnPropertyDescriptor(
+        Object.getPrototypeOf(stem),
+        'positions',
+      );
+      Object.defineProperty(stem, 'positions', {
+        configurable: true,
+        get: () => positions.get.call(stem),
+        set(value) {
+          stemWrites++;
+          positions.set.call(stem, value);
+        },
+      });
+      entity.position.definitionChanged.addEventListener(() => {
+        positionEvents++;
+        env.layer.disable(env.viewer);
+      });
+      return 117;
+    },
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+  await env.enable();
+  env.preRender.raise();
+  assert.equal(positionEvents, 1);
+  assert.equal(
+    stemWrites,
+    0,
+    'reentrant teardown prevents a write to the released line',
+  );
+  assert.equal(env.sampleCalls.count, 1);
+  assert.equal(releasedOwner.isDestroyed(), true);
+  assert.equal(env.dataSources.length, 0);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(env.preRender.listeners.size, 0);
+  assert.equal(env.moveEnd.listeners.size, 0);
+});
+
+test('surface collection mode rejects stale or unsupported ownership and destroy releases it', async (t) => {
+  assert.throws(
+    () =>
+      createLocalGeoJsonLayer({
+        id: 'invalid',
+        url: '/invalid',
+        name: 'Invalid',
+        color: '#fff',
+        surfaceRenderer: 'unknown',
+      }),
+    /Unsupported local infrastructure surface renderer/,
+  );
+
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'primitive-collections',
+  });
+  const owner = env.primitiveOwners[0];
+  env.layer.destroy(env.viewer);
+  assert.equal(env.primitiveOwners.length, 0);
+  assert.equal(owner.isDestroyed(), true);
+  assert.deepEqual(env.layer.getSurfaceRendererDiagnostics(), {
+    mode: 'primitive-collections',
+    owners: 0,
+    points: 0,
+    stems: 0,
+    attached: false,
+  });
+  await env.layer.enable(env.viewer);
+  assert.equal(
+    env.primitiveOwners.length,
+    0,
+    'destroyed layer cannot resurrect its collection',
+  );
+  env.cleanup();
+});
+
+test('surface collection rollback removes a partially attached owner', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    surfaceRenderer: 'primitive-collections',
+    primitiveAddThrowsAfterAttach: true,
+  });
+  t.after(() => {
+    env.layer.destroy(env.viewer);
+    env.cleanup();
+  });
+
+  assert.equal(
+    env.primitiveOwners.length,
+    0,
+    'a scene.add failure after attachment must remove the exact owner',
+  );
+  assert.equal(env.dataSources.length, 0);
+  assert.deepEqual(env.layer.getSurfaceRendererDiagnostics(), {
+    mode: 'primitive-collections',
+    owners: 0,
+    points: 0,
+    stems: 0,
+    attached: false,
+  });
+});
+
 test('real layer disable clears its published host entries and balances settle listeners', async () => {
   const env = await createRealLocalLayerHarness();
   env.preRender.raise();
@@ -497,7 +2583,7 @@ test('local infrastructure creates no native labels or per-frame geometry callba
   assert.match(source, /const stemPositionBuffers = \[\s*\[base, tip\],\s*\[base, tip\],?\s*\]/);
   assert.match(source, /record\.entity\.polyline\.positions\.setValue\(stemPositions\)/);
   assert.match(source, /viewer\.camera\.moveEnd\.addEventListener/);
-  assert.match(source, /if \(refreshStemGeometry \|\| terrainFloorChanged\)/);
+  assert.match(source, /refreshStemGeometry \|\|\s*terrainFloorChanged \|\|\s*returnedToFlatGlobe/);
   assert.match(source, /now - _lastVisibilityUpdate < VISIBILITY_UPDATE_MS/);
 });
 
@@ -606,7 +2692,9 @@ function asyncDataSources({ rejectAdd = false } = {}) {
   const added = [];
   return {
     added,
+    addCalls: 0,
     add(dataSource) {
+      this.addCalls++;
       if (rejectAdd) return Promise.reject(new Error('scene rejected the data source'));
       return Promise.resolve().then(() => {
         added.push(dataSource);
@@ -638,11 +2726,7 @@ function windowThatFailsOnce() {
   };
 }
 
-test('a post-processing failure after the scene accepts the source rolls it back, and the retry does not double-add', async () => {
-  // The window between GeoJsonDataSource.load() and the end of entity
-  // post-processing. Publishing early made every later enable() skip the
-  // loader; rolling back before the add settled left Cesium to insert the
-  // "removed" source afterwards, which the retry would then double up on.
+test('a conversion failure never attaches a partial source and the retry adds once', async () => {
   const scene = asyncDataSources();
   const { layer, cleanup, enable } = await enableLayerWithFetch(serveOnePolygon, {
     dataSources: scene,
@@ -655,7 +2739,8 @@ test('a post-processing failure after the scene accepts the source rolls it back
   assert.equal(failed.lastUpdate, null);
   assert.equal(layerFeedState(failed), 'unavailable');
   assert.equal(scene.added.length, 0,
-    'rollback must remove the source the scene already accepted');
+    'a conversion failure cannot leave a source in the scene');
+  assert.equal(scene.addCalls, 0, 'visualizers must never observe the failed conversion');
 
   await enable();
   const retried = layer.getStats();
@@ -663,7 +2748,38 @@ test('a post-processing failure after the scene accepts the source rolls it back
   assert.equal(retried.count, 1);
   assert.ok(Number.isFinite(retried.lastUpdate));
   assert.equal(scene.added.length, 1, 'the retry must not leave two sources in the scene');
+  assert.equal(scene.addCalls, 1);
   cleanup();
+});
+
+test('a real collection listener failure after attachment removes the exact source and permits retry', async () => {
+  const scene = new Cesium.DataSourceCollection();
+  const accepted = [];
+  const removed = [];
+  let rejectOnce = true;
+  scene.dataSourceAdded.addEventListener((_collection, source) => {
+    accepted.push(source);
+    if (rejectOnce) {
+      rejectOnce = false;
+      throw new Error('scene listener rejected the added source');
+    }
+  });
+  scene.dataSourceRemoved.addEventListener((_collection, source) => { removed.push(source); });
+  const { layer, cleanup, enable } = await enableLayerWithFetch(serveOnePolygon, { dataSources: scene });
+  try {
+    assert.equal(layer.getStats().error, 'dataset unavailable (scene listener rejected the added source)');
+    assert.equal(layer.getStats().count, 0);
+    assert.equal(scene.length, 0);
+    assert.deepEqual(removed, [accepted[0]]);
+    await enable();
+    assert.equal(layer.getStats().error, null);
+    assert.equal(scene.length, 1);
+    assert.equal(accepted.length, 2);
+    assert.equal(scene.get(0), accepted[1]);
+    assert.notEqual(accepted[1], accepted[0]);
+  } finally {
+    cleanup();
+  }
 });
 
 test('a rejected scene add surfaces as an error instead of healthy stats', async () => {
@@ -726,6 +2842,46 @@ test('ground sampling waits for visible globe tiles before caching a height', as
   env.preRender.raise();
   assert.equal(env.sampleCalls.count, 1, 'the existing retry must sample the settled scene');
   assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+});
+
+test('flat-globe grounding follows a visible height owner appearing and disappearing', async (t) => {
+  const env = await createRealLocalLayerHarness({
+    sampleHeightSupported: true,
+    sampleHeight: () => 117,
+  });
+  const clock = installFakeClock(t);
+  t.after(() => { env.layer.destroy(env.viewer); env.cleanup(); });
+  const displayRoot = {};
+  const groundRoot = {};
+  const scene = env.viewer.scene;
+  env.viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+  env.viewer.entities = { values: [] };
+  env.viewer.dataSourceDisplay = { _primitives: displayRoot, _groundPrimitives: groundRoot };
+  Object.defineProperty(env.viewer.dataSources, 'length', { get: () => env.dataSources.length });
+  env.viewer.dataSources.get = (index) => env.dataSources[index];
+  scene.primitives.length = 1;
+  scene.primitives.get = (index) => index === 0 ? displayRoot : undefined;
+  scene.groundPrimitives = { length: 1, get: (index) => index === 0 ? groundRoot : undefined };
+  scene.globe = { show: true, tilesLoaded: true, getHeight: () => 0 };
+  const previewEntity = { show: false };
+  env.dataSources.push({ show: true, entities: { values: [previewEntity] } });
+  setCameraAltitude(env, 20_000);
+  scene.sampleHeightSupported = false;
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 0, 'flat globe should avoid scene-depth readback');
+  assert.ok(Math.abs(baseHeightM(env)) < 0.01);
+  scene.sampleHeightSupported = true;
+  previewEntity.show = true;
+  clock.advance(500);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1, 'new scene ownership requires a real depth sample');
+  assert.ok(Math.abs(baseHeightM(env) - 117) < 0.01);
+  scene.sampleHeightSupported = false;
+  previewEntity.show = false;
+  clock.advance(500);
+  env.preRender.raise();
+  assert.equal(env.sampleCalls.count, 1, 'returning to a flat globe needs no depth sample');
+  assert.ok(Math.abs(baseHeightM(env)) < 0.01, 'a departed height owner cannot leave a floating stem');
 });
 
 test('settled terrain refinement lifts an already sampled stem without another GPU sample', async (t) => {
@@ -1075,8 +3231,8 @@ test('after the cap a camera-motion frame still samples, and re-opens the budget
   runArmedRetryChain(env, t, clock, 5);
   assert.equal(
     governorScene.renders,
-    GROUND_SAMPLE_MAX_ARMED_RETRIES,
-    'a grounded record asks for no further frames',
+    GROUND_SAMPLE_MAX_ARMED_RETRIES + 1,
+    'a grounded record asks for one visualizer settle frame and no further retries',
   );
 });
 
@@ -1255,7 +3411,12 @@ test('getLodDiagnostics reports the active/total split and the band budget', asy
   });
 
   assert.deepEqual(env.layer.getLodDiagnostics(), {
-    total: 150, active: 0, budgetLimit: 0, computed: false,
+    total: 150,
+    active: 0,
+    budgetLimit: 0,
+    computed: false,
+    geometryDirty: true,
+    cameraPosition: null,
   }, 'before the first walk: materialized but not yet selected');
 
   env.preRender.raise();

@@ -1,0 +1,35 @@
+{
+  "schema": "gev-soak-reassessment/v1",
+  "scope": "Historical measurements evaluated by a newer validator; not a new run or current-candidate acceptance.",
+  "sourceSha256": "8c9fc7d2f7cedf87a51e1b55bd1713f9a58bbfa2010984d2d495dbd63473815c",
+  "candidateCommit": "786583e0ee8a36a670fe81cd244e8923bf84014b",
+  "validatorCommit": "786583e0ee8a36a670fe81cd244e8923bf84014b",
+  "applicationCommit": "786583e0ee8a36a670fe81cd244e8923bf84014b",
+  "originalStability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.023394102019120788
+  },
+  "originalOperationStatus": "passed",
+  "stability": {
+    "status": "passed",
+    "failures": [],
+    "pending": [],
+    "heapGrowthRatio": 0.023394102019120788
+  },
+  "outcome": "passed",
+  "renderer": {
+    "vendor": "Google Inc. (Intel)",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "renderingEvidence": {
+    "kind": "native-gpu",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": true
+  },
+  "hardwareRenderingValidated": true,
+  "durationMs": 3606892,
+  "checkpointCount": 13
+}

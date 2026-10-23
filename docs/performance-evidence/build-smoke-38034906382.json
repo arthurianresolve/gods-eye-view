@@ -1,0 +1,240 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "c49288e4b274c8b7b4be0f78a7ac72ab369d0551",
+  "harnessSha": "c49288e4b274c8b7b4be0f78a7ac72ab369d0551",
+  "startedAt": "2026-10-10T07:35:02.809Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Created JavaScript blob is not a validated Cesium worker.",
+      "failureDetails": {
+        "phase": "final-page-health-and-code-path-audit",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "workerBlobDiagnostics": {
+          "schema": "gev-cesium-worker-blob-diagnostics/v1",
+          "urlValuesOmitted": true,
+          "retentionByteCapBytes": 33554432,
+          "blobRequestCount": 17,
+          "observedBlobCount": 14,
+          "entryCount": 14,
+          "omittedEntryCount": 0,
+          "entries": [
+            {
+              "index": 0,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 148,
+              "bodySha256": "2344bc2819cd1fa1e60b3ebf882a5bee4e1a055538c4cad5aa1eaa09ef20811c",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 1,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 143,
+              "bodySha256": "f250207077eb4bb7955247e134583730581e19bcf8ff6beed0e30a740f198140",
+              "requestCount": 2,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 2,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "04375b654a745e6ea0d2f9701affd159f6c5f0611e84333dd6f668eae4cc8ec1",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 3,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "3e083e50324e96a6113403a4cc27e0000d0238c1ffb9052233f9ef1884d6acfd",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 4,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "d8b133d7e7f7275a0c02a7a5b5bae274a9e557f5e15ef09bde5bfecf2370e0c8",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 5,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 152,
+              "bodySha256": "44b60d37fae2ca48c1132a447c542ff7b968d17bc84840680a6a5ba6c19ceb29",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 6,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 7,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 8,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 9,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 10,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 11,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 12,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 13,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 136,
+              "bodySha256": "6f74612ca6acccc3cbe35edfdfdcaa3012196e367b2e74c6fc2e4ecbc8fb4700",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            }
+          ]
+        },
+        "workerBlobValidationFailure": "Created JavaScript blob is not a validated Cesium worker.",
+        "densePopulationObservations": [
+          {
+            "checkpoint": "initial",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          },
+          {
+            "checkpoint": "final-before-code-validation",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Created JavaScript blob is not a validated Cesium worker.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-10T07:36:05.337Z",
+  "durationMs": 62528
+}

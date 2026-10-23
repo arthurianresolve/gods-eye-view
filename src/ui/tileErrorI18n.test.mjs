@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // Vector tile and weather image failures reach the DATA LAYERS row and the
 // ALPR retry chip in the UI language; the sources keep them in English.
 import { test } from 'node:test';

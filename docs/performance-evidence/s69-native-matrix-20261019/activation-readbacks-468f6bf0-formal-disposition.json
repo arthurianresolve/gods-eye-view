@@ -1,0 +1,196 @@
+{
+  "schema": "gev-activation-readbacks-formal-disposition/v1",
+  "createdAt": "2026-10-21T03:59:40.311Z",
+  "status": "failed",
+  "candidate": "468f6bf05cb9b13bb41cb91daedc0a722f8ec246",
+  "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+  "qa": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "metrics": {
+    "coldStartup": {
+      "status": "unavailable",
+      "reason": "Identity-only build proof supplies no cold-startup observations."
+    },
+    "localControl": {
+      "status": "failed",
+      "protocolVersion": 4,
+      "feedbackPolicy": "trusted-click-event-timing-observed-acknowledgement-v6",
+      "semantic": "Native-next-paint latency plus observed acknowledgement correctness: matched trusted-click Event Timing duration and a complete positive same-intent natural-RAF DOM geometry observation before the earliest quantized endpoint. Known negative geometry, identity, intent and foreground observations remain fatal; later uncertain DOM mutations are diagnostic and compositor-content attribution is unavailable. Candidate accepted intent and native duration p95 each <=100ms; full-readiness comparisons remain <=10%. Neither DOM observation nor Event Timing identifies acknowledgement pixels in a presented frame.",
+      "baseline": {
+        "sampleCount": 20,
+        "clickToAcceptedIntentP95Ms": 1.300000011920929,
+        "clickToNextRenderingP95Ms": 144,
+        "diagnosticTwoRafFeedbackP95Ms": 144.89999997615814,
+        "clickToFullReadyStateP95Ms": 58.20000001788139,
+        "clickToFullRenderedReadinessP95Ms": 59.900000005960464,
+        "acknowledgementCorrectness": {
+          "status": "observed",
+          "proof": "same-intent-current-visible-natural-raf-v1",
+          "sampleCount": 20
+        },
+        "compositorAttribution": {
+          "status": "unavailable",
+          "reason": "no-acknowledgement-to-presented-frame-binding"
+        },
+        "diagnosticUncertainGeometryObservations": 280,
+        "absoluteAcknowledgementFailures": [
+          "matched click-to-next-rendering p95 exceeds the 100ms limit"
+        ]
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "clickToAcceptedIntentP95Ms": 2.7999999821186066,
+        "clickToNextRenderingP95Ms": 104,
+        "diagnosticTwoRafFeedbackP95Ms": 75.7999999821186,
+        "clickToFullReadyStateP95Ms": 73,
+        "clickToFullRenderedReadinessP95Ms": 75.39999997615814,
+        "acknowledgementCorrectness": {
+          "status": "observed",
+          "proof": "same-intent-current-visible-natural-raf-v1",
+          "sampleCount": 20
+        },
+        "compositorAttribution": {
+          "status": "unavailable",
+          "reason": "no-acknowledgement-to-presented-frame-binding"
+        },
+        "diagnosticUncertainGeometryObservations": 266
+      },
+      "absoluteAcknowledgementLimitMs": 100,
+      "absoluteAcknowledgementGateAppliesTo": "candidate",
+      "fullReadinessRegressionLimitPct": 10,
+      "failures": [
+        "matched click-to-next-rendering p95 exceeds the 100ms limit",
+        "click-to-full-ready state regression exceeds 10%",
+        "click-to-full-rendered readiness regression exceeds 10%"
+      ],
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "loadedReplaySeek": {
+      "status": "measured",
+      "protocolVersion": 4,
+      "semantic": "trusted input event timestamp to selected replay state and the first later naturally completed frame whose visible billboard and bounded analyst record match; input delivery delay is included",
+      "baseline": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 55.5,
+        "inputToRenderedFrameP95Ms": 60.599999994039536
+      },
+      "candidate": {
+        "sampleCount": 20,
+        "inputToStateP95Ms": 64.19999998807907,
+        "inputToRenderedFrameP95Ms": 67.69999998807907
+      },
+      "limitMs": 250,
+      "failures": [],
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    },
+    "sampledPeakHeap": {
+      "status": "measured",
+      "semantic": "maximum JSHeapUsedSize across raw 1-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+      "baselinePeakHeapBytes": 73190968,
+      "candidatePeakHeapBytes": 72744312,
+      "sampleCountByBuild": {
+        "baseline": 82,
+        "candidate": 82
+      },
+      "actualDurationMsByBuild": {
+        "baseline": 86704.5685,
+        "candidate": 85777.95279999997
+      },
+      "changePct": -0.6102610912319127,
+      "regressionOver10Pct": false,
+      "sourceSoakStatus": null,
+      "sourceSoakFailurePreserved": false,
+      "thresholdPct": 10,
+      "measurementEnvironment": {
+        "schema": "gev-qualification-native-window-environment/v1",
+        "mode": "native-window-viewport-v1",
+        "helperSha256": "01d07b474c0d9427de4c0bc796f7d638d29273435611de52be3b6405c2091931",
+        "viewport": {
+          "width": 1280,
+          "height": 537,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2560,
+          "height": 1074
+        }
+      }
+    }
+  },
+  "files": [
+    {
+      "path": "../gev-s61-evidence-19065997/qualification-metrics-468f6bf0-native-window-v6-v7-chrome85-20261021/capture.json",
+      "bytes": 3839760,
+      "sha256": "b84b1c9cc36788b917eb27427580f956f51dbc892648745a86a68383cca22cac"
+    },
+    {
+      "path": "../gev-s61-evidence-19065997/qualification-metrics-468f6bf0-native-window-v6-v7-chrome85-20261021/process.json",
+      "bytes": 3639,
+      "sha256": "633cdc6280e2208c11be928a42b7511763c056e9ae607334b1caa7c90579188f"
+    },
+    {
+      "path": "qa-artifacts/formal-native20-468f6bf0-chrome85-v6-v7-review-20261021/review.json",
+      "bytes": 5623,
+      "sha256": "8eaea44304eec665942f9b47b90462e74390c0bd55b3b55e69490076b2f3493b"
+    },
+    {
+      "path": "qa-artifacts/formal-native20-468f6bf0-chrome85-v6-v7-review-20261021/compact-review.json",
+      "bytes": 73971,
+      "sha256": "d311940320d0bed8dca2ef976ca3cbf429f4a4b691e853cea19aaf3b09c556ea"
+    },
+    {
+      "path": "qa-artifacts/formal-native20-468f6bf0-chrome85-v6-v7-review-20261021/provenance.json",
+      "bytes": 9734,
+      "sha256": "249916a4d5a160d094ca63091b9f6ba54a0b65f3238d58d2cf5cd5f020514869"
+    },
+    {
+      "path": "qa-artifacts/activation-readbacks-complete-transfer-20261021.json",
+      "bytes": 428,
+      "sha256": "cd9a10902bbb0f4bc6e129e0f6df84468766a71f0092d240f2c21895bf54c9e5"
+    }
+  ],
+  "archive": {
+    "status": "all-files-independently-verified",
+    "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/activation-readbacks-468f6bf0-complete-20261021",
+    "fileCount": 63,
+    "totalBytes": 7839081,
+    "manifestSha256": "c7dbe2f88b69ba9e369964e5d766a7a9d1b57d1f47d2df5b76696a6315dd9748",
+    "completedAt": "2026-10-21T03:57:16.269Z",
+    "rawModified": false,
+    "productionChanged": false,
+    "acceptanceEligible": false
+  },
+  "diagnosticHeightEquality": {
+    "queries": 24,
+    "exact": true
+  },
+  "decision": "Remain private and unadopted. Native104ms exceeds100ms; readiness73ms versus58.2ms and completed rendering75.4ms versus59.9ms exceed independent10% limits. Replay67.7ms and sampled peakheap -0.61% pass their own gates. No final-soak, deployment or performance acceptance. Next bounded test changes only the RAF-to-task scheduler, preserving the frame boundary and quality inputs.",
+  "adopted": false,
+  "productionChanged": false,
+  "acceptanceEligible": false
+}

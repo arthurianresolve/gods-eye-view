@@ -6,6 +6,8 @@ import {
   formatDate,
   formatNumber,
   msg,
+  prepareLocale,
+  retryLocalePreparation,
   persistLocaleAndReload,
   setLocale,
   t,
@@ -20,6 +22,55 @@ import {
 } from './locale.js';
 
 afterEach(() => setLocale('en'));
+
+await prepareLocale('es');
+await prepareLocale('ru');
+setLocale('en');
+
+test('locale preparation preserves synchronous translation compatibility and coalesces retries', async () => {
+  const [es, ru] = await Promise.all([
+    prepareLocale('es', { force: true }),
+    prepareLocale('ru', { force: true }),
+  ]);
+  assert.equal(es, 'es');
+  assert.equal(ru, 'ru');
+  setLocale('ru');
+  assert.equal(t('POWERED UP'), 'ЗАПУЩЕНО');
+  assert.equal(await retryLocalePreparation('ru'), 'ru');
+});
+
+test('failed injected catalog falls back to English and explicit retry can recover', async () => {
+  await assert.rejects(
+    prepareLocale('es', {
+      force: true,
+      loaders: { es: () => Promise.reject(new Error('offline')) },
+    }),
+    /offline/,
+  );
+  assert.equal(t('POWERED UP'), 'POWERED UP');
+  await prepareLocale('es', {
+    force: true,
+    loaders: { es: async () => ({ default: { 'POWERED UP': 'LISTO' } }) },
+  });
+  assert.equal(t('POWERED UP'), 'LISTO');
+});
+
+test('failed preparation keeps the requested locale for a default retry, including sync loader throws', async () => {
+  await assert.rejects(
+    prepareLocale('ru', {
+      force: true,
+      loaders: {
+        ru: () => {
+          throw new Error('sync offline');
+        },
+      },
+    }),
+    /sync offline/,
+  );
+  assert.equal(t('POWERED UP'), 'POWERED UP');
+  await retryLocalePreparation();
+  assert.equal(t('POWERED UP'), 'ЗАПУЩЕНО');
+});
 
 function memoryStorage(initial = {}) {
   const data = new Map(Object.entries(initial));

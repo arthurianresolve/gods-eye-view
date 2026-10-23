@@ -1,0 +1,234 @@
+{
+  "schema": "gev-failed-qualification-review/v1",
+  "reviewedAt": "2026-10-19T23:14:08.358Z",
+  "status": "failed-preserved",
+  "acceptanceEligible": false,
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/visual-production-repeat-guarded-190c5ab6-588bbec1",
+  "error": {
+    "name": "Error",
+    "message": "Debugger pause deadline exceeded."
+  },
+  "rawSha256": "5ac97908a4796ec7cc0ee34621baa31210a19f0be10ed76ec12a06ebad59c550",
+  "groups": [
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-visible",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-01-baseline",
+      "state": "hud-restored",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-02-candidate",
+      "state": "hud-visible",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-02-candidate",
+      "state": "hud-restored",
+      "status": "completed",
+      "count": 3,
+      "identicalEncodedPngs": true,
+      "error": null
+    },
+    {
+      "slot": "slot-03-candidate",
+      "state": "hud-visible",
+      "status": "failed",
+      "count": 0,
+      "identicalEncodedPngs": false,
+      "error": {
+        "name": "Error",
+        "message": "Debugger pause deadline exceeded."
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "kind": "same-build-restoration",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-visible",
+        "path": "slot-01-baseline/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-restored",
+        "path": "slot-01-baseline/hud-restored-1.png"
+      },
+      "changedPixels": 7763,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 2411,
+        "maxY": 1381
+      }
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-visible",
+        "path": "slot-01-baseline/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-02-candidate/hud-visible-1.png"
+      },
+      "changedPixels": 36,
+      "maximumChannelDelta": 7,
+      "bounds": {
+        "minX": 62,
+        "minY": 41,
+        "maxX": 2411,
+        "maxY": 1381
+      }
+    },
+    {
+      "kind": "cross-build",
+      "left": {
+        "slot": "slot-01-baseline",
+        "role": "baseline",
+        "state": "hud-restored",
+        "path": "slot-01-baseline/hud-restored-1.png"
+      },
+      "right": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-02-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 0,
+      "maximumChannelDelta": 0,
+      "bounds": null
+    },
+    {
+      "kind": "same-build-restoration",
+      "left": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-visible",
+        "path": "slot-02-candidate/hud-visible-1.png"
+      },
+      "right": {
+        "slot": "slot-02-candidate",
+        "role": "candidate",
+        "state": "hud-restored",
+        "path": "slot-02-candidate/hud-restored-1.png"
+      },
+      "changedPixels": 7727,
+      "maximumChannelDelta": 103,
+      "bounds": {
+        "minX": 24,
+        "minY": 0,
+        "maxX": 222,
+        "maxY": 197
+      }
+    }
+  ],
+  "files": [
+    {
+      "name": "build-receipt-baseline.json",
+      "bytes": 78806,
+      "sha256": "e4c9684a619b780f0c0ea367ef4294cb9f34921f9ca52ff7da3d71be6ac05693"
+    },
+    {
+      "name": "build-receipt-candidate.json",
+      "bytes": 206353,
+      "sha256": "064dd069053d3139704a8f5a70a2bf2eb2b1a57d83c2aeb3062d5d3f183e1c0d"
+    },
+    {
+      "name": "diagnostic.json",
+      "bytes": 217928,
+      "sha256": "5ac97908a4796ec7cc0ee34621baa31210a19f0be10ed76ec12a06ebad59c550"
+    },
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6713,
+      "sha256": "3bbfd62e2373f96303f8d1589ec76c12f0e58a93a6b771142a341d5a0830084e"
+    },
+    {
+      "name": "run-visual-production-repeat-guarded-190c5ab6-588bbec1.mjs",
+      "bytes": 30428,
+      "sha256": "994137de44830942f6b1e9b7be5ebf2a758e3c5571b8e511539b09f7ccda06e0"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-2.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-restored-3.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-1.png",
+      "bytes": 1522836,
+      "sha256": "e5de6de794e5402ca319e530315d44d711acd461d6bc504aa6fa6b9e744c4114"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-2.png",
+      "bytes": 1522836,
+      "sha256": "e5de6de794e5402ca319e530315d44d711acd461d6bc504aa6fa6b9e744c4114"
+    },
+    {
+      "name": "slot-01-baseline/hud-visible-3.png",
+      "bytes": 1522836,
+      "sha256": "e5de6de794e5402ca319e530315d44d711acd461d6bc504aa6fa6b9e744c4114"
+    },
+    {
+      "name": "slot-02-candidate/hud-restored-1.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-02-candidate/hud-restored-2.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-02-candidate/hud-restored-3.png",
+      "bytes": 1522311,
+      "sha256": "9f230541ece9f57312c192a4c2106725aeccc7bf786bc6f024135f2d22b54405"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-1.png",
+      "bytes": 1522719,
+      "sha256": "f11cf19865e41f569775c9198fe04de9fdc05699fa7ecb78ad6d2a2b707c6262"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-2.png",
+      "bytes": 1522719,
+      "sha256": "f11cf19865e41f569775c9198fe04de9fdc05699fa7ecb78ad6d2a2b707c6262"
+    },
+    {
+      "name": "slot-02-candidate/hud-visible-3.png",
+      "bytes": 1522719,
+      "sha256": "f11cf19865e41f569775c9198fe04de9fdc05699fa7ecb78ad6d2a2b707c6262"
+    }
+  ],
+  "scope": "All available raw files verified on VM105. Incomplete or input-mismatched attempt retained; no acceptance and no masks or threshold changes. Whole-image pixel comparisons, when present, describe only completed groups."
+}

@@ -1,0 +1,1250 @@
+{
+  "schema": "gev-short-runtime-comparison-independent-readback/v1",
+  "status": "verified-unqualified-diagnostic",
+  "reviewedAt": "2026-10-20T13:20:19.767Z",
+  "raw": {
+    "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\rail-reconcile-short-comparison-a18-fb389928-3fdbcf42-20261020-r2/process.json",
+    "bytes": 1461387,
+    "sha256": "cf71d7373c432b8b21b10fd54332e228b54cdc2d57e28de27544a924d8170096"
+  },
+  "plan": {
+    "path": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s61-evidence-19065997\\rail-reconcile-short-comparison-a18-fb389928-3fdbcf42-20261020-r2/plan.json",
+    "sha256": "ea6c81d6aca5f15f6844df90d808ff6d13f666ea2e42046ceb2db3a240f274c5"
+  },
+  "qaCommit": "3fdbcf420c4bf5e4995503ef033b828221116698",
+  "application": {
+    "baseline": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+    "candidate": "fb38992850a0e082e8c9147904f87846cc8e2520"
+  },
+  "allFourPortableReceiptsAndServedInventoryRecordsVerified": true,
+  "sourceVerificationOutsideCompleteCaptureSpan": true,
+  "assets": [
+    {
+      "role": "baseline",
+      "phase": "before",
+      "receiptFileSha256": "085b860b64970bdfc92c2499b7bc35594232a5aa33b9be40fc24f13e60e43a07",
+      "schema": "gev-served-assets-verification/v1",
+      "status": "served-assets-match",
+      "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+      "assetCount": 886,
+      "totalAssetBytes": 68599376
+    },
+    {
+      "role": "candidate",
+      "phase": "before",
+      "receiptFileSha256": "677e9944d1c22405d6036bae48a3502dffcf11e824e8c686bd99b1584dd62021",
+      "schema": "gev-served-assets-verification/v1",
+      "status": "served-assets-match",
+      "receiptSha256": "9c5f1039b13f6f3c94e65d73995aaa9f7d6f45bc291a8a2a1e5ffaa29df1933e",
+      "assetCount": 886,
+      "totalAssetBytes": 68600503
+    },
+    {
+      "role": "baseline",
+      "phase": "after",
+      "receiptFileSha256": "085b860b64970bdfc92c2499b7bc35594232a5aa33b9be40fc24f13e60e43a07",
+      "schema": "gev-served-assets-verification/v1",
+      "status": "served-assets-match",
+      "receiptSha256": "0ff07eb9aa198f268b03ff2617550898bba450ea442b06b049565f079a35ad0f",
+      "assetCount": 886,
+      "totalAssetBytes": 68599376
+    },
+    {
+      "role": "candidate",
+      "phase": "after",
+      "receiptFileSha256": "677e9944d1c22405d6036bae48a3502dffcf11e824e8c686bd99b1584dd62021",
+      "schema": "gev-served-assets-verification/v1",
+      "status": "served-assets-match",
+      "receiptSha256": "9c5f1039b13f6f3c94e65d73995aaa9f7d6f45bc291a8a2a1e5ffaa29df1933e",
+      "assetCount": 886,
+      "totalAssetBytes": 68600503
+    }
+  ],
+  "allSixNativeGeometrySnapshotsDeepEqual": true,
+  "geometrySha256": "d79f44591a1d420b4b0a188ee420a35c33d210841112cf8836c1c4807a31ae0f",
+  "geometryScope": "Three ON snapshots per role only; one source/eight entities and analyst identities, positions/bases/stems/colors/LOD exactly equal. No OFF geometry readbacks were declared.",
+  "perActionAnalysis": {
+    "scope": "Verbatim callback body extracted from the frozen source for diagnostic attribution only; original validator separately rejects6!==20. No count requirement, acceptance threshold, raw capture or source file was changed.",
+    "sourceSha256": "93edd4ba681453101d64a1fc5f68a78a034266c00d54ad4348040374569fa7ee",
+    "callbackBodySha256": "df3a4461331f0ff140bbe8e7f8e1aafda78653b8d6918f1fc6905db4eac41dad"
+  },
+  "builds": {
+    "baseline": {
+      "applicationCommit": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+      "localActions": 6,
+      "replayActions": 0,
+      "heapSamples": 0,
+      "allSixETUniqueMatchedTrusted": true,
+      "nativeDurationsMs": [
+        288,
+        112,
+        40,
+        96,
+        48,
+        112
+      ],
+      "over100ms": [
+        "baseline-local-01",
+        "baseline-local-02",
+        "baseline-local-06"
+      ],
+      "frozenWholeCohortValidator": {
+        "status": "rejected",
+        "reason": "Expected values to be strictly equal:\n\n6 !== 20\n"
+      },
+      "diagnosticRuleRejections": 6,
+      "sourceCoverageFailureActions": 5,
+      "sourceBatchesWithinEndpoints": 8,
+      "negativeProofsWithinEndpoints": 0,
+      "hiddenOrUnfocusedProofs": 0,
+      "causeCountsOverlapping": {
+        "mixed-unknown": {
+          "actions": 5,
+          "batches": 6
+        },
+        "no-owned-arm": {
+          "actions": 5,
+          "batches": 6
+        },
+        "late-completion": {
+          "actions": 0,
+          "batches": 0
+        },
+        "unequal-restoration-or-negative-visibility": {
+          "actions": 0,
+          "batches": 0
+        }
+      },
+      "eventTimingWork": {
+        "mutationCallbacks": 70,
+        "mutationRecords": 707,
+        "continuityChecks": 46,
+        "geometryChecks": 20,
+        "restoredMeasurementTransactions": 35,
+        "renderBoundaryArms": 8,
+        "renderBoundaryCallbacks": 8,
+        "overhead": {
+          "status": "unavailable",
+          "reason": "not-measured"
+        }
+      },
+      "foregroundObservations": 8,
+      "normalCloseMs": 743.8215000000055,
+      "cleanupVerified": true,
+      "viewport": {
+        "width": 1280,
+        "height": 537,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2560,
+        "height": 1074
+      },
+      "threeGeometrySnapshotsDeepEqual": true,
+      "actions": [
+        {
+          "sampleId": "baseline-local-01",
+          "enabled": true,
+          "eventTimingMs": 288,
+          "inputDelayMs": 7.800000011920929,
+          "processingMs": 5.299999997019768,
+          "quantizedPostProcessingMs": 274.8999999910593,
+          "earliestEndAfterClickMs": 284,
+          "latestEndAfterClickMs": 292,
+          "acceptedIntentAfterClickMs": 9.800000011920929,
+          "stateAfterClickMs": 442.5,
+          "renderAfterClickMs": 465.80000001192093,
+          "firstRafCompletedAfterClickMs": 61.1000000089407,
+          "secondRafCompletedAfterClickMs": 406.40000000596046,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Visible feedback or intent changed before rendering\n\ntrue !== false\n"
+          },
+          "sourceBatches": [],
+          "sourceCoverageFailure": false,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 61.1000000089407,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 503.80000001192093,
+              "completedAfterClickMs": 504.20000000298023,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 8,
+              "sourceCallback": 8
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-02",
+          "enabled": false,
+          "eventTimingMs": 112,
+          "inputDelayMs": 1,
+          "processingMs": 4.200000002980232,
+          "quantizedPostProcessingMs": 106.79999999701977,
+          "earliestEndAfterClickMs": 108,
+          "latestEndAfterClickMs": 116,
+          "acceptedIntentAfterClickMs": 1.2999999970197678,
+          "stateAfterClickMs": 13.200000002980232,
+          "renderAfterClickMs": 15.299999997019768,
+          "firstRafCompletedAfterClickMs": 16.899999991059303,
+          "secondRafCompletedAfterClickMs": 39.20000000298023,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 14,
+              "afterClickMs": 21.299999997019768,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                },
+                {
+                  "target": "left-panel",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 15,
+              "afterClickMs": 63.20000000298023,
+              "pureSource": true,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": true,
+              "causes": []
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "resize-observer-initial",
+            "completedAfterClickMs": 70.70000000298023,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": true
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 70.29999999701977,
+              "completedAfterClickMs": 70.70000000298023,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": true,
+              "armedByCallback": 15,
+              "sourceCallback": 15
+            },
+            {
+              "atAfterClickMs": 191.20000000298023,
+              "completedAfterClickMs": 191.59999999403954,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 20,
+              "sourceCallback": 20
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-03",
+          "enabled": true,
+          "eventTimingMs": 40,
+          "inputDelayMs": 0.5999999940395355,
+          "processingMs": 1.2000000029802322,
+          "quantizedPostProcessingMs": 38.20000000298023,
+          "earliestEndAfterClickMs": 36,
+          "latestEndAfterClickMs": 44,
+          "acceptedIntentAfterClickMs": 0.7000000029802322,
+          "stateAfterClickMs": 90.3999999910593,
+          "renderAfterClickMs": 99.29999999701977,
+          "firstRafCompletedAfterClickMs": 11.599999994039536,
+          "secondRafCompletedAfterClickMs": 78.20000000298023,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 25,
+              "afterClickMs": 14.700000002980232,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 11.599999994039536,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 130.59999999403954,
+              "completedAfterClickMs": 130.8999999910593,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 28,
+              "sourceCallback": 28
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-04",
+          "enabled": false,
+          "eventTimingMs": 96,
+          "inputDelayMs": 0.9000000059604645,
+          "processingMs": 2.9000000059604645,
+          "quantizedPostProcessingMs": 92.19999998807907,
+          "earliestEndAfterClickMs": 92,
+          "latestEndAfterClickMs": 100,
+          "acceptedIntentAfterClickMs": 1.1000000089406967,
+          "stateAfterClickMs": 14.300000011920929,
+          "renderAfterClickMs": 15.700000002980232,
+          "firstRafCompletedAfterClickMs": 16.80000001192093,
+          "secondRafCompletedAfterClickMs": 65.90000000596046,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 37,
+              "afterClickMs": 19.700000002980232,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                },
+                {
+                  "target": "left-panel",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 38,
+              "afterClickMs": 76.40000000596046,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 65.90000000596046,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 112.70000000298023,
+              "completedAfterClickMs": 113,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 39,
+              "sourceCallback": 39
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-05",
+          "enabled": true,
+          "eventTimingMs": 48,
+          "inputDelayMs": 0.699999988079071,
+          "processingMs": 1.1000000089406967,
+          "quantizedPostProcessingMs": 46.20000000298023,
+          "earliestEndAfterClickMs": 44,
+          "latestEndAfterClickMs": 52,
+          "acceptedIntentAfterClickMs": 0.8999999910593033,
+          "stateAfterClickMs": 95.79999999701977,
+          "renderAfterClickMs": 183.59999999403954,
+          "firstRafCompletedAfterClickMs": 13.399999991059303,
+          "secondRafCompletedAfterClickMs": 83.59999999403954,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 50,
+              "afterClickMs": 16.599999994039536,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 13.399999991059303,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 200.8999999910593,
+              "completedAfterClickMs": 201.09999999403954,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 53,
+              "sourceCallback": 53
+            }
+          ]
+        },
+        {
+          "sampleId": "baseline-local-06",
+          "enabled": false,
+          "eventTimingMs": 112,
+          "inputDelayMs": 1.0999999940395355,
+          "processingMs": 4.5,
+          "quantizedPostProcessingMs": 106.40000000596046,
+          "earliestEndAfterClickMs": 108,
+          "latestEndAfterClickMs": 116,
+          "acceptedIntentAfterClickMs": 1.2999999970197678,
+          "stateAfterClickMs": 12.799999997019768,
+          "renderAfterClickMs": 15.699999988079071,
+          "firstRafCompletedAfterClickMs": 19.799999997019768,
+          "secondRafCompletedAfterClickMs": 60.19999998807907,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 61,
+              "afterClickMs": 34.29999999701977,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                },
+                {
+                  "target": "left-panel",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 62,
+              "afterClickMs": 79.59999999403954,
+              "pureSource": true,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": true,
+              "causes": []
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "resize-observer-initial",
+            "completedAfterClickMs": 89.5,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": true
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 89.09999999403954,
+              "completedAfterClickMs": 89.5,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": true,
+              "armedByCallback": 62,
+              "sourceCallback": 62
+            },
+            {
+              "atAfterClickMs": 194.79999999701977,
+              "completedAfterClickMs": 195.19999998807907,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 64,
+              "sourceCallback": 64
+            }
+          ]
+        }
+      ]
+    },
+    "candidate": {
+      "applicationCommit": "fb38992850a0e082e8c9147904f87846cc8e2520",
+      "localActions": 6,
+      "replayActions": 0,
+      "heapSamples": 0,
+      "allSixETUniqueMatchedTrusted": true,
+      "nativeDurationsMs": [
+        192,
+        112,
+        48,
+        96,
+        48,
+        112
+      ],
+      "over100ms": [
+        "candidate-local-01",
+        "candidate-local-02",
+        "candidate-local-06"
+      ],
+      "frozenWholeCohortValidator": {
+        "status": "rejected",
+        "reason": "Expected values to be strictly equal:\n\n6 !== 20\n"
+      },
+      "diagnosticRuleRejections": 6,
+      "sourceCoverageFailureActions": 6,
+      "sourceBatchesWithinEndpoints": 10,
+      "negativeProofsWithinEndpoints": 0,
+      "hiddenOrUnfocusedProofs": 0,
+      "causeCountsOverlapping": {
+        "mixed-unknown": {
+          "actions": 6,
+          "batches": 8
+        },
+        "no-owned-arm": {
+          "actions": 6,
+          "batches": 8
+        },
+        "late-completion": {
+          "actions": 1,
+          "batches": 1
+        },
+        "unequal-restoration-or-negative-visibility": {
+          "actions": 1,
+          "batches": 1
+        }
+      },
+      "eventTimingWork": {
+        "mutationCallbacks": 62,
+        "mutationRecords": 320,
+        "continuityChecks": 39,
+        "geometryChecks": 19,
+        "restoredMeasurementTransactions": 32,
+        "renderBoundaryArms": 7,
+        "renderBoundaryCallbacks": 7,
+        "overhead": {
+          "status": "unavailable",
+          "reason": "not-measured"
+        }
+      },
+      "foregroundObservations": 8,
+      "normalCloseMs": 563.1423000000068,
+      "cleanupVerified": true,
+      "viewport": {
+        "width": 1280,
+        "height": 537,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2560,
+        "height": 1074
+      },
+      "threeGeometrySnapshotsDeepEqual": true,
+      "actions": [
+        {
+          "sampleId": "candidate-local-01",
+          "enabled": true,
+          "eventTimingMs": 192,
+          "inputDelayMs": 4.899999991059303,
+          "processingMs": 3,
+          "quantizedPostProcessingMs": 184.1000000089407,
+          "earliestEndAfterClickMs": 188,
+          "latestEndAfterClickMs": 196,
+          "acceptedIntentAfterClickMs": 5.699999988079071,
+          "stateAfterClickMs": 410.5,
+          "renderAfterClickMs": 502.19999998807907,
+          "firstRafCompletedAfterClickMs": 30.799999997019768,
+          "secondRafCompletedAfterClickMs": 383.8999999910593,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 3,
+              "afterClickMs": 42.79999999701977,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 30.799999997019768,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 585.5,
+              "completedAfterClickMs": 586.2999999970198,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 7,
+              "sourceCallback": 7
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-02",
+          "enabled": false,
+          "eventTimingMs": 112,
+          "inputDelayMs": 0.8999999910593033,
+          "processingMs": 3.7000000029802322,
+          "quantizedPostProcessingMs": 107.40000000596046,
+          "earliestEndAfterClickMs": 108,
+          "latestEndAfterClickMs": 116,
+          "acceptedIntentAfterClickMs": 1.2000000029802322,
+          "stateAfterClickMs": 12.899999991059303,
+          "renderAfterClickMs": 14.700000002980232,
+          "firstRafCompletedAfterClickMs": 16.099999994039536,
+          "secondRafCompletedAfterClickMs": 64.5,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 12,
+              "afterClickMs": 19.899999991059303,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                },
+                {
+                  "target": "left-panel",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 15,
+              "afterClickMs": 74.3999999910593,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 64.5,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 126.8999999910593,
+              "completedAfterClickMs": 127.29999999701977,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 17,
+              "sourceCallback": 17
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-03",
+          "enabled": true,
+          "eventTimingMs": 48,
+          "inputDelayMs": 0.7999999970197678,
+          "processingMs": 1.5999999940395355,
+          "quantizedPostProcessingMs": 45.6000000089407,
+          "earliestEndAfterClickMs": 44,
+          "latestEndAfterClickMs": 52,
+          "acceptedIntentAfterClickMs": 1.0999999940395355,
+          "stateAfterClickMs": 100.70000000298023,
+          "renderAfterClickMs": 108.79999999701977,
+          "firstRafCompletedAfterClickMs": 14.5,
+          "secondRafCompletedAfterClickMs": 86.8999999910593,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 23,
+              "afterClickMs": 17.299999997019768,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 14.5,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 138.5,
+              "completedAfterClickMs": 138.59999999403954,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 26,
+              "sourceCallback": 26
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-04",
+          "enabled": false,
+          "eventTimingMs": 96,
+          "inputDelayMs": 0.7999999970197678,
+          "processingMs": 2.7000000029802322,
+          "quantizedPostProcessingMs": 92.5,
+          "earliestEndAfterClickMs": 92,
+          "latestEndAfterClickMs": 100,
+          "acceptedIntentAfterClickMs": 1,
+          "stateAfterClickMs": 11.899999991059303,
+          "renderAfterClickMs": 13.299999997019768,
+          "firstRafCompletedAfterClickMs": 14.299999997019768,
+          "secondRafCompletedAfterClickMs": 48.8999999910593,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 32,
+              "afterClickMs": 17.099999994039536,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                },
+                {
+                  "target": "left-panel",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 33,
+              "afterClickMs": 61.599999994039536,
+              "pureSource": true,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": true,
+              "causes": []
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "resize-observer-initial",
+            "completedAfterClickMs": 68.29999999701977,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": true
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 67.69999998807907,
+              "completedAfterClickMs": 68.29999999701977,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": true,
+              "armedByCallback": 33,
+              "sourceCallback": 33
+            },
+            {
+              "atAfterClickMs": 162.79999999701977,
+              "completedAfterClickMs": 163.59999999403954,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 35,
+              "sourceCallback": 35
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-05",
+          "enabled": true,
+          "eventTimingMs": 48,
+          "inputDelayMs": 0.5999999940395355,
+          "processingMs": 1.1000000089406967,
+          "quantizedPostProcessingMs": 46.29999999701977,
+          "earliestEndAfterClickMs": 44,
+          "latestEndAfterClickMs": 52,
+          "acceptedIntentAfterClickMs": 0.7000000029802322,
+          "stateAfterClickMs": 96.3999999910593,
+          "renderAfterClickMs": 107.79999999701977,
+          "firstRafCompletedAfterClickMs": 14.599999994039536,
+          "secondRafCompletedAfterClickMs": 83.59999999403954,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 44,
+              "afterClickMs": 17.5,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 14.599999994039536,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 134.5,
+              "completedAfterClickMs": 134.79999999701977,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 47,
+              "sourceCallback": 47
+            }
+          ]
+        },
+        {
+          "sampleId": "candidate-local-06",
+          "enabled": false,
+          "eventTimingMs": 112,
+          "inputDelayMs": 0.7999999970197678,
+          "processingMs": 2.7999999970197678,
+          "quantizedPostProcessingMs": 108.40000000596046,
+          "earliestEndAfterClickMs": 108,
+          "latestEndAfterClickMs": 116,
+          "acceptedIntentAfterClickMs": 1,
+          "stateAfterClickMs": 13.099999994039536,
+          "renderAfterClickMs": 14.399999991059303,
+          "firstRafCompletedAfterClickMs": 15.5,
+          "secondRafCompletedAfterClickMs": 63.8999999910593,
+          "diagnosticVerbatimPerActionRule": {
+            "status": "diagnostic-per-action-assertion-rejected",
+            "reason": "Source-owned measurement needs an eligible post-layout proof before rendering"
+          },
+          "sourceBatches": [
+            {
+              "callback": 53,
+              "afterClickMs": 19.099999994039536,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                },
+                {
+                  "target": "left-panel",
+                  "attribute": "style",
+                  "reason": "changed-attribute"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 54,
+              "afterClickMs": 77,
+              "pureSource": false,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "other",
+                  "reason": "changed-attribute"
+                },
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "mixed-unknown",
+                "no-owned-arm"
+              ]
+            },
+            {
+              "callback": 55,
+              "afterClickMs": 114.20000000298023,
+              "pureSource": true,
+              "recognizedTransactions": 1,
+              "reasons": [
+                {
+                  "target": "layout-root",
+                  "attribute": "data-rail-measuring",
+                  "reason": "restored-measurement"
+                }
+              ],
+              "eligibleCoverage": false,
+              "causes": [
+                "late-completion",
+                "unequal-restoration-or-negative-visibility"
+              ]
+            }
+          ],
+          "sourceCoverageFailure": true,
+          "selectedBeforeEarliestEnd": {
+            "kind": "raf",
+            "completedAfterClickMs": 63.8999999910593,
+            "visible": true,
+            "focused": true,
+            "restoredGeometry": null
+          },
+          "negativeProofsWithinEndpoint": 0,
+          "hiddenOrUnfocusedProofs": 0,
+          "otherInvalidObservations": [],
+          "renderBoundaryProofs": [
+            {
+              "atAfterClickMs": 120.5,
+              "completedAfterClickMs": 120.79999999701977,
+              "visible": true,
+              "focused": true,
+              "restoredGeometry": false,
+              "armedByCallback": 55,
+              "sourceCallback": 55
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "limits": "One serial six-action pair, not formal20 or a repeatability result. Native ET records are actual matched browser durations; failed continuous attribution does not erase them or prove hidden feedback. The exact-restoration assertions can reject visible movement. No overhead calibration or GPU/driver cause is inferred. Planned-stop remains failed; no replay/heap/startup/soak/visual credit.",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "testsRun": false,
+  "productionChanged": false
+}

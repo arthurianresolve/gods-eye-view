@@ -1,0 +1,35 @@
+{
+  "schema": "gev-austin-native-candidate-review/v1",
+  "checkedAt": "2026-10-13T02:01:18.433Z",
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38334288585",
+  "candidate": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+  "baseline": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "runStatus": "passed",
+  "fullValidator": "passed",
+  "sampleCount": 4,
+  "satelliteEpochValidation": "passed",
+  "canonicalFixture": "independently generated exact match",
+  "workerContract": "derived from installed pinned Cesium bytes",
+  "parentAndChildReport": "exact match",
+  "buildAndServedAssets": "hosted parent reports matching assets before and after for both builds; child matches candidate receipt",
+  "artifactIntegrity": [
+    {
+      "path": "hosted-native-38334288585-smoke.json.gz",
+      "compressedBytes": 695197,
+      "compressedSha256": "b59eb4b629bca8c1b9a1a178a0c84dd54d72a968b2c737ea8743b6f4aad63687",
+      "rawBytes": 6878536,
+      "rawSha256": "2c43cecdd0c73cd0dfb8a1913cb662c94e12d3b032a8fe6b2c9e6549da328c43"
+    },
+    {
+      "path": "hosted-native-38334288585-cli.json.gz",
+      "compressedBytes": 390887,
+      "compressedSha256": "d26c1044fc77dc14bd945c3847ca4634e789856619b8ee5acbfbd6d998685c27",
+      "rawBytes": 3676462,
+      "rawSha256": "1a7c573251a58e773a62d9eee8e3da25705afebd8790cffd3939850985fda439"
+    }
+  ],
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+  "performanceAcceptance": false,
+  "comparisonEligible": false,
+  "scope": "Root replay validates structure and independent fixture/worker expectations. Fresh build and served-byte checks were performed by the hosted run, not repeated locally. Short hosted paravirtual Metal diagnostic with instrumentation, not physical GPU or matched performance acceptance."
+}

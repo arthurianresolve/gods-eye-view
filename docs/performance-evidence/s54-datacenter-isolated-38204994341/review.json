@@ -1,0 +1,98 @@
+{
+  "commit": "9a0b6a0805594945aa8975783a515aa5a23bce57",
+  "harnessCommit": "9a0b6a0805594945aa8975783a515aa5a23bce57",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38204994341",
+  "artifact": {
+    "bytes": 58552,
+    "sha256": "c7e3abfbd89bf6679918d96c84452e5650536bae448fa8c3d2c4e530568cef9d"
+  },
+  "status": "failed",
+  "physicalHardwareCoverage": false,
+  "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+  "sampleCount": 0,
+  "completedComparisons": 0,
+  "failedMode": "entities",
+  "failedCase": "default-style",
+  "completedCaptures": 55,
+  "stableFrames": 35,
+  "geometryReady": true,
+  "lodGeometryDirty": false,
+  "sourceReady": true,
+  "surfaceCount": 4362,
+  "visibleSurfaces": 2,
+  "pickDiagnostics": {
+    "examined": 4362,
+    "hidden": 4360,
+    "offscreen": 0,
+    "coincident": 0,
+    "pointMisses": 2,
+    "stemMisses": 0,
+    "rejections": [
+      {
+        "kind": "point",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1176042553",
+        "actualEntityId": "1182624646",
+        "primitiveType": "PointPrimitive",
+        "appearanceType": null
+      },
+      {
+        "kind": "point",
+        "reason": "picked-owner-kind-or-layer-mismatch",
+        "expectedEntityId": "1182624646",
+        "actualEntityId": "1182624646",
+        "primitiveType": "PointPrimitive",
+        "appearanceType": null
+      }
+    ]
+  },
+  "teardown": {
+    "layerDestroyed": true,
+    "dataSourceRemoved": true,
+    "rendererOwnersRemoved": true,
+    "viewerKeptForNextLifetime": true,
+    "instrumentationRestored": true,
+    "ownerCountAfterDestroy": 0,
+    "dataSourceCountAfterDestroy": 0,
+    "scenePrimitiveCountAfterDestroy": 1,
+    "groundPrimitiveCountAfterDestroy": 1
+  },
+  "viewerCleanup": {
+    "viewerDestroyed": true
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 29841.282875,
+      "closeSettledHostMs": 30191.299708,
+      "closeElapsedMs": 350.01683299999786,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 333.97654200000034
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "sourceDefect": {
+    "path": "scripts/fixtures/infrastructure-runtime-collections.mjs",
+    "line": 783,
+    "invalidProperty": "targetLayer.layerId",
+    "publicLayerProperty": "targetLayer.id",
+    "effect": "Undefined layer identity fails the native-pick helper allowlist before actual owner validation."
+  },
+  "limitations": [
+    "Collection lifetime not reached",
+    "No exact image pairs or new benefit evidence",
+    "Fixture defect does not establish a production rendering or physical GPU fault"
+  ]
+}

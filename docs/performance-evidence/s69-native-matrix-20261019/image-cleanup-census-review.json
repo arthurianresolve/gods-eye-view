@@ -1,0 +1,163 @@
+{
+  "schema": "gev-image-cleanup-and-engine-census-review/v1",
+  "reviewedAt": "2026-10-19T10:49:49.143Z",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "browserVersion": "Chrome/155.0.8059.84",
+  "intervention": {
+    "applicationCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "harnessCommit": "18702e7703bfe9dd394fa638fcc3d6a91bff86fc",
+    "receiptSha256": "2cf95262f994e916309c784a0a8745e3e71f192e7587e93d3998d43cd4916c97",
+    "archiveReceiptSha256": "5e71989a5bd7d11da459cc2ab61e87ed367587ee97a20ba803fb6a3e12cb29fb",
+    "archiveRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/image-retention-proof-d8ef-1792406216561",
+    "checkpoints": [
+      {
+        "label": "warmed-baseline",
+        "cycles": 0,
+        "heapBytes": 248844620,
+        "nodes": 6354,
+        "listeners": 666,
+        "imagesAlive": 2,
+        "observedImages": 2
+      },
+      {
+        "label": "original",
+        "cycles": 4,
+        "heapBytes": 257740824,
+        "nodes": 6377,
+        "listeners": 666,
+        "imagesAlive": 5,
+        "observedImages": 5
+      },
+      {
+        "label": "original",
+        "cycles": 8,
+        "heapBytes": 258526312,
+        "nodes": 6404,
+        "listeners": 666,
+        "imagesAlive": 9,
+        "observedImages": 9
+      },
+      {
+        "label": "original-drained",
+        "cycles": 8,
+        "heapBytes": 258203628,
+        "nodes": 6342,
+        "listeners": 664,
+        "imagesAlive": 9,
+        "observedImages": 9
+      },
+      {
+        "label": "original-drained-confirmation",
+        "cycles": 8,
+        "heapBytes": 258208996,
+        "nodes": 6343,
+        "listeners": 664,
+        "imagesAlive": 9,
+        "observedImages": 9
+      },
+      {
+        "label": "after-release",
+        "cycles": 8,
+        "heapBytes": 258220288,
+        "nodes": 6288,
+        "listeners": 664,
+        "imagesAlive": 0,
+        "observedImages": 9
+      },
+      {
+        "label": "substituted-cleanup",
+        "cycles": 12,
+        "heapBytes": 259673864,
+        "nodes": 6349,
+        "listeners": 666,
+        "imagesAlive": 0,
+        "observedImages": 13
+      },
+      {
+        "label": "substituted-cleanup",
+        "cycles": 16,
+        "heapBytes": 260518592,
+        "nodes": 6348,
+        "listeners": 666,
+        "imagesAlive": 0,
+        "observedImages": 16
+      },
+      {
+        "label": "substituted-drained",
+        "cycles": 16,
+        "heapBytes": 260232380,
+        "nodes": 6289,
+        "listeners": 664,
+        "imagesAlive": 0,
+        "observedImages": 16
+      }
+    ]
+  },
+  "engineCensus": {
+    "applicationCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+    "harnessCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+    "receiptSha256": "fc8bb068c0e3f0b0ae41931e4560d4447947791aa8ea1f3ee8e38ac9ce8fbc17",
+    "archiveReceiptSha256": "3c1a8446eb134741978a9af81d8df5ee3458e183408967ccd0495b66a8bbf202",
+    "archiveRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/engine-ownership-census-d8ef-1792406133840",
+    "checkpoints": [
+      {
+        "label": "warm",
+        "cycles": 0,
+        "heapBytes": 253548996,
+        "nodes": 6342,
+        "listeners": 666,
+        "cesiumEvents": 223952,
+        "cesiumListenerPairs": 246819,
+        "cesiumEntities": 8740,
+        "entityCollections": 5
+      },
+      {
+        "label": "cycle",
+        "cycles": 4,
+        "heapBytes": 261141572,
+        "nodes": 6350,
+        "listeners": 666,
+        "cesiumEvents": 223952,
+        "cesiumListenerPairs": 246819,
+        "cesiumEntities": 8740,
+        "entityCollections": 5
+      },
+      {
+        "label": "cycle",
+        "cycles": 8,
+        "heapBytes": 261119872,
+        "nodes": 6349,
+        "listeners": 666,
+        "cesiumEvents": 223952,
+        "cesiumListenerPairs": 246819,
+        "cesiumEntities": 8740,
+        "entityCollections": 5
+      },
+      {
+        "label": "cycle",
+        "cycles": 12,
+        "heapBytes": 261475188,
+        "nodes": 6346,
+        "listeners": 666,
+        "cesiumEvents": 223952,
+        "cesiumListenerPairs": 246819,
+        "cesiumEntities": 8740,
+        "entityCollections": 5
+      },
+      {
+        "label": "drained",
+        "cycles": 12,
+        "heapBytes": 259938752,
+        "nodes": 6289,
+        "listeners": 664,
+        "cesiumEvents": 223952,
+        "cesiumListenerPairs": 246819,
+        "cesiumEntities": 8740,
+        "entityCollections": 5
+      }
+    ]
+  },
+  "conclusion": "The cancelled-image ownership leak is reproduced and corrected. The full-application intervention releases all observed retired images and reduces DOM nodes. Engine Event/Entity counts stay fixed in a new-candidate12cycle census, but diagnostics and extra GC do not satisfy the60minute heap gate. The older6.32percent final-window failure remains failed; final candidate stability is unqualified."
+}

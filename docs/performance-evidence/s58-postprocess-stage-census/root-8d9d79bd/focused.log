@@ -1,0 +1,27 @@
+✔ capture no-undef config accepts standard Node and browser globals (180.0109ms)
+✔ Vite commit metadata is allowed only in the CCTV fixture (28.8216ms)
+✔ capture no-undef config rejects an undeclared project identifier (14.0838ms)
+✔ capture no-undef config does not allow inline suppression (10.154ms)
+✔ VisualSettings selection drives real Cesium stages through crossfade and disposal (132.5903ms)
+✔ a second enabled style fails the selected-stage contribution contract (108.785ms)
+✔ stage census validation rejects altered fixture identity and missing ownership (318.8007ms)
+✔ unit discovery includes each existing server test exactly once (66.9589ms)
+✔ unit discovery recursively includes future nested server test files (9.3474ms)
+✔ construction is inert and initialization creates one owned pipeline (2.1203ms)
+✔ crossfade uses the established 500ms easing and settles without idle frames (0.6238ms)
+✔ a superseding transition starts from the current rendered intensity (0.3152ms)
+✔ only visible animated stages keep the animation clock and render hold alive (0.3342ms)
+✔ direct Cockpit intensity writes are reconciled before rendering (0.388ms)
+✔ bloom retains its dead zone, normalized intensity and independent toggle (0.8446ms)
+✔ sharpen uses the existing uniform scale and keeps values while disabled (0.4579ms)
+✔ stop revokes pending work immediately but retains stages until final destruction (1.1593ms)
+✔ destroying one instance does not remove another pipeline or clock (0.471ms)
+✔ existing baseline and military presets keep one detection default (0.3961ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3564.0459

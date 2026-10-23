@@ -1,0 +1,317 @@
+{
+  "schema": "gev-cable-browser-review/v1",
+  "diagnosticOnly": true,
+  "acceptance": "unresolved; original five-run failures retained",
+  "protocolSha256": "c6eeac5d168baec410d64c83f4afb4997c715219c32de4842b263f1cb168dc56",
+  "harnessCommit": "c9c61d019272a6fa85b7a2eb04ddc2a0e62df1d2",
+  "appCommits": {
+    "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+    "candidate": "19065997a3f6360d68cb9ed5b389c4754856b596"
+  },
+  "order": ["candidate", "baseline"],
+  "warmupMs": 30000,
+  "durationMs": 60000,
+  "archiveFiles": [
+    {
+      "file": "capture-1-candidate.json",
+      "sha256": "2a1d93eff63cea324791a9f71a65288a009a2ef8d305ef51f3ae399a20d323ec",
+      "bytes": 241683
+    },
+    {
+      "file": "frame-trace-1-candidate.json",
+      "sha256": "27af170615c042769a8d7b6eaa786a49904d7d24de942f0b63a856ee60c0c5ac",
+      "bytes": 148006
+    },
+    {
+      "file": "browser-trace-1-candidate.json",
+      "sha256": "1b1936de5c403d5e9b69b1496f4f1d85317fcf20a7a8f4ef7ab5415e32c67a8e",
+      "bytes": 26149048
+    },
+    {
+      "file": "capture-2-baseline.json",
+      "sha256": "6cfd9a513b9e0f1ad6a9f1415dbaeff8816da1780a825a787067f08266c53be9",
+      "bytes": 235473
+    },
+    {
+      "file": "frame-trace-2-baseline.json",
+      "sha256": "fd1e47a7aef14286f291600b82d1cda76674174c6f700369bac73115d42a90b0",
+      "bytes": 142198
+    },
+    {
+      "file": "browser-trace-2-baseline.json",
+      "sha256": "23d3cd7f3df917a5924fd653b7b189a6924e1d225cacd1e96a06ad3aa99917f8",
+      "bytes": 26097135
+    }
+  ],
+  "analysisScripts": [
+    {
+      "name": "review-cable-browser-trace.mjs",
+      "sha256": "84417d2004691df2377584d5218eb8c025d5b53a713b6a304329b38bddf7e4e2"
+    },
+    {
+      "name": "summarize-selected-trace-cpu.mjs",
+      "sha256": "2e91e31298712a32bfb723ad3a237fb7a9478c67864f407561442b110947f076"
+    }
+  ],
+  "visualSettings": {
+    "qualityMode": "manual",
+    "densityPct": 75,
+    "detectionMode": "DENSE",
+    "resolutionScale": 1,
+    "antialias": true,
+    "msaaSamples": 4,
+    "fxaa": false,
+    "bloom": false,
+    "bloomIntensity": 0,
+    "sharpen": true,
+    "sharpenIntensity": 49,
+    "style": "normal",
+    "map": "esri-imagery",
+    "visualState": {
+      "style": "normal",
+      "bloom": {
+        "enabled": false,
+        "intensity": 0,
+        "version": 2
+      },
+      "sharpen": {
+        "enabled": true,
+        "intensity": 49
+      },
+      "hud": {
+        "visible": true,
+        "variant": "tactical"
+      },
+      "detection": {
+        "mode": "DENSE",
+        "density": 75,
+        "allocation": "ELASTIC",
+        "fadePct": 7,
+        "outsideOpacityPct": 1
+      },
+      "scope": {
+        "enabled": true,
+        "featherPct": 11
+      },
+      "mapStack": "esri-imagery",
+      "styleParams": {
+        "retro": {
+          "pixelation": 5,
+          "distortion": 0,
+          "instability": 0.4
+        },
+        "surveillance": {
+          "gain": 0.55,
+          "bloom": 0.3,
+          "scanlineStr": 1,
+          "pixelation": 2.5
+        },
+        "thermal": {
+          "sensitivity": 0.75,
+          "bloom": 0.65,
+          "mode": 0,
+          "pixelation": 1.5,
+          "palette": 0
+        },
+        "anime": {
+          "saturation": 1,
+          "edgeThick": 0.5
+        },
+        "noir": {
+          "contrastAmt": 1.2,
+          "grainAmt": 0.5,
+          "vignetteAmt": 0.5
+        },
+        "snow": {
+          "density": 0.6,
+          "wind": 0.5
+        }
+      }
+    },
+    "nativeSharpnessProfile": {
+      "id": "native-sharpness-v1",
+      "useBrowserRecommendedResolution": false,
+      "resolutionScale": 1,
+      "maximumScreenSpaceError": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    }
+  },
+  "captures": [
+    {
+      "label": "candidate",
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "capturedAt": "2026-10-18T23:33:18.440Z",
+      "motionIntervalMs": {
+        "p50": 285.60000002384186,
+        "p95": 351.5,
+        "max": 643.7000000178814,
+        "samples": 208,
+        "reason": null
+      },
+      "renderedFrames": 209,
+      "longTasks": {
+        "count": 1,
+        "maxMs": 52
+      },
+      "totalObjects": 2629,
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "traceStatus": "completed",
+      "traceDataLoss": false,
+      "traceBufferUsage": {
+        "percentFull": 0.23074126243591309,
+        "eventCount": 0,
+        "value": 0.23074126243591309
+      },
+      "categories": ["devtools.timeline", "toplevel", "viz"],
+      "compositionControl": {
+        "diagnosticOnly": true,
+        "requestedBrowserSwitch": "--disable-direct-composition",
+        "scope": "owned temporary Chrome process only; no persistent browser or Windows setting changes",
+        "effectivePath": "must be established from browser trace; a requested switch alone does not establish it"
+      },
+      "events": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 205,
+          "inclusiveWallTotalMs": 34973.492999999995,
+          "wallP95Ms": 284.537,
+          "threadCpuSamples": 205,
+          "threadCpuTotalMs": 2015.476000000001,
+          "threadCpuP95Ms": 15.603
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 0,
+          "inclusiveWallTotalMs": 0,
+          "wallP95Ms": null,
+          "threadCpuSamples": 0,
+          "threadCpuTotalMs": null,
+          "threadCpuP95Ms": null,
+          "overlayCounts": []
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 451,
+          "inclusiveWallTotalMs": 4944.240000000003,
+          "wallP95Ms": 23.401,
+          "threadCpuSamples": 451,
+          "threadCpuTotalMs": 4865.955999999999,
+          "threadCpuP95Ms": 22.99
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 455,
+          "inclusiveWallTotalMs": 601.446,
+          "wallP95Ms": 2.526,
+          "threadCpuSamples": 455,
+          "threadCpuTotalMs": 593.8969999999999,
+          "threadCpuP95Ms": 2.483
+        },
+        {
+          "name": "Layout",
+          "count": 442,
+          "inclusiveWallTotalMs": 201.56899999999996,
+          "wallP95Ms": 0.783,
+          "threadCpuSamples": 442,
+          "threadCpuTotalMs": 199.736,
+          "threadCpuP95Ms": 0.768
+        }
+      ]
+    },
+    {
+      "label": "baseline",
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "capturedAt": "2026-10-18T23:37:32.529Z",
+      "motionIntervalMs": {
+        "p50": 314.40000000596046,
+        "p95": 357.69999998807907,
+        "max": 499.30000001192093,
+        "samples": 195,
+        "reason": null
+      },
+      "renderedFrames": 196,
+      "longTasks": {
+        "count": 1,
+        "maxMs": 53
+      },
+      "totalObjects": 2629,
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "traceStatus": "completed",
+      "traceDataLoss": false,
+      "traceBufferUsage": {
+        "percentFull": 0.22093021869659424,
+        "eventCount": 0,
+        "value": 0.22093021869659424
+      },
+      "categories": ["devtools.timeline", "toplevel", "viz"],
+      "compositionControl": {
+        "diagnosticOnly": true,
+        "requestedBrowserSwitch": "--disable-direct-composition",
+        "scope": "owned temporary Chrome process only; no persistent browser or Windows setting changes",
+        "effectivePath": "must be established from browser trace; a requested switch alone does not establish it"
+      },
+      "events": [
+        {
+          "name": "SkiaOutputSurfaceImplOnGpu::SwapBuffers",
+          "count": 192,
+          "inclusiveWallTotalMs": 56153.145999999986,
+          "wallP95Ms": 331.181,
+          "threadCpuSamples": 192,
+          "threadCpuTotalMs": 2054.876,
+          "threadCpuP95Ms": 15.4
+        },
+        {
+          "name": "SkiaOutputDevice->ScheduleOverlays()",
+          "count": 0,
+          "inclusiveWallTotalMs": 0,
+          "wallP95Ms": null,
+          "threadCpuSamples": 0,
+          "threadCpuTotalMs": null,
+          "threadCpuP95Ms": null,
+          "overlayCounts": []
+        },
+        {
+          "name": "FireAnimationFrame",
+          "count": 438,
+          "inclusiveWallTotalMs": 4585.637999999999,
+          "wallP95Ms": 20.586,
+          "threadCpuSamples": 438,
+          "threadCpuTotalMs": 4522.496999999998,
+          "threadCpuP95Ms": 20.139
+        },
+        {
+          "name": "UpdateLayoutTree",
+          "count": 440,
+          "inclusiveWallTotalMs": 603.5179999999991,
+          "wallP95Ms": 2.218,
+          "threadCpuSamples": 440,
+          "threadCpuTotalMs": 585.3219999999994,
+          "threadCpuP95Ms": 2.151
+        },
+        {
+          "name": "Layout",
+          "count": 429,
+          "inclusiveWallTotalMs": 241.8759999999999,
+          "wallP95Ms": 0.962,
+          "threadCpuSamples": 429,
+          "threadCpuTotalMs": 240.08099999999996,
+          "threadCpuP95Ms": 0.965
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "One instrumented run per build; not performance acceptance.",
+    "X-event wall and thread CPU durations are Chrome dur and tdur fields in microseconds. Missing thread CPU fields remain unavailable.",
+    "Inclusive event durations overlap; do not add totals across event names. Thread CPU is not GPU execution time.",
+    "Presentation waits are localized but no application or driver root cause is established."
+  ]
+}

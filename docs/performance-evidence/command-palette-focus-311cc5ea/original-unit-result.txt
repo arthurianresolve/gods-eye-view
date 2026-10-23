@@ -1,0 +1,194 @@
+✔ command search is case-insensitive and explains unavailable commands (1.6523ms)
+✔ workflow layouts restore panel state and teardown is reversible (0.9116ms)
+✖ a delayed native close event does not steal focus from a newly opened inspector (3.4091ms)
+✔ Escape still relies on native close focus restoration (0.3024ms)
+✖ an old close event cannot steal focus from a reopened palette (1.2203ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 3
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.5661
+
+✖ failing tests:
+
+test at qa-artifacts\focus-reproduction\commandPalette-original.test.mjs:187:1
+✖ a delayed native close event does not steal focus from a newly opened inspector (3.4091ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+  ... Skipped lines
+  
+  + <ref *1> FakeElement {
+  +   attributes: Map(1) {
+  +     'aria-label' => 'Search commands'
+  +   },
+  - FakeElement {
+  -   attributes: Map(0) {},
+      children: [],
+  +   className: 'gev-command-trigger',
+      dataset: {},
+      isConnected: true,
+  +   listeners: Map(1) {
+  +     'click' => Set(1) {
+  +       [Function: open]
+  +     }
+  +   },
+  -   listeners: Map(0) {},
+      open: false,
+  +   ownerDocument: {
+  +     activeElement: [Circular *1],
+  -   ownerDocument: <ref *1> {
+  -     activeElement: FakeElement {
+  -       attributes: Map(1) {
+  -         'aria-label' => 'Search commands'
+  -       },
+  -       children: [],
+  -       className: 'gev-command-trigger',
+  -       dataset: {},
+  -       isConnected: true,
+  -       listeners: Map(1) {
+  -         'click' => Set(1) {
+  -           [Function: open]
+  -         }
+  -       },
+  -       open: false,
+  -       ownerDocument: [Circular *1],
+  -       tagName: 'button',
+  -       textContent: '⌕',
+  -       title: 'Search commands (Ctrl+K)',
+  -       type: 'button',
+  -       value: ''
+  -     },
+        addEventListener: [Function: addEventListener],
+        body: {
+          append: [Function: append]
+        },
+        createElement: [Function: createElement],
+  ...
+        },
+  +     focusBeforeDialog: [Circular *1],
+  -     focusBeforeDialog: FakeElement {
+  -       attributes: Map(1) {
+  -         'aria-label' => 'Search commands'
+  -       },
+  -       children: [],
+  -       className: 'gev-command-trigger',
+  -       dataset: {},
+  -       isConnected: true,
+  -       listeners: Map(1) {
+  -         'click' => Set(1) {
+  -           [Function: open]
+  -         }
+  -       },
+  -       open: false,
+  -       ownerDocument: [Circular *1],
+  -       tagName: 'button',
+  -       textContent: '⌕',
+  -       title: 'Search commands (Ctrl+K)',
+  -       type: 'button',
+  -       value: ''
+  -     },
+        queuedCloseEvents: [],
+        removeEventListener: [Function: removeEventListener]
+      },
+      tagName: 'button',
+  +   textContent: '⌕',
+  +   title: 'Search commands (Ctrl+K)',
+  +   type: 'button',
+      value: ''
+    }
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-command-palette-focus/qa-artifacts/focus-reproduction/commandPalette-original.test.mjs:204:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [FakeElement],
+    expected: [FakeElement],
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at qa-artifacts\focus-reproduction\commandPalette-original.test.mjs:220:1
+✖ an old close event cannot steal focus from a reopened palette (1.2203ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+  ... Skipped lines
+  
+  + <ref *1> FakeElement {
+  - FakeElement {
+      attributes: Map(0) {},
+      children: [],
+      dataset: {},
+      isConnected: true,
+  +   listeners: Map(0) {},
+  -   listeners: Map(2) {
+  -     'input' => Set(1) {
+  -       [Function: render]
+  -     },
+  -     'keydown' => Set(1) {
+  -       [Function (anonymous)]
+  -     }
+  -   },
+      open: false,
+  +   ownerDocument: {
+  +     activeElement: [Circular *1],
+  -   ownerDocument: <ref *1> {
+  -     activeElement: FakeElement {
+  -       attributes: Map(0) {},
+  -       children: [],
+  -       dataset: {},
+  -       isConnected: true,
+  -       listeners: Map(0) {},
+  -       open: false,
+  -       ownerDocument: [Circular *1],
+  -       tagName: 'button',
+  -       value: ''
+  -     },
+        addEventListener: [Function: addEventListener],
+        body: {
+          append: [Function: append]
+        },
+        createElement: [Function: createElement],
+  ...
+        },
+  +     focusBeforeDialog: [Circular *1],
+  -     focusBeforeDialog: FakeElement {
+  -       attributes: Map(0) {},
+  -       children: [],
+  -       dataset: {},
+  -       isConnected: true,
+  -       listeners: Map(0) {},
+  -       open: false,
+  -       ownerDocument: [Circular *1],
+  -       tagName: 'button',
+  -       value: ''
+  -     },
+        queuedCloseEvents: [],
+        removeEventListener: [Function: removeEventListener]
+      },
+  +   tagName: 'button',
+  -   tagName: 'input',
+      value: ''
+    }
+  
+      at TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-command-palette-focus/qa-artifacts/focus-reproduction/commandPalette-original.test.mjs:232:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1306:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)
+      at Test.postRun (node:internal/test_runner/test:1447:19)
+      at Test.run (node:internal/test_runner/test:1372:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:897:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [FakeElement],
+    expected: [FakeElement],
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

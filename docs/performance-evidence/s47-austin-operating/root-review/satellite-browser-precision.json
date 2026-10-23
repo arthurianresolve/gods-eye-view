@@ -1,0 +1,94 @@
+{
+  "schema": "gev-satellite-browser-numerical-control/v1",
+  "recordedAt": "2026-10-12T21:38:20.322Z",
+  "commit": "61c72ea2411163c3d5906467b2bcfd32e275a987",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "node": "v24.16.0",
+  "sourceSha256": {
+    "src/layers/satellites/rendering.js": "606b1642f92a9b11680d4c8d74df9c9a0b6355d906dfd6b2174192ac7a1d24b8",
+    "src/layers/satellites/controls.js": "87ba258bf943d4abff7bf849e260471dc421234b653cc9e414997f439efe7717",
+    "src/layers/satellites/orbits.js": "4b8a46697e21a86ea6ea3209079ae009fa0ad288654490706d13b76bc8c44b01",
+    "src/layers/satellites/policy.js": "918f3659ab7b396c6a6d944bc7f7162eb02f3590f22144cc6e571068baa970fa",
+    "src/sources/tle.js": "a687f5725295758b005a54fbb1258084123a8089d070b5649db84fa5cb8b7570",
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801",
+    "package-lock.json": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+    "src/data/fixtures/austin-operating-v1/tle/stations.tle": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c",
+    "src/data/fixtures/austin-operating-v1/tle/visual.tle": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9",
+    "src/data/fixtures/austin-operating-v1/tle/gps-ops.tle": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909",
+    "src/data/fixtures/austin-operating-v1/tle/glo-ops.tle": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f",
+    "src/data/fixtures/austin-operating-v1/tle/galileo.tle": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255",
+    "src/data/fixtures/austin-operating-v1/tle/geo.tle": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+  },
+  "sourceStable": true,
+  "browserBundleSha256": "bbf5ccea592053411d48b028a5b0ff10a10a772ecb1279a2afd0a17ea8c53821",
+  "raw": {
+    "file": "satellite-browser-precision-raw.json",
+    "byteLength": 521679,
+    "sha256": "060fe78a38785b5cab2ab833a481cccda2a020d7e6ea5d209192faba25ac147f"
+  },
+  "toleranceMeters": 0.001,
+  "cases": [
+    {
+      "frameStepMs": 16,
+      "boundary": "warmup-held",
+      "boundaryEpochMs": 1791828030000,
+      "derivedEpochMs": 1791828029232,
+      "ageMs": 768,
+      "matchedCount": 828,
+      "maximumResidualMeters": 0.000003141352562788422,
+      "rawPositionSha256": "642c00ede462f302a14a55f771ee531c537d59980fc76cc9977e03604d003d41"
+    },
+    {
+      "frameStepMs": 16,
+      "boundary": "complete",
+      "boundaryEpochMs": 1791828090000,
+      "derivedEpochMs": 1791828089712,
+      "ageMs": 288,
+      "matchedCount": 828,
+      "maximumResidualMeters": 0.0000030943957672574175,
+      "rawPositionSha256": "61caaeef8ad36e98abd698d489ed3c2a7a50ff5be2e2d2787af8ae25e7af60b1"
+    },
+    {
+      "frameStepMs": 33,
+      "boundary": "warmup-held",
+      "boundaryEpochMs": 1791828030000,
+      "derivedEpochMs": 1791828029667,
+      "ageMs": 333,
+      "matchedCount": 828,
+      "maximumResidualMeters": 0.000003141352562788422,
+      "rawPositionSha256": "60be8c3ad2546df6043eec93f75b8c42de4b75bdc34148fb8c1126fd105b096b"
+    },
+    {
+      "frameStepMs": 33,
+      "boundary": "complete",
+      "boundaryEpochMs": 1791828090000,
+      "derivedEpochMs": 1791828089004,
+      "ageMs": 996,
+      "matchedCount": 828,
+      "maximumResidualMeters": 0.000003101979823175005,
+      "rawPositionSha256": "0e895c3ecdcfdc455290477f6ba2e53f45532132a62d6d212006853f8e28ac91"
+    },
+    {
+      "frameStepMs": 120,
+      "boundary": "warmup-held",
+      "boundaryEpochMs": 1791828030000,
+      "derivedEpochMs": 1791828029160,
+      "ageMs": 840,
+      "matchedCount": 828,
+      "maximumResidualMeters": 0.0000031378756446727583,
+      "rawPositionSha256": "f363d101a74e29e9bd2468afc2518c8ac2f4143a70cceee7674e41a4fb9ff737"
+    },
+    {
+      "frameStepMs": 120,
+      "boundary": "complete",
+      "boundaryEpochMs": 1791828090000,
+      "derivedEpochMs": 1791828089640,
+      "ageMs": 360,
+      "matchedCount": 828,
+      "maximumResidualMeters": 0.0000031012499405373903,
+      "rawPositionSha256": "e23f2df5d2e141738f8021ff27b2edeaeece1ad00fbbe71a342a209732dda336"
+    }
+  ],
+  "scope": "Native renderer and Cesium point collection setters in Windows Chrome, simulated frame cadence. Host independently derives sampled epoch and checks all828 public cached positions. No WebGL, frame delivery, whole application or GPU performance acceptance.",
+  "status": "passed"
+}

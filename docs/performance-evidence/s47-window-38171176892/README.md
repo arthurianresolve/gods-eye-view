@@ -1,0 +1,7 @@
+# S47 measurement-window smoke: worker audit race before sampling
+
+[Run 38171176892](https://github.com/arthurianresolve/gods-eye-view/actions/runs/38171176892) tests `e9ebce8bd27790be136dff3af73b9cd1babf411a`. The baseline application build and fixture checks pass. Candidate capture fails before its first measured sample: the diagnostic audit records 12 created script blobs, then sees 14 at restoration. Native API restoration and registry clearing both succeed. Separate metadata/body/restore calls race with asynchronous worker creation; the result remains failed.
+
+The timing-window change at this commit has 90 focused passing checks but no completed hosted sample in this run. It separates timed frame/long-task observation from final camera settling; actual timer overshoot remains visible. The original JSON is preserved (SHA-256 `a96092d24c499ab01a0b9fe93e256faf570ab75617621497b3d523c4ddb1636d`).
+
+Follow-up `c266634fb69174a77506917424317d78f735edd5` uses the existing atomic freeze/read/restore operation for diagnostic boundaries as well as prewarm boundaries, retains strict validation of every captured body and rejects observed executable paths outside that snapshot. All 109 focused tests pass. Dispatch 38171536509 omitted its mandatory candidate SHA and failed before capture; corrected run 38171616725 supplies that immutable SHA. No deadline, workload, resolution, visual quality or acceptance threshold was relaxed.

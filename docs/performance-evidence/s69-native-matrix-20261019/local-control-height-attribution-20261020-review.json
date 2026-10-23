@@ -1,0 +1,96 @@
+{
+  "schema": "gev-local-control-height-attribution-review/v1",
+  "reviewedAt": "2026-10-20T06:15:25.005Z",
+  "status": "diagnostic-reviewed",
+  "acceptanceEligible": false,
+  "comparisonEligible": false,
+  "rawSha256": "1f548646204b2cc87c3de598a49888b044ac5aec374af76ebc01f733d8c44081",
+  "manifestSha256": "fdedc55a868486ffd9231e7945d63fd54e2d9a911d92805653c8bc8983f2987e",
+  "filesIndependentlyVerified": 10,
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "producerCommit": "b843cac5d243246b6df56a020c3dd4d0db7dace8",
+  "environment": {
+    "browser": "Chrome/155.0.8059.84",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "viewport": {
+      "width": 1440,
+      "height": 1000,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 2000
+    }
+  },
+  "featureCount": 8,
+  "samples": [
+    {
+      "id": "toggle-01",
+      "enabled": true,
+      "sampleHeightCalls": 8,
+      "sampleHeightSynchronousWallMs": 301.4000000208616,
+      "longestSampleHeightMs": 245.5,
+      "moduleDurationMs": 3.7999999970197678,
+      "activeClassObservedMs": 9.299999997019768,
+      "firstMatchingPostRenderMs": 327.5
+    },
+    {
+      "id": "toggle-02",
+      "enabled": false,
+      "sampleHeightCalls": 0,
+      "sampleHeightSynchronousWallMs": 0,
+      "longestSampleHeightMs": 0,
+      "moduleDurationMs": 1.5999999940395355,
+      "activeClassObservedMs": 7.700000002980232,
+      "firstMatchingPostRenderMs": 28.400000005960464
+    },
+    {
+      "id": "toggle-03",
+      "enabled": true,
+      "sampleHeightCalls": 8,
+      "sampleHeightSynchronousWallMs": 242.60000002384186,
+      "longestSampleHeightMs": 176.79999999701977,
+      "moduleDurationMs": 13.900000005960464,
+      "activeClassObservedMs": 36.30000001192093,
+      "firstMatchingPostRenderMs": 382.70000000298023
+    },
+    {
+      "id": "toggle-04",
+      "enabled": false,
+      "sampleHeightCalls": 0,
+      "sampleHeightSynchronousWallMs": 0,
+      "longestSampleHeightMs": 0,
+      "moduleDurationMs": 6.799999997019768,
+      "activeClassObservedMs": 22.700000002980232,
+      "firstMatchingPostRenderMs": 109.20000000298023
+    },
+    {
+      "id": "toggle-05",
+      "enabled": true,
+      "sampleHeightCalls": 8,
+      "sampleHeightSynchronousWallMs": 82.30000005662441,
+      "longestSampleHeightMs": 16.5,
+      "moduleDurationMs": 4.199999988079071,
+      "activeClassObservedMs": 12,
+      "firstMatchingPostRenderMs": 108.09999999403954
+    },
+    {
+      "id": "toggle-06",
+      "enabled": false,
+      "sampleHeightCalls": 0,
+      "sampleHeightSynchronousWallMs": 0,
+      "longestSampleHeightMs": 0,
+      "moduleDurationMs": 3.0999999940395355,
+      "activeClassObservedMs": 23.5,
+      "firstMatchingPostRenderMs": 114.5
+    }
+  ],
+  "cleanupConfirmed": true,
+  "conclusion": "Each enable repeated eight synchronous scene.sampleHeight calls. The calls occupied 82.3–301.4 ms during these toggles and are a measured contributor to the first matching render delay.",
+  "limitations": [
+    "Six instrumented toggle samples are attribution evidence, not the official interaction benchmark.",
+    "First matching postRender does not certify completed LOD/visual placement.",
+    "The existing 625.4 ms p95 qualification failure remains unchanged.",
+    "Measured wall time includes GPU synchronization and scheduling; it is not isolated GPU execution time."
+  ]
+}

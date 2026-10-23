@@ -1,0 +1,3088 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+  "platform": "darwin",
+  "timestamp": "2026-10-10T19:47:12.840Z",
+  "status": "failed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+    "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+    "capturedAt": "2026-10-10T19:47:19.895Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+        "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+        "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Native renderer probe failed: CCTV calibration report is incomplete or failed.",
+  "importBatches": {
+    "schema": "gev-import-batches/v1",
+    "applicationCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+    "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+    "capturedAt": "2026-10-10T19:47:22.197Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 51.70000000001164,
+        "maxHeartbeatGapMs": 107.10000000003492,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 231281626,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 66.69999999995343,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 24.399999999965075,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 122.10000000003492,
+        "maxHeartbeatGapMs": 49.79999999998836,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 354490785,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 5.7000000000116415,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 5.599999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 131.60000000003492,
+        "maxHeartbeatGapMs": 38.90000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 470106089,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 54.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 39,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 38.90000000002328,
+        "maxHeartbeatGapMs": 93.90000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 151774801,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 5.900000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 5.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 45.90000000002328,
+        "maxHeartbeatGapMs": 100.90000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 277634257,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 72.70000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 21.70000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 139.60000000003492,
+        "maxHeartbeatGapMs": 19.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 108818045,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 14.200000000011642,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 14.200000000011642,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 127.5,
+        "maxHeartbeatGapMs": 21.79999999998836,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 108420969,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 43.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 24.699999999953434,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 46.699999999953434,
+        "maxHeartbeatGapMs": 99.59999999997672,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 230384857,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 13.599999999976717,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 10.099999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 48.399999999965075,
+        "maxHeartbeatGapMs": 97,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 354634005,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 53.20000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 17.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 165,
+        "maxHeartbeatGapMs": 29,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 109187685,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 80.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 32.800000000046566,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+      "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "coldActivationMs": 279.8999999999651,
+    "warmedResources": {
+      "heapBytes": 110841206,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "calibrationPageErrors": [],
+  "calibrationInterceptionErrors": [],
+  "calibrationExternalRequestCount": 0,
+  "calibrationPointerActions": [
+    {
+      "id": "calibration-0-legacy-control-0",
+      "from": {
+        "x": 619.1232751612232,
+        "y": 483.998329218423
+      },
+      "to": {
+        "x": 627.7287489837579,
+        "y": 483.9983292183604
+      },
+      "steps": 6,
+      "startedElapsedMs": 13022,
+      "status": "dispatched",
+      "finishedElapsedMs": 14054
+    },
+    {
+      "id": "calibration-0-candidate-1",
+      "from": {
+        "x": 619.1232751612232,
+        "y": 483.998329218423
+      },
+      "to": {
+        "x": 627.7287489837579,
+        "y": 483.9983292183604
+      },
+      "steps": 6,
+      "startedElapsedMs": 25693,
+      "status": "dispatched",
+      "finishedElapsedMs": 26565
+    }
+  ],
+  "calibrationRenderDemand": {
+    "schema": "gev-cctv-calibration-render-demand/v1",
+    "fixture": {
+      "id": "cctv-calibration-native-drag/v1",
+      "sha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+      "cameraId": "qa-cctv-calibration-camera-001",
+      "epochMs": 1791460800000,
+      "idleRequestedMs": 10000
+    },
+    "applicationCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+    "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+    "scope": "isolated production CCTV layer; native calibration input and render-demand comparison",
+    "status": "failed",
+    "phase": "pair-0-comparison",
+    "pairs": [
+      {
+        "pair": 0,
+        "order": [
+          "legacy-control",
+          "candidate"
+        ],
+        "runs": [
+          {
+            "schema": "gev-cctv-calibration-trial/v1",
+            "status": "passed",
+            "mode": "legacy-control",
+            "pair": 0,
+            "fixtureId": "cctv-calibration-native-drag/v1",
+            "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+            "applicationCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+            "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+            "startedAt": "2026-10-10T19:47:28.526Z",
+            "phase": "pair-0-legacy-control-after-drag-render",
+            "viewport": {
+              "width": 1200,
+              "height": 800,
+              "devicePixelRatio": 1,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960
+            },
+            "environment": {
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "maskedRenderer": "WebKit WebGL",
+              "rendererIdentity": "unmasked-extension",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36"
+            },
+            "camera": {
+              "selectedCameraId": "qa-cctv-calibration-camera-001",
+              "position": [
+                -743234.6984124286,
+                -5466111.680014155,
+                3197755.2224108577
+              ],
+              "direction": [
+                0.11636545106412513,
+                0.855808471496806,
+                -0.5040346634041586
+              ],
+              "up": [
+                0.06790939745071646,
+                0.49943894086346946,
+                0.8636834246916266
+              ],
+              "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42"
+            },
+            "initialCalibration": {
+              "offsetEastM": 0,
+              "offsetNorthM": 0,
+              "headingDeg": 0,
+              "pitchDeg": 0,
+              "fovDeg": 0,
+              "rangeScale": 1,
+              "heightM": 0
+            },
+            "renderingSettings": {
+              "initialRequestRenderMode": true,
+              "drawingBufferWidth": 1200,
+              "drawingBufferHeight": 800,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960,
+              "devicePixelRatio": 1,
+              "msaaSamples": 4,
+              "antialias": true,
+              "preserveDrawingBuffer": true,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true
+              },
+              "requestRenderModeDuringIdle": false
+            },
+            "layoutEvidence": {
+              "settled": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "cameraCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "beforePixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "afterPixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              }
+            },
+            "captureDiagnostics": null,
+            "setup": {
+              "elapsedMs": 1304.3000000000466,
+              "completedFrames": 8
+            },
+            "idle": {
+              "requestedDurationMs": 10000,
+              "durationMs": 10018.599999999977,
+              "completedFrames": 276,
+              "completedFrameSamples": {
+                "scope": "Completed postRender timestamps from listener attachment",
+                "sampleLimit": 32,
+                "elapsedMs": [
+                  59.399999999965075,
+                  81.89999999996508,
+                  89.79999999998836,
+                  141,
+                  183,
+                  245.69999999995343,
+                  267.79999999998836,
+                  326.19999999995343,
+                  354,
+                  423.69999999995343,
+                  453.19999999995343,
+                  509.5999999999767,
+                  542.5999999999767,
+                  573.3999999999651,
+                  606.1999999999534,
+                  657.5999999999767,
+                  683.6999999999534,
+                  756.0999999999767,
+                  780.8999999999651,
+                  789.0999999999767,
+                  837.5,
+                  894.7999999999884,
+                  915.3999999999651,
+                  921.6999999999534,
+                  975.6999999999534,
+                  1004,
+                  1067,
+                  1145.7999999999884,
+                  1155.1999999999534,
+                  1207.399999999965,
+                  1240.6999999999534,
+                  1281.399999999965
+                ],
+                "overflowCount": 244
+              },
+              "renderMode": false,
+              "forcedCaptureFramesIncluded": false,
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 10018.600000000035,
+                "completedPhase": "observation"
+              },
+              "renderDemand": {
+                "startedAtEpochMs": 1791661651923,
+                "endedAtEpochMs": 1791661661947,
+                "governorBefore": {
+                  "capturedAtEpochMs": 1791661651923,
+                  "installed": true,
+                  "mode": "continuous",
+                  "holds": [
+                    "qa-cctv-adjust-legacy-control"
+                  ],
+                  "scheduledUpdates": [],
+                  "recentRequests": [
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661648691
+                    },
+                    {
+                      "reason": "cctv-adjust-enabled",
+                      "at": 1791661648691
+                    },
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661648692
+                    },
+                    {
+                      "reason": "cctv-footprint-ground",
+                      "at": 1791661648693
+                    }
+                  ],
+                  "recentRequestCapacity": 16
+                },
+                "governorAfter": {
+                  "capturedAtEpochMs": 1791661661947,
+                  "installed": true,
+                  "mode": "continuous",
+                  "holds": [
+                    "qa-cctv-adjust-legacy-control"
+                  ],
+                  "scheduledUpdates": [],
+                  "recentRequests": [
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661648691
+                    },
+                    {
+                      "reason": "cctv-adjust-enabled",
+                      "at": 1791661648691
+                    },
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661648692
+                    },
+                    {
+                      "reason": "cctv-footprint-ground",
+                      "at": 1791661648693
+                    }
+                  ],
+                  "recentRequestCapacity": 16
+                },
+                "governorRequestsDuringIdle": [],
+                "governorRecentRequestWindowMayBeTruncated": false,
+                "sceneRequestRenderCalls": {
+                  "scope": "Observed scene.requestRender calls; not a render or GPU timing",
+                  "startedAtEpochMs": 1791661651923,
+                  "endedAtEpochMs": 1791661661947,
+                  "totalCalls": 0,
+                  "sampleLimit": 32,
+                  "sampleOverflowCount": 0,
+                  "samples": []
+                }
+              }
+            },
+            "drag": {
+              "instructionId": "calibration-0-legacy-control-0",
+              "instructionDelivered": true,
+              "from": {
+                "x": 619.1232751612232,
+                "y": 483.998329218423
+              },
+              "to": {
+                "x": 627.7287489837579,
+                "y": 483.9983292183604
+              },
+              "handlePosition": {
+                "x": 619.1232751612232,
+                "y": 399.998329218423
+              },
+              "axisLengthPx": 19.123275161188303,
+              "kind": "drag",
+              "steps": 6,
+              "calibrationBefore": {
+                "offsetEastM": 0,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "calibrationAfter": {
+                "offsetEastM": 28.8,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "changedFields": [
+                "offsetEastM"
+              ],
+              "acceptedCalibrationChanged": true,
+              "committedAfterRelease": true,
+              "trustedPointerDown": true,
+              "trustedPointerMoveCount": 6,
+              "trustedPointerUp": true,
+              "dragInputsDisabledObserved": true,
+              "dragInputsRestoredAfterRelease": true,
+              "selectedCameraIdAfterRelease": "qa-cctv-calibration-camera-001",
+              "pickIdentity": {
+                "entityId": "cctv-gizmo-move-east",
+                "kind": "move-east",
+                "cameraId": "qa-cctv-calibration-camera-001",
+                "trusted": true,
+                "x": 619.123291015625,
+                "y": 483.9983215332031,
+                "targetDistancePx": 0.0000176188722950442
+              },
+              "pickEvidence": {
+                "returnedObject": true,
+                "pickedObjectType": "Object",
+                "idType": "object",
+                "entityId": "cctv-gizmo-move-east",
+                "primitiveType": "PointPrimitive",
+                "primitiveId": "cctv-gizmo-move-east",
+                "client": {
+                  "x": 619.123291015625,
+                  "y": 483.9983215332031
+                },
+                "canvasRect": {
+                  "left": 0,
+                  "top": 84,
+                  "width": 1200,
+                  "height": 800
+                },
+                "cssLocal": {
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                },
+                "drawingBuffer": {
+                  "width": 1200,
+                  "height": 800,
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                }
+              },
+              "canvasLayoutAtPointerDown": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "canvasLayoutObservations": {
+                "beforeInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterRelease": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterCapture": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                }
+              },
+              "geometrySha256After": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+              "geometrySettlement": {
+                "status": "passed",
+                "releaseAtMs": 15556.899999999965,
+                "readyFrameAtMs": 15709.5,
+                "timeoutMs": 2000,
+                "elapsedMs": 111.20000000001164,
+                "forcedFrames": 0
+              },
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 1254.100000000035,
+                "completedPhase": "after-frame-capture"
+              }
+            },
+            "beforePixels": {
+              "sha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1777,
+              "captureState": {
+                "dataSourceDisplayReady": true,
+                "currentVisualizerUpdateReady": true,
+                "selectedCameraId": "qa-cctv-calibration-camera-001",
+                "position": [
+                  -743234.6984124286,
+                  -5466111.680014155,
+                  3197755.2224108577
+                ],
+                "direction": [
+                  0.11636545106412513,
+                  0.855808471496806,
+                  -0.5040346634041586
+                ],
+                "up": [
+                  0.06790939745071646,
+                  0.49943894086346946,
+                  0.8636834246916266
+                ],
+                "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+                "styleSha256": "1410f6281a09cf4960bcb169868a779cc9895c46f866d1f5207ec36156b026f6",
+                "stylePayload": [
+                  {
+                    "id": "cctv-gizmo-handle-fov-l",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-fov-r",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-range",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 13,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-move-east",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        1,
+                        0.3215686274509804,
+                        0.3215686274509804,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-north",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        0.3215686274509804,
+                        1,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-up",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        0.3568627450980392,
+                        0.5490196078431373,
+                        1,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-heading",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-pitch",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.45
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "afterPixels": {
+              "sha256": "27b19210ecfc465a2bf3a8d922e15dfd4c1054c41cf86b55cf3d5f85665811dd",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1650,
+              "captureState": {
+                "dataSourceDisplayReady": true,
+                "currentVisualizerUpdateReady": true,
+                "selectedCameraId": "qa-cctv-calibration-camera-001",
+                "position": [
+                  -743234.6984124286,
+                  -5466111.680014155,
+                  3197755.2224108577
+                ],
+                "direction": [
+                  0.11636545106412513,
+                  0.8558084714968061,
+                  -0.5040346634041585
+                ],
+                "up": [
+                  0.0669849065153974,
+                  0.4995644237814189,
+                  0.8636830488038203
+                ],
+                "geometrySha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+                "styleSha256": "eb52542ea77b96288e618b4526a6f9a177d7c5e3ce03172a074279b558ce7010",
+                "stylePayload": [
+                  {
+                    "id": "cctv-gizmo-handle-fov-l",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-fov-r",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-range",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 13,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-move-east",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        1,
+                        0.3215686274509804,
+                        0.3215686274509804,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-north",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        0.3215686274509804,
+                        1,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-up",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        0.3568627450980392,
+                        0.5490196078431373,
+                        1,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-heading",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-pitch",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.45
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "cleanup": {
+              "layerDisabled": true,
+              "layerDestroyed": true,
+              "worldOverlayDestroyed": true,
+              "governorUninstalled": true,
+              "viewerDestroyed": true,
+              "ownedEntitiesBeforeDestroy": 8,
+              "ownedEntitiesAfterLayerDestroy": 0,
+              "governorHoldsAfterLayerDestroy": 0,
+              "error": null
+            }
+          },
+          {
+            "schema": "gev-cctv-calibration-trial/v1",
+            "status": "passed",
+            "mode": "candidate",
+            "pair": 0,
+            "fixtureId": "cctv-calibration-native-drag/v1",
+            "fixtureSha256": "c54211cbe81b3b443dfde6b0df6548293f57383006348b3dcdc9862469488b15",
+            "applicationCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+            "harnessCommit": "b80b3793cfeab8fa873c67b1332b04b90a2eeb65",
+            "startedAt": "2026-10-10T19:47:43.207Z",
+            "phase": "pair-0-candidate-after-drag-render",
+            "viewport": {
+              "width": 1200,
+              "height": 800,
+              "devicePixelRatio": 1,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960
+            },
+            "environment": {
+              "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+              "maskedRenderer": "WebKit WebGL",
+              "rendererIdentity": "unmasked-extension",
+              "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36"
+            },
+            "camera": {
+              "selectedCameraId": "qa-cctv-calibration-camera-001",
+              "position": [
+                -743234.6984124286,
+                -5466111.680014155,
+                3197755.2224108577
+              ],
+              "direction": [
+                0.11636545106412513,
+                0.855808471496806,
+                -0.5040346634041586
+              ],
+              "up": [
+                0.06790939745071646,
+                0.49943894086346946,
+                0.8636834246916266
+              ],
+              "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42"
+            },
+            "initialCalibration": {
+              "offsetEastM": 0,
+              "offsetNorthM": 0,
+              "headingDeg": 0,
+              "pitchDeg": 0,
+              "fovDeg": 0,
+              "rangeScale": 1,
+              "heightM": 0
+            },
+            "renderingSettings": {
+              "initialRequestRenderMode": true,
+              "drawingBufferWidth": 1200,
+              "drawingBufferHeight": 800,
+              "cssWidth": 1200,
+              "cssHeight": 800,
+              "viewportWidth": 1200,
+              "viewportHeight": 960,
+              "devicePixelRatio": 1,
+              "msaaSamples": 4,
+              "antialias": true,
+              "preserveDrawingBuffer": true,
+              "contextAttributes": {
+                "alpha": false,
+                "antialias": true,
+                "depth": true,
+                "premultipliedAlpha": true,
+                "preserveDrawingBuffer": true,
+                "stencil": true
+              },
+              "requestRenderModeDuringIdle": true
+            },
+            "layoutEvidence": {
+              "settled": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "cameraCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "beforePixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              },
+              "afterPixelsCapture": {
+                "before": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "after": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "stable": true
+              }
+            },
+            "captureDiagnostics": null,
+            "setup": {
+              "elapsedMs": 650.9000000000233,
+              "completedFrames": 14
+            },
+            "idle": {
+              "requestedDurationMs": 10000,
+              "durationMs": 10054.399999999965,
+              "completedFrames": 0,
+              "completedFrameSamples": {
+                "scope": "Completed postRender timestamps from listener attachment",
+                "sampleLimit": 32,
+                "elapsedMs": [],
+                "overflowCount": 0
+              },
+              "renderMode": true,
+              "forcedCaptureFramesIncluded": false,
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 10054.5,
+                "completedPhase": "observation"
+              },
+              "renderDemand": {
+                "startedAtEpochMs": 1791661664564,
+                "endedAtEpochMs": 1791661674624,
+                "governorBefore": {
+                  "capturedAtEpochMs": 1791661664564,
+                  "installed": true,
+                  "mode": "idle",
+                  "holds": [],
+                  "scheduledUpdates": [],
+                  "recentRequests": [
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661663251
+                    },
+                    {
+                      "reason": "cctv-adjust-enabled",
+                      "at": 1791661663251
+                    },
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661663251
+                    },
+                    {
+                      "reason": "cctv-footprint-ground",
+                      "at": 1791661663251
+                    }
+                  ],
+                  "recentRequestCapacity": 16
+                },
+                "governorAfter": {
+                  "capturedAtEpochMs": 1791661674624,
+                  "installed": true,
+                  "mode": "idle",
+                  "holds": [],
+                  "scheduledUpdates": [],
+                  "recentRequests": [
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661663251
+                    },
+                    {
+                      "reason": "cctv-adjust-enabled",
+                      "at": 1791661663251
+                    },
+                    {
+                      "reason": "cctv-gizmo-refresh",
+                      "at": 1791661663251
+                    },
+                    {
+                      "reason": "cctv-footprint-ground",
+                      "at": 1791661663251
+                    }
+                  ],
+                  "recentRequestCapacity": 16
+                },
+                "governorRequestsDuringIdle": [],
+                "governorRecentRequestWindowMayBeTruncated": false,
+                "sceneRequestRenderCalls": {
+                  "scope": "Observed scene.requestRender calls; not a render or GPU timing",
+                  "startedAtEpochMs": 1791661664564,
+                  "endedAtEpochMs": 1791661674624,
+                  "totalCalls": 0,
+                  "sampleLimit": 32,
+                  "sampleOverflowCount": 0,
+                  "samples": []
+                }
+              }
+            },
+            "drag": {
+              "instructionId": "calibration-0-candidate-1",
+              "instructionDelivered": true,
+              "from": {
+                "x": 619.1232751612232,
+                "y": 483.998329218423
+              },
+              "to": {
+                "x": 627.7287489837579,
+                "y": 483.9983292183604
+              },
+              "handlePosition": {
+                "x": 619.1232751612232,
+                "y": 399.998329218423
+              },
+              "axisLengthPx": 19.123275161188303,
+              "kind": "drag",
+              "steps": 6,
+              "calibrationBefore": {
+                "offsetEastM": 0,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "calibrationAfter": {
+                "offsetEastM": 28.8,
+                "offsetNorthM": 0,
+                "headingDeg": 0,
+                "pitchDeg": 0,
+                "fovDeg": 0,
+                "rangeScale": 1,
+                "heightM": 0
+              },
+              "changedFields": [
+                "offsetEastM"
+              ],
+              "acceptedCalibrationChanged": true,
+              "committedAfterRelease": true,
+              "trustedPointerDown": true,
+              "trustedPointerMoveCount": 6,
+              "trustedPointerUp": true,
+              "dragInputsDisabledObserved": true,
+              "dragInputsRestoredAfterRelease": true,
+              "selectedCameraIdAfterRelease": "qa-cctv-calibration-camera-001",
+              "pickIdentity": {
+                "entityId": "cctv-gizmo-move-east",
+                "kind": "move-east",
+                "cameraId": "qa-cctv-calibration-camera-001",
+                "trusted": true,
+                "x": 619.123291015625,
+                "y": 483.9983215332031,
+                "targetDistancePx": 0.0000176188722950442
+              },
+              "pickEvidence": {
+                "returnedObject": true,
+                "pickedObjectType": "Object",
+                "idType": "object",
+                "entityId": "cctv-gizmo-move-east",
+                "primitiveType": "PointPrimitive",
+                "primitiveId": "cctv-gizmo-move-east",
+                "client": {
+                  "x": 619.123291015625,
+                  "y": 483.9983215332031
+                },
+                "canvasRect": {
+                  "left": 0,
+                  "top": 84,
+                  "width": 1200,
+                  "height": 800
+                },
+                "cssLocal": {
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                },
+                "drawingBuffer": {
+                  "width": 1200,
+                  "height": 800,
+                  "x": 619.123291015625,
+                  "y": 399.9983215332031
+                }
+              },
+              "canvasLayoutAtPointerDown": {
+                "drawingBufferWidth": 1200,
+                "drawingBufferHeight": 800,
+                "cssWidth": 1200,
+                "cssHeight": 800,
+                "cssLeft": 0,
+                "cssTop": 84,
+                "viewportWidth": 1200,
+                "viewportHeight": 960,
+                "devicePixelRatio": 1
+              },
+              "canvasLayoutObservations": {
+                "beforeInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterInstruction": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterRelease": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                },
+                "afterCapture": {
+                  "drawingBufferWidth": 1200,
+                  "drawingBufferHeight": 800,
+                  "cssWidth": 1200,
+                  "cssHeight": 800,
+                  "cssLeft": 0,
+                  "cssTop": 84,
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1
+                }
+              },
+              "geometrySha256After": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+              "geometrySettlement": {
+                "status": "passed",
+                "releaseAtMs": 28064.899999999965,
+                "readyFrameAtMs": 28420.899999999965,
+                "timeoutMs": 2000,
+                "elapsedMs": 356.29999999998836,
+                "forcedFrames": 0
+              },
+              "conditions": {
+                "before": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "after": {
+                  "viewportWidth": 1200,
+                  "viewportHeight": 960,
+                  "devicePixelRatio": 1,
+                  "visibilityState": "visible",
+                  "focused": true,
+                  "canvasLayout": {
+                    "drawingBufferWidth": 1200,
+                    "drawingBufferHeight": 800,
+                    "cssWidth": 1200,
+                    "cssHeight": 800,
+                    "cssLeft": 0,
+                    "cssTop": 84,
+                    "viewportWidth": 1200,
+                    "viewportHeight": 960,
+                    "devicePixelRatio": 1
+                  }
+                },
+                "events": [],
+                "eventOverflow": false,
+                "foregroundUninterrupted": true,
+                "canvasLayoutUnchanged": true,
+                "durationMs": 1351.1999999999534,
+                "completedPhase": "after-frame-capture"
+              }
+            },
+            "beforePixels": {
+              "sha256": "7fa36dfce29944fc4b03ba7cbf677c8c2a97214ef442c8fb1b8bb3a099f2bc4d",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1777,
+              "captureState": {
+                "dataSourceDisplayReady": true,
+                "currentVisualizerUpdateReady": true,
+                "selectedCameraId": "qa-cctv-calibration-camera-001",
+                "position": [
+                  -743234.6984124286,
+                  -5466111.680014155,
+                  3197755.2224108577
+                ],
+                "direction": [
+                  0.11636545106412513,
+                  0.855808471496806,
+                  -0.5040346634041586
+                ],
+                "up": [
+                  0.06790939745071646,
+                  0.49943894086346946,
+                  0.8636834246916266
+                ],
+                "geometrySha256": "1a9a97d5254e025289962b425c5d2fb0828e59a02d4fca5c9562da7eae9f2c42",
+                "styleSha256": "1410f6281a09cf4960bcb169868a779cc9895c46f866d1f5207ec36156b026f6",
+                "stylePayload": [
+                  {
+                    "id": "cctv-gizmo-handle-fov-l",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-fov-r",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-range",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 13,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-move-east",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        1,
+                        0.3215686274509804,
+                        0.3215686274509804,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-north",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        0.3215686274509804,
+                        1,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-up",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        0.3568627450980392,
+                        0.5490196078431373,
+                        1,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-heading",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-pitch",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.45
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "afterPixels": {
+              "sha256": "2d9760b2dfb9b339944eab0c4e7da693a2178787594f0220e7e7a3cb1e3e7046",
+              "width": 1200,
+              "height": 800,
+              "nonBackgroundPixels": 1653,
+              "captureState": {
+                "dataSourceDisplayReady": true,
+                "currentVisualizerUpdateReady": true,
+                "selectedCameraId": "qa-cctv-calibration-camera-001",
+                "position": [
+                  -743234.6984124286,
+                  -5466111.680014155,
+                  3197755.2224108577
+                ],
+                "direction": [
+                  0.11636545106412513,
+                  0.855808471496806,
+                  -0.5040346634041586
+                ],
+                "up": [
+                  0.06790939745071646,
+                  0.49943894086346946,
+                  0.8636834246916266
+                ],
+                "geometrySha256": "9f2c7237112648673f85a902781aa9010567e145757eaea1ff1590ab2b1c3801",
+                "styleSha256": "eb52542ea77b96288e618b4526a6f9a177d7c5e3ce03172a074279b558ce7010",
+                "stylePayload": [
+                  {
+                    "id": "cctv-gizmo-handle-fov-l",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-fov-r",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-handle-range",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 13,
+                      "color": [
+                        1,
+                        0.8509803921568627,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": null
+                  },
+                  {
+                    "id": "cctv-gizmo-move-east",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 14,
+                      "color": [
+                        1,
+                        0.3215686274509804,
+                        0.3215686274509804,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.3215686274509804,
+                          0.3215686274509804,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-north",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        0.3215686274509804,
+                        1,
+                        0.47843137254901963,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3215686274509804,
+                          1,
+                          0.47843137254901963,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-move-up",
+                    "entityShow": true,
+                    "point": {
+                      "show": null,
+                      "pixelSize": 10,
+                      "color": [
+                        0.3568627450980392,
+                        0.5490196078431373,
+                        1,
+                        1
+                      ],
+                      "outlineColor": [
+                        0,
+                        0,
+                        0,
+                        0.7
+                      ],
+                      "outlineWidth": 2
+                    },
+                    "polyline": {
+                      "show": null,
+                      "width": 12,
+                      "material": {
+                        "type": "PolylineArrowMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          1
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.3568627450980392,
+                          0.5490196078431373,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-heading",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          0.20784313725490197,
+                          0.8470588235294118,
+                          1,
+                          0.45
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "id": "cctv-gizmo-ring-pitch",
+                    "entityShow": true,
+                    "point": null,
+                    "polyline": {
+                      "show": null,
+                      "width": 3,
+                      "material": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.9
+                        ]
+                      },
+                      "depthFailMaterial": {
+                        "type": "ColorMaterialProperty",
+                        "color": [
+                          1,
+                          0.37254901960784315,
+                          0.8156862745098039,
+                          0.45
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "cleanup": {
+              "layerDisabled": true,
+              "layerDestroyed": true,
+              "worldOverlayDestroyed": true,
+              "governorUninstalled": true,
+              "viewerDestroyed": true,
+              "ownedEntitiesBeforeDestroy": 8,
+              "ownedEntitiesAfterLayerDestroy": 0,
+              "governorHoldsAfterLayerDestroy": 0,
+              "error": null
+            }
+          }
+        ],
+        "comparison": null,
+        "visualMismatch": {
+          "status": "mismatch",
+          "differenceCount": 712,
+          "bounds": {
+            "left": 443,
+            "top": 176,
+            "right": 775,
+            "bottom": 416,
+            "width": 333,
+            "height": 241
+          },
+          "width": 1200,
+          "height": 800,
+          "controlPngBase64": "iVBORw0KGgoAAAANSUhEUgAABLAAAAMgCAYAAAAz4JsCAAAQAElEQVR4AezdCbSlZ1kn+mfvfaaaUpWkEsg8EBIQGhOEIKPLjojatxWcuhtnHK52q7Tr0rba3l732oOXvst7G3vZoG0vG2lX4yyCIoMICk0kzSQNIQQSTCCBDJXUeOqMu79vn1RSwxn28O1veL/fsfY+e3i/932e37NXmfqvU0V318Gr+m4MfAZ8BnwGfAZ8BnwGfAZ8BnwGfAZ8BnwGfAaS/gz4s7/8o9GfgW74IkCAAAECBAgQIECAAIEhBCwhQIAAgaoEBFhVyTuXAAECBAgQINBGAT0TIECAAAECBMYQEGCNgeYSAgQIECBQpYCzCRAgQIAAAQIECLRNQIDVtonrlwCBXMCNAAECBAgQIECAAAECBBokIMBq0LDqVapqCBAgQIAAAQIECBAgQIAAgfQF6tGhAKsec1AFAQIECBAgQIAAAQIECKQqoC8CBCYWEGBNTGgDAgQIECBAgAABAgSmLWB/AgQIEGi3gACr3fPXPQECBAgQINAeAZ0SIECAAAECBBorIMBq7OgUToAAAQLlCziRAAECBAgQIECAAIEqBARYVag7k0CbBfROgAABAgQIECBAgAABAgRGFBBgjQhWh+VqIECAAAECBAgQIECAAAECBNIX0OETAgKsJyw8IkCAAAECBAgQIECAAIG0BHRDgEAiAgKsRAapDQIECBAgQIAAAQLTEbArAQIECBCoXkCAVf0MVECAAAECBAikLqA/AgQIECBAgACBiQQEWBPxuZgAAQIEyhJwDgECBAgQIECAAAEC7RUQYLV39jpvn4COCRAgQIAAAQIECBAgQIBAIwUEWCONzWICBAgQIECAAAECBAgQIEAgfQEd1k1AgFW3iaiHAAECBAgQIECAAAECKQjogQABAgUKCLAKxLQVAQIECBAgQIAAgSIF7EWAAAECBAhsCAiwNhzcEyBAgAABAmkK6IoAAQIECBAgQCABAQFWAkPUAgECBKYrYHcCBAgQIECAAAECBAhUKyDAqtbf6W0R0CcBAgQIECBAgAABAgQIECAwtkBjAqyxO3QhAQIECBAgQIAAAQIECBAg0BgBhRLYTECAtZmK1wgQIECAAAECBAgQINBcAZUTIEAgOQEBVnIj1RABAgQIECBAgMDkAnYgQIAAAQIE6iQgwKrTNNRCgAABAgRSEtALAQIECBAgQIAAgYIEBFgFQdqGAAEC0xCwJwECBAgQIECAAAECBAhECLB8ClIX0B8BAgQIECBAgAABAgQIECDQcIEhAqyGd6h8AgQIECBAgAABAgQIECBAYAgBSwjUV0CAVd/ZqIwAAQIECBAgQIAAgaYJqJcAAQIEpiIgwJoKq00JECBAgAABAgTGFXAdAQIECBAgQOBsAQHW2SKeEyBAgACB5gvogAABAgQIECBAgEBSAgKspMapGQIEihOwEwECBAgQIECAAAECBAjURUCAVZdJpFiHnggQIECAAAECBAgQIECAAIH0BUroUIBVArIjCBAgQIAAAQIECBAgQIDAdgLeI0BgewEB1vY+3iVAgAABAgQIECBAoBkCqiRAgACBhAUEWAkPV2sECBAgQIAAgdEErCZAgAABAgQI1FNAgFXPuaiKAAECBJoqoG4CBAgQIECAAAECBAoXEGAVTmpDAgQmFXA9AQIECBAgQIAAAQIECBA4XUCAdbpGOo91QoAAAQIECBAgQIAAAQIECKQv0JoOBVitGbVGCRAgQIAAAQIECBAgQOBcAa8QINAEAQFWE6akRgIECBAgQIAAAQJ1FlAbAQIECBCYsoAAa8rAtidAgAABAgQIDCNgDQECBAgQIECAwNYCAqytbbxDgAABAs0SUC0BAgQIECBAgAABAokKCLASHay2CIwn4CoCBAgQIECAAAECBAgQIFA/AQFW0TOxHwECBAgQIECAAAECBAgQIJC+gA5LFRBglcrtMAIECBAgQIAAAQIECBA4JeA7AQIEhhUQYA0rZR0BAgQIECBAgACB+gmoiAABAgQItEJAgNWKMWuSAAECBAgQ2FrAOwQIECBAgAABAnUXEGDVfULqI0CAQBME1EiAAAECBAgQIECAAIEpCgiwpohrawKjCFhLgAABAgQIECBAgAABAgQIbC6QUoC1eYdeJUCAAAECBAgQIECAAAECBFIS0EsLBQRYLRy6lgkQIECAAAECBAgQaLuA/gkQINAsAQFWs+alWgIECBAgQIAAgboIqIMAAQIECBAoTUCAVRq1gwgQIECAAIGzBTwnQIAAAQIECBAgMIyAAGsYJWsIECBQXwGVESBAgAABAgQIECBAIHkBAVbyI9bgzgJWECBAgAABAgQIECBAgAABAnUWKCbAqnOHaiNAgAABAgQIECBAgAABAgSKEbALgYoEBFgVwTuWAAECBAgQIECAAIF2CuiaAAECBEYXEGCNbuYKAgQIECBAgACBagWcToAAAQIECLRMQIDVsoFrlwABAgQIbAi4J0CAAAECBAgQINAcAQFWc2alUgIE6iagHgIECBAgQIAAAQIECBAoRUCAVQqzQ7YS8DoBAgQIECBAgAABAgQIECCQvsCkHQqwJhV0PQECBAgQIECAAAECBAgQmL6AEwi0WkCA1erxa54AAQIECBAgQIBAmwT0SoAAAQJNFRBgNXVy6iZAgAABAgQIVCHgTAIECBAgQIBABQICrArQHUmAAAEC7RbQPQECBAgQIECAAAECowkIsEbzspoAgXoIqIIAAQIECBAgQIAAAQIEWiQgwGrRsM9s1TMCBAgQIECAAAECBAgQIEAgfYE0OhRgpTFHXRAgQIAAAQIECBAgQIDAtATsS4BA5QICrMpHoAACBAgQIECAAAEC6QvokAABAgQITCIgwJpEz7UECBAgQIAAgfIEnESAAAECBAgQaK2AAKu1o9c4AQIE2iigZwIECBAgQIAAAQIEmiggwGri1NRMoEoBZxMgQIAAAQIECBAgQIAAgZIFBFglg+fHuREgQIAAAQIECBAgQIAAAQLpC+iwOAEBVnGWdiJAgAABAgQIECBAgACBYgXsRoAAgYGAAGvA4I4AAQIECBAgQIBAqgL6IkCAAAECzRcQYDV/hjogQIAAAQIEpi1gfwIECBAgQIAAgUoFBFiV8jucAAEC7RHQKQECBAgQIECAAAECBMYVEGCNK+c6AuULOJEAAQIECBAgQIAAAQIECLRSoGUBVitnrGkCBAgQIECAAAECBAgQINAyAe2mJiDASm2i+iFAgAABAgQIECBAgEARAvYgQIBAjQQEWDUahlIIECBAgAABAgTSEtANAQIECBAgUIyAAKsYR7sQIECAAAEC0xGwKwECBAgQIECAAIEQYPkQECBAIHkBDRIgQIAAAQIECBAgQKDZAgKsZs9P9WUJOIcAAQIECBAgQIAAAQIECBCoTKC0AKuyDh1MgAABAgQIECBAgAABAgQIlCbgIALTEBBgTUPVngQIECBAgAABAgQIEBhfwJUECBAgcJaAAOssEE8JECBAgAABAgRSENADAQIECBAgkJKAACulaeqFAAECBAgUKWAvAgQIECBAgAABAjUREGDV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ECBAgAABApsJeI0AAQIECBBogIAAqwFDUiIBAgQIEKi3gOoIECBAgAABAgQITFdAgDVdX7sTIEBgOAGrCBAgQIAAAQIECBAgQGBLAQHWljTeaJqAegkQIECAAAECBAgQIECAAIE0BU4PsNLsUFcECBAgQIAAAQIECBAgQIDA6QIeE2icgACrcSNTMAECBAgQIECAAAEC1QuogAABAgTKFBBglantLAIECBAgQIAAgScEPCJAgAABAgQIDCkgwBoSyjICBAgQIFBHATURIECAAAECBAgQaIOAAKsNU9YjAQLbCXiPAAECBAgQIECAAAECBGouIMCq+YCaUZ4qCRAgQIAAAQIECBAgQIAAgfQFqutQgFWdvZMJECBAgAABAgQIECBAoG0C+iVAYCwBAdZYbC4iQIAAAQIECBAgQKAqAecSIECAQPsEBFjtm7mOCRAgQIAAAQIECBAgQIAAAQKNEhBgNWpciiVAgACB+giohAABAgQIECBAgACBsgQEWGVJO4cAgXMFvEKAAAECBAgQIECAAAECBIYQEGANgVTnJWojQIAAAQIECBAgQIAAAQIE0hdoe4cCrLZ/AvRPgAABAgQIECBAgACBdgjokgCBBgsIsBo8PKUTIECAAAECBAgQKFfAaQQIECBAoBoBAVY17k4lQIAAAQIE2iqgbwIECBAgQIAAgZEFBFgjk7mAAAECBKoWcD4BAgQIECBAgAABAu0SEGC1a966JXBKwHcCBAgQIECAAAECBAgQINAYAQHW2KNyIQECBAgQIECAAAECBAgQIJC+gA7rICDAqsMU1ECAAAECBAgQIECAAIGUBfRGgACBCQUEWBMCupwAAQIECBAgQIBAGQLOIECAAAECbRYQYLV5+nonQIAAAQLtEtAtAQIECBAgQIBAQwUEWA0dnLIJECBQjYBTCRAgQIAAAQIECBAgUL6AAKt8cye2XUD/BAgQIECAAAECBAgQIECAwEgCjQywRurQYgIECBAgQIAAAQIECBAgQKCRAoomcEpAgHVKwncCBAgQIECAAAECBAikJ6AjAgQIJCEgwEpijJogQIAAAQIECBCYnoCdCRAgQIAAgaoFBFhVT8D5BAgQIECgDQJ6JECAAAECBAgQIDCBgABrAjyXEiBAoEwBZxEgQIAAAQIECBAgQKCtAgKstk6+nX3rmgABAgQIECBAgAABAgQI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gA5rLCDAqvFwlEaAAAECBAgQIECAAIFmCaiWAAEC0xEQYE3H1a4ECBAgQIAAAQIExhNwFQECBAgQIHCOgADrHBIvECBAgAABAk0XUD8BAgQIECBAgEBaAgKstOapGwIECBQlYB8CBAgQIECAAAECBAjURkCAVZtRKCQ9AR0RIECAAAECBAgQIECAAAECRQjUO8AqokN7ECBAgAABAgQIECBAgAABAvUWUB2BHQQEWDsAeZsAAQIECBAgQIAAAQJNEFAjAQIEUhYQYKU8Xb0RIECAAAECBAiMImAtAQIECBAgUFMBAVZNB6MsAgQIECDQTAFVEyBAgAABAgQIECheQIBVvKkdCRAgMJmAqwkQIECAAAECBAgQIEDgDAEB1hkcnqQioA8CBAgQIECAAAECBAgQIEAgHYGtAqx0OtQJAQIECBAgQIAAAQIECBAgsJWA1wk0QkCA1YgxKZIAAQIECBAgQIAAgfoKqIwAAQIEpi0gwJq2sP0JECBAgAABAgR2FrCCAAECBAgQILCNgABrGxxvESBAgACBJgmolQABAgQIECBAgECqAgKsVCerLwIExhFwDQECBAgQIECAAAECBAjUUECAVcOhNLsk1RMgQIAAAQIECBAgQIAAAQLpC5TboQCrXG+nESBAgAABAgQIECBAgACBDQH3BAgMLSDAGprKQgIECBAgQIAAAQIE6iagHgIECBBoh4AAqx1z1iUBAgQIECBAYCsBrxMgQIAAAQIEai8gwKr9iBRIgAABAvUXUCEBAgQIECBAgAABAtMUEGBNU9feBAgML2AlAQIECBAgQIAAAQIECBDYQkCAtQVME19WMwECBAgQIECAAAECBAgQIJC+QBs7FGC1cep6JkCAAAECBAgQIECAQLsFdE+AQMMEBFgNG5hyCRAgQIAAAQIECNRDQBUECBAgQKA8AQFWedZOIkCAAAECBAicKeAZAQIECBAgQIDAUAICrKGYLCJAgACBugqoiwABAgQIECBAgACB9AUEWOnPWIcEdhLwPgECBAgQIECAAAECBAgQqLWAAKuQ8diEAAECBAgQIECAAAECBAgQSF9Ah1UJCLCqkncuAQIECBAgQIAAAQIE2iigZwIECIwhIMAaA80lBAgQIECAAAECBKoUcDYBAgQIEGibgACrbRPXLwECBAgQIJALuBEgQIAAAQIECDRIQIDVoGEplQABAvUSUA0BAgQIECBAgAABAgTKERBglePsFAKbC3iVAAECBAgQIECAAAECBAgQ2FGg8QHWjh1aQIAAAQIECBAgQIAAAQIECDReQAPtFhBgtXv+uidAgAABAgQIECBAoD0COiVAgEBjBQRYjR2dwgkQIECAAAECBMoXcCIBAgQIECBQhYAAqwp1ZxIgQIAAgTYL6J0AAQIECBAgQIDAiAICrBHBLCdAgEAdBNRAgAABAgQIECBAgACBNgkIsNo0bb2eLuAxAQIECBAgQIAAAQIECBAg0BCBCQKshnSoTAIECBAgQIAAAQIECBAgQGACAZcSqF5AgFX9DFRAgAABAgQIECBAgEDqAvojQIAAgYkEBFgT8bmYAAECBAgQIECgLAHnECBAgAABAu0VEGC1d/Y6J0CAAIH2CeiYAAECBAgQIECAQCMFBFiNHJuiCRCoTsDJBAgQIECAAAECBAgQIFC2gACrbHHnRTAgQIAAAQIECBAgQIAAAQIE0hcosEMBVoGYtiJAgAABAgQIECBAgAABAkUK2IsAgQ0BAdaGg3sCBAgQIECAAAECBNIU0BUBAgQIJCAgwEpgiFogQIAAAQIECExXwO4ECBAgQIAAgWoFBFjV+judAAECBNoioE8CBAgQIECAAAECBMYWEGCNTedCAgTKFnAeAQIECBAgQIAAAQIECLRTQIDVrrnrlgABAgQIECBAgAABAgQIEEhfILkOBVjJjVRDBAgQIECAAAECBAgQIDC5gB0IEKiTgACrTtNQCwECBAgQIECAAIGUBPRCgAABAgQKEhBgFQRpGwIECBAgQIDANATsSYAAAQIECBAgECHA8ikgQIAAgdQF9EeAAAECBAgQIECAQMMFBFgNH6DyCZQj4BQCBAgQIECAAAECBAgQIFCdgACrLHvnECBAgAABAgQIECBAgAABAukL6HAqAgKsqbDalAABAgQIECBAgAABAgTGFXAdAQIEzhYQYJ0t4jkBAgQIECBAgACB5gvogAABAgQIJCUgwEpqnGQTV4EAABAASURBVJohQIAAAQIEihOwEwECBAgQIECAQF0EBFh1mYQ6CBAgkKKAnggQIECAAAECBAgQIFCAgACrAERbEJimgL0JECBAgAABAgQIECBAgEDbBdoQYLV9xvonQIAAAQIECBAgQIAAAQJtENBjwgICrISHqzUCBAgQIECAAAECBAiMJmA1AQIE6ikgwKrnXFRFgAABAgQIECDQVAF1EyBAgAABAoULCLAKJ7UhAQIECBAgMKmA6wkQIECAAAECBAicLiDAOl3DYwIECKQjoBMCBAgQIECAAAECBAgkIyDASmaUGilewI4ECBAgQIAAAQIECBAgQIBAHQSmG2DVoUM1ECBAgAABAgQIECBAgAABAtMVsDuBKQsIsKYMbHsCBAgQIECAAAECBAgMI2ANAQIECGwtIMDa2sY7BAgQIECAAAECzRJQLQECBAgQIJCogAAr0cFqiwABAgQIjCfgKgIECBAgQIAAAQL1ExBg1W8mKiJAoOkC6idAgAABAgQIECBAgACBQgUEWIVy2qwoAfsQIECAAAECBAgQIECAAAEC6QsM26EAa1gp6wgQIECAAAECBAgQIECAQP0EVESgFQICrFaMWZMECBAgQIAAAQIECGwt4B0CBAgQqLuAAKvuE1IfAQIECBAgQKAJAmokQIAAAQIECExRQIA1RVxbEyBAgACBUQSsJUCAAAECBAgQIEBgcwEB1uYuXiVAoJkCqiZAgAABAgQIECBAgACBBAUEWAkOdbKWXE2AAAECBAgQIECAAAECBAikL9CsDgVYzZqXagkQIECAAAECBAgQIECgLgLqIECgNAEBVmnUDiJAgAABAgQIECBA4GwBzwkQIECAwDACAqxhlKwhQIAAAQIECNRXQGUECBAgQIAAgeQFBFjJj1iDBAgQILCzgBUECBAgQIAAAQIECNRZQIBV5+mojUCTBNRKgAABAgQIECBAgAABAgSmJCDAmhLsONu6hgABAgQIECBAgAABAgQIEEhfQIejCwiwRjdzBQECBAgQIECAAAECBAhUK+B0AgRaJiDAatnAtUuAAAECBAgQIEBgQ8A9AQIECBBojoAAqzmzUikBAgQIECBQNwH1ECBAgAABAgQIlCIgwCqF2SEECBAgsJWA1wkQIECAAAECBAgQILCTgABrJyHvE6i/gAoJECBAgAABAgQIECBAgEDSAgKswXjdESBAgAABAgQIECBAgAABAukL6LCpAgKspk5O3QQIECBAgAABAgQIEKhCwJkECBCoQECAVQG6IwkQIECAAAECBNotoHsCBAgQIEBgNAEB1mheVhMgQIAAAQL1EFAFAQIECBAgQIBAiwQEWC0atlYJECBwpoBnBAgQIECAAAECBAgQaIaAAKsZc1JlXQXURYAAAQIECBAgQIAAAQIECExdoPIAa+odOoAAAQIECBAgQIAAAQIECBCoXEABBCYREGBNoudaAgQIECBAgAABAgQIlCfgJAIECLRWQIDV2tFrnAABAgQIECDQRgE9EyBAgAABAk0UEGA1cWpqJkCAAAECVQo4mwABAgQIECBAgEDJAgKsksEdR4AAgVzAjQABAgQIECBAgAABAgSGFxBgDW9lZb0EVEOAAAECBAgQIECAAAECBAikLzDoUIA1YHBHgAABAgQIECBAgAABAgRSFdAXgeYLCLCaP0MdECBAgAABAgQIECAwbQH7EyBAgEClAgKsSvkdToAAAQIECBBoj4BOCRAgQIAAAQLjCgiwxpVzHQECBAgQKF/AiQQIECBAgAABAgRaKSDAauXYNU2gzQJ6J0CAAAECBAgQIECAAIGmCQiwmjaxOtSrBgIECBAgQIAAAQIECBAgQCB9gRp1KMCq0TCUQoAAAQIECBAgQIAAAQJpCeiGAIFiBARYxTjahQABAgQIECBAgACB6QjYlQABAgQIhADLh4AAAQIECBAgkLyABgkQIECAAAECzRYQYDV7fqonQIAAgbIEnEOAAAECBAgQIECAQGUCAqzK6B1MoH0COiZAgAABAgQIECBAgAABAuMICLDGUavuGicTIECAAAECBAgQIECAAAEC6Qvo8CwBAdZZIJ4SIECAAAECBAgQIECAQAoCeiBAICUBAVZK09QLAQIECBAgQIAAgSIF7EWAAAECBGoiIMCqySCUQYAAAQIECKQpoCsCBAgQIECAAIHJBQRYkxvagQABAgSmK2B3AgQIECBAgAABAgRaLiDAavkHQPttEdAnAQIECBAgQIAAAQIECBBoroAAa9jZWUeAAAECBAgQIECAAAECBAikL6DDWgoIsGo5FkURIECAAAECBAgQIECguQIqJ0CAQNECAqyiRe1HgAABAgQIECBAYHIBOxAgQIAAAQKnCQiwTsPwkAABAgQIEEhJQC8ECBAgQIAAAQKpCAiwUpmkPggQIDANAXsSIECAAAECBAgQIECgBgICrBoMQQlpC+iOAAECBAgQIECAAAECBAgQmEygCQHWZB26mgABAgQIECBAgAABAgQIEGiCgBoJbCkgwNqSxhsECBAgQIAAAQIECBBomoB6CRAgkKaAACvNueqKAAECBAgQIEBgXAHXESBAgAABArUTEGDVbiQKIkCAAAECzRfQAQECBAgQIECAAIEiBQRYRWraiwABAsUJ2IkAAQIECBAgQIAAAQIEHhMQYD0G4VuKAnoiQIAAAQIECBAgQIAAAQIEUhDYPsBKoUM9ECBAgAABAgQIECBAgAABAtsLeJdAzQUEWDUfkPIIECBAgAABAgQIEGiGgCoJECBAYHoCAqzp2dqZAAECBAgQIEBgNAGrCRAgQIAAAQKbCgiwNmXxIgECBAgQaKqAugkQIECAAAECBAikJyDASm+mOiJAYFIB1xMgQIAAAQIECBAgQIBArQQEWLUaRzrF6IQAAQIECBAgQIAAAQIECBBIX6CsDgVYZUk7hwABAgQIECBAgAABAgQInCvgFQIEhhAQYA2BZAkBAgQIECBAgAABAnUWUBsBAgQIpC4gwEp9wvojQIAAAQIECAwjYA0BAgQIECBAoMYCAqwaD0dpBAgQINAsAdUSIECAAAECBAgQIDAdAQHWdFztSoDAeAKuIkCAAAECBAgQIECAAAEC5wgIsM4hafoL6idAgAABAgQIECBAgAABAgTSF2hXhwKsds1btwQIECBAgAABAgQIECBwSsB3AgQaIyDAasyoFEqAAAECBAgQIECgfgIqIkCAAAECZQgIsMpQdgYBAgQIECBAYGsB7xAgQIAAAQIECOwgIMDaAcjbBAgQINAEATUSIECAAAECBAgQIJCygAAr5enqjcAoAtYSIECAAAECBAgQIECAAIGaCgiwChyMrQgQIECAAAECBAgQIECAAIH0BXRYvoAAq3xzJxIgQIAAAQIECBAgQKDtAvonQIDASAICrJG4LCZAgAABAgQIECBQFwF1ECBAgACB9ggIsNoza50SIECAAAECZwt4ToAAAQIECBAg0AgBAVYjxqRIAgQI1FdAZQQIECBAgAABAgQIEJi2gABr2sL2J7CzgBUECBAgQIAAAQIECBAgQIDANgKJBFjbdOgtAgQIECBAgAABAgQIECBAIBEBbbRVQIDV1snrmwABAgQIECBAgACBdgromgABAg0UEGA1cGhKJkCAAAECBAgQqFbA6QQIECBAgEC5AgKscr2dRoAAAQIECGwIuCdAgAABAgQIECAwtIAAa2gqCwkQIFA3AfUQIECAAAECBAgQIECgHQICrHbMWZdbCXidAAECBAgQIECAAAECBAgQqL3AxAFW7TtUIAECBAgQIECAAAECBAgQIDCxgA0IVCkgwKpS39kECBAgQIAAAQIECLRJQK8ECBAgMKaAAGtMOJcRIECAAAECBAhUIeBMAgQIECBAoI0CAqw2Tl3PBAgQINBuAd0TIECAAAECBAgQaJiAAKthA1MuAQL1EFAFAQIECBAgQIAAAQIECJQnIMAqz9pJZwp4RoAAAQIECBAgQIAAAQIECKQvUEiHAqxCGG1CgAABAgQIECBAgAABAgSmJWBfAgQEWD4DBAgQIECAAAECBAikL6BDAgQIEGi0gACr0eNTPAECBAgQIECgPAEnESBAgAABAgSqEhBgVSXvXAIECBBoo4CeCRAgQIAAAQIECBAYQ0CANQaaSwgQqFLA2QQIECBAgAABAgQIECDQNgEBVtsmnvfrRoAAAQIECBAgQIAAAQIECKQvkFCHAqyEhqkVAgQIECBAgAABAgQIEChWwG4ECNRDQIBVjzmoggABAgQIECBAgECqAvoiQIAAAQITCwiwJia0AQECBAgQIEBg2gL2J0CAAAECBAi0W0CA1e75654AAQLtEdApAQIECBAgQIAAAQKNFRBgNXZ0CidQvoATCRAgQIAAAQIECBAgQIBAFQICrHLVnUaAAAECBAgQIECAAAECBAikL6DDggUEWAWD2o4AAQIECBAgQIAAAQIEihCwBwECBJ4QEGA9YeERAQIECBAgQIAAgbQEdEOAAAECBBIREGAlMkhtECBAgAABAtMRsCsBAgQIECBAgED1AgKs6megAgIECKQuoD8CBAgQIECAAAECBAhMJCDAmojPxQTKEnAOAQIECBAgQIAAAQIECBBor0B7Aqz2zljnBAgQIECAAAECBAgQIECgPQI6TVJAgJXkWDVFgAABAgQIECBAgACB8QVcSYAAgboJCLDqNhH1ECBAgAABAgQIpCCgBwIECBAgQKBAAQFWgZi2IkCAAAECBIoUsBcBAgQIECBAgACBDQEB1oaDewIECKQpoCsCBAgQIECAAAECBAgkICDASmCIWpiugN0JECBAgAABAgQIECBAgACBagXKCLCq7dDpBAgQIECAAAECBAgQIECAQBkCziAwNQEB1tRobUyAAAECBAgQIECAAIFRBawnQIAAgc0EBFibqXiNAAECBAgQIECguQIqJ0CAAAECBJITEGAlN1INESBAgACByQXsQIAAAQIECBAgQKBOAgKsOk1DLQQIpCSgFwIECBAgQIAAAQIECBAoSECAVRCkbaYhYE8CBAgQIECAAAECBAgQIEAgfYGdOxRg7WxkBQECBAgQIECAAAECBAgQqLeA6ggkLiDASnzA2iNAgAABAgQIECBAYDgBqwgQIECgvgICrPrORmUECBAgQIAAgaYJqJcAAQIECBAgMBUBAdZUWG1KgAABAgTGFXAdAQIECBAgQIAAAQJnCwiwzhbxnACB5gvogAABAgQIECBAgAABAgSSEhBgJTXO4pqxEwECBAgQIECAAAECBAgQIJC+QFM6FGA1ZVLqJECAAAECBAgQIECAAIE6CqiJAIESBARYJSA7ggABAgQIECBAgACB7QS8R4AAAQIEthcQYG3v410CBAgQIECAQDMEVEmAAAECBAgQSFhAgJXwcLVGgAABAqMJWE2AAAECBAgQIECAQD0FBFj1nIuqCDRVQN0ECBAgQIAAAQIECBAEq63mAAAMfElEQVQgQKBwAQFW4aSTbuh6AgQIECBAgAABAgQIECBAIH0BHY4iIMAaRctaAgQIECBAgAABAgQIEKiPgEoIEGiNgACrNaPWKAECBAgQIECAAIFzBbxCgAABAgSaICDAasKU1EiAAAECBAjUWUBtBAgQIECAAAECUxYQYE0Z2PYECBAgMIyANQQIECBAgAABAgQIENhaQIC1tY13CDRLQLUECBAgQIAAAQIECBAgQCBRAQHWaYP1kAABAgQIECBAgAABAgQIEEhfQIfNExBgNW9mKiZAgAABAgQIECBAgEDVAs4nQIBAqQICrFK5HUaAAAECBAgQIEDglIDvBAgQIECAwLACAqxhpawjQIAAAQIE6iegIgIECBAgQIAAgVYICLBaMWZNEiBAYGsB7xAgQIAAAQIECBAgQKDuAgKsuk9IfU0QUCMBAgQIECBAgAABAgQIECAwRYGaBFhT7NDWBAgQIECAAAECBAgQIECAQE0ElEFgPAEB1nhuriJAgAABAgQIECBAgEA1Ak4lQIBACwUEWC0cupYJECBAgAABAm0X0D8BAgQIECDQLAEBVrPmpVoCBAgQIFAXAXUQIECAAAECBAgQKE1AgFUatYMIECBwtoDnBAgQIECAAAECBAgQIDCMgABrGCVr6iugMgIECBAgQIAAAQIECBAgQCB5gW7yHWqQAAECBAgQIECAAAECBAgQCAQEmizgJ7CaPD21EyBAgAABAgQIECBQpoCzCBAgQKAiAQFWRfCOJUCAAAECBAi0U0DXBAgQIECAAIHRBQRYo5u5ggABAgQIVCvgdAIECBAgQIAAAQItExBgtWzg2iVAYEPAPQECBAgQIECAAAECBAg0R0CA1ZxZ1a1S9RAgQIAAAQIECBAgQIAAAQLpC9SiQwFWLcagCAIECBAgQIAAAQIECBBIV0BnBAhMKiDAmlTQ9QQIECBAgAABAgQITF/ACQQIECDQagEBVqvHr3kCBAgQIECgTQJ6JUCAAAECBAg0VUCA1dTJqZsAAQIEqhBwJgECBAgQIECAAAECFQgIsCpAdySBdgvongABAgQIECBAgAABAgQIjCYgwBrNqx6rVUGAAAECBAgQIECAAAECBAikL6DDxwUEWI9TeECAAAECBAgQIECAAAECqQnohwCBNAQEWGnMURcECBAgQIAAAQIEpiVgXwIECBAgULmAAKvyESiAAAECBAgQSF9AhwQIECBAgAABApMICLAm0XMtAQIECJQn4CQCBAgQIECAAAECBForIMBq7eg13kYBPRMgQIAAAQIECBAgQIAAgSYKCLBGm5rVBAgQIECAAAECBAgQIECAQPoCOqyZgACrZgNRDgECBAgQIECAAAECBNIQ0AUBAgSKExBgFWdpJwIECBAgQIAAAQLFCtiNAAECBAgQGAgIsAYM7ggQIECAAIFUBfRFgAABAgQIECDQfAEBVvNnqAMCBAhMW8D+BAgQIECAAAECBAgQqFRAgFUpv8PbI6BTAgQIECBAgAABAgQIECBAYFyB5gRY43boOgIECBAgQIAAAQIECBAgQKA5AiolsImAAGsTFC8RIECAAAECBAgQIECgyQJqJ0CAQGoCAqzUJqofAgQIECBAgACBIgTsQYAAAQIECNRIQIBVo2EohQABAgQIpCWgGwIECBAgQIAAAQLFCAiwinG0CwECBKYjYFcCBAgQIECAAAECBAgQCAGWD0HyAhokQIAAAQIECBAgQIAAAQIEmi0wTIDV7A5VT4AAAQIECBAgQIAAAQIECAwjYA2B2goIsGo7GoURIECAAAECBAgQINA8ARUTIECAwDQEBFjTULUnAQIECBAgQIDA+AKuJECAAAECBAicJSDAOgvEUwIECBAgkIKAHggQIECAAAECBAikJCDASmmaeiFAoEgBexEgQIAAAQIECBAgQIBATQQEWDUZRJpl6IoAAQIECBAgQIAAAQIECBBIX2D6HQqwpm/sBAIECBAgQIAAAQIECBAgsL2AdwkQ2FZAgLUtjzcJECBAgAABAgQIEGiKgDoJECBAIF0BAVa6s9UZAQIECBAgQGBUAesJECBAgAABArUUEGDVciyKIkCAAIHmCqicAAECBAgQIECAAIGiBQRYRYvajwCByQXsQIAAAQIECBAgQIAAAQIEThMQYJ2GkdJDvRAgQIAAAQIECBAgQIAAAQLpC7SlQwFWWyatTwIECBAgQIAAAQIECBDYTMBrBAg0QECA1YAhKZEAAQIECBAgQIBAvQVUR4AAAQIEpisgwJqur90JECBAgAABAsMJWEWAAAECBAgQILClgABrSxpvECBAgEDTBNRLgAABAgQIECBAgECaAgKsNOeqKwLjCriOAAECBAgQIECAAAECBAjUTkCAVfhIbEiAAAECBAgQIECAAAECBAikL6DDMgUEWGVqO4sAAQIECBAgQIAAAQIEnhDwiAABAkMKCLCGhLKMAAECBAgQIECAQB0F1ESAAAECBNogIMBqw5T1SIAAAQIECGwn4D0CBAgQIECAAIGaCwiwaj4g5REgQKAZAqokQIAAAQIECBAgQIDA9AQEWNOztTOB0QSsJkCAAAECBAgQIECAAAECBDYVSCrA2rRDLxIgQIAAAQIECBAgQIAAAQJJCWimfQICrPbNXMcECBAgQIAAAQIECBAgQIAAgUYJCLAaNS7FEiBAgAABAgQI1EdAJQQIECBAgEBZAgKssqSdQ4AAAQIECJwr4BUCBAgQIECAAAECQwgIsIZAsoQAAQJ1FlAbAQIECBAgQIAAAQIEUhcQYKU+Yf0NI2ANAQIECBAgQIAAAQIECBAgUGOBggKsGneoNAIECBAgQIAAAQIECBAgQKAgAdsQqEZAgFWNu1MJECBAgAABAgQIEGirgL4JECBAYGQBAdbIZC4gQIAAAQIECBCoWsD5BAgQIECAQLsEBFjtmrduCRAgQIDAKQHfCRAgQIAAAQIECDRGQIDVmFEplACB+gmoiAABAgQIECBAgAABAgTKEBBglaHsjK0FvEOAAAECBAgQIECAAAECBAikLzBhhwKsCQFdToAAAQIECBAgQIAAAQIEyhBwBoE2Cwiw2jx9vRMgQIAAAQIECBBol4BuCRAgQKChAgKshg5O2QQIECBAgACBagScSoAAAQIECBAoX0CAVb65EwkQIECg7QL6J0CAAAECBAgQIEBgJAEB1khcFhMgUBcBdRAgQIAAAQIECBAgQIBAewQEWO2Z9dmdek6AAAECBAgQIECAAAECBAikL5BEhwKsJMaoCQIECBAgQIAAAQIECBCYnoCdCRCoWkCAVfUEnE+AAAECBAgQIECgDQJ6JECAAAECEwgIsCbAcykBAgQIECBAoEwBZxEgQIAAAQIE2iogwGrr5PVNgACBdgromgABAgQIECBAgACBBgoIsBo4NCUTqFbA6QQIECBAgAABAgQIECBAoFwBAVa53hunuSdAgAABAgQIECBAgAABAgTSF9BhYQICrMIobUSAAAECBAgQIECAAAECRQvYjwABArmAACtXcCNAgAABAgQIECCQroDOCBAgQIBA4wUEWI0foQYIECBAgACB6Qs4gQABAgQIECBAoEoBAVaV+s4mQIBAmwT0SoAAAQIECBAgQIAAgTEFBFhjwrmMQBUCziRAgAABAgQIECBAgAABAm0UaFuA1cYZ65kAAQIECBAgQIAAAQIECLRNQL+JCQiwEhuodggQIECAAAECBAgQIFCMgF0IECBQHwEBVn1moRICBAgQIECAAIHUBPRDgAABAgQIFCIgwCqE0SYECBAgQIDAtATsS4AAAQIECBAgQECA5TNAgACB9AV0SIAAAQIECBAgQIAAgUYLCLAaPT7FlyfgJAIECBAgQIAAAQIECBAgQKAqgfICrKo6dC4BAgQIECBAgAABAgQIECBQnoCTCExBQIA1BVRbEiBAgAABAgQIECBAYBIB1xIgQIDAmQICrDM9PCNAgAABAgQIEEhDQBcECBAgQIBAQgICrISGqRUCBAgQIFCsgN0IECBAgAABAgQI1ENAgFWPOaiCAIFUBfRFgAABAgQIECBAgAABAhMLCLAmJrTBtAXsT4AAAQIECBAgQIAAAQIECKQvsF2HAqztdLxHgAABAgQIECBAgAABAgSaI6BSAskKCLCSHa3GCBAgQIAAAQIECBAYXcAVBAgQIFBHAQFWHaeiJgIECBAgQIBAkwXUToAAAQIECBAoWECAVTCo7QgQIECAQBEC9iBAgAABAgQIECBA4AmB/wUAAP//n8PkzQAAAAZJREFUAwCZbamUvoLNzgAAAABJRU5ErkJggg==",
+          "candidatePngBase64": "iVBORw0KGgoAAAANSUhEUgAABLAAAAMgCAYAAAAz4JsCAAAQAElEQVR4AezdCbhtZ1kn+HfvM905w01IAoQQTEjCPIMMahlsgdYihbR2KwUOLWVj16N2ldJ0VT9t+1SVjdQg2rZlWSWPiJYUUuWAQAnagCBTQBmEQCCBkJDx5iZ3OvPetdY+ubnTGfaw1l5rfet3vPucPXzr+9739+7nmPN/zr10d190Rd+NgfeA94D3gPeA94D3gPeA94D3gPeA94D3gPdA0u8BP/vLPxr9HuiGDwIECBAgQIAAAQIECBAYQsASAgQIEKhKQIBVlbxzCRAgQIAAAQJtFNAzAQIECBAgQGAMAQHWGGguIUCAAAECVQo4mwABAgQIECBAgEDbBARYbZu4fgkQyAXcCBAgQIAAAQIECBAgQKBBAgKsBg2rXqWqhgABAgQIECBAgAABAgQIEEhfoB4dCrDqMQdVECBAgAABAgQIECBAgECqAvoiQGBiAQHWxIQ2IECAAAECBAgQIECgbAH7EyBAgEC7BQRY7Z6/7gkQIECAAIH2COiUAAECBAgQINBYAQFWY0encAIECBCYvoATCRAgQIAAAQIECBCoQkCAVYW6Mwm0WUDvBAgQIECAAAECBAgQIEBgRAEB1ohgdViuBgIECBAgQIAAAQIECBAgQCB9AR2eEhBgnbJwjwABAgQIECBAgAABAgTSEtANAQKJCAiwEhmkNggQIECAAAECBAiUI2BXAgQIECBQvYAAq/oZqIAAAQIECBBIXUB/BAgQIECAAAECEwkIsCbiczEBAgQITEvAOQQIECBAgAABAgQItFdAgNXe2eu8fQI6JkCAAAECBAgQIECAAAECjRQQYI00NosJECBAgAABAgQIECBAgACB9AV0WDcBAVbdJqIeAgQIECBAgAABAgQIpCCgBwIECBQoIMAqENNWBAgQIECAAAECBIoUsBcBAgQIECCwISDA2nDwmQABAgQIEEhTQFcECBAgQIAAAQIJCAiwEhiiFggQIFCugN0JECBAgAABAgQIECBQrYAAq1p/p7dFQJ8ECBAgQIAAAQIECBAgQIDA2AKNCbDG7tCFBAgQIECAAAECBAgQIECAQGMEFEpgMwEB1mYqniNAgAABAgQIECBAgEBzBVROgACB5AQEWMmNVEMECBAgQIAAAQKTC9iBAAECBAgQqJOAAKtO01ALAQIECBBISUAvBAgQIECAAAECBAoSEGAVBGkbAgQIlCFgTwIECBAgQIAAAQIECBCIEGB5F6QuoD8CBAgQIECAAAECBAgQIECg4QJDBFgN71D5BAgQIECAAAECBAgQIECAwBAClhCor4AAq76zURkBAgQIECBAgAABAk0TUC8BAgQIlCIgwCqF1aYECBAgQIAAAQLjCriOAAECBAgQIHC2gADrbBGPCRAgQIBA8wV0QIAAAQIECBAgQCApAQFWUuPUDAECxQnYiQABAgQIECBAgAABAgTqIiDAqsskUqxDTwQIECBAgAABAgQIECBAgED6AlPoUIA1BWRHECBAgAABAgQIECBAgACB7QS8RoDA9gICrO19vEqAAAECBAgQIECAQDMEVEmAAAECCQsIsBIertYIECBAgAABAqMJWE2AAAECBAgQqKeAAKuec1EVAQIECDRVQN0ECBAgQIAAAQIECBQuIMAqnNSGBAhMKuB6AgQIECBAgAABAgQIECBwuoAA63SNdO7rhAABAgQIECBAgAABAgQIEEhfoDUdCrBaM2qNEiBAgAABAgQIECBAgMC5Ap4hQKAJAgKsJkxJjQQIECBAgAABAgTqLKA2AgQIECBQsoAAq2Rg2xMgQIAAAQIEhhGwhgABAgQIECBAYGsBAdbWNl4hQIAAgWYJqJYAAQIECBAgQIAAgUQFBFiJDlZbBMYTcBUBAgQIECBAgAABAgQIEKifgACr6JnYjwABAgQIECBAgAABAgQIEEhfQIdTFRBgTZXbYQQIECBAgAABAgQIECBwUsBXAgQIDCsgwBpWyjoCBAgQIECAAAEC9RNQEQECBAgQaIWAAKsVY9YkAQIECBAgsLWAVwgQIECAAAECBOouIMCq+4TUR4AAgSYIqJEAAQIECBAgQIAAAQIlCgiwSsS1NYFRBKwlQIAAAQIECBAgQIAAAQIENhdIKcDavEPPEiBAgAABAgQIECBAgAABAikJ6KWFAgKsFg5dywQIECBAgAABAgQItF1A/wQIEGiWgACrWfNSLQECBAgQIECAQF0E1EGAAAECBAhMTUCANTVqBxEgQIAAAQJnC3hMgAABAgQIECBAYBgBAdYwStYQIECgvgIqI0CAAAECBAgQIECAQPICAqzkR6zBnQWsIECAAAECBAgQIECAAAECBOosUEyAVecO1UaAAAECBAgQIECAAAECBAgUI2AXAhUJCLAqgncsAQIECBAgQIAAAQLtFNA1AQIECIwuIMAa3cwVBAgQIECAAAEC1Qo4nQABAgQIEGiZgACrZQPXLgECBAgQ2BDwmQABAgQIECBAgEBzBARYzZmVSgkQqJuAeggQIECAAAECBAgQIEBgKgICrKkwO2QrAc8TIECAAAECBAgQIECAAAEC6QtM2qEAa1JB1xMgQIAAAQIECBAgQIAAgfIFnECg1QICrFaPX/MECBAgQIAAAQIE2iSgVwIECBBoqoAAq6mTUzcBAgQIECBAoAoBZxIgQIAAAQIEKhAQYFWA7kgCBAgQaLeA7gkQIECAAAECBAgQGE1AgDWal9UECNRDQBUECBAgQIAAAQIECBAg0CIBAVaLhn1mqx4RIECAAAECBAgQIECAAAEC6Quk0aEAK4056oIAAQIECBAgQIAAAQIEyhKwLwEClQsIsCofgQIIECBAgAABAgQIpC+gQwIECBAgMImAAGsSPdcSIECAAAECBKYn4CQCBAgQIECAQGsFBFitHb3GCRAg0EYBPRMgQIAAAQIECBAg0EQBAVYTp6ZmAlUKOJsAAQIECBAgQIAAAQIECExZQIA1ZfD8ODcCBAgQIECAAAECBAgQIEAgfQEdFicgwCrO0k4ECBAgQIAAAQIECBAgUKyA3QgQIDAQEGANGHwiQIAAAQIECBAgkKqAvggQIECAQPMFBFjNn6EOCBAgQIAAgbIF7E+AAAECBAgQIFCpgACrUn6HEyBAoD0COiVAgAABAgQIECBAgMC4AgKsceVcR2D6Ak4kQIAAAQIECBAgQIAAAQKtFGhZgNXKGWuaAAECBAgQIECAAAECBAi0TEC7qQkIsFKbqH4IECBAgAABAgQIECBQhIA9CBAgUCMBAVaNhqEUAgQIECBAgACBtAR0Q4AAAQIECBQjIMAqxtEuBAgQIECAQDkCdiVAgAABAgQIECAQAixvAgIECCQvoEECBAgQIECAAAECBAg0W0CA1ez5qX5aAs4hQIAAAQIECBAgQIAAAQIEKhOYWoBVWYcOJkCAAAECBAgQIECAAAECBKYm4CACZQgIsMpQtScBAgQIECBAgAABAgTGF3AlAQIECJwlIMA6C8RDAgQIECBAgACBFAT0QIAAAQIECKQkIMBKaZp6IUCAAAECRQrYiwABAgQIECBAgEBNBARYNRmEMggQSFNAVwQIECBAgAABAgQIECAwuYAAa3JDO5QrYHcCBAgQIECAAAECBAgQIEAgfYFtOxRgbcvjRQIECBAgQIAAAQIECBAg0BQBdRJIV0CAle5sdUaAAAECBAgQIECAwKgC1hMgQIBALQUEWLUci6IIECBAgAABAs0VUDkBAgQIECBAoGgBAVbRovYjQIAAAQKTC9iBAAECBAgQIECAAIHTBARYp2G4S4BASgJ6IUCAAAECBAgQIECAAIFUBARYqUyyjD7sSYAAAQIECBAgQIAAAQIECKQv0IAOBVgNGJISCRAgQIAAAQIECBAgQKDeAqojQKBcAQFWub52J0CAAAECBAgQIEBgOAGrCBAgQIDAlgICrC1pvECAAAECBAgQaJqAegkQIECAAAECaQoIsNKcq64IECBAYFwB1xEgQIAAAQIECBAgUDsBAVbtRqIgAs0X0AEBAgQIECBAgAABAgQIEChSQIBVpGZxe9mJAAECBAgQIECAAAECBAgQSF9Ah0MKCLCGhLKMAAECBAgQIECAAAECBOoooCYCBNogIMBqw5T1SIAAAQIECBAgQGA7Aa8RIECAAIGaCwiwaj4g5REgQIAAAQLNEFAlAQIECBAgQIBAeQICrPJs7UyAAAECowlYTYAAAQIECBAgQIAAgU0FBFibsniSQFMF1E2AAAECBAgQIECAAAECBNITEGCdPVOPCRAgQIAAAQIECBAgQIAAgfQFdNgoAQFWo8alWAIECBAgQIAAAQIECNRHQCUECBCYloAAa1rSziFAgAABAgQIECBwroBnCBAgQIAAgSEEBFhDIFlCgAABAgQI1FlAbQQIECBAgAABAqkLCLBSn7D+CBAgMIyANQQIECBAgAABAgQIEKixgACrxsNRWrMEVEuAAAECBAgQIECAAAECBAiUI1CnAKucDu1KgAABAgQIECBAgAABAgQI1ElALQRGFhBgjUzmAgIECBAgQIAAAQIECFQt4HwCBAi0S0CA1a5565YAAQIECBAgQOCkgK8ECBAgQIBAYwQEWI0ZlUIJECBAgED9BFREgAABAgQIECBAYBoCAqxpKDuDAAECWwt4hQABAgQIECBAgAABAgR2EBBg7QDk5SYIqJEAAQIECBAgQIAAAQIECBBIWWAjwEq5Q70RIECAAAECBAgQIECAAAECGwI+E2iogACroYNTNgECBAgQIECAAAEC1Qg4lQABAgSmLyDAmr65EwkQIECAAAECbRfQPwECBAgQIEBgJAEB1khcFhMgQIAAgboIqIMAAQIECBAgQIBAewQEWO2ZtU4JEDhbwGMCBAgQIECAAAECBAgQaISAAKsRY6pvkSojQIAAAQIECBAgQIAAAQIE0heoukMBVtUTcD4BAgQIECBAgAABAgQItEFAjwQITCAgwJoAz6UECBAgQIAAAQIECExTwFkECBAg0FYBAVZbJ69vAgQIECBAoJ0CuiZAgAABAgQINFBAgNXAoSmZAAECBKoVcDoBAgQIECBAgAABAtMVEGBN19tpBAhsCPhMgAABAgQIECBAgAABAgSGFhBgDU1Vt4XqIUCAAAECBAgQIECAAAECBNIX0GEuIMDKFdwIECBAgAABAgQIECBAIF0BnREg0HgBAVbjR6gBAgQIECBAgAABAuULOIEAAQIECFQpIMCqUt/ZBAgQIECAQJsE9EqAAAECBAgQIDCmgABrTDiXESBAgEAVAs4kQIAAAQIECBAgQKCNAgKsNk5dz+0W0D0BAgQIECBAgAABAgQIEGiYgABrjIG5hAABAgQIECBAgAABAgQIEEhfQIf1ERBg1WcWKiFAgAABAgQIECBAgEBqAvohQIBAIQICrEIYbUKAAAECBAgQIECgLAH7EiBAgAABAgIs7wECBAgQIEAgfQEdEiBAgAABAgQIMMuM6gAAEABJREFUNFpAgNXo8SmeAAEC0xNwEgECBAgQIECAAAECBKoSEGBVJe/cNgromQABAgQIECBAgAABAgQIEBhDoGEB1hgduoQAAQIECBAgQIAAAQIECBBomIByCZwpIMA608MjAgQIECBAgAABAgQIpCGgCwIECCQkIMBKaJhaIUCAAAECBAgQKFbAbgQIECBAgEA9BARY9ZiDKggQIECAQKoC+iJAgAABAgQIECAwsYAAa2JCGxAgQKBsAfsTIECAAAECBAgQIECg3QICrHbPvz3d65QAAQIECBAgQIAAAQIECBBorMDQAVZjO1Q4AQIECBAgQIAAAQIECBAgMLSAhQTqKCDAquNU1ESAAAECBAgQIECAQJMF1E6AAAECBQsIsAoGtR0BAgQIECBAgEARAvYgQIAAAQIECJwSEGCdsnCPAAECBAikJaAbAgQIECBAgAABAokICLASGaQ2CBAoR8CuBAgQIECAAAECBAgQIFC9gACr+hmkXoH+CBAgQIAAAQIECBAgQIAAgfQFSu1QgFUqr80JECBAgAABAgQIECBAgMCwAtYRILCVgABrKxnPEyBAgAABAgQIECDQPAEVEyBAgECSAgKsJMeqKQIECBAgQIDA+AKuJECAAAECBAjUTUCAVbeJqIcAAQIEUhDQAwECBAgQIECAAAECBQoIsArEtBUBAkUK2IsAAQIECBAgQIAAAQIECGwICLA2HNL8rCsCBAgQIECAAAECBAgQIEAgfYEWdCjAasGQtUiAAAECBAgQIECAAAEC2wt4lQCBegsIsOo9H9URIECAAAECBAgQaIqAOgkQIECAQGkCAqzSaG1MgAABAgQIEBhVwHoCBAgQIECAAIHNBARYm6l4jgABAgSaK6ByAgQIECBAgAABAgSSExBgJTdSDRGYXMAOBAgQIECAAAECBAgQIECgTgICrHKmYVcCBAgQIECAAAECBAgQIEAgfQEdTklAgDUlaMcQIECAAAECBAgQIECAwGYCniNAgMDOAgKsnY2sIECAAAECBAgQIFBvAdURIECAAIHEBQRYiQ9YewQIECBAgMBwAlYRIECAAAECBAjUV0CAVd/ZqIwAAQJNE1AvAQIECBAgQIAAAQIEShEQYJXCalMC4wq4jgABAgQIECBAgAABAgQIEDhbIL0A6+wOPSZAgAABAgQIECBAgAABAgTSE9BRqwQEWK0at2YJECBAgAABAgQIECBwSsA9AgQINEVAgNWUSamTAAECBAgQaLhAP/q9teitLsf6ymJ2O5HdFqO3thL9fq/hvbW6fM0TIECAAAECUxAQYE0B2REECBAgUFeBLFDIgoN+b/2hAKFf10ITryv99nrrq7G2dCzWThzJvh6J9aWj2e3Y4La2eCTyWx5qCbLSfy9U1mE/+36Xf6/Lbtk3vMrKcDABAgQIEBhXQIA1rpzrCBAgUCcBtYwk0O/1ore6lIUGR2PtxIOxtpjdBl+PDZ4XIozEafF2AllokAdT64tHo7eyGNFfj0dfsi9e8PRHxnc+9/J4yuMPxr7ds9FfWxmEWetZyNVfX9tuR68RGEmgn4Wn68vHs+9zRx6+rWbf8/LnemurI+1lMQECBAgQqFJAgFWlvrNrJaAYAgTaIdAbBAVZcLV0NPIQK//hLg8M8q+91cVYy57fCBH8YNeOd0S5Xa5n76k8KOj31uJZT7ok3vbGl8Zn//DV8cG3/kD82b9/ZXzqD14VH/v9/yl+6u8/PfbvnRu8J9eWj0X+niy3MrsnLzAIT09kodXRyN+DvbXl7H21unHLvw9modb60pHBa0L75N8NGiRAgEASAkUGWEmAaIIAAQIE0hUYhFfZD235D3J7d83GD37PtfG7v/Sy+PPfemX89r94SXzfd10dC3PdjRBh8JswQqx03w3ld5a/z/Lfvop+L171vdfF+7LA6gdeek0c2Dv/8OGdTieuvfLC+Fc/9x3xH9/0snjUJfuin4cLKyciv+7hhe4QGEmgH+vZe2h9+UT2NlqLq684P/7pTzw3/vTX/16899+9In7xZ14YT7v24uy19SzAOjG4RRZ4jXSExQQItF1A/wSmLiDAmjq5AwkQIECgCoF+L/tBLfuBLv9Nq6uvuCDe9x9eGW/9xZdGHih8+7Mvjx/KAoa3/+vviT/+tRs2QoT8r92sLGY/0/nHtauYV9PPzH+jpbeyFJG9777r+VfEb/z8d8X+04Krzfp7yYuujF/5P/5O7F6YjTxszW+brfMcgZ0EeqsrWYCV/5XVXvzwDU+MG9/xqvj5n3x+fPcLHxsv/tYr4md/9Nnx8bf/ULz+x54dWYaahfaLsb6avV932tjrBQvYjgABAgRGEeiOsthaAgQIECDQVIE8DOivrcaBfQvxe296WTznyZdu2sr1z3tMvOWffXcszM9kIcLy4LdhNl3oSQLbCOR/BTD/h9v37J6L//snv3Xwftpm+cMvvfw7r4pXfNfVEf1e9v5byb76HxZ4GGezO547VyB/7+RhVPb1pS96bPzmL/x3sTd7H569cKbbiX/+0y+MH3vFEwfvs152TR70n73OYwIECBAgUBcBAVZdJqEOAgQIEChPoN9/KIjqxw/999fE0697xLZnfWcWYn3vdzxu44e6tSxEiHRDhG0hvDi2QP6bfnkIlQelz3nKZSPt88M3PCFmZrqRh2D9/vpI11pMoLe+Fnl4OjvbjZ//yecPfsNqO5X/K1tz/v6F7O26NnjPbbfWawQIECBAoEoBAVaV+s4mQCAFAT00QCD/61wnf7Pg77346qEqzn8TJl+YX9fPArD8vhuB4QSywLS3ETw9+4mXDHfJaauelgWsB8/fFf1+L/L/xczTXnKXwI4C+fesyL5nXfmo8+IZT7hkx/WXXbw3nnrtxYPAvt9b23G9BQQIECBAoCoBAVZV8s49TcBdAgQIlCyQ/TCX/XQ2+K2WR16yb6jDLr9s/0Pr+tml2e2hR74Q2FFg8HYZfIqLLty94/KzF+R/3Su/ZW+87M/GPmev8ZjA1gL5e6YfB7MQNP/3rbZed+qVSy/au/Fg8L1y467PBAgQIECgHIHxdxVgjW/nSgIECBBoisDgp7hOrK/34t77TwxV9d33HX9oXSd2/Ds44YPAaQLZWyZi8CkeOLIco34sLa/H4tJDvwkzeO+OuoP17RbI33udePDo8O+9Qw8sbpB5v204+Eyg7gLqI9BSAQFWSwevbQIECLRJoNPpRqc7M2j5XR+4ZfB1p09/+qFbB0vy6zqd/AfCwUOfCAwh0In8fZMv/PQX7sm/jHT726/cF3mgMHjfZu/dkS62uPUCg/depxO33P5gfPGWQzt6HD6yFJ+56d5s3an3bfYg+T8aJECAAIHmCXSbV7KKCRAgQIDAiALZD3Od2bnsok689Y+/GLd844Hs/tZ/Pv2Fu+M/v/8r2YLsB7qZjeuyB/4QGFqg052NyMKnj332zsgDqRjh421/8sVYXetll89mt43gdYTLp7XUOTUV6Mxk75vstryyHv/s3358xyrf+O8/GfceXoyN6/LvdzteYgEBAgQIEKhEQIBVCbtDCRAgQGDaAt3ZhewHtLnI/wrhD/7cuwe/nbBZDZ/78r3x6je8N44dX4nu7Pzgttm6yZ+zQ8oCnSwwzQOB/K9x/cL/97HoD/lvC33wk7fHf3z3lyI6WXiavf/yr+GDwAgCnSw4nZnbFZF9fft7vhRv+Dd/ueX7782/8+n45eyWLc6+1y1klwhMwwcBAgQI1FZAgFXb0SiMAIEdBSwgMIJA/tdqZuZ3Zz+gzcaNn787Xviq3x/8YPeRv74jbv764ciDg5/5f/7/+Ds/8o646Zb7Iw8fuoP1fqAbgdnShwRODxHe+b6vxD9+0wdjvZf/49oPLdjky42fvyte9wvvjyPHlrMwYT66cwubrPIUgZ0FullgPwixohNv+q0bs+93b4//8M7Pxedvvi+++NVD8fvvvile8tp3xj9604diba2fvdd2RXc+C7123toKAgQIECBQmYAAqzL6ehysCgIECLRJIA8EZhb2ZuHUfNxzaHHwg923v/od8eSXvzWu/9F3xK/+7t/EA0dWojM7HzML+6KbfW2Tj16LFRi837IQNMsQ4s2/89fxd1/3h/GhG2+P3llBVv7Xt970W5+MG/7hH8eXvnY4e3/Oxcz8nuh0/GdasRNp0W6dTnQX9sRMdovuTHz8s3fGP/j598czXvm2eNor3havev174v0fvS0iOtHN3qP5uk7H+y18ECBAIHGBprfn/1M1fYLqJ0CAAIGRBPJQYXb3/uwHu71ZQLUQ+W9mrfU72dfZweOZXXtjdtf+7P78SPtaTOBcgU7MZEHUzPzeiCxE+K8f+Vq85LX/OZ75P7wtvv9n/iRe84b3xHf/+DvjGd/3O/GGf/PhuOu+Ew+Fp3ujM/i318IHgbEF8kAqD6YG38+y92H+nupHN3rRGby/ullwlX8vnM1D/ez9OfZBLiTQLgHdEiBQoYAAq0J8RxMgQIBANQKd7Ie1wQ92uw/E7J7zYm73eYOvs9njmfwHvez1aipzanICnU7MLOzOQtF90Z3bFStrEZ/78qHB/0jA777rpvjzj90Wd+bBVRZYDd6TwtPwUaRAJ/LfJJ3dtW/je1z2/W42/36Xfa/Ln+vOLkRk79GY6ofDCBAgQIDAeAICrPHcXEWAAAECKQhkP7jlYVZnZjbyr36QS2Godeyhk4UIC1mItT8LEQ7ETBYmzCzsjTwszf+q6uyuLEjNAoX8ucH7MHb48DKBMQQ6nW72fS77Xnfy+110xtjFJQQIECBAoDqBbnVHO5kAAQIECFQj4FQClQh0OtHNf9NqfnfkYdVGkLUn8r/WKrgKHwQIECBAgACBbQUEWNvyeJEAgS0EPE2AAAECBAgQIECAAAECBKYmIMCaGvXZB3lMgAABAgQIECBAgAABAgQIpC+gwyIEBFhFKNqDAAECBAgQIECAAAECBMoTsDMBAq0XEGC1/i0AgAABAgQIECBAoA0CeiRAgAABAk0WEGA1eXpqJ0CAAAECBKYp4CwCBAgQIECAAIGKBARYFcE7lgABAu0U0DUBAgQIECBAgAABAgRGFxBgjW7mCgLVCjidAAECBAgQIECAAAECBAi0TKCVAVbLZqxdAgQIECBAgAABAgQIECDQSgFNpyMgwEpnljohQIAAAQIECBAgQIBA0QL2I0CAQC0EBFi1GIMiCBAgQIAAAQIE0hXQGQECBAgQIDCpgABrUkHXEyBAgAABAuULOIEAAQIECBAgQKDVAgKsVo9f8wQItElArwQIECBAgAABAgQIEGiqgACrqZNTdxUCziRAgAABAgQIECBAgAABAgQqEJhygFVBh44kQIAAAQIECBAgQIAAAQIEpizgOALFCgiwivW0GwECBAgQIECAAAECBIoRsAsBAgQIPCwgwHqYwh0CBAgQIECAAIHUBPRDgAABAgQIpCEgwEpjjrogQEwmVv4AABAASURBVIAAAQJlCdiXAAECBAgQIECAQOUCAqzKR6AAAgTSF9AhAQIECBAgQIAAAQIECEwiIMCaRM+10xNwEgECBAgQIECAAAECBAgQIJC+wBYdCrC2gPE0AQIECBAgQIAAAQIECBBoooCaCaQoIMBKcap6IkCAAAECBAgQIEBgEgHXEiBAgEDNBARYNRuIcggQIECAAAECaQjoggABAgQIECBQnIAAqzhLOxEgQIAAgWIF7EaAAAECBAgQIECAwEBAgDVg8IkAgVQF9EWAAAECBAgQIECAAAECzRcQYDV/hmV3YH8CBAgQIECAAAECBAgQIEAgfYFadyjAqvV4FEeAAAECBAgQIECAAAECzRFQKQECZQkIsMqStS8BAgQIECBAgAABAqMLuIIAAQIECGwiIMDaBMVTBAgQIECAAIEmC6idAAECBAgQIJCagAArtYnqhwABAgSKELAHAQIECBAgQIAAAQI1EhBg1WgYSiGQloBuCBAgQIAAAQIECBAgQIBAMQICrGIcy9nFrgQIECBAgAABAgQIECBAgED6AjrcUUCAtSORBQQIECBAgAABAgQIECBQdwH1ESCQtoAAK+356o4AAQIECBAgQIDAsALWESBAgACB2goIsGo7GoURIECAAAECzRNQMQECBAgQIECAQBkCAqwyVO1JgAABAuMLuJIAAQIECBAgQIAAAQJnCQiwzgLxkEAKAnogQIAAAQIECBAgQIAAAQIpCQiwNp+mZwkQIECAAAECBAgQIECAAIH0BXTYEAEBVkMGpUwCBAgQIECAAAECBAjUU0BVBAgQKF9AgFW+sRMIECBAgAABAgQIbC/gVQIECBAgQGBbAQHWtjxeJECAAAECBJoioE4CBAgQIECAAIF0BQRY6c5WZwQIEBhVwHoCBAgQIECAAAECBAjUUkCAVcuxKKq5AionQIAAAQIECBAgQIAAAQIEihaoX4BVdIf2I0CAAAECBAgQIECAAAECBOonoCICIwgIsEbAspQAAQIECBAgQIAAAQJ1ElALAQIE2iIgwGrLpPVJgAABAgQIECCwmYDnCBAgQIAAgQYICLAaMCQlEiBAgACBeguojgABAgQIECBAgEC5AgKscn3tToAAgeEErCJAgAABAgQIECBAgACBLQUEWFvSeKFpAuolQIAAAQIECBAgQIAAAQIE0hQ4PcBKs0NdESBAgAABAgQIECBAgAABAqcLuE+gcQICrMaNTMEECBAgQIAAAQIECFQvoAICBAgQmKaAAGua2s4iQIAAAQIECBA4JeAeAQIECBAgQGBIAQHWkFCWESBAgACBOgqoiQABAgQIECBAgEAbBARYbZiyHgkQ2E7AawQIECBAgAABAgQIECBQcwEBVs0H1IzyVEmAAAECBAgQIECAAAECBAikL1BdhwKs6uydTIAAAQIECBAgQIAAAQJtE9AvAQJjCQiwxmJzEQECBAgQIECAAAECVQk4lwABAgTaJyDAat/MdUyAAAECBAgQIECAAAECBAgQaJSAAKtR41IsAQIECNRHQCUECBAgQIAAAQIECExLQIA1LWnnECBwroBnCBAgQIAAAQIECBAgQIDAEAICrCGQ6rxEbQQIECBAgAABAgQIECBAgED6Am3vUIDV9neA/gkQIECAAAECBAgQINAOAV0SINBgAQFWg4endAIECBAgQIAAAQLTFXAaAQIECBCoRkCAVY27UwkQIECAAIG2CuibAAECBAgQIEBgZAEB1shkLiBAgACBqgWcT4AAAQIECBAgQIBAuwQEWO2at24JnBTwlQABAgQIECBAgAABAgQINEZAgDX2qFxIgAABAgQIECBAgAABAgQIpC+gwzoICLDqMAU1ECBAgAABAgQIECBAIGUBvREgQGBCAQHWhIAuJ0CAAAECBAgQIDANAWcQIECAAIE2Cwiw2jx9vRMgQIAAgXYJ6JYAAQIECBAgQKChAgKshg5O2QQIEKhGwKkECBAgQIAAAQIECBCYvoAAa/rmTmy7gP4JECBAgAABAgQIECBAgACBkQQaGWCN1KHFBAgQIECAAAECBAgQIECAQCMFFE3gpIAA66SErwQIECBAgAABAgQIEEhPQEcECBBIQkCAlcQYNUGAAAECBAgQIFCegJ0JECBAgACBqgUEWFVPwPkECBAgQKANAnokQIAAAQIECBAgMIGAAGsCPJcSIEBgmgLO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FZhGgFVth04nQIAAAQIECBAgQIAAAQIEpiHgDAKlCQiwSqO1MQECBAgQIECAAAECBEYVsJ4AAQIENhMQYG2m4jkCBAgQIECAAIHmCqicAAECBAgQSE5AgJXcSDVEgAABAgQmF7ADAQIECBAgQIAAgToJCLDqNA21ECCQkoBeCBAgQIAAAQIECBAgQKAgAQFWQZC2KUPAngQIECBAgAABAgQIECBAgED6Ajt3KMDa2cgKAgQIECBAgAABAgQIECBQbwHVEUhcQICV+IC1R4AAAQIECBAgQIDAcAJWESBAgEB9BQRY9Z2NyggQIECAAAECTRNQLwECBAgQIECgFAEBVimsNiVAgAABAuMKuI4AAQIECBAgQIAAgbMFBFhni3hMgEDzBXRAgAABAgQIECBAgAABAkkJCLCSGmdxzdiJAAECBAgQIECAAAECBAgQSF+gKR0KsJoyKXUSIECAAAECBAgQIECAQB0F1ESAwBQEBFhTQHYEAQIECBCZfB9mAAAM20lEQVQgQIAAAQLbCXiNAAECBAhsLyDA2t7HqwQIECBAgACBZgiokgABAgQIECCQsIAAK+Hhao0AAQIERhOwmgABAgQIECBAgACBegoIsOo5F1URaKqAugkQIECAAAECBAgQIECAQOECAqzCSSfd0PUECBAgQIAAAQIECBAgQIBA+gI6HEVAgDWKlrUECBAgQIAAAQIECBAgUB8BlRAg0BoBAVZrRq1RAgQIECBAgAABAucKeIYAAQIECDRBQIDVhCmpkQABAgQIEKizgNoIECBAgAABAgRKFhBglQxsewIECBAYRsAaAgQIECBAgAABAgQIbC0gwNraxisEmiWgWgIECBAgQIAAAQIECBAgkKiAAOu0wbpLgAABAgQIECBAgAABAgQIpC+gw+YJCLCaNzMVEyBAgAABAgQIECBAoGoB5xMgQGCqAgKsqXI7jAABAgQIECBAgMBJAV8JECBAgACBYQUEWMNKWUeAAAECBAjUT0BFBAgQIECAAAECrRAQYLVizJokQIDA1gJeIUCAAAECBAgQIECAQN0FBFh1n5D6miCgRgIECBAgQIAAAQIECBAgQKBEgZoEWCV2aGsCBAgQIECAAAECBAgQIECgJgLKIDCegABrPDdXESBAgAABAgQIECBAoBoBpxIgQKCFAgKsFg5dywQIECBAgACBtgvonwABAgQIEGiWgACrWfNSLQECBAgQqIuAOggQIECAAAECBAhMTUCANTVqBxEgQOBsAY8JECBAgAABAgQIECBAYBgBAdYwStbUV0BlBAgQIECAAAECBAgQIECAQPIC3eQ71CABAgQIECBAgAABAgQIECAQCAg0WcBvYDV5emonQIAAAQIECBAgQGCaAs4iQIAAgYoEBFgVwTuWAAECBAgQINBOAV0TIECAAAECBEYXEGCNbuYKAgQIECBQrYDTCRAgQIAAAQIECLRMQIDVsoFrlwCBDQGfCRAgQIAAAQIECBAgQKA5AgKs5syqbpWqhwABAgQIECBAgAABAgQIEEhfoBYdCrBqMQZFECBAgAABAgQIECBAgEC6AjojQGBSAQHWpIKuJ0CAAAECBAgQIECgfAEnECBAgECrBQRYrR6/5gkQIECAAIE2CeiVAAECBAgQINBUAQFWUyenbgIECBCoQsCZBAgQIECAAAECBAhUICDAqgDdkQTaLaB7AgQIECBAgAABAgQIECAwmoAAazSveqxWBQECBAgQIECAAAECBAgQIJC+gA4fFhBgPUzhDgECBAgQIECAAAECBAikJqAfAgTSEBBgpTFHXRAgQIAAAQIECBAoS8C+BAgQIECgcgEBVuUjUAABAgQIECCQvoAOCRAgQIAAAQIEJhEQYE2i51oCBAgQmJ6AkwgQIECAAAECBAgQaK2AAKu1o9d4GwX0TIAAAQIECBAgQIAAAQIEmiggwBptalYTIECAAAECBAgQIECAAAEC6QvosGYCAqyaDUQ5BAgQIECAAAECBAgQSENAFwQIEChOQIBVnKWdCBAgQIAAAQIECBQrYDcCBAgQIEBgICDAGjD4RIAAAQIECKQqoC8CBAgQIECAAIHmCwiwmj9DHRAgQKBsAfsTIECAAAECBAgQIECgUgEBVqX8Dm+PgE4JECBAgAABAgQIECBAgACBcQWaE2CN26HrCBAgQIAAAQIECBAgQIAAgeYIqJTAJgICrE1QPEWAAAECBAgQIECAAIEmC6idAAECqQkIsFKbqH4IECBAgAABAgSKELAHAQIECBAgUCMBAVaNhqEUAgQIECCQloBuCBAgQIAAAQIECBQjIMAqxtEuBAgQKEfArgQIECBAgAABAgQIECAQAixvguQFNEiAAAECBAgQIECAAAECBAg0W2CYAKvZHaqeAAECBAgQIECAAAECBAgQGEbAGgK1FRBg1XY0CiNAgAABAgQIECBAoHkCKiZAgACBMgQEWGWo2pMAAQIECBAgQGB8AVcSIECAAAECBM4SEGCdBeIhAQIECBBIQUAPBAgQIECAAAECBFISEGClNE29ECBQpIC9CBAgQIAAAQIECBAgQKAmAgKsmgwizTJ0RYAAAQIECBAgQIAAAQIECKQvUH6HAqzyjZ1AgAABAgQIECBAgAABAgS2F/AqAQLbCgiwtuXxIgECBAgQIECAAAECTRFQJwECBAikKyDASne2OiNAgAABAgQIjCpgPQECBAgQIECglgICrFqORVEECBAg0FwBlRMgQIAAAQIECBAgULSAAKtoUfsRIDC5gB0IECBAgAABAgQIECBAgMBpAgKs0zBSuqsXAgQIECBAgAABAgQIECBAIH2BtnQowGrLpPVJgAABAgQIECBAgAABApsJeI4AgQYICLAaMCQlEiBAgAABAgQIEKi3gOoIECBAgEC5AgKscn3tToAAAQIECBAYTsAqAgQIECBAgACBLQUEWFvSeIEAAQIEmiagXgIECBAgQIAAAQIE0hQQYKU5V10RGFfAdQQIECBAgAABAgQIECBAoHYCAqzCR2JDAgQIECBAgAABAgQIECBAIH0BHU5TQIA1TW1nESBAgAABAgQIECBAgMApAfcIECAwpIAAa0goywgQIECAAAECBAjUUUBNBAgQIECgDQICrDZMWY8ECBAgQIDAdgJeI0CAAAECBAgQqLmAAKvmA1IeAQIEmiGgSgIECBAgQIAAAQIECJQnIMAqz9bOBEYTsJoAAQIECBAgQIAAAQIECBDYVCCpAGvTDj1JgAABAgQIECBAgAABAgQIJCWgmfYJCLDaN3MdEyBAgAABAgQIECBAgAABAgQaJSDAatS4FEuAAAECBAgQIFAfAZUQIECAAAEC0xIQYE1L2jkECBAgQIDAuQKeIUCAAAECBAgQIDCEgABrCCRLCBAgUGcBtREgQIAAAQIECBAgQCB1AQFW6hPW3zAC1hAgQIAAAQIECBAgQIAAAQI1FigowKpxh0ojQIAAAQIECBAgQIAAAQIEChKwDYFqBARY1bg7lQABAgQIECBAgACBtgromwABAgRGFhBgjUzmAgIECBAgQIAAgaoFnE+AAAECBAi0S0CA1a5565YAAQIECJwU8JUAAQIECBAgQIBAYwQEWI0ZlUIJEKifgIoIECBAgAABAgQIECBAYBoCAqxpKDtjawGvECBAgAABAgQIECBAgAABAukLTNihAGtCQJcTIECAAAECBAgQIECAAIFpCDiDQJsFBFhtnr7eCRAgQIAAAQIECLRLQLcECBAg0FABAVZDB6dsAgQIECBAgEA1Ak4lQIAAAQIECExfQIA1fXMnEiBAgEDbBfRPgAABAgQIECBAgMBIAgKskbgsJkCgLgLqIECAAAECBAgQIECAAIH2CAiw2jPrszv1mAABAgQIECBAgAABAgQIEEhfIIkOBVhJjFETBAgQIECAAAECBAgQIFCegJ0JEKhaQIBV9QScT4AAAQIECBAgQKANAnokQIAAAQITCAiwJsBzKQECBAgQIEBgmgLOIkCAAAECBAi0VUCA1dbJ65sAAQLtFNA1AQIECBAgQIAAAQINFBBgNXBoSiZQrYDTCRAgQIAAAQIECBAgQIDAdAUEWNP13jjNZwIECBAgQIAAAQIECBAgQCB9AR0WJiDAKozSRgQIECBAgAABAgQIECBQtID9CBAgkAsIsHIFNwIECBAgQIAAAQLpCuiMAAECBAg0XkCA1fgRaoAAAQIECBAoX8AJBAgQIECAAAECVQoIsKrUdzYBAgTaJKBXAgQIECBAgAABAgQIjCkgwBoTzmUEqhBwJgECBAgQIECAAAECBAgQaKNA2wKsNs5YzwQIECBAgAABAgQIECBAoG0C+k1MQICV2EC1Q4AAAQIECBAgQIAAgWIE7EKAAIH6CAiw6jMLlRAgQIAAAQIECKQmoB8CBAgQIECgEAEBViGMNiFAgAABAgTKErAvAQIECBAgQIAAAQGW9wABAgTSF9AhAQIECBAgQIAAAQIEGi0gwGr0+BQ/PQEnESBAgAABAgQIECBAgAABAlUJTC/AqqpD5xIgQIAAAQIECBAgQIAAAQLTE3ASgRIEBFgloNqSAAECBAgQIECAAAECkwi4lgABAgTOFBBgnenhEQECBAgQIECAQBoCuiBAgAABAgQSEhBgJTRMrRAgQIAAgWIF7EaAAAECBAgQIECgHgICrHrMQRUECKQqoC8CBAgQIECAAAECBAgQmFhAgDUxoQ3KFrA/AQIECBAgQIAAAQIECBAgkL7Adh0KsLbT8RoBAgQIECBAgAABAgQIEGiOgEoJJCsgwEp2tBojQIAAAQIECBAgQGB0AVcQIECAQB0FBFh1nIqaCBAgQIAAAQJNFlA7AQIECBAgQKBgAQFWwaC2I0CAAAECRQjYgwABAgQIECBAgACBUwL/DQAA//9L9XbEAAAABklEQVQDAFdTtpTLv5L/AAAAAElFTkSuQmCC",
+          "pngOmitted": null
+        }
+      }
+    ],
+    "cleanup": {
+      "trials": 2,
+      "allTrialsReleased": false,
+      "viewerDestroyedCount": 2,
+      "governorUninstalledCount": 2
+    },
+    "environment": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "desktopForegroundVerification": "unavailable",
+      "maskedRenderer": "WebKit WebGL",
+      "rendererIdentity": "unmasked-extension"
+    },
+    "viewport": {
+      "width": 1200,
+      "height": 800,
+      "devicePixelRatio": 1,
+      "cssWidth": 1200,
+      "cssHeight": 800,
+      "viewportWidth": 1200,
+      "viewportHeight": 960
+    },
+    "startedAt": "2026-10-10T19:47:28.525Z",
+    "failedPhase": "pair-0-comparison",
+    "error": "CCTV calibration control and candidate outputs differ.",
+    "finishedAt": "2026-10-10T19:47:56.006Z"
+  },
+  "calibrationGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "calibrationRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 43403.419917,
+      "closeSettledHostMs": 43776.500042,
+      "closeElapsedMs": 373.0801250000004,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 339.9806250000038
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

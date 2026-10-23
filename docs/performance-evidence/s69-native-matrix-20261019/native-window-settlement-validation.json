@@ -1,0 +1,234 @@
+{
+  "schema": "gev-native-window-settlement-validation/v1",
+  "status": "passed",
+  "baseCommit": "e6e1abc10b154b5317101d6e1b9bb18779e469ce",
+  "runtimeCommit": "e6e1abc10b154b5317101d6e1b9bb18779e469ce",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-settlement-e6e1abc1-validation-20261020/source",
+  "output": "/opt/gods-eye-view-validation/s61-s70-20261018/native-window-settlement-e6e1abc1-validation-20261020/r2",
+  "inputs": [
+    {
+      "file": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 86543,
+      "sha256": "0f54b01195261864216db921017f0613bc981957e5965478a6dc8356bb8e1a76"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 67522,
+      "sha256": "bc7e18df9fb46619a8f3eb4b4ec721e5a8deee315487f9a41cca77bd3f131979"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 124558,
+      "sha256": "158c2541c5c267842e54ada0ec06beba3fdf540846b508c70d9f4b44f607c4bf"
+    },
+    {
+      "file": "scripts/performance/nativeWindowViewport.mjs",
+      "bytes": 39434,
+      "sha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848"
+    },
+    {
+      "file": "scripts/performance/nativeWindowViewport.test.mjs",
+      "bytes": 28618,
+      "sha256": "9aa763845a3fb983823ccea930bd39a9f52e6904ab33df61c69ff0452895a9bd"
+    },
+    {
+      "file": "scripts/qa-application-fixtures.mjs",
+      "bytes": 28141,
+      "sha256": "d1e5c761a0d9b1615f5489f05351e4c895c10d5c7e8c1c715eaf005dc7033858"
+    },
+    {
+      "file": "scripts/qa-application-fixtures.test.mjs",
+      "bytes": 11123,
+      "sha256": "ab35052e2d433457ad206de045dad9cff24d9f2d7d7a7ca61cd80a9bd99ab19f"
+    },
+    {
+      "file": "scripts/qa-rendered-soak-driver.mjs",
+      "bytes": 79222,
+      "sha256": "f0e79219bccc7c5b7a248b18399bd717a94f9f358a5bfdade10eae865e42eacf"
+    },
+    {
+      "file": "scripts/run-unit-tests.mjs",
+      "bytes": 13187,
+      "sha256": "c05e3f4401f0c4ae25e21386a661cc8c3458108ba5a6679445d654741f0e5cf7"
+    },
+    {
+      "file": "scripts/captureNoUndefConfig.mjs",
+      "bytes": 6549,
+      "sha256": "90068b422619aead354dc17d5021675e91aaf5d356dc02d025cc591df48db9ab"
+    },
+    {
+      "file": "scripts/format-scope.json",
+      "bytes": 57348,
+      "sha256": "5f7fe57b8ab3239aaa5933d402a0cdf7e1ad7e981b80affa39effa43ce1f48f8"
+    }
+  ],
+  "restoredAdoptedDocs": [
+    {
+      "file": "docs/CODE-BOUNDARIES.md",
+      "bytes": 44336,
+      "sha256": "98532776a5cf8a1e4e1fe1efe0d3a36ac04d0b6a3212cd6bd6205ef22cf41f74"
+    },
+    {
+      "file": "docs/APPLICATION.md",
+      "bytes": 11635,
+      "sha256": "d583dd48302f94457524a3be95b373269270a0bf19a109b51d36da74dd69dcf5"
+    },
+    {
+      "file": "docs/SOURCE-ADAPTERS.md",
+      "bytes": 2466,
+      "sha256": "c82a4e3296a494f597b27c400f07ea97036d453000441ab089a9cd97ffff4933"
+    },
+    {
+      "file": "docs/UPDATE-RECOVERY.md",
+      "bytes": 4539,
+      "sha256": "6fd221a6fed75e1f03df2bd18c1351faea4d04154fee11e22c0baa815e5acdaa"
+    },
+    {
+      "file": "docs/UPSTREAM-BUG-TRIAGE.md",
+      "bytes": 3699,
+      "sha256": "26daa5e067c20277335acd1a79560b8aacc9c35dc63db1ae58b042f538838e05"
+    },
+    {
+      "file": "docs/performance-evidence/webgl-delayed-start/README.md",
+      "bytes": 1179,
+      "sha256": "a1d84c9b1767d448847a12d1609bbe8d82f0fe5e7b225b17e6cc010d98ad3962"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node24-focused.log",
+      "sha256": "2e3e45461b06edf9cdb6d9979d292d077d642e83a2fb68badbcea5704ca5311f",
+      "tests": 153,
+      "pass": 153,
+      "fail": 0,
+      "tail": "omic hardware cycles up to twelve minutes apart (0.215886ms)\n✔ retention compares owned gauges rather than cumulative provider activity (0.506826ms)\n✔ retention gates scene entities and explicitly scoped import point instances (0.520634ms)\n✔ operation failure preserves completed counts and retained checkpoints (0.545802ms)\n✔ worker preflight requires success, expected failure and recovery and disposes its own processor (0.559028ms)\n✔ worker timeout cannot count as an expected error; late completion is consumed (5.382777ms)\n✔ worker preflight rejects unexpected errors, missing rejection and unsettled counts (0.402707ms)\n✔ soak reports completed driver operations and labels short runs as smoke (0.275842ms)\n✔ mixed-use soak fails closed and preserves an unfulfilled fixture receipt (0.185468ms)\n✔ full soak anchors its end to the first retained checkpoint at or after 30 minutes (0.807126ms)\n✔ requested full-soak duration remains a floor when it exceeds the anchored target (0.243149ms)\n✔ full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap (0.303655ms)\n✔ full soak fails at the extension bound if no retention anchor was sampled (0.260883ms)\n✔ full soak continues past its requested duration while waiting for a retention anchor (0.344084ms)\n✔ full soak fails if the final retained read exceeds the extension bound (0.309908ms)\n✔ soak report preserves native resolution at initial and retained checkpoints (0.257827ms)\n✔ native drawing-buffer drift fails the soak and retains its failure report (0.318744ms)\n✔ requested soak recording output is portable and reported without embedding it in the soak report (6.880797ms)\n✔ software renderer detection rejects known fallback strings (0.401834ms)\n✔ soak fails when an operation is missing or fails (0.384872ms)\n✔ a committed harness may validate a separately frozen application commit (0.166501ms)\nℹ tests 153\nℹ suites 0\nℹ pass 153\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2308.082783\n"
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node24-format.log",
+      "sha256": "a8441ced353ec611a73ebcd759e00f57702903c4de8f3c134852de93e1ba74ba",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1821 source files.\n"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "sha256": "0f96e3c99bd1da4597723bc8c9b7179a4090d59dfe6df2d048cfe41354d70c8b",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 101 files passed.\n"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node24-imports.log",
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node24",
+      "name": "packages",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node24-packages.log",
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "ctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node26-focused.log",
+      "sha256": "bfe9dc1538cdac0e53f0f7f29c31e9cf18df55301d6fc6cec0eeeb58175cded5",
+      "tests": 153,
+      "pass": 153,
+      "fail": 0,
+      "tail": "ts atomic hardware cycles up to twelve minutes apart (0.202591ms)\n✔ retention compares owned gauges rather than cumulative provider activity (0.420701ms)\n✔ retention gates scene entities and explicitly scoped import point instances (0.390974ms)\n✔ operation failure preserves completed counts and retained checkpoints (0.368591ms)\n✔ worker preflight requires success, expected failure and recovery and disposes its own processor (0.421042ms)\n✔ worker timeout cannot count as an expected error; late completion is consumed (4.932008ms)\n✔ worker preflight rejects unexpected errors, missing rejection and unsettled counts (0.784022ms)\n✔ soak reports completed driver operations and labels short runs as smoke (0.427916ms)\n✔ mixed-use soak fails closed and preserves an unfulfilled fixture receipt (0.24371ms)\n✔ full soak anchors its end to the first retained checkpoint at or after 30 minutes (0.62195ms)\n✔ requested full-soak duration remains a floor when it exceeds the anchored target (0.2851ms)\n✔ full soak fails with bounded scheduling evidence when the anchor cannot fit the extension cap (0.298105ms)\n✔ full soak fails at the extension bound if no retention anchor was sampled (0.261344ms)\n✔ full soak continues past its requested duration while waiting for a retention anchor (0.666225ms)\n✔ full soak fails if the final retained read exceeds the extension bound (0.315569ms)\n✔ soak report preserves native resolution at initial and retained checkpoints (0.325898ms)\n✔ native drawing-buffer drift fails the soak and retains its failure report (0.330728ms)\n✔ requested soak recording output is portable and reported without embedding it in the soak report (5.480847ms)\n✔ software renderer detection rejects known fallback strings (0.387428ms)\n✔ soak fails when an operation is missing or fails (0.429107ms)\n✔ a committed harness may validate a separately frozen application commit (0.204654ms)\nℹ tests 153\nℹ suites 0\nℹ pass 153\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2551.13281\n"
+    },
+    {
+      "label": "node26",
+      "name": "format",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node26-format.log",
+      "sha256": "a8441ced353ec611a73ebcd759e00f57702903c4de8f3c134852de93e1ba74ba",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Checked 1821 source files.\n"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node26-capture-no-undef.log",
+      "sha256": "0f96e3c99bd1da4597723bc8c9b7179a4090d59dfe6df2d048cfe41354d70c8b",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "Capture harness no-undef: 101 files passed.\n"
+    },
+    {
+      "label": "node26",
+      "name": "imports",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node26-imports.log",
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node26",
+      "name": "packages",
+      "node": "/opt/nodejs/current/bin/node",
+      "exitCode": 0,
+      "error": null,
+      "log": "node26-packages.log",
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "tail": "ctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    }
+  ],
+  "completedAt": "2026-10-20T11:15:17.502Z",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "productionChanged": false,
+  "limits": "Pure/mock and static validation only; the new formal native-window cohort has not run. Legacy captures retain their historical mode and failures."
+}

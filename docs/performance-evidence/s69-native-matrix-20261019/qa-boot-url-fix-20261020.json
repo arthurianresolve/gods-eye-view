@@ -1,0 +1,103 @@
+{
+  "schema": "gev-qa-boot-url-fix-validation/v1",
+  "status": "passed",
+  "scope": "Fixture URL construction only; runtime application unchanged.",
+  "candidateParent": "324eebe10997474377899d0ee9b3b3154968fdb7",
+  "sourceFiles": [
+    {
+      "name": "scripts/performance/consoleMessageOwnership.mjs",
+      "bytes": 3224,
+      "sha256": "30377088596290eb87562de03eafe42dfda65e4422c01dd8fe97e09d26a2041f"
+    },
+    {
+      "name": "scripts/performance/fixtureInterception.mjs",
+      "bytes": 14361,
+      "sha256": "549ae79712e183236fc140cb61a80b8e4344006e22dd6dac1991ebec33358d60"
+    },
+    {
+      "name": "scripts/performance/fixtureNetworkProbe.mjs",
+      "bytes": 2308,
+      "sha256": "05ecd4a985b465bb8388370356eac3338af560d55f0d664a6dad23661e97837a"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryFixtureContract.mjs",
+      "bytes": 292,
+      "sha256": "87a1e78394f0f63dd4f91937be152a7c5df9e49c09a624032d5e295b94706aa2"
+    },
+    {
+      "name": "scripts/performance/startupDiagnostics.mjs",
+      "bytes": 8814,
+      "sha256": "9aad3887b5dc32355d7f191fdf64a597e42f1e98bfa4ddc9c77e8c868c2f9efe"
+    },
+    {
+      "name": "scripts/performance/workspaceOpenProbe.mjs",
+      "bytes": 2606,
+      "sha256": "62b2bef8b007274b7f4828ad7ced8e4d56e567464d64d7ce56c425fddbcca32f"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.mjs",
+      "bytes": 27955,
+      "sha256": "d7cb838d1a00f1dfafd1e234fa71d3ca8b4052c33a9dbf8d31b4cb2764c841e8"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.test.mjs",
+      "bytes": 10242,
+      "sha256": "f7f6d963c57c207c08688b045f96154b045719b555eda93df6936cab27acb05f"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "kind": "syntax",
+      "file": "scripts/qa-application-fixtures.mjs",
+      "code": 0,
+      "stderr": ""
+    },
+    {
+      "label": "node24",
+      "kind": "syntax",
+      "file": "scripts/qa-application-fixtures.test.mjs",
+      "code": 0,
+      "stderr": ""
+    },
+    {
+      "label": "node24",
+      "kind": "focused-tests",
+      "code": 0,
+      "outputSha256": "384f0db9cba089f6894cb74196b6d4281896558d2f87376f00e689417a7da7b5",
+      "tail": "✔ bootFixturePage joins welcome URL once and preserves a base path and requested hash (1.87722ms)\n✔ import fixture releases the selector ElementHandle it does not retain (0.616849ms)\n✔ import setup opens closed workspace disclosures through application controls (0.265853ms)\n✔ import setup reopens the panel even when the workspace disclosure stayed open (0.133748ms)\n✔ import setup fails explicitly for missing disclosure APIs and unavailable library (0.452052ms)\n✔ opening disclosures never bypasses the visible import-control requirement (0.506747ms)\n✔ fixture console ownership defaults off and diagnostics remain unavailable (0.936617ms)\n✔ opt-in fixture disposes handles for console early returns and drains on cleanup (12.440001ms)\n✔ opt-in fixture skips console handles when another page listener shares them (0.334054ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 169.644836\n\n"
+    },
+    {
+      "label": "node26",
+      "kind": "syntax",
+      "file": "scripts/qa-application-fixtures.mjs",
+      "code": 0,
+      "stderr": ""
+    },
+    {
+      "label": "node26",
+      "kind": "syntax",
+      "file": "scripts/qa-application-fixtures.test.mjs",
+      "code": 0,
+      "stderr": ""
+    },
+    {
+      "label": "node26",
+      "kind": "focused-tests",
+      "code": 0,
+      "outputSha256": "fbdaf36663887c5bb4a45ee6aab27d60fba6b6a5f17e3bc8a73c424e2122ee8c",
+      "tail": "✔ bootFixturePage joins welcome URL once and preserves a base path and requested hash (1.898441ms)\n✔ import fixture releases the selector ElementHandle it does not retain (0.605468ms)\n✔ import setup opens closed workspace disclosures through application controls (0.264971ms)\n✔ import setup reopens the panel even when the workspace disclosure stayed open (0.151651ms)\n✔ import setup fails explicitly for missing disclosure APIs and unavailable library (0.450699ms)\n✔ opening disclosures never bypasses the visible import-control requirement (0.522448ms)\n✔ fixture console ownership defaults off and diagnostics remain unavailable (0.968799ms)\n✔ opt-in fixture disposes handles for console early returns and drains on cleanup (12.79693ms)\n✔ opt-in fixture skips console handles when another page listener shares them (0.414038ms)\nℹ tests 9\nℹ suites 0\nℹ pass 9\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 172.872992\n\n"
+    },
+    {
+      "label": "node24",
+      "kind": "prettier",
+      "code": 0,
+      "stdout": "Checking formatting...\nAll matched files use Prettier code style!\n",
+      "stderr": ""
+    }
+  ],
+  "sourceClosureMatchesValidatedBytes": true,
+  "frozenProducerRestored": true,
+  "hardwareEvidenceChanged": false,
+  "observedAt": "2026-10-20T06:19:34.078Z"
+}

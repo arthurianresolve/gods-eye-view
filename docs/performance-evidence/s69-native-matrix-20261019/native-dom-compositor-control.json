@@ -1,0 +1,1669 @@
+{
+  "schema": "gev-native-dom-compositor-control-process/v1",
+  "status": "completed-diagnostic-only",
+  "startedAt": "2026-10-20T13:45:09.682Z",
+  "planSha256": "99f72691964c6a5feaa0caa31f0d3d19f5fdc66e0b12ea640dac0a4775b18443",
+  "wrapperSha256": "0218e951dbd2ec3eb4d7ef7c31176c25c9300bbf71d0b379083544714f982a44",
+  "htmlSha256": "4a4b6b04dd1b83568c768db772b46d416500acfce087a364f81d0e696cd1f2ed",
+  "observerSha256": "6f434a421fa0698ae4b0da320b2b60d33248c40e2a08c7e6dd27f54ff0941a31",
+  "acceptanceEligible": false,
+  "application": false,
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/",
+      "at": "2026-10-20T13:45:12.990Z"
+    }
+  ],
+  "actions": [
+    {
+      "generation": 1,
+      "expected": true,
+      "control": {
+        "ordinal": 1,
+        "trusted": true,
+        "clickAtMs": 1465.3999999910593,
+        "enabled": true,
+        "handlerStartedAtMs": 1466.5999999940395,
+        "handlerEndedAtMs": 1466.7000000029802
+      },
+      "eventAction": {
+        "generation": 1,
+        "clickAtMs": 1465.3999999910593,
+        "expected": true,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 1478.5,
+        "drainEndedAtMs": 2489.7999999970198,
+        "pointerDownAtMs": 1464.8999999910593,
+        "pointerUpAtMs": 1465.3999999910593,
+        "clickReceivedAtMs": 1466.5999999940395
+      },
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 1465.3999999910593,
+        "duration": 16,
+        "processingStart": 1466.3999999910593,
+        "processingEnd": 1466.7999999970198,
+        "interactionId": 6331,
+        "deliveredAtMs": 1500.7000000029802,
+        "targetMatched": true,
+        "generation": 1
+      },
+      "eventTimingAvailability": "observed-exact-match",
+      "visiblePage": "visible",
+      "focused": true
+    },
+    {
+      "generation": 2,
+      "expected": false,
+      "control": {
+        "ordinal": 2,
+        "trusted": true,
+        "clickAtMs": 2502.0999999940395,
+        "enabled": false,
+        "handlerStartedAtMs": 2502.2999999970198,
+        "handlerEndedAtMs": 2502.3999999910593
+      },
+      "eventAction": {
+        "generation": 2,
+        "clickAtMs": 2502.0999999940395,
+        "expected": false,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 2503.7000000029802,
+        "drainEndedAtMs": 3507.7999999970198,
+        "pointerDownAtMs": 2502,
+        "pointerUpAtMs": 2502.0999999940395,
+        "clickReceivedAtMs": 2502.2999999970198
+      },
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 2502.0999999940395,
+        "duration": 16,
+        "processingStart": 2502.2999999970198,
+        "processingEnd": 2502.3999999910593,
+        "interactionId": 6338,
+        "deliveredAtMs": 2535.7999999970198,
+        "targetMatched": true,
+        "generation": 2
+      },
+      "eventTimingAvailability": "observed-exact-match",
+      "visiblePage": "visible",
+      "focused": true
+    },
+    {
+      "generation": 3,
+      "expected": true,
+      "control": {
+        "ordinal": 3,
+        "trusted": true,
+        "clickAtMs": 3519.7000000029802,
+        "enabled": true,
+        "handlerStartedAtMs": 3520,
+        "handlerEndedAtMs": 3520
+      },
+      "eventAction": {
+        "generation": 3,
+        "clickAtMs": 3519.7000000029802,
+        "expected": true,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 3521.2000000029802,
+        "drainEndedAtMs": 4536.5,
+        "pointerDownAtMs": 3519.5999999940395,
+        "pointerUpAtMs": 3519.7000000029802,
+        "clickReceivedAtMs": 3520
+      },
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 3519.7000000029802,
+        "duration": 32,
+        "processingStart": 3519.8999999910593,
+        "processingEnd": 3520.0999999940395,
+        "interactionId": 6345,
+        "deliveredAtMs": 3570.7000000029802,
+        "targetMatched": true,
+        "generation": 3
+      },
+      "eventTimingAvailability": "observed-exact-match",
+      "visiblePage": "visible",
+      "focused": true
+    },
+    {
+      "generation": 4,
+      "expected": false,
+      "control": {
+        "ordinal": 4,
+        "trusted": true,
+        "clickAtMs": 4547.0999999940395,
+        "enabled": false,
+        "handlerStartedAtMs": 4547.399999991059,
+        "handlerEndedAtMs": 4547.399999991059
+      },
+      "eventAction": {
+        "generation": 4,
+        "clickAtMs": 4547.0999999940395,
+        "expected": false,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 4548.5,
+        "drainEndedAtMs": 5550.29999999702,
+        "pointerDownAtMs": 4547,
+        "pointerUpAtMs": 4547.0999999940395,
+        "clickReceivedAtMs": 4547.399999991059
+      },
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 4547.0999999940395,
+        "duration": 16,
+        "processingStart": 4547.399999991059,
+        "processingEnd": 4547.399999991059,
+        "interactionId": 6352,
+        "deliveredAtMs": 4581.5,
+        "targetMatched": true,
+        "generation": 4
+      },
+      "eventTimingAvailability": "observed-exact-match",
+      "visiblePage": "visible",
+      "focused": true
+    },
+    {
+      "generation": 5,
+      "expected": true,
+      "control": {
+        "ordinal": 5,
+        "trusted": true,
+        "clickAtMs": 5561.899999991059,
+        "enabled": true,
+        "handlerStartedAtMs": 5562.0999999940395,
+        "handlerEndedAtMs": 5562.0999999940395
+      },
+      "eventAction": {
+        "generation": 5,
+        "clickAtMs": 5561.899999991059,
+        "expected": true,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 5563.29999999702,
+        "drainEndedAtMs": 6572.70000000298,
+        "pointerDownAtMs": 5561.899999991059,
+        "pointerUpAtMs": 5561.899999991059,
+        "clickReceivedAtMs": 5562.0999999940395
+      },
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 5561.899999991059,
+        "duration": 24,
+        "processingStart": 5562.0999999940395,
+        "processingEnd": 5562.0999999940395,
+        "interactionId": 6359,
+        "deliveredAtMs": 5603.899999991059,
+        "targetMatched": true,
+        "generation": 5
+      },
+      "eventTimingAvailability": "observed-exact-match",
+      "visiblePage": "visible",
+      "focused": true
+    },
+    {
+      "generation": 6,
+      "expected": false,
+      "control": {
+        "ordinal": 6,
+        "trusted": true,
+        "clickAtMs": 6583.899999991059,
+        "enabled": false,
+        "handlerStartedAtMs": 6584.0999999940395,
+        "handlerEndedAtMs": 6584.20000000298
+      },
+      "eventAction": {
+        "generation": 6,
+        "clickAtMs": 6583.899999991059,
+        "expected": false,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 6585.29999999702,
+        "drainEndedAtMs": 7590.399999991059,
+        "pointerDownAtMs": 6583.79999999702,
+        "pointerUpAtMs": 6583.899999991059,
+        "clickReceivedAtMs": 6584.0999999940395
+      },
+      "eventTiming": {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 6583.899999991059,
+        "duration": 16,
+        "processingStart": 6584.0999999940395,
+        "processingEnd": 6584.20000000298,
+        "interactionId": 6366,
+        "deliveredAtMs": 6617.899999991059,
+        "targetMatched": true,
+        "generation": 6
+      },
+      "eventTimingAvailability": "observed-exact-match",
+      "visiblePage": "visible",
+      "focused": true
+    }
+  ],
+  "cleanup": {
+    "errors": [],
+    "observer": {
+      "observerAbsent": true
+    },
+    "foreground": "disposed",
+    "nativeOwner": "disposed",
+    "server": "closed"
+  },
+  "baseUrl": "http://127.0.0.1:61158/",
+  "browserPid": 34144,
+  "browserSpawnfile": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+  "browserSpawnargs": [
+    "C:/Program Files/Google/Chrome/Application/chrome.exe",
+    "--allow-pre-commit-input",
+    "--disable-background-networking",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-breakpad",
+    "--disable-client-side-phishing-detection",
+    "--disable-component-extensions-with-background-pages",
+    "--disable-crash-reporter",
+    "--disable-default-apps",
+    "--disable-dev-shm-usage",
+    "--disable-hang-monitor",
+    "--disable-infobars",
+    "--disable-ipc-flooding-protection",
+    "--disable-popup-blocking",
+    "--disable-prompt-on-repost",
+    "--disable-renderer-backgrounding",
+    "--disable-search-engine-choice-screen",
+    "--disable-sync",
+    "--enable-automation",
+    "--export-tagged-pdf",
+    "--force-color-profile=srgb",
+    "--generate-pdf-document-outline",
+    "--metrics-recording-only",
+    "--no-first-run",
+    "--password-store=basic",
+    "--use-mock-keychain",
+    "--disable-features=Translate,AcceptCHFrame,MediaRouter,OptimizationHints,WebUIReloadButton,WebUIOmniboxPopup,WebUIOmniboxAimPopup,ProcessPerSiteUpToMainFrameThreshold,IsolateSandboxedIframes",
+    "--enable-features=PdfOopif",
+    "--disable-extensions",
+    "about:blank",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--remote-debugging-port=0",
+    "--user-data-dir=C:\\Users\\Privat\\AppData\\Local\\Temp\\puppeteer_dev_chrome_profile-zB2hD1"
+  ],
+  "configured": {
+    "schema": "gev-native-window-viewport/v1",
+    "browserPid": 34144,
+    "label": "native-window-configured",
+    "ordinal": 3,
+    "observedAtUtc": "2026-10-20T13:45:12.138Z",
+    "units": {
+      "page": "CSS pixels",
+      "hostRects": "physical pixels under a temporary PMv2 reader",
+      "cdpWindowBounds": "raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges",
+      "nativeWindowScale": "GetDpiForWindow / 96 from a per-monitor-aware target",
+      "browserZoom": "Page.getLayoutMetrics.cssVisualViewport.zoom",
+      "visualScale": "DOM and CDP visualViewport.scale"
+    },
+    "metricsEmulation": "cleared-before-navigation",
+    "puppeteerViewport": null,
+    "observedDprBeforeConfiguration": 2,
+    "cdp": {
+      "windowId": 1601435322,
+      "windowBounds": {
+        "left": -7,
+        "top": -7,
+        "width": 1294,
+        "height": 694,
+        "windowState": "maximized"
+      },
+      "layoutMetrics": {
+        "cssLayoutViewport": {
+          "pageX": 0,
+          "pageY": 0,
+          "clientWidth": 1280,
+          "clientHeight": 537
+        },
+        "cssVisualViewport": {
+          "offsetX": 0,
+          "offsetY": 0,
+          "pageX": 0,
+          "pageY": 0,
+          "clientWidth": 1280,
+          "clientHeight": 537,
+          "scale": 1,
+          "zoom": 1
+        },
+        "cssContentSize": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 537
+        }
+      }
+    },
+    "host": {
+      "processName": "chrome",
+      "dpi": 192,
+      "clientRect": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      },
+      "ownedWindowCount": 1,
+      "minimized": false,
+      "visible": true,
+      "foreground": true,
+      "browserPid": 34144,
+      "physicalPixelReadContext": "per-monitor-aware-v2",
+      "monitor": {
+        "displayMode": {
+          "positionY": 0,
+          "orientation": 0,
+          "width": 2560,
+          "positionX": 0,
+          "height": 1440,
+          "refreshHz": 60,
+          "bitsPerPixel": 32,
+          "adapter": "Intel(R) UHD Graphics 620"
+        },
+        "bounds": {
+          "left": 0,
+          "bottom": 1440,
+          "top": 0,
+          "right": 2560,
+          "height": 1440,
+          "width": 2560
+        },
+        "device": "\\\\.\\DISPLAY5",
+        "workArea": {
+          "left": 0,
+          "bottom": 1360,
+          "top": 0,
+          "right": 2560,
+          "height": 1360,
+          "width": 2560
+        }
+      },
+      "schema": "gev-owned-windows-window-geometry/v1",
+      "ownerPid": 34144,
+      "windowRect": {
+        "left": -13,
+        "bottom": 1373,
+        "top": -13,
+        "right": 2573,
+        "height": 1386,
+        "width": 2586
+      },
+      "targetDpiAwareness": 2,
+      "observedAtUtc": "2026-10-20T13:45:12.9133707Z",
+      "visibleFrameRect": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      },
+      "windowHandle": "15139684",
+      "maximized": true
+    },
+    "page": {
+      "devicePixelRatio": 2,
+      "inner": {
+        "width": 1280,
+        "height": 537
+      },
+      "outer": {
+        "width": 1280,
+        "height": 680
+      },
+      "screenPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "screen": {
+        "width": 1280,
+        "height": 720,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1280,
+        "availHeight": 680,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      },
+      "visualViewport": {
+        "width": 1280,
+        "height": 537,
+        "scale": 1,
+        "offsetLeft": 0,
+        "offsetTop": 0,
+        "pageLeft": 0,
+        "pageTop": 0
+      },
+      "documentClient": {
+        "width": 1280,
+        "height": 537
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0
+      },
+      "visibilityState": "visible",
+      "focused": true,
+      "nativeResolution": null,
+      "canvasRect": null
+    },
+    "cdpBoundsMapping": "native-DIPs:windowRect",
+    "preparation": {
+      "schema": "gev-native-window-preparation/v1",
+      "status": "passed",
+      "maximumAttempts": 40,
+      "timeoutMs": 15000,
+      "deadlineScope": "after-owned-CDP-session-ready-before-navigation",
+      "cleanupTimeoutMs": 1000,
+      "intervalMs": 50,
+      "requiredConsecutiveCoherentProofs": 2,
+      "attempts": [
+        {
+          "attempt": 1,
+          "status": "incoherent",
+          "evidence": {
+            "schema": "gev-native-window-viewport/v1",
+            "browserPid": 34144,
+            "label": "native-window-configured",
+            "ordinal": 1,
+            "observedAtUtc": "2026-10-20T13:45:10.463Z",
+            "units": {
+              "page": "CSS pixels",
+              "hostRects": "physical pixels under a temporary PMv2 reader",
+              "cdpWindowBounds": "raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges",
+              "nativeWindowScale": "GetDpiForWindow / 96 from a per-monitor-aware target",
+              "browserZoom": "Page.getLayoutMetrics.cssVisualViewport.zoom",
+              "visualScale": "DOM and CDP visualViewport.scale"
+            },
+            "metricsEmulation": "cleared-before-navigation",
+            "puppeteerViewport": null,
+            "observedDprBeforeConfiguration": 2,
+            "cdp": {
+              "windowId": 1601435322,
+              "windowBounds": {
+                "left": -7,
+                "top": -7,
+                "width": 1294,
+                "height": 694,
+                "windowState": "maximized"
+              },
+              "layoutMetrics": {
+                "cssLayoutViewport": {
+                  "pageX": 0,
+                  "pageY": 0,
+                  "clientWidth": 1280,
+                  "clientHeight": 536
+                },
+                "cssVisualViewport": {
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "pageX": 0,
+                  "pageY": 0,
+                  "clientWidth": 1280,
+                  "clientHeight": 536,
+                  "scale": 1,
+                  "zoom": 1
+                },
+                "cssContentSize": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 536
+                }
+              }
+            },
+            "host": {
+              "processName": "chrome",
+              "dpi": 192,
+              "clientRect": {
+                "left": 0,
+                "bottom": 1360,
+                "top": 0,
+                "right": 2560,
+                "height": 1360,
+                "width": 2560
+              },
+              "ownedWindowCount": 1,
+              "minimized": false,
+              "visible": true,
+              "foreground": true,
+              "browserPid": 34144,
+              "physicalPixelReadContext": "per-monitor-aware-v2",
+              "monitor": {
+                "displayMode": {
+                  "positionY": 0,
+                  "orientation": 0,
+                  "width": 2560,
+                  "positionX": 0,
+                  "height": 1440,
+                  "refreshHz": 60,
+                  "bitsPerPixel": 32,
+                  "adapter": "Intel(R) UHD Graphics 620"
+                },
+                "bounds": {
+                  "left": 0,
+                  "bottom": 1440,
+                  "top": 0,
+                  "right": 2560,
+                  "height": 1440,
+                  "width": 2560
+                },
+                "device": "\\\\.\\DISPLAY5",
+                "workArea": {
+                  "left": 0,
+                  "bottom": 1360,
+                  "top": 0,
+                  "right": 2560,
+                  "height": 1360,
+                  "width": 2560
+                }
+              },
+              "schema": "gev-owned-windows-window-geometry/v1",
+              "ownerPid": 34144,
+              "windowRect": {
+                "left": -13,
+                "bottom": 1373,
+                "top": -13,
+                "right": 2573,
+                "height": 1386,
+                "width": 2586
+              },
+              "targetDpiAwareness": 2,
+              "observedAtUtc": "2026-10-20T13:45:11.2886939Z",
+              "visibleFrameRect": {
+                "left": 0,
+                "bottom": 1360,
+                "top": 0,
+                "right": 2560,
+                "height": 1360,
+                "width": 2560
+              },
+              "windowHandle": "15139684",
+              "maximized": true
+            },
+            "page": {
+              "devicePixelRatio": 2,
+              "inner": {
+                "width": 1280,
+                "height": 537
+              },
+              "outer": {
+                "width": 1280,
+                "height": 680
+              },
+              "screenPosition": {
+                "x": 0,
+                "y": 0
+              },
+              "screen": {
+                "width": 1280,
+                "height": 720,
+                "availLeft": 0,
+                "availTop": 0,
+                "availWidth": 1280,
+                "availHeight": 680,
+                "colorDepth": 24,
+                "pixelDepth": 24
+              },
+              "visualViewport": {
+                "width": 1280,
+                "height": 537,
+                "scale": 1,
+                "offsetLeft": 0,
+                "offsetTop": 0,
+                "pageLeft": 0,
+                "pageTop": 0
+              },
+              "documentClient": {
+                "width": 1280,
+                "height": 537
+              },
+              "scroll": {
+                "x": 0,
+                "y": 0
+              },
+              "visibilityState": "visible",
+              "focused": true,
+              "nativeResolution": null,
+              "canvasRect": null
+            },
+            "cdpBoundsMapping": "native-DIPs:windowRect"
+          },
+          "error": "Expected values to be strictly equal:\n\n536 !== 537\n"
+        },
+        {
+          "attempt": 2,
+          "status": "coherent",
+          "evidence": {
+            "schema": "gev-native-window-viewport/v1",
+            "browserPid": 34144,
+            "label": "native-window-configured",
+            "ordinal": 2,
+            "observedAtUtc": "2026-10-20T13:45:11.430Z",
+            "units": {
+              "page": "CSS pixels",
+              "hostRects": "physical pixels under a temporary PMv2 reader",
+              "cdpWindowBounds": "raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges",
+              "nativeWindowScale": "GetDpiForWindow / 96 from a per-monitor-aware target",
+              "browserZoom": "Page.getLayoutMetrics.cssVisualViewport.zoom",
+              "visualScale": "DOM and CDP visualViewport.scale"
+            },
+            "metricsEmulation": "cleared-before-navigation",
+            "puppeteerViewport": null,
+            "observedDprBeforeConfiguration": 2,
+            "cdp": {
+              "windowId": 1601435322,
+              "windowBounds": {
+                "left": -7,
+                "top": -7,
+                "width": 1294,
+                "height": 694,
+                "windowState": "maximized"
+              },
+              "layoutMetrics": {
+                "cssLayoutViewport": {
+                  "pageX": 0,
+                  "pageY": 0,
+                  "clientWidth": 1280,
+                  "clientHeight": 537
+                },
+                "cssVisualViewport": {
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "pageX": 0,
+                  "pageY": 0,
+                  "clientWidth": 1280,
+                  "clientHeight": 537,
+                  "scale": 1,
+                  "zoom": 1
+                },
+                "cssContentSize": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 537
+                }
+              }
+            },
+            "host": {
+              "processName": "chrome",
+              "dpi": 192,
+              "clientRect": {
+                "left": 0,
+                "bottom": 1360,
+                "top": 0,
+                "right": 2560,
+                "height": 1360,
+                "width": 2560
+              },
+              "ownedWindowCount": 1,
+              "minimized": false,
+              "visible": true,
+              "foreground": true,
+              "browserPid": 34144,
+              "physicalPixelReadContext": "per-monitor-aware-v2",
+              "monitor": {
+                "displayMode": {
+                  "positionY": 0,
+                  "orientation": 0,
+                  "width": 2560,
+                  "positionX": 0,
+                  "height": 1440,
+                  "refreshHz": 60,
+                  "bitsPerPixel": 32,
+                  "adapter": "Intel(R) UHD Graphics 620"
+                },
+                "bounds": {
+                  "left": 0,
+                  "bottom": 1440,
+                  "top": 0,
+                  "right": 2560,
+                  "height": 1440,
+                  "width": 2560
+                },
+                "device": "\\\\.\\DISPLAY5",
+                "workArea": {
+                  "left": 0,
+                  "bottom": 1360,
+                  "top": 0,
+                  "right": 2560,
+                  "height": 1360,
+                  "width": 2560
+                }
+              },
+              "schema": "gev-owned-windows-window-geometry/v1",
+              "ownerPid": 34144,
+              "windowRect": {
+                "left": -13,
+                "bottom": 1373,
+                "top": -13,
+                "right": 2573,
+                "height": 1386,
+                "width": 2586
+              },
+              "targetDpiAwareness": 2,
+              "observedAtUtc": "2026-10-20T13:45:12.0201496Z",
+              "visibleFrameRect": {
+                "left": 0,
+                "bottom": 1360,
+                "top": 0,
+                "right": 2560,
+                "height": 1360,
+                "width": 2560
+              },
+              "windowHandle": "15139684",
+              "maximized": true
+            },
+            "page": {
+              "devicePixelRatio": 2,
+              "inner": {
+                "width": 1280,
+                "height": 537
+              },
+              "outer": {
+                "width": 1280,
+                "height": 680
+              },
+              "screenPosition": {
+                "x": 0,
+                "y": 0
+              },
+              "screen": {
+                "width": 1280,
+                "height": 720,
+                "availLeft": 0,
+                "availTop": 0,
+                "availWidth": 1280,
+                "availHeight": 680,
+                "colorDepth": 24,
+                "pixelDepth": 24
+              },
+              "visualViewport": {
+                "width": 1280,
+                "height": 537,
+                "scale": 1,
+                "offsetLeft": 0,
+                "offsetTop": 0,
+                "pageLeft": 0,
+                "pageTop": 0
+              },
+              "documentClient": {
+                "width": 1280,
+                "height": 537
+              },
+              "scroll": {
+                "x": 0,
+                "y": 0
+              },
+              "visibilityState": "visible",
+              "focused": true,
+              "nativeResolution": null,
+              "canvasRect": null
+            },
+            "cdpBoundsMapping": "native-DIPs:windowRect"
+          },
+          "matchesPrevious": false
+        },
+        {
+          "attempt": 3,
+          "status": "coherent",
+          "evidence": {
+            "schema": "gev-native-window-viewport/v1",
+            "browserPid": 34144,
+            "label": "native-window-configured",
+            "ordinal": 3,
+            "observedAtUtc": "2026-10-20T13:45:12.138Z",
+            "units": {
+              "page": "CSS pixels",
+              "hostRects": "physical pixels under a temporary PMv2 reader",
+              "cdpWindowBounds": "raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges",
+              "nativeWindowScale": "GetDpiForWindow / 96 from a per-monitor-aware target",
+              "browserZoom": "Page.getLayoutMetrics.cssVisualViewport.zoom",
+              "visualScale": "DOM and CDP visualViewport.scale"
+            },
+            "metricsEmulation": "cleared-before-navigation",
+            "puppeteerViewport": null,
+            "observedDprBeforeConfiguration": 2,
+            "cdp": {
+              "windowId": 1601435322,
+              "windowBounds": {
+                "left": -7,
+                "top": -7,
+                "width": 1294,
+                "height": 694,
+                "windowState": "maximized"
+              },
+              "layoutMetrics": {
+                "cssLayoutViewport": {
+                  "pageX": 0,
+                  "pageY": 0,
+                  "clientWidth": 1280,
+                  "clientHeight": 537
+                },
+                "cssVisualViewport": {
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "pageX": 0,
+                  "pageY": 0,
+                  "clientWidth": 1280,
+                  "clientHeight": 537,
+                  "scale": 1,
+                  "zoom": 1
+                },
+                "cssContentSize": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1280,
+                  "height": 537
+                }
+              }
+            },
+            "host": {
+              "processName": "chrome",
+              "dpi": 192,
+              "clientRect": {
+                "left": 0,
+                "bottom": 1360,
+                "top": 0,
+                "right": 2560,
+                "height": 1360,
+                "width": 2560
+              },
+              "ownedWindowCount": 1,
+              "minimized": false,
+              "visible": true,
+              "foreground": true,
+              "browserPid": 34144,
+              "physicalPixelReadContext": "per-monitor-aware-v2",
+              "monitor": {
+                "displayMode": {
+                  "positionY": 0,
+                  "orientation": 0,
+                  "width": 2560,
+                  "positionX": 0,
+                  "height": 1440,
+                  "refreshHz": 60,
+                  "bitsPerPixel": 32,
+                  "adapter": "Intel(R) UHD Graphics 620"
+                },
+                "bounds": {
+                  "left": 0,
+                  "bottom": 1440,
+                  "top": 0,
+                  "right": 2560,
+                  "height": 1440,
+                  "width": 2560
+                },
+                "device": "\\\\.\\DISPLAY5",
+                "workArea": {
+                  "left": 0,
+                  "bottom": 1360,
+                  "top": 0,
+                  "right": 2560,
+                  "height": 1360,
+                  "width": 2560
+                }
+              },
+              "schema": "gev-owned-windows-window-geometry/v1",
+              "ownerPid": 34144,
+              "windowRect": {
+                "left": -13,
+                "bottom": 1373,
+                "top": -13,
+                "right": 2573,
+                "height": 1386,
+                "width": 2586
+              },
+              "targetDpiAwareness": 2,
+              "observedAtUtc": "2026-10-20T13:45:12.9133707Z",
+              "visibleFrameRect": {
+                "left": 0,
+                "bottom": 1360,
+                "top": 0,
+                "right": 2560,
+                "height": 1360,
+                "width": 2560
+              },
+              "windowHandle": "15139684",
+              "maximized": true
+            },
+            "page": {
+              "devicePixelRatio": 2,
+              "inner": {
+                "width": 1280,
+                "height": 537
+              },
+              "outer": {
+                "width": 1280,
+                "height": 680
+              },
+              "screenPosition": {
+                "x": 0,
+                "y": 0
+              },
+              "screen": {
+                "width": 1280,
+                "height": 720,
+                "availLeft": 0,
+                "availTop": 0,
+                "availWidth": 1280,
+                "availHeight": 680,
+                "colorDepth": 24,
+                "pixelDepth": 24
+              },
+              "visualViewport": {
+                "width": 1280,
+                "height": 537,
+                "scale": 1,
+                "offsetLeft": 0,
+                "offsetTop": 0,
+                "pageLeft": 0,
+                "pageTop": 0
+              },
+              "documentClient": {
+                "width": 1280,
+                "height": 537
+              },
+              "scroll": {
+                "x": 0,
+                "y": 0
+              },
+              "visibilityState": "visible",
+              "focused": true,
+              "nativeResolution": null,
+              "canvasRect": null
+            },
+            "cdpBoundsMapping": "native-DIPs:windowRect"
+          },
+          "matchesPrevious": true
+        }
+      ],
+      "elapsedMs": 2554.2032999999997,
+      "acceptedAttempt": 3
+    }
+  },
+  "browserVersion": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/155.0.8059.84",
+    "revision": "@5869fe313571d75152b77813cf0a4ee26a4e6df0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "jsVersion": "15.5.35.25"
+  },
+  "hostActivation": {
+    "requestId": 1,
+    "schema": "gev-windows-owned-browser-foreground-activation/v1",
+    "status": "foreground-confirmed",
+    "browserPid": 34144,
+    "windowHandleAvailable": true,
+    "windowHandleSource": "process-main-window",
+    "handlePollAttempts": 1,
+    "inputAttached": false,
+    "mutationSkipped": true,
+    "showWindowAccepted": null,
+    "bringWindowToTopAccepted": null,
+    "setForegroundAccepted": null,
+    "foregroundConfirmed": true,
+    "foregroundPid": 34144,
+    "foregroundProcessName": "chrome",
+    "desktopState": "interactive"
+  },
+  "before": {
+    "schema": "gev-native-window-viewport/v1",
+    "browserPid": 34144,
+    "label": "dom-control-before",
+    "ordinal": 4,
+    "observedAtUtc": "2026-10-20T13:45:13.673Z",
+    "units": {
+      "page": "CSS pixels",
+      "hostRects": "physical pixels under a temporary PMv2 reader",
+      "cdpWindowBounds": "raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges",
+      "nativeWindowScale": "GetDpiForWindow / 96 from a per-monitor-aware target",
+      "browserZoom": "Page.getLayoutMetrics.cssVisualViewport.zoom",
+      "visualScale": "DOM and CDP visualViewport.scale"
+    },
+    "metricsEmulation": "cleared-before-navigation",
+    "puppeteerViewport": null,
+    "observedDprBeforeConfiguration": 2,
+    "cdp": {
+      "windowId": 1601435322,
+      "windowBounds": {
+        "left": -7,
+        "top": -7,
+        "width": 1294,
+        "height": 694,
+        "windowState": "maximized"
+      },
+      "layoutMetrics": {
+        "cssLayoutViewport": {
+          "pageX": 0,
+          "pageY": 0,
+          "clientWidth": 1280,
+          "clientHeight": 537
+        },
+        "cssVisualViewport": {
+          "offsetX": 0,
+          "offsetY": 0,
+          "pageX": 0,
+          "pageY": 0,
+          "clientWidth": 1280,
+          "clientHeight": 537,
+          "scale": 1,
+          "zoom": 1
+        },
+        "cssContentSize": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 537
+        }
+      }
+    },
+    "host": {
+      "processName": "chrome",
+      "dpi": 192,
+      "clientRect": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      },
+      "ownedWindowCount": 1,
+      "minimized": false,
+      "visible": true,
+      "foreground": true,
+      "browserPid": 34144,
+      "physicalPixelReadContext": "per-monitor-aware-v2",
+      "monitor": {
+        "displayMode": {
+          "positionY": 0,
+          "orientation": 0,
+          "width": 2560,
+          "positionX": 0,
+          "height": 1440,
+          "refreshHz": 60,
+          "bitsPerPixel": 32,
+          "adapter": "Intel(R) UHD Graphics 620"
+        },
+        "bounds": {
+          "left": 0,
+          "bottom": 1440,
+          "top": 0,
+          "right": 2560,
+          "height": 1440,
+          "width": 2560
+        },
+        "device": "\\\\.\\DISPLAY5",
+        "workArea": {
+          "left": 0,
+          "bottom": 1360,
+          "top": 0,
+          "right": 2560,
+          "height": 1360,
+          "width": 2560
+        }
+      },
+      "schema": "gev-owned-windows-window-geometry/v1",
+      "ownerPid": 34144,
+      "windowRect": {
+        "left": -13,
+        "bottom": 1373,
+        "top": -13,
+        "right": 2573,
+        "height": 1386,
+        "width": 2586
+      },
+      "targetDpiAwareness": 2,
+      "observedAtUtc": "2026-10-20T13:45:14.3550218Z",
+      "visibleFrameRect": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      },
+      "windowHandle": "15139684",
+      "maximized": true
+    },
+    "page": {
+      "devicePixelRatio": 2,
+      "inner": {
+        "width": 1280,
+        "height": 537
+      },
+      "outer": {
+        "width": 1280,
+        "height": 680
+      },
+      "screenPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "screen": {
+        "width": 1280,
+        "height": 720,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1280,
+        "availHeight": 680,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      },
+      "visualViewport": {
+        "width": 1280,
+        "height": 537,
+        "scale": 1,
+        "offsetLeft": 0,
+        "offsetTop": 0,
+        "pageLeft": 0,
+        "pageTop": 0
+      },
+      "documentClient": {
+        "width": 1280,
+        "height": 537
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0
+      },
+      "visibilityState": "visible",
+      "focused": true,
+      "nativeResolution": null,
+      "canvasRect": null
+    },
+    "cdpBoundsMapping": "native-DIPs:windowRect"
+  },
+  "controlSetup": {
+    "rect": {
+      "left": 213,
+      "top": 102,
+      "width": 72,
+      "height": 30,
+      "right": 285,
+      "bottom": 132
+    },
+    "visible": true,
+    "canvasCount": 0,
+    "initial": {
+      "enabled": false,
+      "ariaPressed": "false",
+      "clicks": []
+    }
+  },
+  "measurementStartedAt": "2026-10-20T13:45:14.418Z",
+  "measurementEndedAt": "2026-10-20T13:45:20.579Z",
+  "eventTiming": {
+    "schema": "gev-native-dom-event-timing-control/v1",
+    "status": "observed",
+    "durationThresholdMs": 16,
+    "durationQuantumMs": 8,
+    "actionDrainMs": 1000,
+    "maximumEntries": 128,
+    "overflow": false,
+    "actions": [
+      {
+        "generation": 1,
+        "clickAtMs": 1465.3999999910593,
+        "expected": true,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 1478.5,
+        "drainEndedAtMs": 2489.7999999970198,
+        "pointerDownAtMs": 1464.8999999910593,
+        "pointerUpAtMs": 1465.3999999910593,
+        "clickReceivedAtMs": 1466.5999999940395
+      },
+      {
+        "generation": 2,
+        "clickAtMs": 2502.0999999940395,
+        "expected": false,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 2503.7000000029802,
+        "drainEndedAtMs": 3507.7999999970198,
+        "pointerDownAtMs": 2502,
+        "pointerUpAtMs": 2502.0999999940395,
+        "clickReceivedAtMs": 2502.2999999970198
+      },
+      {
+        "generation": 3,
+        "clickAtMs": 3519.7000000029802,
+        "expected": true,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 3521.2000000029802,
+        "drainEndedAtMs": 4536.5,
+        "pointerDownAtMs": 3519.5999999940395,
+        "pointerUpAtMs": 3519.7000000029802,
+        "clickReceivedAtMs": 3520
+      },
+      {
+        "generation": 4,
+        "clickAtMs": 4547.0999999940395,
+        "expected": false,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 4548.5,
+        "drainEndedAtMs": 5550.29999999702,
+        "pointerDownAtMs": 4547,
+        "pointerUpAtMs": 4547.0999999940395,
+        "clickReceivedAtMs": 4547.399999991059
+      },
+      {
+        "generation": 5,
+        "clickAtMs": 5561.899999991059,
+        "expected": true,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 5563.29999999702,
+        "drainEndedAtMs": 6572.70000000298,
+        "pointerDownAtMs": 5561.899999991059,
+        "pointerUpAtMs": 5561.899999991059,
+        "clickReceivedAtMs": 5562.0999999940395
+      },
+      {
+        "generation": 6,
+        "clickAtMs": 6583.899999991059,
+        "expected": false,
+        "targetMatched": true,
+        "trusted": true,
+        "visible": true,
+        "focused": true,
+        "witness": null,
+        "witnesses": [],
+        "renderBoundaryArms": 0,
+        "renderBoundaryProofs": [],
+        "renderBoundaryPendingAtDrainEnd": false,
+        "drainStartedAtMs": 6585.29999999702,
+        "drainEndedAtMs": 7590.399999991059,
+        "pointerDownAtMs": 6583.79999999702,
+        "pointerUpAtMs": 6583.899999991059,
+        "clickReceivedAtMs": 6584.0999999940395
+      }
+    ],
+    "entries": [
+      {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 1465.3999999910593,
+        "duration": 16,
+        "processingStart": 1466.3999999910593,
+        "processingEnd": 1466.7999999970198,
+        "interactionId": 6331,
+        "deliveredAtMs": 1500.7000000029802,
+        "targetMatched": true,
+        "generation": 1
+      },
+      {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 2502.0999999940395,
+        "duration": 16,
+        "processingStart": 2502.2999999970198,
+        "processingEnd": 2502.3999999910593,
+        "interactionId": 6338,
+        "deliveredAtMs": 2535.7999999970198,
+        "targetMatched": true,
+        "generation": 2
+      },
+      {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 3519.7000000029802,
+        "duration": 32,
+        "processingStart": 3519.8999999910593,
+        "processingEnd": 3520.0999999940395,
+        "interactionId": 6345,
+        "deliveredAtMs": 3570.7000000029802,
+        "targetMatched": true,
+        "generation": 3
+      },
+      {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 4547.0999999940395,
+        "duration": 16,
+        "processingStart": 4547.399999991059,
+        "processingEnd": 4547.399999991059,
+        "interactionId": 6352,
+        "deliveredAtMs": 4581.5,
+        "targetMatched": true,
+        "generation": 4
+      },
+      {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 5561.899999991059,
+        "duration": 24,
+        "processingStart": 5562.0999999940395,
+        "processingEnd": 5562.0999999940395,
+        "interactionId": 6359,
+        "deliveredAtMs": 5603.899999991059,
+        "targetMatched": true,
+        "generation": 5
+      },
+      {
+        "name": "click",
+        "entryType": "event",
+        "startTime": 6583.899999991059,
+        "duration": 16,
+        "processingStart": 6584.0999999940395,
+        "processingEnd": 6584.20000000298,
+        "interactionId": 6366,
+        "deliveredAtMs": 6617.899999991059,
+        "targetMatched": true,
+        "generation": 6
+      }
+    ],
+    "foreground": [
+      {
+        "eventType": "focus",
+        "atMs": 1466.0999999940395,
+        "visible": true,
+        "focused": true,
+        "targetKind": "control"
+      }
+    ],
+    "visibilityEvidence": {
+      "status": "unavailable",
+      "reason": "DOM compositor control has no formal application visibility witness"
+    }
+  },
+  "after": {
+    "schema": "gev-native-window-viewport/v1",
+    "browserPid": 34144,
+    "label": "dom-control-after",
+    "ordinal": 5,
+    "observedAtUtc": "2026-10-20T13:45:20.580Z",
+    "units": {
+      "page": "CSS pixels",
+      "hostRects": "physical pixels under a temporary PMv2 reader",
+      "cdpWindowBounds": "raw protocol pixels; checked against physical identity or exact native-DIP enclosing edges",
+      "nativeWindowScale": "GetDpiForWindow / 96 from a per-monitor-aware target",
+      "browserZoom": "Page.getLayoutMetrics.cssVisualViewport.zoom",
+      "visualScale": "DOM and CDP visualViewport.scale"
+    },
+    "metricsEmulation": "cleared-before-navigation",
+    "puppeteerViewport": null,
+    "observedDprBeforeConfiguration": 2,
+    "cdp": {
+      "windowId": 1601435322,
+      "windowBounds": {
+        "left": -7,
+        "top": -7,
+        "width": 1294,
+        "height": 694,
+        "windowState": "maximized"
+      },
+      "layoutMetrics": {
+        "cssLayoutViewport": {
+          "pageX": 0,
+          "pageY": 0,
+          "clientWidth": 1280,
+          "clientHeight": 537
+        },
+        "cssVisualViewport": {
+          "offsetX": 0,
+          "offsetY": 0,
+          "pageX": 0,
+          "pageY": 0,
+          "clientWidth": 1280,
+          "clientHeight": 537,
+          "scale": 1,
+          "zoom": 1
+        },
+        "cssContentSize": {
+          "x": 0,
+          "y": 0,
+          "width": 1280,
+          "height": 537
+        }
+      }
+    },
+    "host": {
+      "processName": "chrome",
+      "dpi": 192,
+      "clientRect": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      },
+      "ownedWindowCount": 1,
+      "minimized": false,
+      "visible": true,
+      "foreground": true,
+      "browserPid": 34144,
+      "physicalPixelReadContext": "per-monitor-aware-v2",
+      "monitor": {
+        "displayMode": {
+          "positionY": 0,
+          "orientation": 0,
+          "width": 2560,
+          "positionX": 0,
+          "height": 1440,
+          "refreshHz": 60,
+          "bitsPerPixel": 32,
+          "adapter": "Intel(R) UHD Graphics 620"
+        },
+        "bounds": {
+          "left": 0,
+          "bottom": 1440,
+          "top": 0,
+          "right": 2560,
+          "height": 1440,
+          "width": 2560
+        },
+        "device": "\\\\.\\DISPLAY5",
+        "workArea": {
+          "left": 0,
+          "bottom": 1360,
+          "top": 0,
+          "right": 2560,
+          "height": 1360,
+          "width": 2560
+        }
+      },
+      "schema": "gev-owned-windows-window-geometry/v1",
+      "ownerPid": 34144,
+      "windowRect": {
+        "left": -13,
+        "bottom": 1373,
+        "top": -13,
+        "right": 2573,
+        "height": 1386,
+        "width": 2586
+      },
+      "targetDpiAwareness": 2,
+      "observedAtUtc": "2026-10-20T13:45:21.1356258Z",
+      "visibleFrameRect": {
+        "left": 0,
+        "bottom": 1360,
+        "top": 0,
+        "right": 2560,
+        "height": 1360,
+        "width": 2560
+      },
+      "windowHandle": "15139684",
+      "maximized": true
+    },
+    "page": {
+      "devicePixelRatio": 2,
+      "inner": {
+        "width": 1280,
+        "height": 537
+      },
+      "outer": {
+        "width": 1280,
+        "height": 680
+      },
+      "screenPosition": {
+        "x": 0,
+        "y": 0
+      },
+      "screen": {
+        "width": 1280,
+        "height": 720,
+        "availLeft": 0,
+        "availTop": 0,
+        "availWidth": 1280,
+        "availHeight": 680,
+        "colorDepth": 24,
+        "pixelDepth": 24
+      },
+      "visualViewport": {
+        "width": 1280,
+        "height": 537,
+        "scale": 1,
+        "offsetLeft": 0,
+        "offsetTop": 0,
+        "pageLeft": 0,
+        "pageTop": 0
+      },
+      "documentClient": {
+        "width": 1280,
+        "height": 537
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0
+      },
+      "visibilityState": "visible",
+      "focused": true,
+      "nativeResolution": null,
+      "canvasRect": null
+    },
+    "cdpBoundsMapping": "native-DIPs:windowRect"
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "effectiveCloseDeadlineMs": 5000,
+      "postDisconnectExitTimeoutMs": 5000,
+      "postDisconnectExitWaitAttempted": false,
+      "closeStartHostMs": 12497.7781,
+      "closeSettledHostMs": 12784.0241,
+      "closeElapsedMs": 286.246000000001,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 251.18730000000141
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "completedAt": "2026-10-20T13:45:21.501Z"
+}

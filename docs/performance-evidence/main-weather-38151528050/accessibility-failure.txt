@@ -1,0 +1,16 @@
+2026-10-11T15:35:18.7563980Z AssertionError [ERR_ASSERTION]: Visible control lacks an accessible name: <button type="button" data-action="save-query">SAVE QUERY</button>
+2026-10-11T15:35:18.7565202Z     at file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/qa-accessibility.mjs:107:12 {
+2026-10-11T15:35:18.7565597Z   generatedMessage: false,
+2026-10-11T15:35:18.7565801Z   code: 'ERR_ASSERTION',
+2026-10-11T15:35:18.7565993Z   actual: undefined,
+2026-10-11T15:35:18.7566176Z   expected: true,
+2026-10-11T15:35:18.7566353Z   operator: '==',
+2026-10-11T15:35:18.7566527Z   diff: 'simple'
+2026-10-11T15:35:18.7566686Z }
+2026-10-11T15:35:18.7566743Z 
+2026-10-11T15:35:18.7566796Z Node.js v24.14.0
+2026-10-11T15:35:18.7703406Z ##[error]Process completed with exit code 1.
+2026-10-11T15:35:18.7731350Z ##[group]Run node scripts/qa-visual-settings.mjs --url http://localhost:4174
+2026-10-11T15:35:18.7731672Z [36;1mnode scripts/qa-visual-settings.mjs --url http://localhost:4174[0m
+2026-10-11T15:35:18.7784309Z shell: /usr/bin/bash -e {0}
+2026-10-11T15:35:18.7784466Z env:

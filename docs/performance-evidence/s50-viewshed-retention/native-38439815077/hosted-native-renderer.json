@@ -1,0 +1,1609 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+  "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+  "platform": "darwin",
+  "timestamp": "2026-10-13T17:35:46.036Z",
+  "status": "passed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "capturedAt": "2026-10-13T17:35:59.735Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+        "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+        "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "sourceDirtyAtStart": false,
+  "harnessDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "harnessChangedDuringRun": false,
+  "importPageErrors": [],
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.",
+  "importBatches": {
+    "schema": "gev-import-batches/v2",
+    "applicationCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "capturedAt": "2026-10-13T17:36:04.884Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "pointRepresentation": "entity",
+    "featureLimit": 5000,
+    "mixedGeometryParityRequested": false,
+    "pointBenefitDiagnosticsRequested": false,
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 138.39999999999418,
+        "maxHeartbeatGapMs": 283.6000000000058,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 12.900000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 12.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 240312365,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 344.3999999999942,
+        "maxHeartbeatGapMs": 67.20000000001164,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 13.800000000017462,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 13.800000000017462,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 368497589,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 302.1000000000058,
+        "maxHeartbeatGapMs": 53.5,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 50.10000000000582,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 41.20000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 108884476,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 136.70000000001164,
+        "maxHeartbeatGapMs": 220.30000000001746,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 25.20000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 8.89999999999418,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 231965808,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 66.20000000001164,
+        "maxHeartbeatGapMs": 158.20000000001164,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 7.899999999994179,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 7.899999999994179,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 237568620,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 305.5,
+        "maxHeartbeatGapMs": 37.19999999998254,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 61.69999999998254,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 26.89999999999418,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 364899548,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 539.5,
+        "maxHeartbeatGapMs": 188.19999999998254,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 24.5,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 24.5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 113905472,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 78.70000000001164,
+        "maxHeartbeatGapMs": 196.80000000001746,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 61.89999999999418,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 31,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 226272276,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 101.10000000000582,
+        "maxHeartbeatGapMs": 217.79999999998836,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 33.60000000000582,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 33.60000000000582,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 163435692,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 639,
+        "maxHeartbeatGapMs": 272.3999999999942,
+        "features": 5000,
+        "capture": {
+          "elapsedMs": 42.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 42.40000000002328,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279",
+        "resources": {
+          "heapBytes": 109412468,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "importedFeatureCount": 5000,
+          "entities": 5000,
+          "pointPrimitiveCount": 5000,
+          "entityPointCensus": {
+            "available": true,
+            "version": "1.138.0",
+            "activeEntityCount": 5000,
+            "pointCount": 5000
+          },
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            },
+            {
+              "type": "EntityClusterPointPrimitiveCollection",
+              "count": 5000,
+              "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+            }
+          ]
+        }
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+      "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "renderConfiguration": {
+      "viewerConstruction": "application-wrapper",
+      "pointRepresentation": "entity",
+      "preserveDrawingBuffer": true,
+      "captureMode": "pixels",
+      "renderDemand": true,
+      "msaaSamplesRequested": 4,
+      "antialias": true,
+      "msaaSupported": true,
+      "webglContextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "desynchronized": false,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "xrCompatible": false
+      },
+      "sceneMode": 3,
+      "canvas": {
+        "cssWidth": 640,
+        "cssHeight": 360,
+        "drawingBufferWidth": 640,
+        "drawingBufferHeight": 360
+      },
+      "camera": {
+        "position": [
+          6463137,
+          0,
+          0
+        ],
+        "direction": [
+          -1,
+          0,
+          2.220446049250313e-16
+        ],
+        "up": [
+          2.220446049250313e-16,
+          2.220446049250313e-16,
+          1
+        ],
+        "frustumNear": 0.1,
+        "frustumFar": 10000000000,
+        "frustumFov": 1.0471975511965976
+      }
+    },
+    "coldActivationMs": 731.7000000000116,
+    "warmedResources": {
+      "heapBytes": 114244936,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "importedFeatureCount": 5000,
+      "entities": 5000,
+      "pointPrimitiveCount": 5000,
+      "entityPointCensus": {
+        "available": true,
+        "version": "1.138.0",
+        "activeEntityCount": 5000,
+        "pointCount": 5000
+      },
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        },
+        {
+          "type": "EntityClusterPointPrimitiveCollection",
+          "count": 5000,
+          "ownership": "Cesium-1.138.0-PointVisualizer-EntityCluster-adapter"
+        }
+      ]
+    },
+    "cancellation": {
+      "attempted": 12,
+      "abortErrors": 12,
+      "pendingJobsAfter": 0,
+      "featureCountAfter": 0,
+      "pointPrimitiveCountAfter": 0,
+      "ownershipReleased": true
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "viewshedRetentionPageErrors": [],
+  "viewshedRetentionInterceptionErrors": [],
+  "viewshedRetentionExternalRequestCount": 0,
+  "viewshedRetention": {
+    "schema": "gev-cctv-viewshed-retention/v2",
+    "status": "passed",
+    "scope": "rendered CCTV component retention comparison",
+    "performanceAcceptanceEligible": false,
+    "applicationCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "harnessCommit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+    "environment": {
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "maskedRenderer": "WebKit WebGL",
+      "rendererIdentity": "unmasked-extension",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36"
+    },
+    "fixture": {
+      "id": "cctv-viewshed-retention/v2",
+      "sha256": "b160b49c242372d38b4cc5731f9d58934d11ced45a0c4da815a84a161a2897e0",
+      "descriptor": {
+        "fixtureId": "cctv-viewshed-retention/v2",
+        "cameraIds": [
+          "qa-viewshed-camera-00",
+          "qa-viewshed-camera-01",
+          "qa-viewshed-camera-02",
+          "qa-viewshed-camera-03",
+          "qa-viewshed-camera-04",
+          "qa-viewshed-camera-05",
+          "qa-viewshed-camera-06",
+          "qa-viewshed-camera-07",
+          "qa-viewshed-camera-08",
+          "qa-viewshed-camera-09",
+          "qa-viewshed-camera-10",
+          "qa-viewshed-camera-11",
+          "qa-viewshed-camera-12",
+          "qa-viewshed-camera-13",
+          "qa-viewshed-camera-14",
+          "qa-viewshed-camera-15"
+        ],
+        "camera": {
+          "id": "qa-cctv-calibration-camera-001",
+          "name": "Calibration demand fixture",
+          "city": "Austin",
+          "cityId": "austin",
+          "lat": 30.2672,
+          "lon": -97.7431,
+          "headingDeg": 0,
+          "fovDeg": 70,
+          "rangeM": 700,
+          "mountHeightM": 22,
+          "pitchDeg": -17,
+          "groundElevationM": 0,
+          "feedType": "image",
+          "provider": "Synthetic CCTV fixture",
+          "sourceKind": "synthetic",
+          "url": "fixture://cctv-calibration-frame"
+        },
+        "frameDataSha256": "33934bce268c7686ea40866b64f6d3b02e1a0696ebd426547e05a557bd378d15",
+        "cameraLayout": {
+          "gridColumns": 4,
+          "stepDegrees": 0.00035
+        },
+        "epochMs": 1791460800000,
+        "viewport": [
+          1200,
+          960
+        ],
+        "settings": {
+          "coverageMode": "viewshed",
+          "showProjection": false,
+          "autoHop": false,
+          "requestRenderMode": true,
+          "drawingBuffer": [
+            1200,
+            800
+          ]
+        }
+      },
+      "cameraCount": 16,
+      "cameraIds": [
+        "qa-viewshed-camera-00",
+        "qa-viewshed-camera-01",
+        "qa-viewshed-camera-02",
+        "qa-viewshed-camera-03",
+        "qa-viewshed-camera-04",
+        "qa-viewshed-camera-05",
+        "qa-viewshed-camera-06",
+        "qa-viewshed-camera-07",
+        "qa-viewshed-camera-08",
+        "qa-viewshed-camera-09",
+        "qa-viewshed-camera-10",
+        "qa-viewshed-camera-11",
+        "qa-viewshed-camera-12",
+        "qa-viewshed-camera-13",
+        "qa-viewshed-camera-14",
+        "qa-viewshed-camera-15"
+      ]
+    },
+    "settings": {
+      "coverageMode": "viewshed",
+      "showProjection": false,
+      "autoHop": false,
+      "requestRenderMode": true,
+      "globeShown": false,
+      "clockEpochMs": 1791460800000,
+      "drawingBufferWidth": 1200,
+      "drawingBufferHeight": 800,
+      "viewportWidth": 1200,
+      "viewportHeight": 960,
+      "msaaSamples": 4,
+      "antialias": true,
+      "preserveDrawingBuffer": true,
+      "camera": {
+        "longitude": -97.7431,
+        "latitude": 30.267199999999992,
+        "height": 3500.0000000004666,
+        "heading": 6.283185307179586,
+        "pitch": -1.5707963267948966
+      }
+    },
+    "cohort": {
+      "limit": 14,
+      "peakLiveVolumes": 14,
+      "initialVolumeCount": 14,
+      "retainedModeToggleBuilds": 0,
+      "disableEnableCycles": 2,
+      "disableEnableBuilds": 0,
+      "disableEnableIdentitiesPreserved": true,
+      "disableEnableCameraId": "qa-viewshed-camera-01",
+      "beforeHandoffIds": [
+        "qa-viewshed-camera-00",
+        "qa-viewshed-camera-01",
+        "qa-viewshed-camera-02",
+        "qa-viewshed-camera-03",
+        "qa-viewshed-camera-04",
+        "qa-viewshed-camera-05",
+        "qa-viewshed-camera-06",
+        "qa-viewshed-camera-07",
+        "qa-viewshed-camera-08",
+        "qa-viewshed-camera-09",
+        "qa-viewshed-camera-10",
+        "qa-viewshed-camera-11",
+        "qa-viewshed-camera-12",
+        "qa-viewshed-camera-13"
+      ],
+      "afterHandoffIds": [
+        "qa-viewshed-camera-02",
+        "qa-viewshed-camera-03",
+        "qa-viewshed-camera-04",
+        "qa-viewshed-camera-05",
+        "qa-viewshed-camera-06",
+        "qa-viewshed-camera-07",
+        "qa-viewshed-camera-08",
+        "qa-viewshed-camera-09",
+        "qa-viewshed-camera-10",
+        "qa-viewshed-camera-11",
+        "qa-viewshed-camera-12",
+        "qa-viewshed-camera-13",
+        "qa-viewshed-camera-14",
+        "qa-viewshed-camera-15"
+      ],
+      "modeSequence": [
+        "viewshed",
+        "on",
+        "off",
+        "viewshed",
+        "on",
+        "off",
+        "viewshed"
+      ],
+      "preReadyTintFlipObserved": true,
+      "duplicateCameraIdCount": 0,
+      "constructionEvents": [
+        {
+          "sequence": 1,
+          "cameraId": "qa-viewshed-camera-00",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "44973dd7"
+        },
+        {
+          "sequence": 2,
+          "cameraId": "qa-viewshed-camera-01",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "2ca90c0b"
+        },
+        {
+          "sequence": 3,
+          "cameraId": "qa-viewshed-camera-02",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "90f94180"
+        },
+        {
+          "sequence": 4,
+          "cameraId": "qa-viewshed-camera-03",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "f0ca986c"
+        },
+        {
+          "sequence": 5,
+          "cameraId": "qa-viewshed-camera-04",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "6f3fb6ac"
+        },
+        {
+          "sequence": 6,
+          "cameraId": "qa-viewshed-camera-05",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "c7d4d7b4"
+        },
+        {
+          "sequence": 7,
+          "cameraId": "qa-viewshed-camera-06",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "98a9154b"
+        },
+        {
+          "sequence": 8,
+          "cameraId": "qa-viewshed-camera-07",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "b259d602"
+        },
+        {
+          "sequence": 9,
+          "cameraId": "qa-viewshed-camera-08",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "80510755"
+        },
+        {
+          "sequence": 10,
+          "cameraId": "qa-viewshed-camera-09",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "28ff2634"
+        },
+        {
+          "sequence": 11,
+          "cameraId": "qa-viewshed-camera-10",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "618471da"
+        },
+        {
+          "sequence": 12,
+          "cameraId": "qa-viewshed-camera-11",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "d365fda8"
+        },
+        {
+          "sequence": 13,
+          "cameraId": "qa-viewshed-camera-12",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "563dff13"
+        },
+        {
+          "sequence": 14,
+          "cameraId": "qa-viewshed-camera-13",
+          "phase": "startup",
+          "positionComponentCount": 15,
+          "geometrySignature": "560b1cfa"
+        },
+        {
+          "sequence": 15,
+          "cameraId": "qa-viewshed-camera-14",
+          "phase": "camera-handoff",
+          "positionComponentCount": 15,
+          "geometrySignature": "4669c816"
+        },
+        {
+          "sequence": 16,
+          "cameraId": "qa-viewshed-camera-15",
+          "phase": "camera-handoff",
+          "positionComponentCount": 15,
+          "geometrySignature": "82547e83"
+        },
+        {
+          "sequence": 17,
+          "cameraId": "qa-viewshed-camera-15",
+          "phase": "hidden-pose-edit",
+          "positionComponentCount": 15,
+          "geometrySignature": "2631486c"
+        },
+        {
+          "sequence": 18,
+          "cameraId": "qa-viewshed-camera-02",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "90f94180"
+        },
+        {
+          "sequence": 19,
+          "cameraId": "qa-viewshed-camera-03",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "f0ca986c"
+        },
+        {
+          "sequence": 20,
+          "cameraId": "qa-viewshed-camera-04",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "6f3fb6ac"
+        },
+        {
+          "sequence": 21,
+          "cameraId": "qa-viewshed-camera-05",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "c7d4d7b4"
+        },
+        {
+          "sequence": 22,
+          "cameraId": "qa-viewshed-camera-06",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "98a9154b"
+        },
+        {
+          "sequence": 23,
+          "cameraId": "qa-viewshed-camera-07",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "b259d602"
+        },
+        {
+          "sequence": 24,
+          "cameraId": "qa-viewshed-camera-08",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "80510755"
+        },
+        {
+          "sequence": 25,
+          "cameraId": "qa-viewshed-camera-09",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "28ff2634"
+        },
+        {
+          "sequence": 26,
+          "cameraId": "qa-viewshed-camera-10",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "618471da"
+        },
+        {
+          "sequence": 27,
+          "cameraId": "qa-viewshed-camera-11",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "d365fda8"
+        },
+        {
+          "sequence": 28,
+          "cameraId": "qa-viewshed-camera-12",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "563dff13"
+        },
+        {
+          "sequence": 29,
+          "cameraId": "qa-viewshed-camera-13",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "560b1cfa"
+        },
+        {
+          "sequence": 30,
+          "cameraId": "qa-viewshed-camera-14",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "4669c816"
+        },
+        {
+          "sequence": 31,
+          "cameraId": "qa-viewshed-camera-15",
+          "phase": "full-layer-rebuild-control",
+          "positionComponentCount": 15,
+          "geometrySignature": "2631486c"
+        }
+      ],
+      "constructionEventOmissionCount": 0
+    },
+    "hiddenPoseEdit": {
+      "coverageHidden": true,
+      "calibrationChanged": true,
+      "beforeOffsetEastM": 0,
+      "afterOffsetEastM": 18,
+      "reentryBuildCount": 1
+    },
+    "activeTint": {
+      "cameraId": "qa-viewshed-camera-15",
+      "expectedRgba": [
+        132,
+        66,
+        240,
+        56
+      ],
+      "observedRgba": [
+        132,
+        66,
+        240,
+        56
+      ],
+      "translucent": true,
+      "allowPicking": false
+    },
+    "preReadyTint": {
+      "cameraId": "qa-viewshed-camera-01",
+      "readyAtSwitch": false,
+      "expectedRgba": [
+        66,
+        240,
+        117,
+        56
+      ],
+      "observedRgba": [
+        66,
+        240,
+        117,
+        56
+      ],
+      "translucent": true,
+      "allowPicking": false
+    },
+    "retained": {
+      "cameraId": "qa-viewshed-camera-15",
+      "camera": {
+        "longitude": -97.7431,
+        "latitude": 30.267199999999992,
+        "height": 3500.0000000004666,
+        "heading": 6.283185307179586,
+        "pitch": -1.5707963267948966
+      },
+      "settings": {
+        "coverageMode": "viewshed",
+        "showProjection": false,
+        "autoHop": false,
+        "requestRenderMode": true,
+        "globeShown": false,
+        "clockEpochMs": 1791460800000,
+        "drawingBufferWidth": 1200,
+        "drawingBufferHeight": 800,
+        "viewportWidth": 1200,
+        "viewportHeight": 960,
+        "msaaSamples": 4,
+        "antialias": true,
+        "preserveDrawingBuffer": true,
+        "camera": {
+          "longitude": -97.7431,
+          "latitude": 30.267199999999992,
+          "height": 3500.0000000004666,
+          "heading": 6.283185307179586,
+          "pitch": -1.5707963267948966
+        }
+      },
+      "liveVolumes": 14,
+      "pixels": {
+        "width": 1200,
+        "height": 800,
+        "frameBefore": 63,
+        "frameAfter": 64,
+        "rgbaSha256": "cb686830b11cc58975ca042a2c65db6131e577e6240fa557ab6178ab2c86f729",
+        "nonBackgroundPixels": 74699,
+        "distinctRgbSamples": 32
+      }
+    },
+    "rebuildControl": {
+      "label": "full-layer-rebuild-control",
+      "cameraId": "qa-viewshed-camera-15",
+      "camera": {
+        "longitude": -97.7431,
+        "latitude": 30.267199999999992,
+        "height": 3500.0000000004666,
+        "heading": 6.283185307179586,
+        "pitch": -1.5707963267948966
+      },
+      "settings": {
+        "coverageMode": "viewshed",
+        "showProjection": false,
+        "autoHop": false,
+        "requestRenderMode": true,
+        "globeShown": false,
+        "clockEpochMs": 1791460800000,
+        "drawingBufferWidth": 1200,
+        "drawingBufferHeight": 800,
+        "viewportWidth": 1200,
+        "viewportHeight": 960,
+        "msaaSamples": 4,
+        "antialias": true,
+        "preserveDrawingBuffer": true,
+        "camera": {
+          "longitude": -97.7431,
+          "latitude": 30.267199999999992,
+          "height": 3500.0000000004666,
+          "heading": 6.283185307179586,
+          "pitch": -1.5707963267948966
+        }
+      },
+      "buildCount": 14,
+      "pixels": {
+        "width": 1200,
+        "height": 800,
+        "frameBefore": 86,
+        "frameAfter": 87,
+        "rgbaSha256": "cb686830b11cc58975ca042a2c65db6131e577e6240fa557ab6178ab2c86f729",
+        "nonBackgroundPixels": 74699,
+        "distinctRgbSamples": 32
+      },
+      "pixelComparison": {
+        "exactMatch": true,
+        "changedPixels": 0
+      }
+    },
+    "pixelFailureEvidence": null,
+    "cleanup": {
+      "layerDestroyed": true,
+      "retainedLayerDestroyed": true,
+      "viewerDestroyed": true,
+      "wrappersRestored": true,
+      "worldOverlayDestroyed": true,
+      "governorUninstalled": true,
+      "liveVolumes": 0,
+      "createdVolumes": 31,
+      "removedVolumes": 31,
+      "destroyedVolumes": 31,
+      "postRenderListenersBefore": 3,
+      "postRenderListenersAfter": 3,
+      "postRenderListenersAfterLayer": 3,
+      "postRenderListenersAfterOwners": 2
+    },
+    "phase": "complete",
+    "error": null,
+    "viewshedVisibility": {
+      "changedPixels": 73796,
+      "viewshedOn": {
+        "width": 1200,
+        "height": 800,
+        "frameBefore": 55,
+        "frameAfter": 56,
+        "rgbaSha256": "cb686830b11cc58975ca042a2c65db6131e577e6240fa557ab6178ab2c86f729",
+        "nonBackgroundPixels": 74699,
+        "distinctRgbSamples": 32
+      },
+      "viewshedOff": {
+        "width": 1200,
+        "height": 800,
+        "frameBefore": 56,
+        "frameAfter": 57,
+        "rgbaSha256": "20d96abbdd27eee9fbdc2252e740890277e35a16cf57493df1785a527cdd7d96",
+        "nonBackgroundPixels": 2419,
+        "distinctRgbSamples": 32
+      }
+    }
+  },
+  "viewshedRetentionGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "viewshedRetentionRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 41573.557208,
+      "closeSettledHostMs": 42236.269583,
+      "closeElapsedMs": 662.7123750000028,
+      "timingOrigins": {
+        "closeElapsedMs": "browser.close invocation",
+        "processExitElapsedMs": "closeRecoveryBrowser entry"
+      },
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 618.3257909999957
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  }
+}

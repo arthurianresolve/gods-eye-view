@@ -710,9 +710,11 @@ test('the Display selector, voice schema and final stylesheet expose Cyber', () 
     cyberStyles,
     /\.hud-left-edge \{\s*top: calc\(var\(--cyber-left-rail-top\) - 18px\);\s*left: 14px;/,
   );
+  // Check that Cyber uses the shared aligned baseline, without pinning the
+  // arithmetic spelling. panelRails.test.mjs exercises its layout and rounding.
   assert.match(
     rightRail,
-    /const leftStackTop = settledLeftRailTop\([\s\S]*?const alignedTop = Number\.isFinite\(leftStackTop\)[\s\S]*?baseTop: alignedTop,/,
+    /const leftStackTop = settledLeftRailTop\([\s\S]*?const alignedTop =[\s\S]*?baseTop: alignedTop,/,
   );
   assert.match(
     cyberStyles,

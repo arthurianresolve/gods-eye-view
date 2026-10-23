@@ -1,4 +1,16 @@
 import { cancelCameraArrival } from './cameraArrival.js';
+import { waitForVisibilityPaint } from './visibilityPaint.js';
+
+import { beginCpuTiming, endCpuTiming } from '../performance/cpuTimings.js';
+
+function callLayerUpdate(layerId, module, viewer, options) {
+  const timing = beginCpuTiming(layerId, 'update-sync');
+  try {
+    return module.update(viewer, options);
+  } finally {
+    endCpuTiming(timing);
+  }
+}
 
 function cloneLayerParams(value) {
   if (Array.isArray(value)) return value.map(cloneLayerParams);
@@ -292,7 +304,9 @@ export class LayerLifecycle {
     let result;
     let failure = null;
     try {
-      result = await entry.module.update(this.viewer, { signal });
+      result = await callLayerUpdate(layerId, entry.module, this.viewer, {
+        signal,
+      });
       // Even a rejected/partial update may have changed the data exposed by
       // the layer. Publish before classifying its result so observers see it.
       this._publishActivity({ type: 'data-updated', layerId });
@@ -654,6 +668,7 @@ export class LayerLifecycle {
       intentEpoch = null,
       suppressWillChangeNotification = false,
       beforeEnableParams = null,
+      immediateTeardown = false,
     } = {},
   ) {
     const desiredState = Boolean(targetEnabled);
@@ -725,6 +740,35 @@ export class LayerLifecycle {
       requestedChange,
       desiredState ? 'enabling' : 'disabling',
     );
+    // Give direct user requests a rendering opportunity for their truthful
+    // busy status before geometry preparation or teardown invalidates the
+    // scene. Bulk clear and rollback retain immediate ordered teardown.
+    // The same intent owns cancellation during this wait and the later work.
+    if (origin === 'user' && (desiredState || !immediateTeardown)) {
+      this._setVisibilityIntentPhase(entry, intentEpoch, 'presentation');
+      await waitForVisibilityPaint({
+        signal,
+        documentRef: this.viewer?.container?.ownerDocument,
+      });
+    }
+    if (signal?.aborted || isSuperseded()) {
+      // No lifecycle work has started, so cancellation restores presentation
+      // without enabling/disabling untouched resources. A newer intent retains
+      // its own transitional presentation through the existing adoption lane.
+      settleLifecycle();
+      this._publishActivity({ type: 'status' });
+      this._notifyListeners({
+        ...requestedChange,
+        type: 'visibility-cancelled',
+        ...this._visibilityCancellationMetadata(
+          entry,
+          intentEpoch,
+          signal,
+          'presentation',
+        ),
+      });
+      return false;
+    }
     if (!desiredState) {
       // Disable
       this._invalidateRefresh(layerId, entry, 'layer-disabled');
@@ -1006,7 +1050,12 @@ export class LayerLifecycle {
       // First update immediately
       this._setVisibilityIntentPhase(entry, intentEpoch, 'update');
       try {
-        const updated = await entry.module.update(this.viewer, { signal });
+        const updated = await callLayerUpdate(
+          layerId,
+          entry.module,
+          this.viewer,
+          { signal },
+        );
         if (updated === false) throw lifecycleRejectedError(layerId, 'update');
       } catch (e) {
         if (signal?.aborted || isAbortError(e)) {
@@ -1083,6 +1132,7 @@ export class LayerLifecycle {
       notificationToken = null,
       notifyWillChangeBeforeEffective = false,
       beforeEnableParams = null,
+      immediateTeardown = false,
     } = {},
   ) {
     const entry = this.layers.get(layerId);
@@ -1312,6 +1362,7 @@ export class LayerLifecycle {
                 targetEnabled: !desiredState,
                 notificationToken,
                 intentEpoch,
+                immediateTeardown: true,
               });
             } finally {
               if (entry.activeVisibilityIntent === compensationIntent) {
@@ -1389,6 +1440,7 @@ export class LayerLifecycle {
           intentEpoch,
           suppressWillChangeNotification: notifyWillChangeBeforeEffective,
           beforeEnableParams,
+          immediateTeardown,
         });
       } finally {
         signal?.removeEventListener('abort', forwardCallerAbort);
@@ -1586,10 +1638,11 @@ export class LayerLifecycle {
         }
         try {
           const clearIntentEpoch = entry.visibilityIntentEpoch + 1;
-          const result = await this.setEnabled(layerId, false, {
+          const result = await this._setEnabledWithIntent(layerId, false, {
             origin,
+            immediateTeardown: true,
             ...(notificationToken ? { notificationToken } : {}),
-          });
+          }).promise;
           attempts.set(layerId, {
             result,
             superseded: entry.visibilityIntentEpoch !== clearIntentEpoch,

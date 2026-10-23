@@ -1,0 +1,227 @@
+{
+  "schema": "gev-late-readiness-qa-independent-readback/v1",
+  "status": "passed",
+  "baseCommit": "5f055666a7e647ef8dac1eca48536d474a20e30e",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/late-readiness-5f055666-validation-20261020/source",
+  "receipt": {
+    "path": "qa-artifacts/late-readiness-5f055666-validation-20261020/validation.json",
+    "sha256": "d7896c8df672eaf5de518fdf25d315de712b0e8fefc989a8833dd18144478c4e"
+  },
+  "sources": [
+    {
+      "file": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 103262,
+      "sha256": "06c3e8cd75760420926da99ca2b6100cd3dea08f0b57946f95761cd104bf5468"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 72285,
+      "sha256": "4f46219e9ecabc22bc39fd933393fc125960d748d3268ed438e7e57c58e11ce7"
+    },
+    {
+      "file": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 158095,
+      "sha256": "72cbd896e4f485a1e7813f46071b39ec09d2ab7765795564389f978563d51c15"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.mjs",
+      "bytes": 51357,
+      "sha256": "45f6a24ccc56fca2e2288f214e4bbe7ea1c4eaef12dabb1fcbd772bc5fe914af"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.test.mjs",
+      "bytes": 63544,
+      "sha256": "8d007c2ef3d915d16ccd683b03ad4acf72ce98e1b99313109623bd95b2ccc0cf"
+    },
+    {
+      "file": "scripts/format-scope.json",
+      "bytes": 57683,
+      "sha256": "1c5a62662f3cc94df9fa08e6ab19b1bf15860e0f62a4aa4aeeec8dd933068b4c"
+    },
+    {
+      "file": "package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f"
+    },
+    {
+      "file": "package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f"
+    }
+  ],
+  "files": [
+    {
+      "file": "validation.json",
+      "bytes": 18858,
+      "sha256": "d7896c8df672eaf5de518fdf25d315de712b0e8fefc989a8833dd18144478c4e"
+    },
+    {
+      "file": "node24-focused.log",
+      "bytes": 8766,
+      "sha256": "cfd372a3743278aa508e6c64f23b0486fc6eeee69d62f06e01c6eed67f77bf77"
+    },
+    {
+      "file": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf"
+    },
+    {
+      "file": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e"
+    },
+    {
+      "file": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186"
+    },
+    {
+      "file": "node24-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c"
+    },
+    {
+      "file": "node26-focused.log",
+      "bytes": 8757,
+      "sha256": "0f7dfbfb958b9ae69aef8cef0382d5abfade6066167bf5d003abfbe3b6d0857c"
+    },
+    {
+      "file": "node26-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf"
+    },
+    {
+      "file": "node26-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e"
+    },
+    {
+      "file": "node26-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186"
+    },
+    {
+      "file": "node26-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "exitCode": 0,
+      "tests": 82,
+      "pass": 82,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "cfd372a3743278aa508e6c64f23b0486fc6eeee69d62f06e01c6eed67f77bf77"
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186"
+    },
+    {
+      "label": "node24",
+      "name": "packages",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 1024,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c"
+    },
+    {
+      "label": "node26",
+      "name": "focused",
+      "exitCode": 0,
+      "tests": 82,
+      "pass": 82,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "0f7dfbfb958b9ae69aef8cef0382d5abfade6066167bf5d003abfbe3b6d0857c"
+    },
+    {
+      "label": "node26",
+      "name": "format",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e"
+    },
+    {
+      "label": "node26",
+      "name": "imports",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 512,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186"
+    },
+    {
+      "label": "node26",
+      "name": "packages",
+      "exitCode": 0,
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "heapCapMiB": 1024,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c"
+    }
+  ],
+  "sourceClean": true,
+  "localAndVmCommittedSourceExact": true,
+  "logsDownloadedAndIndependentlyHashed": true,
+  "testsRerunDuringReadback": false,
+  "helperSha256": "6714909049705461f605014c1f37deb0499a5668ace46dc5ffd8bede486afe58",
+  "completedAt": "2026-10-20T14:05:04.155Z"
+}

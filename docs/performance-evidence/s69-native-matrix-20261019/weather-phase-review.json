@@ -1,0 +1,72 @@
+{
+  "schema": "gev-weather-phase-diagnostic-review/v1",
+  "at": "2026-10-18T22:39:41.454Z",
+  "protocolSha256": "f0d93bb109190321da8fc670f6d155726ceef4265b120bee300ea7ff2af491ab",
+  "diagnosticOnly": true,
+  "captures": [
+    {
+      "role": "baseline",
+      "sha256": "5d7d18d31577737b1c5c98e3f1e2787c31e3598e6d2d66b87165df3eceeff396",
+      "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "harnessCommit": "fb8a6c33285e3a83f92b8d612d55fda21a13c42b",
+      "status": "capture-completed",
+      "failure": null,
+      "comparisonEligible": false,
+      "readiness": {
+        "status": "not-ready",
+        "workerAuditTimingBoundary": "external-receipt-path-observation-no-page-worker-instrumentation",
+        "reasons": [
+          "observed-comparison-contract-incomplete",
+          "warmup-is-not-30-seconds",
+          "capture-does-not-have-five-runs-per-scenario",
+          "weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance"
+        ],
+        "reason": "observed-comparison-contract-incomplete; warmup-is-not-30-seconds; capture-does-not-have-five-runs-per-scenario; weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance"
+      },
+      "captures": [
+        {
+          "scenario": "idle",
+          "durationMs": 60004.59999999404,
+          "weatherPhaseSummary": null
+        },
+        {
+          "scenario": "scripted-motion",
+          "durationMs": 60034.20000001788,
+          "weatherPhaseSummary": null
+        }
+      ]
+    },
+    {
+      "role": "candidate",
+      "sha256": "91b0be3761546d9cfb6a7f1cb41d12da23dbd6ff5983af89ddaebae919de7f7f",
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "harnessCommit": "fb8a6c33285e3a83f92b8d612d55fda21a13c42b",
+      "status": "capture-completed",
+      "failure": null,
+      "comparisonEligible": false,
+      "readiness": {
+        "status": "not-ready",
+        "workerAuditTimingBoundary": "external-receipt-path-observation-no-page-worker-instrumentation",
+        "reasons": [
+          "observed-comparison-contract-incomplete",
+          "warmup-is-not-30-seconds",
+          "capture-does-not-have-five-runs-per-scenario",
+          "weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance"
+        ],
+        "reason": "observed-comparison-contract-incomplete; warmup-is-not-30-seconds; capture-does-not-have-five-runs-per-scenario; weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance"
+      },
+      "captures": [
+        {
+          "scenario": "idle",
+          "durationMs": 60003,
+          "weatherPhaseSummary": null
+        },
+        {
+          "scenario": "scripted-motion",
+          "durationMs": 60025,
+          "weatherPhaseSummary": null
+        }
+      ]
+    }
+  ]
+}

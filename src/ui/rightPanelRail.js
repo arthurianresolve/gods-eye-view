@@ -11,6 +11,156 @@ import { displayPanelScroller } from './displayPanelScroll.js';
 
 const pendingCollapseRetries = new WeakSet();
 
+function rightRailPanels(stack, getComputedStyle) {
+  return [...stack.children].filter(
+    (panel) =>
+      panel.matches('[data-panel-id]') &&
+      !panel.hidden &&
+      ((stack.classList.contains('layout-exclusive') &&
+        panel.classList.contains('collapsed')) ||
+        getComputedStyle(panel).display !== 'none'),
+  );
+}
+
+function measuredRightPanels(panels, exclusive) {
+  return panels.filter(
+    (panel) =>
+      !exclusive ||
+      !panel.classList.contains('collapsed') ||
+      panel.classList.contains('layout-auto-collapsed'),
+  );
+}
+
+function measureRightHeights(panels) {
+  return new Map(
+    panels.map((panel) => [
+      panel,
+      Math.max(
+        panel.getBoundingClientRect().height,
+        panel.scrollHeight || 0,
+        panel.classList.contains('collapsed') ? 42 : 0,
+      ),
+    ]),
+  );
+}
+
+function railInputState(node) {
+  return [
+    node.parentElement,
+    node.hidden,
+    node.getAttribute('class'),
+    node.getAttribute('style'),
+    node.getAttribute('aria-hidden'),
+  ];
+}
+
+/**
+ * One synchronous intrinsic snapshot, never retained between callbacks.
+ * Tactical desktop roots have independent widths (layers.css #left-panel-stack
+ * and #right-context-rail); scenes.css's left allocation/focus/tail selectors
+ * affect only left descendants, as do panel-surfaces.css's left rules.
+ * This is the current CSS contract, not a generic property of sibling rails.
+ * Right obstacle geometry
+ * is deliberately NOT captured here and must still be read after left apply.
+ * Disclosure/placement/caller mutations invalidate the transaction in its owner.
+ */
+export function prepareRightRailIntrinsicMeasurement({
+  stack,
+  windowRef,
+  hud,
+  getComputedStyle = (element) => windowRef.getComputedStyle(element),
+}) {
+  if (
+    !stack ||
+    hud.variant !== 'tactical' ||
+    windowRef.matchMedia('(max-width: 720px)').matches ||
+    stack.getAttribute('data-rail-measuring') != null
+  )
+    return null;
+  const panels = rightRailPanels(stack, getComputedStyle);
+  if (
+    !panels.length ||
+    panels.some(
+      (panel) =>
+        panel.classList.contains('layout-auto-collapsed') ||
+        panel.classList.contains('cyber-accordion-collapsed'),
+    )
+  )
+    return null;
+  const exclusive = panels.some(
+    (panel) => !panel.classList.contains('collapsed'),
+  );
+  if (stack.classList.contains('layout-exclusive') !== exclusive) return null;
+  // The ordinary pass normalizes ARIA before measuring. A restored/stale value
+  // may also participate in CSS, so do not sample before that write occurs.
+  if (
+    panels.some((panel) =>
+      exclusive && panel.classList.contains('collapsed')
+        ? panel.getAttribute('aria-hidden') !== 'true'
+        : panel.getAttribute('aria-hidden') != null,
+    )
+  )
+    return null;
+  const measuredPanels = measuredRightPanels(panels, exclusive);
+  const inputStates = [stack, ...panels].map(railInputState);
+  const viewport = [windowRef.innerWidth, windowRef.innerHeight];
+  const presentation = [hud.visible, hud.variant];
+  const children = [...stack.children];
+  const scrollers = [
+    ...(stack.querySelectorAll?.('[data-rail-scroller]') || []),
+  ]
+    .map((node) => [node, node.scrollTop || 0])
+    .filter(([, top]) => top > 0);
+  let valid = true;
+  let naturalHeights;
+  return {
+    stack,
+    measure() {
+      naturalHeights = measureRightHeights(measuredPanels);
+    },
+    restoreScroll() {
+      const errors = [];
+      for (const [node, top] of scrollers) {
+        try {
+          if (node.scrollTop !== top) node.scrollTop = top;
+        } catch (error) {
+          errors.push(error);
+        }
+      }
+      if (errors.length === 1) throw errors[0];
+      if (errors.length > 1)
+        throw new AggregateError(errors, 'Rail scroll restoration failed');
+    },
+    invalidate() {
+      valid = false;
+    },
+    take(currentPanels, currentMeasuredPanels, currentHud, currentWindow) {
+      const canReuse =
+        valid &&
+        naturalHeights &&
+        viewport[0] === currentWindow.innerWidth &&
+        viewport[1] === currentWindow.innerHeight &&
+        presentation[0] === currentHud.visible &&
+        presentation[1] === currentHud.variant &&
+        children.length === stack.children.length &&
+        children.every((node, index) => node === stack.children[index]) &&
+        panels.length === currentPanels.length &&
+        panels.every((node, index) => node === currentPanels[index]) &&
+        measuredPanels.length === currentMeasuredPanels.length &&
+        measuredPanels.every(
+          (node, index) => node === currentMeasuredPanels[index],
+        ) &&
+        [stack, ...panels].every((node, index) =>
+          railInputState(node).every(
+            (value, key) => value === inputStates[index][key],
+          ),
+        );
+      valid = false;
+      return canReuse ? naturalHeights : null;
+    },
+  };
+}
+
 /**
  * Where the left rail's top will settle, not where it is mid-transition:
  * nothing re-runs this pass when the `top` animation ends (ResizeObserver
@@ -62,6 +212,7 @@ export function layoutRightPanelRail({
   leftStack,
   displayPanel,
   readDisplayScrollTop,
+  intrinsicMeasurement,
   documentRef = stack?.ownerDocument,
   getComputedStyle = (element) => windowRef.getComputedStyle(element),
 }) {
@@ -69,18 +220,10 @@ export function layoutRightPanelRail({
   // A collapse may schedule one follow-up, which only measures and allocates.
   const isCollapseRetry = pendingCollapseRetries.delete(stack);
 
-  // Other CSS may hide a panel, such as an event view: it is not laid out.
+  // A panel that other CSS hides, such as an event view, is not laid out.
   // Exclusive presentation hides collapsed panels itself; those stay in the
   // rail so they can be restored.
-  const hiddenByRail = (panel) =>
-    stack.classList.contains('layout-exclusive') &&
-    panel.classList.contains('collapsed');
-  const panels = [...stack.children].filter(
-    (panel) =>
-      panel.matches('[data-panel-id]') &&
-      !panel.hidden &&
-      (hiddenByRail(panel) || getComputedStyle(panel).display !== 'none'),
-  );
+  const panels = rightRailPanels(stack, getComputedStyle);
   if (!hud.visible || hud.variant !== 'tactical') {
     for (const panel of panels.filter((item) =>
       item.classList.contains('layout-auto-collapsed'),
@@ -123,18 +266,26 @@ export function layoutRightPanelRail({
   });
   stack.classList.toggle('layout-exclusive', exclusive);
   for (const panel of panels) {
-    if (exclusive && panel.classList.contains('collapsed'))
-      panel.setAttribute('aria-hidden', 'true');
-    else panel.removeAttribute('aria-hidden');
+    if (exclusive && panel.classList.contains('collapsed')) {
+      if (panel.getAttribute('aria-hidden') !== 'true')
+        panel.setAttribute('aria-hidden', 'true');
+    } else if (panel.getAttribute('aria-hidden') != null)
+      panel.removeAttribute('aria-hidden');
   }
 
   if (isMobile) {
     stack.classList.remove('layout-focus');
-    stack.style.removeProperty('--right-stack-safe-top');
-    stack.style.removeProperty('--right-stack-max-height');
+    for (const property of [
+      '--right-stack-safe-top',
+      '--right-stack-max-height',
+    ])
+      if (stack.style.getPropertyValue(property))
+        stack.style.removeProperty(property);
     for (const panel of panels)
-      panel.style.removeProperty('--right-panel-allocated-height');
-    stack.dataset.layoutMode = 'mobile';
+      if (panel.style.getPropertyValue('--right-panel-allocated-height'))
+        panel.style.removeProperty('--right-panel-allocated-height');
+    if (stack.dataset.layoutMode !== 'mobile')
+      stack.dataset.layoutMode = 'mobile';
     return;
   }
 
@@ -146,9 +297,17 @@ export function layoutRightPanelRail({
     viewportHeight,
     getComputedStyle,
   );
-  const alignedTop = Number.isFinite(leftStackTop)
-    ? leftStackTop
-    : viewportHeight * 0.26;
+  // The rail writes its top at 0.1 CSS-pixel precision below. Use that same
+  // coordinate for allocation: a transition target (21.48px) and its settled
+  // layout-unit rect (21.46875px) otherwise both write 21.5px but alternate
+  // between 494.0px and 494.1px of height in a 537px viewport. That changes the
+  // allocation and wakes observers despite an unchanged painted top.
+  const alignedTop = Number(
+    (Number.isFinite(leftStackTop)
+      ? leftStackTop
+      : viewportHeight * 0.26
+    ).toFixed(1),
+  );
   const obstacleRects = [];
 
   for (const obstacle of obstacles) {
@@ -178,12 +337,7 @@ export function layoutRightPanelRail({
 
   // Auto-collapsed headers contribute the same need even when exclusive
   // presentation hides them. Manually collapsed launchers keep their policy.
-  const measuredPanels = panels.filter(
-    (panel) =>
-      !exclusive ||
-      !panel.classList.contains('collapsed') ||
-      panel.classList.contains('layout-auto-collapsed'),
-  );
+  const measuredPanels = measuredRightPanels(panels, exclusive);
   const visiblePanels = panels.filter(
     (panel) => !exclusive || !panel.classList.contains('collapsed'),
   );
@@ -195,28 +349,28 @@ export function layoutRightPanelRail({
   ]
     .map((node) => [node, node.scrollTop || 0])
     .filter(([, top]) => top > 0);
-  const naturalHeights = new Map();
+  // Measuring does not change the gap. Read it before lifting allocations,
+  // avoiding a style/layout read after the constrained presentation returns.
+  const gap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   // Remove live height allocations through a synchronous CSS override. Keeping
   // the stored properties intact avoids REMOVE/SET churn on unchanged panels.
   // Do not toggle layout classes here: the class observer schedules new passes.
-  stack.setAttribute('data-rail-measuring', '');
-  try {
-    for (const panel of measuredPanels) {
-      naturalHeights.set(
-        panel,
-        Math.max(
-          panel.getBoundingClientRect().height,
-          panel.scrollHeight || 0,
-          panel.classList.contains('collapsed') ? 42 : 0,
-        ),
-      );
+  let naturalHeights = intrinsicMeasurement?.take(
+    panels,
+    measuredPanels,
+    hud,
+    windowRef,
+  );
+  if (!naturalHeights) {
+    stack.setAttribute('data-rail-measuring', '');
+    try {
+      naturalHeights = measureRightHeights(measuredPanels);
+    } finally {
+      stack.removeAttribute('data-rail-measuring');
+      for (const [node, top] of scrollers)
+        if (node.scrollTop !== top) node.scrollTop = top;
     }
-  } finally {
-    stack.removeAttribute('data-rail-measuring');
-    for (const [node, top] of scrollers)
-      if (node.scrollTop !== top) node.scrollTop = top;
   }
-  const gap = parseFloat(getComputedStyle(stack).rowGap) || 0;
   const naturalHeight =
     measuredPanels.reduce(
       (total, panel) => total + naturalHeights.get(panel),
@@ -315,24 +469,29 @@ export function layoutRightPanelRail({
   });
   for (const panel of panels) {
     if (expandedPanels.includes(panel)) continue;
-    panel.style.removeProperty('--right-panel-allocated-height');
+    if (panel.style.getPropertyValue('--right-panel-allocated-height'))
+      panel.style.removeProperty('--right-panel-allocated-height');
   }
 
-  stack.style.setProperty(
-    '--right-stack-safe-top',
-    `${layoutTop.toFixed(1)}px`,
-  );
-  stack.style.setProperty(
-    '--right-stack-max-height',
-    `${Math.max(0, safeBottom - layoutTop).toFixed(1)}px`,
-  );
+  const topValue = `${layoutTop.toFixed(1)}px`;
+  const maxHeightValue = `${Math.max(0, safeBottom - layoutTop).toFixed(1)}px`;
+  if (stack.style.getPropertyValue('--right-stack-safe-top') !== topValue)
+    stack.style.setProperty('--right-stack-safe-top', topValue);
+  if (
+    stack.style.getPropertyValue('--right-stack-max-height') !== maxHeightValue
+  )
+    stack.style.setProperty('--right-stack-max-height', maxHeightValue);
   stack.classList.toggle('layout-focus', shouldFocus);
-  stack.dataset.layoutMode = shouldFocus ? 'focus' : 'normal';
-  stack.dataset.safeTop = layoutTop.toFixed(1);
-  stack.dataset.safeBottom = safeBottom.toFixed(1);
-  stack.dataset.availableHeight = availableHeight.toFixed(1);
-  stack.dataset.requiredHeight = naturalHeight.toFixed(1);
-  stack.dataset.expandedCount = String(expandedPanels.length);
+  const metadata = {
+    layoutMode: shouldFocus ? 'focus' : 'normal',
+    safeTop: layoutTop.toFixed(1),
+    safeBottom: safeBottom.toFixed(1),
+    availableHeight: availableHeight.toFixed(1),
+    requiredHeight: naturalHeight.toFixed(1),
+    expandedCount: String(expandedPanels.length),
+  };
+  for (const [key, value] of Object.entries(metadata))
+    if (stack.dataset[key] !== value) stack.dataset[key] = value;
 
   if (displayPanel && expandedPanels.includes(displayPanel)) {
     const scroller = displayPanelScroller(displayPanel);

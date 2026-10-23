@@ -8,12 +8,26 @@ export class LayerPresentation {
     manager,
     {
       weatherClock,
+      investigationTime,
+      aircraftSource,
+      vesselSource,
+      timelineArbiter,
+      workspaceStorage,
+      recordingService,
+      vesselRecordingService,
       requestRender = governorRequestRender,
       invalidateDetection = markDetectionSourcesChanged,
     } = {},
   ) {
     this.manager = manager;
     this.weatherClock = weatherClock;
+    this.investigationTime = investigationTime;
+    this.aircraftSource = aircraftSource;
+    this.vesselSource = vesselSource;
+    this.timelineArbiter = timelineArbiter;
+    this.workspaceStorage = workspaceStorage;
+    this.recordingService = recordingService;
+    this.vesselRecordingService = vesselRecordingService;
     this._panel = null;
     this.pendingVisible = false;
     this._unsubscribe = manager.subscribeActivity((change) => {
@@ -38,6 +52,14 @@ export class LayerPresentation {
     if (!this._panel)
       this._panel = new LayerPanel({
         weatherClock: this.weatherClock,
+        investigationTime: this.investigationTime,
+        aircraftSource: this.aircraftSource,
+        vesselSource: this.vesselSource,
+        timelineArbiter: this.timelineArbiter,
+        workspaceStorage: this.workspaceStorage,
+        recordingService: this.recordingService,
+        vesselRecordingService: this.vesselRecordingService,
+        getDataManager: () => this.manager,
         getLayers: () => this.manager.getAll(),
         isEnabled: (id) => this.manager.isEnabled(id),
         setEnabled: (id, enabled, options) =>

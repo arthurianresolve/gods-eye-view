@@ -1,7 +1,9 @@
 import * as Cesium from 'cesium';
 import { satelliteClassLabel } from '../../data/satelliteClass.js';
+import { createSatelliteEvidence } from './evidence.js';
 import { t } from '../../i18n/index.js';
 import { formatQuantity, unitLabel } from '../../ui/unitLabels.js';
+
 import {
   ISS_NORAD,
   CONTEXT_REFRESH_INTERVAL_MS,
@@ -20,6 +22,10 @@ export function createTracking({ state: layerState, services, parts, source }) {
     selectTrackedSubjectContext,
   } = services.context;
   const { refreshTrackedReadout } = services.readout;
+  const holdContinuousRender =
+    services.render?.holdContinuousRender || (() => {});
+  const releaseContinuousRender =
+    services.render?.releaseContinuousRender || (() => {});
 
   function _normalizeTrackedNorad(candidate) {
     const numeric = Number(candidate);
@@ -79,8 +85,10 @@ export function createTracking({ state: layerState, services, parts, source }) {
     layerState._dockedCompanions = new Set();
     layerState._lastDockedScanMs = Number.NEGATIVE_INFINITY;
     if (!layerState._trackedNorad) {
+      releaseContinuousRender('satellites');
       clearFocusTarget('satellites');
       parts.labels._syncIssOverlay();
+      parts.lifecycle?.methods?.syncRenderDemand?.();
       return;
     }
     const clearedNorad = layerState._trackedNorad;
@@ -106,6 +114,7 @@ export function createTracking({ state: layerState, services, parts, source }) {
     // Invalidate the per-frame tracked-position cache (WS-D2)
     layerState._trackedFrameNumber = -1;
     layerState._trackedFrameGeo = null;
+    layerState._trackedFrameTimeMs = null;
 
     // Remove tracked entity and orbit path (unless ISS — keep its path)
     if (layerState._trackedNorad !== ISS_NORAD) {
@@ -118,9 +127,11 @@ export function createTracking({ state: layerState, services, parts, source }) {
       layerState._trackedEntity = null;
     }
     layerState._trackedNorad = null;
+    releaseContinuousRender('satellites');
     parts.labels._syncIssOverlay();
     clearTrackedSubjectContext('satellites');
     layerState._contextRefreshedAtMs = 0;
+    parts.lifecycle?.methods?.syncRenderDemand?.();
     _emitAwarenessEvent('gev:awareness-subject-cleared', {
       layerId: 'satellites',
       id: clearedNorad,
@@ -150,14 +161,16 @@ export function createTracking({ state: layerState, services, parts, source }) {
       frameNumber !== layerState._trackedFrameNumber ||
       layerState._trackedFrameGeo === null
     ) {
+      const displayTime = layerState._trackedFrameNowForTest
+        ? layerState._trackedFrameNowForTest()
+        : Date.now();
       const pos = parts.orbits.propagatePosition(
         sat.satrec,
-        layerState._trackedFrameNowForTest
-          ? new Date(layerState._trackedFrameNowForTest())
-          : new Date(),
+        new Date(displayTime),
       );
       if (!pos) return layerState._trackedFrameGeo; // propagation hiccup — keep last good sample
       layerState._trackedFrameGeo = pos;
+      layerState._trackedFrameTimeMs = displayTime;
       Cesium.Cartesian3.fromDegrees(
         pos.longitude,
         pos.latitude,
@@ -218,7 +231,11 @@ export function createTracking({ state: layerState, services, parts, source }) {
    * @returns {object|null} Context metadata, or null when the satellite is gone.
    */
 
-  function _contextSubjectMetadata(noradId, position = null) {
+  function _contextSubjectMetadata(
+    noradId,
+    position = null,
+    displayTime = null,
+  ) {
     const sat = layerState._catalog.get(noradId);
     if (!sat) return null;
     const pos = position || _getTrackedFramePosition();
@@ -233,6 +250,13 @@ export function createTracking({ state: layerState, services, parts, source }) {
       layerName: 'Satellites',
       source: 'CelesTrak',
       label: name,
+      evidence: createSatelliteEvidence({
+        noradId,
+        group: sat.group,
+        elementEpoch: sat.elementEpoch,
+        displayTime: displayTime ?? layerState._trackedFrameTimeMs,
+        state: layerState,
+      }),
       latitude: pos.latitude,
       longitude: pos.longitude,
       // Flat text only: the voice payload compacts properties through a string
@@ -408,8 +432,10 @@ export function createTracking({ state: layerState, services, parts, source }) {
     if (!point || !sat) return;
 
     layerState._trackedNorad = noradId;
+    holdContinuousRender('satellites');
     layerState._trackedFrameNumber = -1;
     layerState._trackedFrameGeo = null;
+    layerState._trackedFrameTimeMs = null;
     parts.labels._syncIssOverlay();
 
     // Hide the primitive — the tracked ENTITY renders the dot below. The
@@ -434,7 +460,13 @@ export function createTracking({ state: layerState, services, parts, source }) {
     // Comfortable tracking landing: ~726 km back for LEO (user-validated
     // "slightly zoomed out" framing — no stutter, label reads cleanly), scaled
     // up for MEO/GEO so the camera doesn't land on top of a high-orbit dot.
-    const initialPos = parts.orbits.propagatePosition(sat.satrec, new Date());
+    const initialTimeMs = layerState._trackedFrameNowForTest
+      ? layerState._trackedFrameNowForTest()
+      : Date.now();
+    const initialPos = parts.orbits.propagatePosition(
+      sat.satrec,
+      new Date(initialTimeMs),
+    );
     const viewScale =
       initialPos && initialPos.altitude > HIGH_ORBIT_ALTITUDE_M
         ? TRACK_VIEW_FROM_HIGH_SCALE
@@ -465,10 +497,19 @@ export function createTracking({ state: layerState, services, parts, source }) {
       layerId: 'satellites',
       id: noradId,
       label: name,
+      evidence: createSatelliteEvidence({
+        noradId,
+        group: sat.group,
+        elementEpoch: sat.elementEpoch,
+        displayTime: initialTimeMs,
+        state: layerState,
+      }),
       position: Cesium.Cartesian3.clone(point.position),
       origin,
     });
-    selectTrackedSubjectContext(_contextSubjectMetadata(noradId, initialPos));
+    selectTrackedSubjectContext(
+      _contextSubjectMetadata(noradId, initialPos, initialTimeMs),
+    );
     layerState._contextRefreshedAtMs = Date.now();
 
     layerState._viewer.trackedEntity = layerState._trackedEntity;

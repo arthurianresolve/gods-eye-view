@@ -1,0 +1,100 @@
+{
+  "schema": "gev-production-host-smoke/v1",
+  "status": "passed",
+  "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "checkedAt": "2026-10-19T10:59:11.213Z",
+  "environment": "Ubuntu VM105; private ephemeral loopback port",
+  "artifactArchiveSha256": "30aca862210f2f857ebc5265d618d4cee73c73ea091263f4faf26644bf2e0669",
+  "productionChanged": false,
+  "checks": [
+    {
+      "name": "html-security-and-revalidation",
+      "status": "passed"
+    },
+    {
+      "name": "current-identity-bytes-etag",
+      "status": "passed",
+      "path": "assets/egm96-universal.esm-D6y_VLZc.js",
+      "sha256": "71642919c6cacdaf91b124ccedfe08380ecf97fbfa9d997763ab86ff47deb785",
+      "wireBytes": 2770496
+    },
+    {
+      "name": "current-br-bytes-etag",
+      "status": "passed",
+      "path": "assets/egm96-universal.esm-D6y_VLZc.js",
+      "sha256": "71642919c6cacdaf91b124ccedfe08380ecf97fbfa9d997763ab86ff47deb785",
+      "wireBytes": 1795268
+    },
+    {
+      "name": "current-gzip-bytes-etag",
+      "status": "passed",
+      "path": "assets/egm96-universal.esm-D6y_VLZc.js",
+      "sha256": "71642919c6cacdaf91b124ccedfe08380ecf97fbfa9d997763ab86ff47deb785",
+      "wireBytes": 1849986
+    },
+    {
+      "name": "range",
+      "status": "passed"
+    },
+    {
+      "name": "head",
+      "status": "passed"
+    },
+    {
+      "name": "previous-asset",
+      "status": "passed",
+      "path": "cesium/Cesium.js",
+      "sha256": "14312c40d18a203c98501266f70f0191830c158627e5d88d1ec96bf8f9b4e7f2"
+    },
+    {
+      "name": "previous-asset",
+      "status": "passed",
+      "path": "assets/index-DkoKGLJs.js",
+      "sha256": "91ee9a39eff7719ffd4406f67172886353dad06275abfa8b051de30805249e7c"
+    },
+    {
+      "name": "host-denied",
+      "status": "passed"
+    },
+    {
+      "name": "route-boundary",
+      "status": "passed",
+      "path": "/api/unknown",
+      "method": "GET"
+    },
+    {
+      "name": "route-boundary",
+      "status": "passed",
+      "path": "/api/setup",
+      "method": "GET"
+    },
+    {
+      "name": "route-boundary",
+      "status": "passed",
+      "path": "/api/setup",
+      "method": "POST"
+    },
+    {
+      "name": "route-boundary",
+      "status": "passed",
+      "path": "/.env",
+      "method": "GET"
+    },
+    {
+      "name": "route-boundary",
+      "status": "passed",
+      "path": "/package.json",
+      "method": "GET"
+    },
+    {
+      "name": "route-boundary",
+      "status": "passed",
+      "path": "/missing.js",
+      "method": "GET"
+    },
+    {
+      "name": "idempotent-shutdown",
+      "status": "passed"
+    }
+  ]
+}

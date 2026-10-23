@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createIngestion } from './ingestion.js';
 
-function setup(source) {
+function setup(source, callbacks = {}) {
   const feed = {
     _source: source,
     _activeUpdateControllers: new Set(),
@@ -23,18 +23,23 @@ function setup(source) {
     },
     setSourceLabel: (label) => labels.push(label),
     applyPendingTrackingRestore: () => restores.push(true),
+    ...callbacks,
   });
   return { feed, accepted, labels, restores, update: methods.update };
 }
 
 test('civil acquisition rejects late completion after cancellation without publishing records', async () => {
   let release;
-  const probe = setup({
-    getSnapshot: () =>
-      new Promise((resolve) => {
-        release = resolve;
-      }),
-  });
+  let renderDemandSyncs = 0;
+  const probe = setup(
+    {
+      getSnapshot: () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    },
+    { syncRenderDemand: () => renderDemandSyncs++ },
+  );
   const request = probe.update(null);
   assert.equal(probe.feed._activeUpdateControllers.size, 1);
   for (const controller of probe.feed._activeUpdateControllers)
@@ -44,6 +49,59 @@ test('civil acquisition rejects late completion after cancellation without publi
   assert.equal(probe.accepted.length, 0);
   assert.equal(probe.restores.length, 0);
   assert.equal(probe.feed._activeUpdateControllers.size, 0);
+  assert.equal(renderDemandSyncs, 1, 'late cancellation reconciles its owner');
+});
+
+test('civil ingestion reconciles render ownership after snapshot and renderer failures', async () => {
+  let activeVisuals = false;
+  const observed = [];
+  const probe = setup(
+    {
+      async getSnapshot() {
+        return {
+          records: [],
+          source: 'Fixture',
+          observedAtMs: 1234,
+          freshness: 'fresh',
+        };
+      },
+    },
+    {
+      applySnapshot() {
+        activeVisuals = true;
+        return { count: 1, ids: new Set(['abc123']) };
+      },
+      syncRenderDemand() {
+        observed.push(activeVisuals);
+      },
+    },
+  );
+  await probe.update(null);
+  assert.deepEqual(observed, [true, true]);
+
+  const failed = setup(
+    {
+      async getSnapshot() {
+        return {
+          records: [],
+          source: 'Fixture',
+          observedAtMs: 1235,
+          freshness: 'fresh',
+        };
+      },
+    },
+    {
+      applySnapshot() {
+        activeVisuals = false;
+        throw new Error('fixture renderer failure');
+      },
+      syncRenderDemand() {
+        observed.push(activeVisuals);
+      },
+    },
+  );
+  await failed.update(null);
+  assert.deepEqual(observed, [true, true, false]);
 });
 
 test('civil acquisition publishes source time and uses a replaced source on the next request', async () => {
@@ -82,4 +140,88 @@ test('civil acquisition publishes source time and uses a replaced source on the 
   assert.equal(probe.feed._lastError, 'Source snapshot time unavailable');
   assert.deepEqual(probe.labels, ['First', 'Second']);
   assert.equal(probe.restores.length, 2);
+});
+
+test('accepted civil snapshots reach the optional recording owner after rendering', async () => {
+  const order = [];
+  const snapshot = {
+    records: [],
+    source: 'approved-fixture',
+    observedAtMs: 1234,
+    freshness: 'current',
+  };
+  const probe = setup(
+    { getSnapshot: async () => snapshot },
+    {
+      onAcceptedSnapshot: async (value) => {
+        assert.equal(value, snapshot);
+        order.push('record');
+      },
+    },
+  );
+  await probe.update(null);
+  assert.deepEqual(order, ['record']);
+  assert.equal(probe.accepted[0], snapshot);
+});
+
+test('civil render ownership reconciles before slow snapshot recording completes', async () => {
+  let releaseRecording;
+  let notifyApplied;
+  const order = [];
+  const applied = new Promise((resolve) => {
+    notifyApplied = resolve;
+  });
+  const probe = setup(
+    {
+      async getSnapshot() {
+        return {
+          records: [],
+          source: 'Fixture',
+          observedAtMs: 1234,
+          freshness: 'fresh',
+        };
+      },
+    },
+    {
+      applySnapshot() {
+        order.push('membership');
+        notifyApplied();
+        return { count: 1, ids: new Set(['abc123']) };
+      },
+      syncRenderDemand() {
+        order.push('render-owner');
+      },
+      onAcceptedSnapshot() {
+        order.push('recording-started');
+        return new Promise((resolve) => {
+          releaseRecording = resolve;
+        });
+      },
+    },
+  );
+
+  let settled = false;
+  const update = probe.update(null).finally(() => {
+    settled = true;
+  });
+  await applied;
+  await Promise.resolve();
+  assert.deepEqual(order.slice(0, 3), [
+    'membership',
+    'render-owner',
+    'recording-started',
+  ]);
+  assert.equal(
+    settled,
+    false,
+    'recording remains pending after ownership is acquired',
+  );
+
+  releaseRecording();
+  await update;
+  assert.equal(
+    order.at(-1),
+    'render-owner',
+    'final reconciliation observes follow-up work',
+  );
 });

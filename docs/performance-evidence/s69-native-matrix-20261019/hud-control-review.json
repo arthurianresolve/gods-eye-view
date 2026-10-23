@@ -1,0 +1,75 @@
+{
+  "schema": "gev-hud-write-control-review/v1",
+  "reviewedAt": "2026-10-18T22:56:04.793Z",
+  "diagnosticOnly": true,
+  "protocolSha256": "1d83897aab8111c425392111f0cfc4b120176f2ca5e091127b82ec13b3e4fc03",
+  "harnessCommit": "fb8a6c33285e3a83f92b8d612d55fda21a13c42b",
+  "conclusion": "The paired unchanged candidate also returned near the prior baseline range. The HUD equality guard is not established as the cause; the temporary guard-removal control is not retained. Original dam and cable failures remain unresolved.",
+  "captures": [
+    {
+      "label": "HUD-unconditional-write-control",
+      "appCommit": "de3c3a654790913dbf97c5b3288fe9a5876a23fe",
+      "reportSha256": "40d74c7ee2d53ae3691b0765390bf15ec54a3a95025cb8b2ce26a22077b46b58",
+      "traceSha256": "6441616e2559d9334c3feacdbca4fb1ee15dfc70bf22de265ea0a1c7930b4a99",
+      "observedFrames": 234,
+      "renderedIntervalMs": {
+        "p50": 259.5,
+        "p95": 295.30000001192093,
+        "p99": 320.19999998807907,
+        "max": 511.7000000178814,
+        "samples": 233
+      },
+      "viewerRenderTotalMs": {
+        "p50": 12.900000005960464,
+        "p95": 18.19999998807907,
+        "p99": 19.400000005960464,
+        "max": 20.099999994039536,
+        "samples": 234
+      },
+      "previousRenderReturnToCurrentCallbackMs": {
+        "p50": 247.30000001192093,
+        "p95": 280.7000000178814,
+        "p99": 301.80000001192093,
+        "max": 502.2999999821186,
+        "samples": 233
+      },
+      "timestampIssues": [],
+      "intervalMismatches": []
+    },
+    {
+      "label": "unchanged19065997",
+      "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+      "reportSha256": "8edf772600f56e059d658dfe55b510151541f09275094e2376e4c6e5fb78acb4",
+      "traceSha256": "3414f227cd6d2e0f82a85629487b7272092e31c99c6471ff7bb37aa987456653",
+      "observedFrames": 246,
+      "renderedIntervalMs": {
+        "p50": 244.7000000178814,
+        "p95": 299,
+        "p99": 464.5,
+        "max": 553.1999999880791,
+        "samples": 245
+      },
+      "viewerRenderTotalMs": {
+        "p50": 10.399999976158142,
+        "p95": 16,
+        "p99": 19.099999994039536,
+        "max": 19.80000001192093,
+        "samples": 246
+      },
+      "previousRenderReturnToCurrentCallbackMs": {
+        "p50": 234.5,
+        "p95": 278.5,
+        "p99": 453.80000001192093,
+        "max": 533.4000000059605,
+        "samples": 245
+      },
+      "timestampIssues": [],
+      "intervalMismatches": []
+    }
+  ],
+  "limitations": [
+    "One diagnostic motion run per revision, with bounded frame instrumentation.",
+    "No exclusive GPU time or causal attribution from callback wall times.",
+    "No replacement for five-run comparison evidence."
+  ]
+}

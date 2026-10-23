@@ -1,0 +1,75 @@
+{
+  "schema": "gev-workspace-browser-review/v1",
+  "candidateCommit": "886b7d2927b6eb3a546c0dfaf629684973d9e501",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38091408792",
+  "jobUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38091408792/job/114328432079",
+  "scope": "Hosted fixture-backed workspace and short mixed-use browser acceptance",
+  "result": "passed",
+  "sourceCleanAndUnchanged": true,
+  "environment": {
+    "platform": "linux",
+    "architecture": "x64",
+    "osRelease": "6.17.0-1022-azure",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logicalCpus": 4,
+    "memoryBytes": 16766414848,
+    "hosted": true,
+    "runnerImage": "ubuntu24",
+    "runnerImageVersion": "20261004.327.1"
+  },
+  "browserVersion": "Chrome/152.0.7977.75",
+  "renderer": {
+    "vendor": "Google Inc. (Google)",
+    "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)"
+  },
+  "mixedUse": {
+    "report": "mixed-use-smoke-886b7d2.json",
+    "sha256": "054a8210603eabbde67cc1bdb5ae054983cbc8875b17c609afc017a9e4522133",
+    "durationMs": 21777,
+    "warmupIterations": 2,
+    "iterations": 1,
+    "sourceToggles": 4,
+    "imports": 1,
+    "replaySeeks": 1,
+    "workspaceReloads": 2,
+    "archiveFailures": 1,
+    "cameraRecoveries": 1,
+    "stability": {
+      "status": "pending",
+      "failures": [],
+      "pending": [
+        "Requires a 60-minute run.",
+        "Final 30-minute post-GC heap checkpoints are unavailable.",
+        "Final 30-minute browser listener checkpoints are unavailable."
+      ],
+      "heapGrowthRatio": null
+    }
+  },
+  "workspaceJourney": {
+    "script": "scripts/qa-workspace-library.mjs",
+    "checks": [
+      "workspace Save as creates a durable revision",
+      "duplicate and open restore a saved workspace",
+      "stale two-tab save is reported without overwriting",
+      "reload retains and reopens the workspace",
+      "command palette search and Escape dismissal",
+      "GeoJSON preview, explicit apply, save and reload rendering",
+      "offline demo is clearly synthetic and saved as its own workspace",
+      "a separate same-origin browser page commits IndexedDB revision and stale UI Save surfaces the conflict"
+    ],
+    "jobLogSha256": "6bb52cbbced90deec9e2ff06e125a1ec9cd3af86db116da9773328a299634114",
+    "assertionsReviewed": [
+      "Second page uses independent application client and shared same-origin IndexedDB",
+      "Second-page UI Save advances revision while preserving all chunks",
+      "Stale first-page UI Save reports newer revision",
+      "Stored revision, document and chunks remain exactly equal to second-page commit",
+      "Reload reopens imported geometry with unchanged stored and rendered counts"
+    ]
+  },
+  "limitations": [
+    "SwiftShader functional evidence, not hardware GPU evidence",
+    "Short mixed-use smoke, not the 60-minute retention gate",
+    "No change to historical failure conclusions"
+  ]
+}

@@ -13,6 +13,23 @@ function finiteCount(value) {
   return Number.isFinite(number) && number >= 0 ? number : 0;
 }
 
+/**
+ * A few legacy layer adapters expose a missing/rejected credential through
+ * both `keyRequired` and their human-readable `error` field. Keep that
+ * guidance on the layer row without treating it as a failed feed. A genuine
+ * error is still retained when a layer reports keyRequired alongside an
+ * unrelated failure.
+ */
+function isCredentialConfigurationError(value) {
+  const text = String(value || '')
+    .trim()
+    .toLowerCase();
+  return (
+    !text ||
+    /\bkey\b|no[_ -]?key|\btoken\b|\bcredential(?:s)?\b|\bsecret\b/.test(text)
+  );
+}
+
 /** Normalize one manager layer into a small loading-feedback record. */
 export function normalizeLayerLoading(layer = {}) {
   const stats = layer.stats || {};
@@ -33,18 +50,28 @@ export function normalizeLayerLoading(layer = {}) {
   // normal operation, never a batch failure — mirrors layerFeedState's carve-out
   // so a prompt stored alongside the status cannot turn the chip red.
   const guidance = GUIDANCE_STATUSES.includes(status);
-  const error = stoppingInstallations
+  const rawErrors = stoppingInstallations
+    ? []
+    : [
+        !guidance && stats.error,
+        stats.lastError,
+        stats.managerRefreshError,
+      ].filter(Boolean);
+  const rawError = rawErrors[0] || null;
+  const keyRequired = stats.keyRequired === true || stats.missingKey === true;
+  const configurationOnly =
+    keyRequired && rawErrors.every(isCredentialConfigurationError);
+  const error = configurationOnly
     ? null
-    : (!guidance && stats.error) ||
-      stats.lastError ||
-      stats.managerRefreshError ||
-      null;
+    : rawErrors.find(
+        (candidate) => !isCredentialConfigurationError(candidate),
+      ) || rawError;
   const unavailable =
+    !configurationOnly &&
     !stoppingInstallations &&
     (stats.unavailable === true ||
       stats.available === false ||
       ['unavailable', 'offline', 'down', 'error'].includes(status));
-  const keyRequired = stats.keyRequired === true || stats.missingKey === true;
   const degraded = stats.degraded === true || Boolean(error);
   const accepted = Boolean(stats.lastUpdate) || count > 0;
   return {
@@ -88,7 +115,11 @@ function terminalFromParticipantStats(summary, participantIds) {
   return summary.records.some(
     (record) =>
       participants.has(record.id) &&
-      (record.error || record.unavailable || record.keyRequired),
+      // A missing optional provider key is an honest configuration state, not
+      // a failed request. The layer row already exposes KEY REQUIRED and the
+      // provider-settings affordance; promoting it to the shared terminal
+      // failure banner incorrectly marks a mixed mission as LOAD FAILED.
+      (record.error || record.unavailable),
   )
     ? 'error'
     : null;
@@ -384,7 +415,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
       (record) =>
         record.id !== 'alpr-cameras' &&
         (state?.activeIds || []).includes(record.id) &&
-        (record.error || record.unavailable || record.keyRequired),
+        (record.error || record.unavailable),
     ) || (state?.failedEventIds || []).some((id) => id !== 'alpr-cameras');
   if (camera && !summary.active.length && !otherCameraFailure) {
     const seconds = Math.max(
@@ -409,7 +440,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
       (record) =>
         record.id !== 'military-installations' &&
         (state?.activeIds || []).includes(record.id) &&
-        (record.error || record.unavailable || record.keyRequired),
+        (record.error || record.unavailable),
     ) ||
     (state?.failedEventIds || []).some((id) => id !== 'military-installations');
   // Keep the actual retry visible between attempts, without hiding another

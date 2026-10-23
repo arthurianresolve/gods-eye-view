@@ -1,0 +1,78 @@
+{
+  "schema": "gev-raster-owner-disposition/v1",
+  "createdAt": "2026-10-21T09:49:53.462Z",
+  "status": "diagnostic-complete-latency-unresolved",
+  "acceptanceEligible": false,
+  "runtimeChangesAdopted": false,
+  "productionChanged": false,
+  "applicationCommit": "acd65cc680c2728e41b0796e2274f6afb25018aa",
+  "qaCommit": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "raw": {
+    "planSha256": "15a8892e7ff78a9cad644c2f81d58f0372297c34debf7f69b7f6e7ee0e7b9433",
+    "traceBytes": 43147480,
+    "traceSha256": "3c6adb8a4a541fa0d222217f20ce03487a62ba1ceea5fd57099214c89cc79277",
+    "resultSha256": "cc4069c5008c84b69e74799e1ce332d339e6882a87da4688255027722d30cc87",
+    "vmArchive": "late-raster-owner-acd-20261021",
+    "fileCount": 31,
+    "totalBytes": 46435210,
+    "transferReceiptSha256": "cfaa94f48d8cbd642eeea8d3a5828152e0c524cf3e834e403fc23f0fee3b7ec2"
+  },
+  "analysis": {
+    "vmArchive": "late-raster-owner-acd-20261021-analysis",
+    "fileCount": 8,
+    "totalBytes": 586359,
+    "transferReceiptSha256": "fd34bd8c0ecbb2d9979591c53fbed93105001d0561c32e85731d620a14f78ded",
+    "findingsSha256": "d3b74ef536b1ac782dfb70ddc32cf0fe27f7dbf2e76eee4af5cc512b6d2e3cc7",
+    "decoderNonbridgeProofSha256": "8e259ff4e30293325bc22c6c7705e4d27b17f9559da685209368cd5e343d125e"
+  },
+  "nativeDiagnosticMs": [
+    256,
+    56,
+    128,
+    64
+  ],
+  "decision": {
+    "instrumentation": "Stop this diagnostic route; no further collector expansion or acquisition to chase the missing service owner.",
+    "runtimeClaim": "No runtime optimization or accepted performance gain is established.",
+    "nextControlledContrast": "Parent authorizes one six-action uninstrumented control versus exact previous row-isolation CSS on the same acd4339 baseline, fresh browser per role. Current immediate ON scheduling differs from the prior ec0 deferred ON experiment, so that prior rejection is not a matched causal test of this schedule. Stable list ownership supports the hypothesis, not a claim that list owns31ms service. If warm benefit is absent, reject again and stop.",
+    "quality": "No backdrop/antialiasing/resolution/density changes. Old optical evidence is scoped to its original mounted case; current right-rail/layout differences prevent blanket visual equivalence."
+  },
+  "limitations": [
+    "Diagnostic tracing and LayerTree change timings; no performance credit.",
+    "Reported layer owner is the first paint-chunk client owner, not exclusive ownership of shared layer content.",
+    "Canonical IDs are same captured process/page; attribution requires unchanged backend in every recorded epoch.",
+    "Host-receipt timestamps are not trace times; node attributes/reasons are resolved after capture.",
+    "Worker task sums can overlap, and service spans nest; neither is hardware GPU duration.",
+    "GPU-service-to-layer attribution requires an actual emitted flow/command bridge; temporal overlap is insufficient."
+  ],
+  "storage": {
+    "activeDrive": "E:",
+    "status": "bounded-integrity-checks-passed",
+    "testFiles": 80,
+    "testBytes": 2416181248,
+    "fullCapacityCertified": false,
+    "powerCyclePersistenceTested": false,
+    "independentVmMastersRetained": true,
+    "archiveUncachedReadbackPassed": true,
+    "retiredDrive": "D:",
+    "deletedScope": "D:/Codex/gods-eye-view",
+    "deletedFiles": 1489,
+    "deletedLogicalBytes": 1301612550,
+    "unrelatedDataDeleted": false,
+    "cDriveFilesDeleted": 0,
+    "assessmentSha256": "eedfe20ee3a8384c1d360a76cca5652f120a536e176dddab535f6b2df26a21e4",
+    "cleanupReceiptSha256": "9378dae34f729763ad3c828a292559c13008903e513e3c693968641e8d17b9d9"
+  },
+  "automaticValidation": {
+    "focusedDiagnosticTests": 85,
+    "passed": 85,
+    "realEPublicationSmokePassed": true
+  },
+  "ci": {
+    "commit": "be9e9c71936df33011e7a88832b7569c06f2b40e",
+    "selectedJobsPassed": 7,
+    "optionalJobsSkipped": 12,
+    "ci": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39574715963",
+    "release": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39574715956"
+  }
+}

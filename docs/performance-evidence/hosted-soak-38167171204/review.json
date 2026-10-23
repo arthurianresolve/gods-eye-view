@@ -1,0 +1,159 @@
+{
+  "schema": "gev-independent-retention-review/v1",
+  "sourceSha256": "592f840d6dfeb8c649b692363a4df3b97018b260b1b9c0ccb30172780f51489d",
+  "candidateCommit": "7cea7aac9891d165a3c59bc09281bba735b71224",
+  "reviewerCommit": "f93f2c8c5f973460f3d76ef9bf49b567aec0e908",
+  "checkpointCount": 13,
+  "durationMs": 3608613,
+  "resourceGaugeCount": 40,
+  "resourceGaugesUnchangedAtEveryCheckpoint": true,
+  "pendingWorkerTasksAtEveryCheckpoint": 0,
+  "browserListenerRange": [
+    629,
+    629
+  ],
+  "initialFinalListeners": [
+    629,
+    629
+  ],
+  "initialFinalHeapBytes": [
+    74438820,
+    82340884
+  ],
+  "finalWindowStartMs": 1504442,
+  "finalWindowMaxHeapGrowthRatio": 0.019370152379964756,
+  "finalWindowEndHeapGrowthRatio": 0.019370152379964756,
+  "browserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 3699550.09025,
+      "closeSettledHostMs": 3700334.622917,
+      "closeElapsedMs": 784.5326670003124,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 723.1936670001596
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "probeBrowserClose": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 39790.037125,
+      "closeSettledHostMs": 40705.692875,
+      "closeElapsedMs": 915.6557499999981,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 872.7297499999986
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "manifestResult": {
+    "comparisons": [],
+    "retention": [
+      {
+        "environmentId": "github-macos-paravirtual",
+        "candidateCommit": "7cea7aac9891d165a3c59bc09281bba735b71224",
+        "artifactFormat": "hosted-envelope",
+        "renderer": {
+          "kind": "apple-paravirtual-metal",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+          "accelerationVerified": true,
+          "physicalDesktopCoverage": false,
+          "hosted": true,
+          "hostIdentityComplete": true
+        },
+        "primaryEligible": false,
+        "stability": {
+          "status": "passed",
+          "failures": [],
+          "pending": [],
+          "heapGrowthRatio": 0.01937015237996482
+        },
+        "errors": [],
+        "pending": [],
+        "status": "passed",
+        "artifact": {
+          "path": "report.json",
+          "sha256": "592f840d6dfeb8c649b692363a4df3b97018b260b1b9c0ccb30172780f51489d"
+        }
+      }
+    ],
+    "comparison": {
+      "status": "pending",
+      "failures": [],
+      "pending": [
+        "No verified physical Windows comparison environment is recorded.",
+        "Required comparison workloads missing: operating-view, dense-investigation, selected-aircraft-tracking, infrastructure, weather-effects, lifecycle-stress, map-streaming.",
+        "No raw paired comparison reports were supplied."
+      ],
+      "missingWorkloads": [
+        "operating-view",
+        "dense-investigation",
+        "selected-aircraft-tracking",
+        "infrastructure",
+        "weather-effects",
+        "lifecycle-stress",
+        "map-streaming"
+      ],
+      "workloadIds": [],
+      "environments": []
+    },
+    "retentionOutcome": {
+      "status": "pending",
+      "failures": [],
+      "pending": [
+        "No verified physical Windows native-GPU retention run was supplied."
+      ],
+      "environments": [
+        {
+          "environmentId": "github-macos-paravirtual",
+          "status": "supplemental",
+          "primaryEligible": false,
+          "renderer": {
+            "kind": "apple-paravirtual-metal",
+            "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+            "accelerationVerified": true,
+            "physicalDesktopCoverage": false,
+            "hosted": true,
+            "hostIdentityComplete": true
+          },
+          "artifact": {
+            "path": "report.json",
+            "sha256": "592f840d6dfeb8c649b692363a4df3b97018b260b1b9c0ccb30172780f51489d"
+          },
+          "stability": {
+            "status": "passed",
+            "failures": [],
+            "pending": [],
+            "heapGrowthRatio": 0.01937015237996482
+          },
+          "errors": [],
+          "pending": [],
+          "reason": "Supplemental retention evidence; physical Windows native-GPU evidence is required for acceptance."
+        }
+      ]
+    }
+  }
+}

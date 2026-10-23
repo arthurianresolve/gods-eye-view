@@ -94,6 +94,13 @@
 
 import fs from 'node:fs';
 import puppeteer from 'puppeteer';
+import { closeRecoveryBrowser, stopOwnedRecoveryProcessTree } from './performance/profileRecoveryPageOwnership.mjs';
+import {
+  buildTrackedFloorCoverage,
+  trackedFloorCoverageSample,
+  trackedFloorCoverageSamplePasses,
+} from './performance/trackedFloorCoverage.mjs';
+
 import { arrivalRotationPassed } from '../src/tooling/trackArrivalObservation.mjs';
 import { classifyAircraft, CLASS_SCALE_3D, CLASS_MODEL_REAL } from '../src/data/aircraftClass.js';
 import { ensureGeoidReady, geoidHeight } from '../src/data/geoid.js';
@@ -123,7 +130,7 @@ const CHROME_EXECUTABLE_CANDIDATES = [
   // tile-gated drain budget under SwiftShader on 2026-07-30 — six
   // false-negative qa-cctv-v2 runs against a healthy build). A deterministic
   // pinned browser beats the newest one for regression harnesses.
-  await puppeteer.executablePath().catch(() => null),
+  await Promise.resolve().then(() => puppeteer.executablePath()).catch(() => null),
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
   '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary',
   '/Applications/Chromium.app/Contents/MacOS/Chromium',
@@ -262,6 +269,7 @@ async function main() {
   const sawLog = { detection: false, readout: false };
 
   try {
+    console.log(`  Browser version: ${await browser.version()}`);
     const page = await browser.newPage();
   await page.evaluateOnNewDocument((base) => { window.__gevQaSourceBase = base; }, SOURCE_BASE);
     await page.setViewport({ width: 1280, height: 800 });
@@ -2895,7 +2903,8 @@ async function main() {
       window.__dfObserveTrackedExit = async ({ scene, trackedEntity, trackedModel,
         getTrackedModel, getTrackedEntity, getTrackedId, getCameraHeight,
         exitHeight, read, now = Date.now, setTimer = setTimeout, clearTimer = clearTimeout }) => {
-        const deadline = now() + 5000;
+        const timeoutMs = window.__dfBudgets?.trackedExitObservationMs ?? 5000;
+        const deadline = now() + timeoutMs;
         let removePre, removePost, removeError, timer;
         let preFrame = null;
         try {
@@ -2904,7 +2913,7 @@ async function main() {
             const finish = (result) => { if (!finished) { finished = true; resolve(result); } };
             const valid = () => {
               try {
-                if (now() > deadline) return 'tracked exit observation exceeded its 5000 ms deadline';
+                if (now() > deadline) return `tracked exit observation exceeded its ${timeoutMs} ms deadline`;
                 if (getTrackedEntity() !== trackedEntity || getTrackedId() !== 'aaa097') return 'tracked exit fixture identity changed';
                 if (!trackedModel || getTrackedModel() !== trackedModel) return 'tracked exit model identity changed';
                 if (!(getCameraHeight() > exitHeight)) return 'tracked exit camera left the exit regime';
@@ -2931,7 +2940,7 @@ async function main() {
               } catch { finish({ error: 'tracked exit snapshot failed' }); }
             });
             removeError = scene.renderError.addEventListener(() => finish({ error: 'tracked exit render failed' }));
-            timer = setTimer(() => finish({ error: 'tracked exit update did not complete within 5000 ms' }), 5000);
+            timer = setTimer(() => finish({ error: `tracked exit update did not complete within ${timeoutMs} ms` }), timeoutMs);
             scene.requestRender();
           });
         } finally {
@@ -3029,14 +3038,27 @@ async function main() {
       // correction is a minimum-range clamp that guards zooming IN, not out),
       // so a programmatic zoom persists instead of being fought every frame.
       window.__dfCamH = () => v.camera.positionCartographic.height;
+      // The tracked-floor seed horizon is derived from these same operation
+      // limits so an instrumentation edit cannot silently outlive coverage.
+      window.__dfBudgets = {
+        fleetClampMs: 5000,
+        trackedWarmupSettleMs: 1500,
+        coldGroundSettleMs: 2500,
+        modelWaitMs: 20000,
+        modelWaitPollMs: 500,
+        postModelSettleMs: 600,
+        zoomOutSteps: 80,
+        zoomOutStepMs: 100,
+        trackedExitObservationMs: 5000,
+      };
       // Both walkers bail on a STALLED step as well as on reaching the target:
       // the controller enforces a minimum range when following, so a zoom-in
       // that has bottomed out would otherwise spin the full iteration budget.
       window.__dfZoomAbove = async (targetH) => {
         let last = window.__dfCamH();
-        for (let i = 0; i < 80 && window.__dfCamH() <= targetH; i++) {
+        for (let i = 0; i < window.__dfBudgets.zoomOutSteps && window.__dfCamH() <= targetH; i++) {
           v.camera.zoomOut(Math.max(15000, (targetH - window.__dfCamH()) * 0.9));
-          await window.__dfSettle(100);
+          await window.__dfSettle(window.__dfBudgets.zoomOutStepMs);
           const now = window.__dfCamH();
           if (i > 0 && Math.abs(now - last) < 1) break;
           last = now;
@@ -3060,7 +3082,7 @@ async function main() {
       window.__dfAwaitTrackedModel = async (icao, ms) => {
         const deadline = Date.now() + ms;
         while (Date.now() < deadline && window.__dfCountModels(icao).rendering === 0) {
-          await window.__dfSettle(500);
+          await window.__dfSettle(window.__dfBudgets.modelWaitPollMs);
         }
         return window.__dfCountModels(icao);
       };
@@ -3353,26 +3375,68 @@ async function main() {
       // The fleet pass skips the tracked icao and the tracked entity draws from
       // _trackedDisplayPosition, so selecting a correctly floored grounded
       // billboard used to swap it for an unfloored cyan target under the mesh.
-      const dfTracked = await evalPage(async () => {
+      const coverageHelperSource = {
+        build: buildTrackedFloorCoverage.toString(),
+        sample: trackedFloorCoverageSample.toString(),
+      };
+      const dfTracked = await evalPage(async (helperSource) => {
         const v = window.__godsEyeView.viewer;
         const Cesium = await import('/node_modules/cesium/Build/Cesium/index.js');
         const fl = window.__godsEyeView.dataManager.layers.get('flights').module;
         const gf = window.__dfGf;
         const cell = (x) => Number(x.toFixed(3));
+        // These pure bounded helpers are serialized from the same module that
+        // the Node contract tests execute; the page still supplies live pose,
+        // floor and clock observations.
+        const buildCoverage = new Function(`return (${helperSource.build})`)();
+        const sampleCoverage = new Function(`return (${helperSource.sample})`)();
         const bbBefore = window.__dfFindBB('aaa097');
         if (!bbBefore) return { error: 'aaa097 billboard missing' };
         const d0 = window.__dfCarto(bbBefore.position);
-        // Plant above both the current billboard and this group's 400 m
-        // identity-probe floor. A poll can refresh the raw render altitude
-        // after d0 was read; a lower seed makes the negative model-ownership
-        // assertion impossible even when the clamp correctly stands aside.
+        // The model may take the full 20 s wait to materialize while this
+        // synthetic contact keeps moving. Seed the observed display-to-fix
+        // corridor plus only the forward path allowed by this scenario's
+        // explicit wait/zoom budgets; a fixed 3x3 patch expires after ~15 s at
+        // 12 m/s and makes the later regime assertion depend on headless load.
+        const feed = window.__SYNTH.flights.find((item) => item.icao === 'aaa097');
+        if (!feed || ![feed.lat, feed.lon, feed.vel, feed.track].every(Number.isFinite)
+          || feed.vel <= 0) return { error: 'tracked floor route feed is unavailable' };
+        const routeBudget = {
+          fleetClampMs: window.__dfBudgets.fleetClampMs,
+          preModelSettlesMs: window.__dfBudgets.trackedWarmupSettleMs
+            + window.__dfBudgets.coldGroundSettleMs,
+          modelWaitMs: window.__dfBudgets.modelWaitMs,
+          modelWaitPollOvershootMs: window.__dfBudgets.modelWaitPollMs,
+          postModelSettleMs: window.__dfBudgets.postModelSettleMs,
+          zoomOutSteps: window.__dfBudgets.zoomOutSteps,
+          zoomOutStepMs: window.__dfBudgets.zoomOutStepMs,
+          trackedExitObservationMs: window.__dfBudgets.trackedExitObservationMs,
+        };
+        const coverageHorizonMs = routeBudget.fleetClampMs
+          + routeBudget.preModelSettlesMs + routeBudget.modelWaitMs
+          + routeBudget.modelWaitPollOvershootMs + routeBudget.postModelSettleMs
+          + routeBudget.zoomOutSteps * routeBudget.zoomOutStepMs
+          + routeBudget.trackedExitObservationMs;
+        const start = { lat: d0.lat, lon: d0.lon };
+        const fix = { lat: feed.lat, lon: feed.lon };
+        const coveragePlan = buildCoverage({ start, feedFix: fix, trackDeg: feed.track,
+          velocityMps: feed.vel, horizonMs: coverageHorizonMs, maxCells: 64, maxSamples: 1024 });
+        if (coveragePlan.error)
+          return { error: `${coveragePlan.error} (cells=${coveragePlan.cellCount}, points=${coveragePlan.sampledPoints})` };
         const seeded = Math.max(d0.h, 400) + 40;
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            gf.reportMeshFloorCell(cell(d0.lat) + dy * 0.001, cell(d0.lon) + dx * 0.001, seeded);
-          }
-        }
-        const fleetClampDeadline = Date.now() + 5000;
+        // Do not clear the real fixture cache until the complete bounded plan
+        // has passed its limits; rejected routes leave prior state untouched.
+        gf._clearMeshFloorCellsForTest();
+        for (const c of coveragePlan.cells)
+          gf.reportMeshFloorCell(c.lat, c.lon, seeded);
+        const coverageStartedAt = Date.now();
+        const coverageReport = {
+          ...coveragePlan,
+          budget: routeBudget,
+          seededFloorM: seeded,
+          seededCellCount: coveragePlan.cells.length,
+        };
+        const fleetClampDeadline = Date.now() + window.__dfBudgets.fleetClampMs;
         let bbLifted = null;
         let fleetH = null;
         do {
@@ -3382,7 +3446,7 @@ async function main() {
         } while (Date.now() < fleetClampDeadline
           && (!Number.isFinite(fleetH) || fleetH < seeded + 1));
         if (!fl.trackById('aaa097')) return { error: 'trackById(aaa097) failed' };
-        await window.__dfSettle(1500);
+        await window.__dfSettle(window.__dfBudgets.trackedWarmupSettleMs);
         // Read the tracked entity's rendered height plus the floor under it and
         // the sensor value the data APIs report, at whatever regime the camera
         // is currently in.
@@ -3395,6 +3459,13 @@ async function main() {
           return {
             h: c.h,
             floor: gf.cachedGroundFloor(c.lat, c.lon),
+            routeCoverage: sampleCoverage({
+              position: { lat: c.lat, lon: c.lon, heightM: c.h },
+              startedAtMs: coverageStartedAt,
+              nowMs: Date.now(),
+              route: coveragePlan,
+              meshFloor: gf.cachedMeshFloor(c.lat, c.lon),
+            }),
             reportedAltM: info?.altitudeM,
             subjectH: subject?.position ? window.__dfCarto(subject.position).h : null,
             camH: window.__dfCamH(),
@@ -3413,7 +3484,7 @@ async function main() {
         // altitude (baro 0 → ~-27 m at Austin) renders ~240 m INSIDE the mesh.
         // The only honest answer is not to draw it — which also means the
         // billboard is still the visual and must still be FLOORED.
-        await window.__dfSettle(2500);
+        await window.__dfSettle(window.__dfBudgets.coldGroundSettleMs);
         const coldModels = window.__dfCountModels('aaa097');
         // `shown` as well as `rendering`: a model parked at scale 0 with
         // show=true would satisfy "nothing renders" while still being a shown
@@ -3439,7 +3510,7 @@ async function main() {
         window.__dfSkinM = seeded;
         let handOffSkin = false;
         try {
-        const modelsIn = await window.__dfAwaitTrackedModel('aaa097', 20000);
+        const modelsIn = await window.__dfAwaitTrackedModel('aaa097', window.__dfBudgets.modelWaitMs);
         const warmModelH = window.__dfModelHeight('aaa097');
         // Scene-wide count, used only to tell two very different states apart:
         // NO model rendered at all (this browser has no usable GLB backend — a
@@ -3447,7 +3518,7 @@ async function main() {
         // aaa097's pick id (a real defect, and the case the old scene-wide
         // probe reported as a pass).
         const anyModelsIn = window.__dfCountModels();
-        await window.__dfSettle(600);
+        await window.__dfSettle(window.__dfBudgets.postModelSettleMs);
         const zoomedIn = readTracked();
         if (!zoomedIn) return { error: 'tracked entity has no position (zoomed in)' };
 
@@ -3481,9 +3552,27 @@ async function main() {
         });
         if (zoomedOut.error) return { error: zoomedOut.error };
 
+        // Negative control: the high mesh floor is present only along the
+        // measured display-to-fix route and its declared forward budget. A
+        // cross-track control must remain cold, and the production floor
+        // oracle must not invent a clamp when no floor is available.
+        const offRoute = {
+          lat: Number((coveragePlan.endpoint.lat + 0.02).toFixed(3)),
+          lon: Number(coveragePlan.endpoint.lon.toFixed(3)),
+        };
+        const negativeControl = {
+          offRoute,
+          offRouteMeshFloor: gf.cachedMeshFloor(offRoute.lat, offRoute.lon),
+          missingFloorClamp: gf.displayFloorHeightM(zoomedOut.h, null),
+          belowFloorInputM: seeded - 10,
+          seededFloorClamp: gf.displayFloorHeightM(seeded - 10, seeded),
+        };
+
         const out = {
           rawH: d0.h,
           seeded,
+          routeCoverage: coverageReport,
+          negativeControl,
           fleetH,
           enter: window.__dfRegime.enter,
           exit: window.__dfRegime.exit,
@@ -3492,6 +3581,7 @@ async function main() {
           achievedOut,
           coldModelsRendering: coldModels.rendering,
           coldModelsShown: coldModels.shown,
+          coldTracked,
           coldModelH,
           coldEntityH: coldTracked ? coldTracked.h : null,
           coldFloor: coldTracked ? coldTracked.floor : null,
@@ -3506,13 +3596,34 @@ async function main() {
         } finally {
           if (!handOffSkin) window.__dfSkinM = null;
         }
-      });
+      }, coverageHelperSource);
 
       record('display-floor: the fleet billboard lifts onto the planted floor (control for the tracked check)',
         !dfTracked.error && Number.isFinite(dfTracked.fleetH)
           && dfTracked.fleetH >= dfTracked.seeded + DISPLAY_FLOOR_LIFT_M - 0.5,
         dfTracked.error
           || `billboard ${Number(dfTracked.rawH).toFixed(1)} m → ${Number(dfTracked.fleetH).toFixed(1)} m (floor ${Number(dfTracked.seeded).toFixed(1)} m)`);
+
+      const trackedRouteSamples = [
+        dfTracked.coldTracked,
+        dfTracked.zoomedIn,
+        dfTracked.zoomedOut,
+      ];
+      const trackedRouteCoverageOk = !dfTracked.error
+        && trackedRouteSamples.every((sample) =>
+          sample && trackedFloorCoverageSamplePasses(sample.routeCoverage, dfTracked.seeded));
+      record('display-floor/tracked-route: sampled model wait and both regimes stayed inside the declared moving-ground coverage',
+        trackedRouteCoverageOk,
+        dfTracked.error
+          || `seed=${JSON.stringify(dfTracked.routeCoverage?.start)} → feedFix=${JSON.stringify(dfTracked.routeCoverage?.feedFix)} → endpoint=${JSON.stringify(dfTracked.routeCoverage?.endpoint)}; ${dfTracked.routeCoverage?.seededCellCount} cells / ${dfTracked.routeCoverage?.horizonMs} ms, observations=${JSON.stringify(trackedRouteSamples.map((sample) => sample?.routeCoverage))}`);
+      record('display-floor/tracked-route: off-route/missing-floor negative control remains unclamped',
+        !dfTracked.error
+          && dfTracked.negativeControl?.offRouteMeshFloor == null
+          && dfTracked.negativeControl?.missingFloorClamp == null
+          && dfTracked.negativeControl?.belowFloorInputM < dfTracked.seeded
+          && dfTracked.negativeControl?.seededFloorClamp === dfTracked.seeded + DISPLAY_FLOOR_LIFT_M,
+        dfTracked.error
+          || `off-route mesh=${dfTracked.negativeControl?.offRouteMeshFloor}, missing-floor clamp=${dfTracked.negativeControl?.missingFloorClamp}, route-floor oracle=${dfTracked.negativeControl?.seededFloorClamp} (expected ${dfTracked.seeded + DISPLAY_FLOOR_LIFT_M})`);
 
       // The tracked contact is floored exactly when the BILLBOARD is what the
       // operator sees, and stands aside exactly when the MODEL is. "Exactly
@@ -4113,7 +4224,15 @@ async function main() {
   } finally {
     if (OFFLINE_IMAGERY) console.log(`  Bundled imagery tiles served: ${offlineImageryRequests}`);
     if (!KEEP_OPEN) {
-      await browser.close();
+      const close = await closeRecoveryBrowser(browser, {
+        timeoutMs: 5000,
+        forceProcess: () => stopOwnedRecoveryProcessTree(browser.process()),
+      });
+      console.log(`  Browser cleanup: ${JSON.stringify(close)}`);
+      if (!close.closeCompleted || close.forcedProcessTermination) {
+        process.exitCode = 1;
+        console.error('Tracking fixture browser did not close normally.');
+      }
     } else {
       console.log('\n--keep-open set; leaving browser running. Ctrl-C to exit.');
     }

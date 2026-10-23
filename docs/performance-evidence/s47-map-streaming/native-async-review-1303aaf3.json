@@ -1,0 +1,60 @@
+{
+  "schema": "gev-independent-review/v1",
+  "reviewedAt": "2026-10-13T06:37:42.694Z",
+  "implementationCommits": [
+    "e7cd78df1a63b3de442f7e2294ee112434456eb2",
+    "1303aaf30d0ccced890975c88898376ddc900230"
+  ],
+  "integrationCommit": "d0f34f05f5a059697ac7b09390802a51ddc72845",
+  "status": "component-validation-passed",
+  "scope": "Native map async execution and retained failure evidence; browser validation still required",
+  "checks": {
+    "focusedTests": {
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0
+    },
+    "captureNoUndef": {
+      "files": 25,
+      "errors": 0
+    },
+    "format": {
+      "files": 1634,
+      "status": "passed"
+    },
+    "importDirections": {
+      "modules": 1010,
+      "portableEntries": 80,
+      "status": "passed"
+    },
+    "packageBoundaries": "passed",
+    "diffCheck": "passed"
+  },
+  "controls": [
+    "60-second logical route through short page calls",
+    "elapsed deadline after slow polls",
+    "accepted start with lost host response",
+    "cancellation failure and mismatched ownership",
+    "completed route followed by failed disposal",
+    "actual late cancellation drain timing",
+    "bounded failure report and outer smoke projection"
+  ],
+  "unchanged": [
+    "Application src/build runtime",
+    "60-second map route and visual settings",
+    "15-second smoke protocol timeout",
+    "Existing readiness and outer process/job deadlines"
+  ],
+  "limitations": [
+    "Page and protocol seams are component simulations; no real browser success is established here.",
+    "Raw failed native runs remain failed.",
+    "No performance gain, completed S47/S57/S60 acceptance, or physical GPU coverage is inferred."
+  ],
+  "files": {
+    "scripts/capture-scene-performance.mjs": "a096f3345c34cfecd10fc7a0feb97ab98c7c950c8122c340010cf9fe0e04bac3",
+    "scripts/performance/mapStreamingCapture.mjs": "21f1f6ebcb0585f5a6d92e8324cec7ecc2c8fa69327143cb7b33a8e59711e611",
+    "scripts/performance/mapStreamingCapture.test.mjs": "05f8e24f0cc0aa1092d0aae05601778781e4d5c2d71bfc9f268458157abecac8",
+    "scripts/qa-performance-build-smoke.mjs": "822c53961305bdd8c562460931043a11153e2165363c8c5cba45e49b86787976",
+    "scripts/qa-performance-build-smoke.test.mjs": "179f4851dd5fee77e01930ba37f23dde4a92f640fe15b25c8ed8c745e34a9fcc"
+  }
+}

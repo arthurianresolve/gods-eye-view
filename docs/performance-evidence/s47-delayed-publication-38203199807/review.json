@@ -1,0 +1,186 @@
+{
+  "schema": "gev-s47-delayed-publication-review/v1",
+  "status": "failed-outer-capture-timeout-after-three-samples",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203199807",
+  "applicationCommit": "788b2bd8b5eef862499086610c073fa3767deda1",
+  "harnessCommit": "788b2bd8b5eef862499086610c073fa3767deda1",
+  "baselineCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "rawBytes": 127210,
+  "rawSha256": "22aa594f5708cf478d8d97c6dd2744c15b74cde021d1fe19b7ccf5ad798e6a4b",
+  "baselineBuildInspection": "passed",
+  "outerFailure": {
+    "message": "Child process timed out; Wrote bounded failed-capture evidence. Capture failed during prepare-fresh-provider-document: Protocol error (Runtime.callFunctionOn): Target closed Refreshed bounded failed-capture evidence after cleanup. Capture failed during prepare-fresh-provider-document: Protocol error (Runtime.callFunctionOn): Target closed; cleanup confirmed (1).",
+    "phase": "candidate"
+  },
+  "candidateFailure": {
+    "phase": "prepare-fresh-provider-document",
+    "scenario": "scripted-motion",
+    "run": 2,
+    "message": "Protocol error (Runtime.callFunctionOn): Target closed",
+    "operator": null
+  },
+  "completedSamples": 3,
+  "embeddedEvidenceTruncated": true,
+  "samples": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "durationMs": 6390.099999999977,
+      "renderedFrameCount": 2,
+      "frameIntervalMs": {
+        "p50": 3506.7000000000116,
+        "p95": 3506.7000000000116,
+        "max": 3506.7000000000116,
+        "samples": 1,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 2667
+      },
+      "totalObjects": 7578,
+      "populations": [
+        {
+          "id": "flights",
+          "count": 2500
+        },
+        {
+          "id": "local-datacenters",
+          "count": 4362
+        },
+        {
+          "id": "local-dams",
+          "count": 716
+        }
+      ],
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "foregroundThroughout": true,
+      "boundaryBindingCleanup": {
+        "removed": true,
+        "elapsedMs": 11.878615999987232,
+        "error": null
+      }
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "durationMs": 4991.299999999988,
+      "renderedFrameCount": 2,
+      "frameIntervalMs": {
+        "p50": 4957.5,
+        "p95": 4957.5,
+        "max": 4957.5,
+        "samples": 1,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 0,
+        "maxMs": null
+      },
+      "totalObjects": 7578,
+      "populations": [
+        {
+          "id": "flights",
+          "count": 2500
+        },
+        {
+          "id": "local-datacenters",
+          "count": 4362
+        },
+        {
+          "id": "local-dams",
+          "count": 716
+        }
+      ],
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "foregroundThroughout": true,
+      "boundaryBindingCleanup": {
+        "removed": true,
+        "elapsedMs": 11.248881999999867,
+        "error": null
+      }
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "durationMs": 8914.099999999977,
+      "renderedFrameCount": 3,
+      "frameIntervalMs": {
+        "p50": 3031,
+        "p95": 3104.2999999999884,
+        "max": 3104.2999999999884,
+        "samples": 2,
+        "reason": null
+      },
+      "longTasks": {
+        "count": 2,
+        "maxMs": 3021
+      },
+      "totalObjects": 7578,
+      "populations": [
+        {
+          "id": "flights",
+          "count": 2500
+        },
+        {
+          "id": "local-datacenters",
+          "count": 4362
+        },
+        {
+          "id": "local-dams",
+          "count": 716
+        }
+      ],
+      "quality": {
+        "mode": "manual",
+        "densityPct": 75,
+        "p95FrameMs": null
+      },
+      "foregroundThroughout": true,
+      "boundaryBindingCleanup": {
+        "removed": true,
+        "elapsedMs": 5.56466500001261,
+        "error": null
+      }
+    }
+  ],
+  "frameAttribution": {
+    "status": "completed",
+    "scope": "first scripted-motion run; installed before warmup and stopped after measurement-boundary settlement; bounded CPU/event timing, not GPU duration",
+    "elapsedMs": 28192.899999999965,
+    "counts": {
+      "update": 10,
+      "render": 10
+    },
+    "maximumUpdateSpanMs": 3028.5,
+    "maximumRenderSpanMs": 3777.2999999999884,
+    "maximumLongTaskMs": 4034,
+    "measurementWindowRelativeMs": {
+      "startMs": 15712.700000000012,
+      "timerFiredMs": 21531.5
+    },
+    "observerErrors": [],
+    "cleanupErrors": [],
+    "cleanupComplete": true,
+    "cleanup": "confirmed",
+    "scriptAttributionAvailable": false
+  },
+  "pageErrors": [],
+  "interceptionErrors": [],
+  "limitations": [
+    "Instrumented short SwiftShader smoke; never performance comparison evidence.",
+    "The bounded embedded failure report is truncated; LoAF script records are null.",
+    "The completed sample diagnostics do not retain per-document worker publication counts, so this run does not classify the prior late target.",
+    "Event spans include stalls; they are not GPU execution timings or function-level CPU profiles.",
+    "The outer timeout and cleanup-associated Target closed result do not establish an independent browser crash.",
+    "No unchanged retry, deadline increase, population reduction or production renderer change."
+  ]
+}

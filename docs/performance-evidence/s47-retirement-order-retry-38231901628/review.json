@@ -1,0 +1,15 @@
+{
+  "schema": "gev-preserved-failed-artifact-review/v1",
+  "runId": "38231901628",
+  "candidateCommit": "29dc9f515d194029f39cb0cc926586e9e0d1adf1",
+  "conclusion": "failure",
+  "performanceAcceptanceEligible": false,
+  "files": [
+    {
+      "file": "report.json",
+      "byteLength": 5884,
+      "sha256": "7a6fedffdaddca97ef1dc12158dd8d35175e74d31b7124fa146b612366bacfe7"
+    }
+  ],
+  "profileChecks": []
+}

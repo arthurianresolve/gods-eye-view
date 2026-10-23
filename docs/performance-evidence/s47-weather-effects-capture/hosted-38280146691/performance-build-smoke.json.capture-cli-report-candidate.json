@@ -1,0 +1,574 @@
+{
+  "schema": "gev-performance-capture-failure/v1",
+  "captureSchema": "gev-performance-capture/v1",
+  "status": "failed",
+  "capturedAt": "2026-10-12T16:52:50.804Z",
+  "comparisonEligible": false,
+  "comparisonReadiness": {
+    "status": "not-ready",
+    "reason": "Failed or incomplete captures are never comparison evidence."
+  },
+  "source": {
+    "harnessCommit": "580cac115f00ef94264f686ea2a80fa209881b09",
+    "harnessDirtyWorktree": false,
+    "appCommit": "580cac115f00ef94264f686ea2a80fa209881b09",
+    "appWorktreeState": "clean",
+    "provenanceStatus": "pre-capture-served-assets-verified",
+    "reason": null,
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "pre-capture-served-assets-verified",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "1af3e361d6b0f5add862fef87c4058362c3019322c7be5257fb911dca1c61313",
+      "appCommit": "580cac115f00ef94264f686ea2a80fa209881b09",
+      "harnessCommit": "580cac115f00ef94264f686ea2a80fa209881b09",
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "1af3e361d6b0f5add862fef87c4058362c3019322c7be5257fb911dca1c61313",
+        "assetCount": 436,
+        "totalAssetBytes": 43983899
+      },
+      "after": null
+    }
+  },
+  "fixture": {
+    "id": "weather-effects-austin-v1",
+    "count": null,
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "sha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+    "byteLength": null
+  },
+  "workload": {
+    "rendererProbeCleanup": [
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 36.47696900000119,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 13.51922999999988,
+          "pageExecutionElapsedMs": 0.10000000000582077,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "already-disabled",
+            "before": false,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 22.57723299999998,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "startup-document-retirement",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1"
+      },
+      {
+        "schema": "gev-early-renderer-probe-cleanup/v1",
+        "confirmed": true,
+        "timeoutMs": 1000,
+        "elapsedMs": 2.02335000000312,
+        "document": {
+          "status": "confirmed",
+          "elapsedMs": 1.6144619999977294,
+          "pageExecutionElapsedMs": 0.1999999999825377,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "statePresent": true,
+          "hookRestoreAttempted": true,
+          "hookRestored": true,
+          "listenerCount": 2,
+          "listenerRemovalAttemptedCount": 2,
+          "listenerRemovalConfirmedCount": 2,
+          "listenerRemovalFailedCount": 0,
+          "stateDeleted": true,
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "confirmed",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "pageExecutionElapsedMs": 0
+          }
+        },
+        "scriptRegistration": {
+          "status": "confirmed",
+          "elapsedMs": 0.3482169999915641,
+          "pageExecutionElapsedMs": null,
+          "errorKind": null,
+          "errorDetail": null,
+          "lateCompletion": null,
+          "lateHostReceiptElapsedMs": null,
+          "lateHostReceiptScope": "host stage start to acknowledgement receipt; includes page execution, protocol delivery, and host scheduling",
+          "lateOutcome": null,
+          "lateErrorKind": null,
+          "lateErrorDetail": null,
+          "verification": "puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable"
+        },
+        "registrationRemovalBoundary": "owned-document-retirement",
+        "phase": "capture-final-document-retirement",
+        "documentRole": "main-measured",
+        "documentId": "main-measured-document"
+      }
+    ],
+    "rendererProbeCleanupOmittedCount": 0,
+    "rendererLoopRetirements": [
+      {
+        "phase": "startup-final-details",
+        "documentRole": "startup-1",
+        "documentId": "startup-document-1",
+        "requested": true,
+        "status": "retired-with-final-observation",
+        "before": true,
+        "after": false,
+        "confirmed": true,
+        "elapsedMs": 0
+      }
+    ],
+    "rendererLoopRetirementsOmittedCount": 0,
+    "fixtureInterceptionReleases": [
+      {
+        "schema": "gev-flight-fixture-session-release/v1",
+        "sessionOrdinal": 1,
+        "documentRole": "main-measured",
+        "documentId": "main-measured-document",
+        "interception": {
+          "schema": "gev-fixture-interception-release/v1",
+          "interception": {
+            "schema": "gev-fixture-interception-drain/v1",
+            "confirmed": true,
+            "listenerRemovalConfirmed": true,
+            "listenerRemovalVerification": "remove-listener-call-acknowledged",
+            "listenerRemovalErrorKind": null,
+            "pendingAtStop": 0,
+            "pendingPreparationAtStop": 0,
+            "pendingAbortSubscriptionsAtStop": 0,
+            "pendingCommandsAtStop": 0,
+            "pendingCommandsAfterDrain": 0,
+            "pendingPreparationsAfterDrain": 0,
+            "pendingAbortSubscriptionsAfterDrain": 0,
+            "rejectedDrainOperations": 0,
+            "drainCommandFailures": 0,
+            "cancelledPreparationCount": 0,
+            "unexpectedLateRequestCount": 0
+          },
+          "fetchDisable": "target-closed",
+          "detach": "target-closed",
+          "confirmed": true
+        },
+        "stop": {
+          "schema": "gev-fixture-interception-drain/v1",
+          "confirmed": true,
+          "listenerRemovalConfirmed": true,
+          "listenerRemovalVerification": "remove-listener-call-acknowledged",
+          "listenerRemovalErrorKind": null,
+          "pendingAtStop": 0,
+          "pendingPreparationAtStop": 0,
+          "pendingAbortSubscriptionsAtStop": 0,
+          "pendingCommandsAtStop": 0,
+          "pendingCommandsAfterDrain": 0,
+          "pendingPreparationsAfterDrain": 0,
+          "pendingAbortSubscriptionsAfterDrain": 0,
+          "rejectedDrainOperations": 0,
+          "drainCommandFailures": 0,
+          "cancelledPreparationCount": 0,
+          "unexpectedLateRequestCount": 0
+        },
+        "fetchDisable": "target-closed",
+        "detach": "target-closed",
+        "confirmed": true,
+        "targetClosed": true
+      }
+    ],
+    "warmupMs": 1000,
+    "durationPerSampleMs": 1000,
+    "runsPerScenario": 2,
+    "startupRuns": 1,
+    "qualityMode": "manual",
+    "expectedDensityPct": 75,
+    "detectionMode": "DENSE",
+    "mixedLayers": false,
+    "scenarios": []
+  },
+  "failure": {
+    "phase": "configure-weather-effects-fixture",
+    "scenario": null,
+    "run": null,
+    "message": "Waiting failed: 60000ms exceeded",
+    "operator": null
+  },
+  "fixtureDelivery": null,
+  "fixtureInterceptionErrors": [
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Unexpected or malformed weather-effects fixture request.",
+      "phase": "request-command",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    }
+  ],
+  "progress": {
+    "startupSampleCount": 1,
+    "startupSamples": [
+      {
+        "run": 1,
+        "cacheDisabled": true,
+        "appReadyMs": 3132,
+        "initialSettleMs": 4669,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "platform": "Linux x86_64",
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 1440,
+          "height": 900
+        },
+        "focused": true,
+        "visible": true,
+        "navigationMs": 2142.100000000006,
+        "memory": {
+          "usedJsHeapBytes": 45721708,
+          "reason": null
+        },
+        "renderLoopRetirement": {
+          "requested": true,
+          "status": "retired-with-final-observation",
+          "before": true,
+          "after": false,
+          "confirmed": true,
+          "elapsedMs": 0
+        },
+        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "vendor": "Google Inc. (Google)",
+        "rendererEvidence": {
+          "source": "early-cesium-context-creation",
+          "contextAttributes": {
+            "alpha": false,
+            "antialias": true,
+            "depth": true,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "high-performance",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": true,
+            "stencil": true,
+            "desynchronized": false
+          },
+          "queryDurationMs": 0.6000000000058208,
+          "parameterQueryCount": 2
+        }
+      }
+    ],
+    "completedSampleCount": 0,
+    "completedSamples": [],
+    "current": {
+      "phase": "configure-weather-effects-fixture",
+      "populationsBeforeLoad": [
+        {
+          "id": "bhote-koshi-2026",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "bhote-koshi-locator",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "flights",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "military",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "local-adsb",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "earthquakes",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "fire-perimeters",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "alpr-cameras",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "street-level",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "satellites",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "rocket-launches",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "traffic",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "cctv",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "radio",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "transit",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "bikeshare",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "directions",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "recent-imagery",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "ais-live-vessels",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "military-installations",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "military-awareness",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "weather-cyclones",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "local-datacenters",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "local-dams",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "telegeography-submarine-cables",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        },
+        {
+          "id": "local-firms",
+          "enabled": false,
+          "count": 0,
+          "loading": false
+        }
+      ],
+      "cameraObservation": {
+        "longitudeDeg": -97.74309999999998,
+        "latitudeDeg": 30.267199999999992,
+        "altitudeM": 11999.999999999502,
+        "headingDeg": 19.99999999999998,
+        "pitchDeg": -45.00000000000003
+      },
+      "fixtureId": "weather-effects-austin-v1",
+      "fixtureSha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+      "performanceDiagnosticsDocuments": [
+        {
+          "documentRole": "startup-1",
+          "documentId": "startup-document-1",
+          "requested": true,
+          "hookAvailable": true,
+          "disabled": true
+        },
+        {
+          "documentRole": "main-setup",
+          "documentId": "main-measured-document",
+          "requested": true,
+          "hookAvailable": true,
+          "disabled": true
+        }
+      ]
+    },
+    "completedSamplesRetained": 0,
+    "startupSamplesRetained": 1
+  },
+  "evidenceTruncated": false
+}

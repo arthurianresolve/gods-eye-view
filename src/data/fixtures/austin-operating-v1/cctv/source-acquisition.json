@@ -1,0 +1,12 @@
+{
+  "schema": "gev-austin-cctv-acquisition/v1",
+  "url": "https://data.austintexas.gov/api/views/b4k4-adkb/rows.json?accessType=DOWNLOAD",
+  "fetchedAt": "2026-10-12T18:56:12.035Z",
+  "status": 200,
+  "filename": "rows.json",
+  "byteLength": 585798,
+  "sha256": "555501e4ef8c966e19c40ca89e7bb57e72d4c85fd6c16d0b8c827661d2e86c21",
+  "columnCount": 40,
+  "rowCount": 1009,
+  "accepted": true
+}

@@ -1,0 +1,333 @@
+{
+  "schema": "gev-startup-confirmation-independent-review/v1",
+  "reviewedAt": "2026-10-19T23:23:30.742Z",
+  "status": "failed",
+  "acceptanceEligible": false,
+  "consumerCommit": "14201a7f0c8cc7989877a4c7d8ced929ca03ed87",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-dams-startup-page-observed-190c5ab6-14201a7f-map-pinned",
+  "files": [
+    {
+      "name": "plan.json",
+      "bytes": 6214,
+      "sha256": "40fb65ad62cc0cb2a147eabe7ae8a1f2a19334dc5bbce5034b4cebde663e6552"
+    },
+    {
+      "name": "process.json",
+      "bytes": 4205,
+      "sha256": "e234bd7799866997074449dd89d77fc0554bae2703adc5a6f41bf933fd941a09"
+    },
+    {
+      "name": "shards/startup-01.json",
+      "bytes": 9245,
+      "sha256": "bc2cbffbbc1b762380d8ce38200b0d62098624cbee26a5c4a12f6ddc12d31717"
+    },
+    {
+      "name": "shards/startup-01.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "2da90fb113d853fbea7af85bdb1d54c3a119406bc9889abe8c492a5400c6af48"
+    },
+    {
+      "name": "shards/startup-01.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "c5a49d0211a67827ac5933cdf31c3b5898027d1da0f4d2b4fe2921f66bfde15d"
+    },
+    {
+      "name": "shards/startup-01.json.log",
+      "bytes": 302,
+      "sha256": "17fb3b0370e040a3b9d6c0df93553f8b4976a764278062d85285f2112ef54a3f"
+    },
+    {
+      "name": "shards/startup-02.json",
+      "bytes": 9244,
+      "sha256": "a97f2d7f4fced04748ea7325b533374efad54e91afca7f8efa9891249328f7ed"
+    },
+    {
+      "name": "shards/startup-02.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "a1c0fa51b89fff6bc8263e901667920b8f45ce8789aea4d194cf9a87f87d402b"
+    },
+    {
+      "name": "shards/startup-02.json.invocation.json",
+      "bytes": 2707,
+      "sha256": "2dc3de994d90c4cfd76f4f895b1d3884384fb7bcda74df3e014bcd686682f443"
+    },
+    {
+      "name": "shards/startup-02.json.log",
+      "bytes": 302,
+      "sha256": "10967acbe39850bd7079b2507f107868cd5b0242003fd1f71ab0c17131ee5baa"
+    },
+    {
+      "name": "shards/startup-03.json",
+      "bytes": 9200,
+      "sha256": "f04c78853227765e8b9bdbaf009b1036bb30f6b380cfb0c44925876ec915670f"
+    },
+    {
+      "name": "shards/startup-03.json.browser.pid.ready",
+      "bytes": 4,
+      "sha256": "a15d22597e02677f886949aaaedeb5ed6ea31d499c6820f17fee8717d00dff46"
+    },
+    {
+      "name": "shards/startup-03.json.invocation.json",
+      "bytes": 2707,
+      "sha256": "c90cdcfb666994f4ae79605daa75a3ea4fe3f203b77727400c0728552a33c588"
+    },
+    {
+      "name": "shards/startup-03.json.log",
+      "bytes": 302,
+      "sha256": "367674b6c056d94c88a4e9fcfc3b2be02fadb47ff1ada122ae25bbb5abf05cda"
+    },
+    {
+      "name": "shards/startup-04.json",
+      "bytes": 9212,
+      "sha256": "f7678cfd1e59b2452aa57e289201eaf7f920dcb8ed1ae39f623c8a90bb5c2a2a"
+    },
+    {
+      "name": "shards/startup-04.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "9882ec29635c96ee4cec59ce49e2c6d6fbb83e32438d016690a259cf77f5a953"
+    },
+    {
+      "name": "shards/startup-04.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "457a7080c9f878ae0d58fdb5485fbbbd1b4796690f41b2ca034225c2dbe789bc"
+    },
+    {
+      "name": "shards/startup-04.json.log",
+      "bytes": 302,
+      "sha256": "f3408433d8779576532c78f849950bae343026a314ff602d18482336c35d8a7d"
+    },
+    {
+      "name": "shards/startup-05.json",
+      "bytes": 9251,
+      "sha256": "f487876657b723f62629aa323537448655de279c16480d20b22583d06e0b0ff1"
+    },
+    {
+      "name": "shards/startup-05.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "84cf1caf7922a7f22c00d2e4d9ef5e5ff566ceedc4f272d17c80e8f226f77e0b"
+    },
+    {
+      "name": "shards/startup-05.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "233412be8a90763502f274494c6266dce7bffd2196b30a1dcb006c1a70ad551c"
+    },
+    {
+      "name": "shards/startup-05.json.log",
+      "bytes": 302,
+      "sha256": "bb6fba841c9e6322f6ea0aaf01d2986328904710abd4836fe58b3a49763ca8b0"
+    },
+    {
+      "name": "shards/startup-06.json",
+      "bytes": 9214,
+      "sha256": "18aa8966aead05623ba539ab081552dd43cdeb8352c53ae1086bc7d21c07e35e"
+    },
+    {
+      "name": "shards/startup-06.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "93ffab5a4afe832c27bb8eb8403b1283b5b21b23df5de8d3408f9dd493d008ce"
+    },
+    {
+      "name": "shards/startup-06.json.invocation.json",
+      "bytes": 2707,
+      "sha256": "44d0cf5dc65149be6a8cdae817a75205f9473e53b5ab15e4681e0485f14f480e"
+    },
+    {
+      "name": "shards/startup-06.json.log",
+      "bytes": 302,
+      "sha256": "eb7fe96bf0d75bfa3d437d488b9b02f24cdd40fd220cc416e132b8327b30c8e4"
+    },
+    {
+      "name": "shards/startup-07.json",
+      "bytes": 9250,
+      "sha256": "639b3f09cabb3a4fa87d568c41d8a79f137eb7eebf407b22cf1584edb262ba34"
+    },
+    {
+      "name": "shards/startup-07.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "6eff468db9611b7afd520236a98056ed943419bb1cd34e19fb6f718f9b9311dd"
+    },
+    {
+      "name": "shards/startup-07.json.invocation.json",
+      "bytes": 2707,
+      "sha256": "c07b9b11e4012f6dc6a92247e91e403ccaf6150458670d0462c33e329392501a"
+    },
+    {
+      "name": "shards/startup-07.json.log",
+      "bytes": 302,
+      "sha256": "6b2faf698f4734740836f85edbc09216dfe3454506ba2ec14053a59d062fcb1a"
+    },
+    {
+      "name": "shards/startup-08.json",
+      "bytes": 9176,
+      "sha256": "95111f0c443d46e3a4fb4bf9eb00a39778d183d401004e71828c7f07b5d2d190"
+    },
+    {
+      "name": "shards/startup-08.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "30f7a7075818ea9997886a262d01d27bb16cdcc5a46d847dc3b6d998c6fe0acc"
+    },
+    {
+      "name": "shards/startup-08.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "e20e0de31cfa87a7702655ae31179769e39cd6b2869a022325bd7370a053127e"
+    },
+    {
+      "name": "shards/startup-08.json.log",
+      "bytes": 302,
+      "sha256": "aa083a3db315d4cb335566ed2e74b865636e5d759c475d4e7540d9b383afc5a8"
+    },
+    {
+      "name": "shards/startup-09.json",
+      "bytes": 9242,
+      "sha256": "a6a29400585c5a5864de58d103af308a1f6b588da239e22866cd23611f0fb6d0"
+    },
+    {
+      "name": "shards/startup-09.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "d95f22840cb0256cbaeb300bcc4461558cd426e685d94644d7df0c6aabad13b4"
+    },
+    {
+      "name": "shards/startup-09.json.invocation.json",
+      "bytes": 2696,
+      "sha256": "5c9efbc26a73f30629f9b3a44dbf2947a96e0b0ab65e15cc436b469dc343de1c"
+    },
+    {
+      "name": "shards/startup-09.json.log",
+      "bytes": 302,
+      "sha256": "f400834226210f7eca0f8ced10b7739b37710e81b033b311ff8b2412034e7832"
+    },
+    {
+      "name": "shards/startup-10.json",
+      "bytes": 9220,
+      "sha256": "eeac1115f51c48a3ef4c1a17fcd85dc9f2b436418d2faa4285360f018cfbc939"
+    },
+    {
+      "name": "shards/startup-10.json.browser.pid.ready",
+      "bytes": 6,
+      "sha256": "45b96061f72010071a96ae44bea593ad1256e660a2c8c9ee2ede432ad50cdfb8"
+    },
+    {
+      "name": "shards/startup-10.json.invocation.json",
+      "bytes": 2707,
+      "sha256": "ddd973912632b97690ebda501bee949388ea4d2acdc173d05082173b2790129c"
+    },
+    {
+      "name": "shards/startup-10.json.log",
+      "bytes": 302,
+      "sha256": "30b435897a429c98a14bcbc702a64238eefd7c2ed137a6bc142ec9bb6f9edead"
+    },
+    {
+      "name": "wrapper.mjs",
+      "bytes": 6281,
+      "sha256": "06f6415d5ca5d54b88771862a65e1136828c020ae5beffa872bba82fc2739c3e"
+    }
+  ],
+  "evaluation": {
+    "schema": "gev-balanced-startup-confirmation-review/v1",
+    "status": "failed",
+    "confirmationOnly": true,
+    "motionEligible": false,
+    "thresholdPct": 10,
+    "order": [
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate"
+    ],
+    "startupMethod": "page-observed-after-foreground-v1",
+    "appReady": {
+      "semantic": "performance.now at first page predicate observation; an upper bound on state availability, not exact publication or first visible render; page and host clocks are validated independently",
+      "controlMedianMs": 4473.399999991059,
+      "candidateMedianMs": 5749.79999999702,
+      "changePct": 28.533106809328736,
+      "regressionOver10Pct": true
+    },
+    "loadingHidden": {
+      "semantic": "performance.now at first page predicate observation; an upper bound on state availability, not exact publication or first visible render; page and host clocks are validated independently",
+      "controlMedianMs": 5482.600000008941,
+      "candidateMedianMs": 6933.20000000298,
+      "changePct": 26.458249735375077,
+      "regressionOver10Pct": true
+    },
+    "createdAt": "2026-10-19T23:23:30.736Z",
+    "plan": {
+      "path": "plan.json",
+      "sha256": "40fb65ad62cc0cb2a147eabe7ae8a1f2a19334dc5bbce5034b4cebde663e6552"
+    },
+    "envelope": {
+      "path": "envelope.json",
+      "sha256": "3c0803fc26b87e9e0bdc1202dadbe12ba45155360d5caf5c2fdc12a4c3714146"
+    },
+    "shards": [
+      {
+        "slotId": "startup-01",
+        "role": "control",
+        "path": "shards/startup-01.json",
+        "sha256": "bc2cbffbbc1b762380d8ce38200b0d62098624cbee26a5c4a12f6ddc12d31717"
+      },
+      {
+        "slotId": "startup-02",
+        "role": "candidate",
+        "path": "shards/startup-02.json",
+        "sha256": "a97f2d7f4fced04748ea7325b533374efad54e91afca7f8efa9891249328f7ed"
+      },
+      {
+        "slotId": "startup-03",
+        "role": "candidate",
+        "path": "shards/startup-03.json",
+        "sha256": "f04c78853227765e8b9bdbaf009b1036bb30f6b380cfb0c44925876ec915670f"
+      },
+      {
+        "slotId": "startup-04",
+        "role": "control",
+        "path": "shards/startup-04.json",
+        "sha256": "f7678cfd1e59b2452aa57e289201eaf7f920dcb8ed1ae39f623c8a90bb5c2a2a"
+      },
+      {
+        "slotId": "startup-05",
+        "role": "control",
+        "path": "shards/startup-05.json",
+        "sha256": "f487876657b723f62629aa323537448655de279c16480d20b22583d06e0b0ff1"
+      },
+      {
+        "slotId": "startup-06",
+        "role": "candidate",
+        "path": "shards/startup-06.json",
+        "sha256": "18aa8966aead05623ba539ab081552dd43cdeb8352c53ae1086bc7d21c07e35e"
+      },
+      {
+        "slotId": "startup-07",
+        "role": "candidate",
+        "path": "shards/startup-07.json",
+        "sha256": "639b3f09cabb3a4fa87d568c41d8a79f137eb7eebf407b22cf1584edb262ba34"
+      },
+      {
+        "slotId": "startup-08",
+        "role": "control",
+        "path": "shards/startup-08.json",
+        "sha256": "95111f0c443d46e3a4fb4bf9eb00a39778d183d401004e71828c7f07b5d2d190"
+      },
+      {
+        "slotId": "startup-09",
+        "role": "control",
+        "path": "shards/startup-09.json",
+        "sha256": "a6a29400585c5a5864de58d103af308a1f6b588da239e22866cd23611f0fb6d0"
+      },
+      {
+        "slotId": "startup-10",
+        "role": "candidate",
+        "path": "shards/startup-10.json",
+        "sha256": "eeac1115f51c48a3ef4c1a17fcd85dc9f2b436418d2faa4285360f018cfbc939"
+      }
+    ],
+    "note": "Startup-only confirmation. It does not replace historical failed evidence or qualify motion performance."
+  },
+  "scope": "Fixed predeclared ten-shard startup confirmation. Original failed startup measurements remain failures; this report supplies additional evidence for an explicit final disposition, not an automatic override.",
+  "productionChanged": false
+}

@@ -1,0 +1,124 @@
+{
+  "schema": "gev-late-globe-cost-disposition/v1",
+  "createdAt": "2026-10-21T08:43:43.552Z",
+  "disposition": "unadopted-no-demonstrated-sampling-or-native-latency-benefit",
+  "acceptanceEligible": false,
+  "balancedComparison": false,
+  "interruption": "Baseline completed with before/after identity checks; candidate preflight failed because all 886 previously verified D: cache files read as zeros. Candidate alone resumed after identical immutable assets were recovered on C: from baseline hardlinks and VM bytes. No baseline samples were discarded or repeated.",
+  "measurements": "Instrumented wall-time spans. Residual is sampleHeight minus its two measured readPixels spans; it is not pure CPU or GPU time. Native Event Timing is quantized. These interrupted four-action diagnostics are not a controlled performance estimate.",
+  "observations": [
+    {
+      "role": "baseline",
+      "commit": "acd65cc680c2728e41b0796e2274f6afb25018aa",
+      "sourceResultSha256": "9200bd3615001284f739bb8bd28020833b040f4e4742b838b6e0f095df4de5aa",
+      "spans": [
+        {
+          "phase": "cold",
+          "queryCount": 8,
+          "sampleHeightMs": 108.1,
+          "firstReadMs": 47.1,
+          "secondReadMs": 36.1,
+          "residualMs": 24.9
+        },
+        {
+          "phase": "warm",
+          "queryCount": 8,
+          "sampleHeightMs": 17.9,
+          "firstReadMs": 8.3,
+          "secondReadMs": 4,
+          "residualMs": 5.6
+        }
+      ],
+      "nativeMs": [
+        432,
+        80,
+        112,
+        48
+      ],
+      "readinessMs": [
+        242.1,
+        42.9,
+        37,
+        31.5
+      ],
+      "completedRenderMs": [
+        248.8,
+        46.9,
+        39,
+        35.2
+      ],
+      "foreground": "completed",
+      "normalClose": true
+    },
+    {
+      "role": "candidate",
+      "commit": "7947d2fd90ccde5671e0762d053476a412993be5",
+      "sourceResultSha256": "60316dcb9e3d240ce3564535b8f7d7a61b4784901a6962cadde35470e4edc3fc",
+      "spans": [
+        {
+          "phase": "cold",
+          "queryCount": 8,
+          "sampleHeightMs": 145.4,
+          "firstReadMs": 78.2,
+          "secondReadMs": 36.1,
+          "residualMs": 31.1
+        },
+        {
+          "phase": "warm",
+          "queryCount": 8,
+          "sampleHeightMs": 23.2,
+          "firstReadMs": 10.5,
+          "secondReadMs": 5.1,
+          "residualMs": 7.6
+        }
+      ],
+      "nativeMs": [
+        392,
+        88,
+        144,
+        64
+      ],
+      "readinessMs": [
+        203,
+        42.5,
+        39.4,
+        34
+      ],
+      "completedRenderMs": [
+        210,
+        45,
+        42.4,
+        38.8
+      ],
+      "foreground": "completed",
+      "normalClose": true
+    }
+  ],
+  "exactQueryResultsMatched": 16,
+  "rawMirrors": [
+    {
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/late-globe-cost-7947d2fd-20261021",
+      "files": 21,
+      "bytes": 1179623,
+      "resultSha256": "9200bd3615001284f739bb8bd28020833b040f4e4742b838b6e0f095df4de5aa",
+      "status": "independent-remote-readback-verified"
+    },
+    {
+      "destination": "/opt/gods-eye-view-validation/s61-s70-20261018/late-globe-cost-7947d2fd-candidate-continuation-20261021",
+      "files": 35,
+      "bytes": 3867270,
+      "resultSha256": "60316dcb9e3d240ce3564535b8f7d7a61b4784901a6962cadde35470e4edc3fc",
+      "status": "independent-remote-readback-verified"
+    }
+  ],
+  "storage": {
+    "incidentReportSha256": "060871f1212a726653ffbe97174873d4cebc9f74b1d189d84cff863572f27cc1",
+    "unusableAssetFiles": 886,
+    "policy": "Stop new D: writes; preserve originals and independently verified VM masters.",
+    "recoveredHardlinks": 873,
+    "recoveredVmBytes": 6057069,
+    "recoveryValidationSha256": "6ee6df5fc446170d7b8d64e252290e2483a4825b3cb8ce5992608c6742a61af1"
+  },
+  "nextDecision": "Trace the current baseline click-bearing Submit through its actual surface aggregation and presentation. No further culling/readback optimization is justified by these timings alone.",
+  "productionChanged": false
+}

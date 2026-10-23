@@ -1,0 +1,176 @@
+{
+  "schema": "gev-current-weather-idle-disposition-review/v1",
+  "reviewedAt": "2026-10-20T00:49:00.651Z",
+  "status": "validated-interpretation-only",
+  "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "balancedEnvelope": {
+    "path": "qualification-envelope.json",
+    "sha256": "2afe87373bb090946e212dd209619db6b67c6c138f082bf8ce7289599a5036d8"
+  },
+  "balancedConsumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "dispositionConsumerCommit": "ae74be8b7e0f45e05552a2a6e5752a6d54ec99d4",
+  "dispositionSourceManifestSha256": "a46c6e117711700036e5c5c029aa61ec2a6b8f3000d1fae23241ccf63b3b941c",
+  "disposition": {
+    "schema": "gev-weather-idle-cadence-disposition/v1",
+    "metric": "idle.frameIntervalMs.p95",
+    "scenario": "idle",
+    "workloadId": "austin-weather-effects-phased-v2",
+    "baselineAppSha": "76cc760b384da27e7cfc848a76f317112574826a",
+    "candidateAppSha": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+    "captureHarnessCommit": "6025a88eb84218f5b460116192557e41248eccfa",
+    "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "controlDiagnostic": {
+      "path": "../weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready/control.json",
+      "sha256": "1b10dcc4504ff364b5f8fdb8249c28281e1aa7698d9a56d43d17669ed0e7353f"
+    },
+    "candidateDiagnostic": {
+      "path": "../weather-visible-wind-probe-190c5ab6-6025a88e-foreground-ready/candidate.json",
+      "sha256": "d8d8a1515d14b956c9e94980b4bff0494d1e9943e907bdbdf896dc96429c9b00"
+    }
+  },
+  "result": {
+    "status": "validated-interpretation-only",
+    "resolvedScenarios": ["idle"],
+    "resolvedMetric": "idle.frameIntervalMs.p95",
+    "diagnosticOnly": true,
+    "performanceBenefitClaim": false,
+    "gpuCostClaim": false,
+    "directSceneRequestAttribution": false,
+    "samplingLimitations": {
+      "controlMaximumGapMs": 1365.2999999970198,
+      "candidateMaximumGapMs": 1092.7000000029802,
+      "maximumGapAcceptanceBound": null,
+      "note": "Wind/frame observations remain sampled; observed sampling maximum gaps are reported without an invented acceptance threshold. The event trace covers governor-mode writes, not all scene.requestRender calls or frame causes."
+    },
+    "control": {
+      "rawSha256": "1b10dcc4504ff364b5f8fdb8249c28281e1aa7698d9a56d43d17669ed0e7353f",
+      "modeTraceEventCount": 0,
+      "sampledFrameCount": 84,
+      "sampledGovernorCount": 230,
+      "visibleWindProbeStatus": "observed"
+    },
+    "candidate": {
+      "rawSha256": "d8d8a1515d14b956c9e94980b4bff0494d1e9943e907bdbdf896dc96429c9b00",
+      "modeTraceEventCount": 0,
+      "sampledFrameCount": 85,
+      "sampledGovernorCount": 229,
+      "visibleWindProbeStatus": "observed"
+    }
+  },
+  "error": null,
+  "balanced": {
+    "status": "comparable",
+    "environmentId": "windows-uhd620-native-chrome155-20261019",
+    "evidenceScope": "balanced-five-pair-full-weather-qualification",
+    "order": [
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate"
+    ],
+    "pairCount": 5,
+    "scenarios": {
+      "idle": {
+        "status": "measured",
+        "baselineRuns": [
+          1368.2000000029802, 1490.4000000059605, 2646.2000000029802,
+          1086.199999988079, 1420.7999999970198
+        ],
+        "candidateRuns": [
+          1837.4000000059605, 1598.5999999940395, 2703.800000011921,
+          2638.2000000029802, 2638.7999999970198
+        ],
+        "baselineMedianP95Ms": 1420.7999999970198,
+        "candidateMedianP95Ms": 2638.2000000029802,
+        "changePct": 85.68412162222087,
+        "regressionOver10Pct": true
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineRuns": [
+          246.29999999701977, 245.19999998807907, 188.90000000596046,
+          242.90000000596046, 217.20000000298023
+        ],
+        "candidateRuns": [
+          260.20000000298023, 234.1000000089407, 175.09999999403954,
+          214.3999999910593, 234.20000000298023
+        ],
+        "baselineMedianP95Ms": 242.90000000596046,
+        "candidateMedianP95Ms": 234.1000000089407,
+        "changePct": -3.6228900769056516,
+        "regressionOver10Pct": false
+      }
+    },
+    "environment": {
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+      "platform": "Win32",
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "vendor": "Google Inc. (Intel)",
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "hardwareEligible": true,
+      "nativeSharpnessProfile": {
+        "id": "native-sharpness-v1",
+        "useBrowserRecommendedResolution": false,
+        "resolutionScale": 1,
+        "maximumScreenSpaceError": 1,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2880,
+          "height": 1800
+        }
+      },
+      "hostEnvironment": {
+        "platform": "win32",
+        "architecture": "x64",
+        "osRelease": "10.0.19045",
+        "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+        "logicalCpus": 8,
+        "memoryBytes": 16907538432,
+        "hosted": false,
+        "runnerImage": null,
+        "runnerImageVersion": null
+      },
+      "graphics": {
+        "browserVersion": "Chrome/155.0.8059.84",
+        "featureStatus": {
+          "webgl": "enabled",
+          "webgl2": null,
+          "gpu_compositing": "enabled",
+          "opengl": "enabled_on"
+        },
+        "devices": [
+          {
+            "vendor": "",
+            "device": "Intel(R) UHD Graphics 620",
+            "driver": "30.0.101.1338"
+          },
+          {
+            "vendor": "",
+            "device": "Microsoft Basic Render Driver",
+            "driver": "10.0.19041.7802"
+          }
+        ]
+      }
+    },
+    "regressionsOver10Pct": ["idle"]
+  },
+  "scope": "Only the idle rendered-frame interval interpretation is eligible for disposition. No motion, startup, interaction, visual, or retention failure is waived. Original reports remain unchanged."
+}

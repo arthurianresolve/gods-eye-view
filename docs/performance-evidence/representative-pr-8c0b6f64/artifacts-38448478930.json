@@ -1,0 +1,45 @@
+{
+  "total_count": 2,
+  "artifacts": [
+    {
+      "id": 11839163092,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzOTE2MzA5Mg==",
+      "name": "gev-candidate-b14c0e4f8cf424fa9d7ef81b7a1b4718819a8143",
+      "size_in_bytes": 19863168,
+      "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11839163092",
+      "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11839163092/zip",
+      "expired": false,
+      "digest": "sha256:2ee97638c6c3d211b063f94cc660d234769431c4695fdaf190c124c0b4a8d0e3",
+      "created_at": "2026-10-13T18:44:27Z",
+      "updated_at": "2026-10-13T18:44:27Z",
+      "expires_at": "2026-11-12T18:44:25Z",
+      "workflow_run": {
+        "id": 38448478930,
+        "repository_id": 1362432886,
+        "head_repository_id": 1362432886,
+        "head_branch": "qa/s47-austin-receipt-only",
+        "head_sha": "8c0b6f64ed4a0225e67eeb9344dfb967921d1ca2"
+      }
+    },
+    {
+      "id": 11838888358,
+      "node_id": "MDg6QXJ0aWZhY3QxMTgzODg4ODM1OA==",
+      "name": "gev-release-evidence-b14c0e4f8cf424fa9d7ef81b7a1b4718819a8143",
+      "size_in_bytes": 786,
+      "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11838888358",
+      "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11838888358/zip",
+      "expired": false,
+      "digest": "sha256:b0cf841e6ce0b0e278ccd89cd02420abbc87e12142649b6eacca0bbaaded5200",
+      "created_at": "2026-10-13T18:44:35Z",
+      "updated_at": "2026-10-13T18:44:35Z",
+      "expires_at": "2027-01-11T18:39:11Z",
+      "workflow_run": {
+        "id": 38448478930,
+        "repository_id": 1362432886,
+        "head_repository_id": 1362432886,
+        "head_branch": "qa/s47-austin-receipt-only",
+        "head_sha": "8c0b6f64ed4a0225e67eeb9344dfb967921d1ca2"
+      }
+    }
+  ]
+}

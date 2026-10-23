@@ -1,0 +1,1566 @@
+{
+  "schema": "gev-weather-interleaved-motion-review/v1",
+  "reviewedAt": "2026-10-19T09:59:09.064Z",
+  "diagnosticOnly": true,
+  "acceptanceEligible": false,
+  "conclusion": "Interleaved motion records are internally comparable on the checked capture conditions; diagnostic timing does not clear or replace prior qualification flags.",
+  "protocol": {
+    "path": "gev-s61-evidence-19065997/weather-interleaved-motion-diagnostic-1792402126285/protocol.json",
+    "sha256": "4065871eb94509494b1c52c324ee68ee055145e6dea89ed570203632209dbb91",
+    "producer": "18702e7703bfe9dd394fa638fcc3d6a91bff86fc",
+    "controlCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+    "candidateCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+    "order": [
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate",
+      "candidate",
+      "control",
+      "control",
+      "candidate"
+    ],
+    "warmupMs": 30000,
+    "measurementMs": 60000,
+    "captures": 10,
+    "diagnosticPolicy": "Five temporally paired alternating-order comparisons with30s warmup and60s motion. No instrumentation, forcedGC or concurrent host jobs. Diagnostic only; prior qualification flags remain recorded."
+  },
+  "reviewerSha256": "aa64c5cbcd5ca48d7b0b027f1135b48c747088ede7600de29e740c2ee7f8ebc7",
+  "files": [
+    {
+      "path": "protocol.json",
+      "bytes": 30949,
+      "sha256": "4065871eb94509494b1c52c324ee68ee055145e6dea89ed570203632209dbb91"
+    },
+    {
+      "path": "capture-1-control.json",
+      "bytes": 103978,
+      "sha256": "2ea7b3b48a9c6c1e4aa5da86128399f3228fc92b3e3c061f5b49e8feeac02747"
+    },
+    {
+      "path": "capture-2-candidate.json",
+      "bytes": 104397,
+      "sha256": "2bb0ce66121f896cf5ca71aba03844fde3cd07a471b511c2b9056613e16b41d0"
+    },
+    {
+      "path": "capture-3-candidate.json",
+      "bytes": 104442,
+      "sha256": "62a3ef83d798b20c80c4df7afa3cba7508fd6a29aaf2990441c997b597c350f6"
+    },
+    {
+      "path": "capture-4-control.json",
+      "bytes": 104002,
+      "sha256": "863624487fb1a9fd91fb039a779cb3cb13980cb043edcff85c2c429bad5980f8"
+    },
+    {
+      "path": "capture-5-control.json",
+      "bytes": 103989,
+      "sha256": "db2fed902daacde2fcaf3ec0be800d8acce89159ccdecda22302a85ffd151bf9"
+    },
+    {
+      "path": "capture-6-candidate.json",
+      "bytes": 104455,
+      "sha256": "84f912475847d7cb85b60023351db2c0f3974d3c7b8aa6a9590b3960e55fc13c"
+    },
+    {
+      "path": "capture-7-candidate.json",
+      "bytes": 104407,
+      "sha256": "395d60b863202d61f75931565651cd0722deda240defd3c8f0b10191cf016730"
+    },
+    {
+      "path": "capture-8-control.json",
+      "bytes": 103999,
+      "sha256": "799705b07733fdaf56e71ba5eb4d65fc20b08d48b25724846a4cfed4e934b1f3"
+    },
+    {
+      "path": "capture-9-control.json",
+      "bytes": 104028,
+      "sha256": "cbdb3137bf84323a1be0732b55f9dc1f04f88e2ed26e06947ef1c4b5c5d0ecb7"
+    },
+    {
+      "path": "capture-10-candidate.json",
+      "bytes": 104386,
+      "sha256": "2580584ccac467ceaa8b34b0e517e049441cc81ca762ea302fb048112c09cb6f"
+    }
+  ],
+  "comparisonChecks": {
+    "rolesAndCommits": "passed",
+    "integrityAndHashes": "passed",
+    "chromeVersion": "Chrome/155.0.8059.84",
+    "settingsAndNativeSharpness": "identical across captures and unchanged before/after",
+    "cameraPath": "elapsed-move-right-v1, 60 seconds, 19.2 km; start and route identical",
+    "fixtureAndPopulation": "weather fixture hash, four enabled populations and counts identical",
+    "phaseCadence": "three source phases observed at declared schedule; all <=5s late and expected timestamps matched",
+    "viewportAndDrawingBuffer": "1440x900 DPR2 / 2880x1800 identical across captures",
+    "renderDemandOwnership": "manual frame pump held during sample; original render-loop state restored",
+    "foregroundAndHostPower": "all samples focused/visible; recorded host stayed online on high-performance power scheme"
+  },
+  "conditions": {
+    "visualSettings": {
+      "qualityMode": "manual",
+      "densityPct": 75,
+      "detectionMode": "DENSE",
+      "resolutionScale": 1,
+      "antialias": true,
+      "msaaSamples": 4,
+      "fxaa": false,
+      "bloom": false,
+      "bloomIntensity": 0,
+      "sharpen": true,
+      "sharpenIntensity": 49,
+      "style": "normal",
+      "map": "osm",
+      "visualState": {
+        "style": "normal",
+        "bloom": {
+          "enabled": false,
+          "intensity": 0,
+          "version": 2
+        },
+        "sharpen": {
+          "enabled": true,
+          "intensity": 49
+        },
+        "hud": {
+          "visible": true,
+          "variant": "tactical"
+        },
+        "detection": {
+          "mode": "DENSE",
+          "density": 75,
+          "allocation": "ELASTIC",
+          "fadePct": 7,
+          "outsideOpacityPct": 1
+        },
+        "scope": {
+          "enabled": true,
+          "featherPct": 11
+        },
+        "mapStack": "osm",
+        "styleParams": {
+          "retro": {
+            "pixelation": 5,
+            "distortion": 0,
+            "instability": 0.4
+          },
+          "surveillance": {
+            "gain": 0.55,
+            "bloom": 0.3,
+            "scanlineStr": 1,
+            "pixelation": 2.5
+          },
+          "thermal": {
+            "sensitivity": 0.75,
+            "bloom": 0.65,
+            "mode": 0,
+            "pixelation": 1.5,
+            "palette": 0
+          },
+          "anime": {
+            "saturation": 1,
+            "edgeThick": 0.5
+          },
+          "noir": {
+            "contrastAmt": 1.2,
+            "grainAmt": 0.5,
+            "vignetteAmt": 0.5
+          },
+          "snow": {
+            "density": 0.6,
+            "wind": 0.5
+          }
+        }
+      },
+      "nativeSharpnessProfile": {
+        "id": "native-sharpness-v1",
+        "useBrowserRecommendedResolution": false,
+        "resolutionScale": 1,
+        "maximumScreenSpaceError": 1,
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 2
+        },
+        "drawingBuffer": {
+          "width": 2880,
+          "height": 1800
+        }
+      }
+    },
+    "cameraPath": {
+      "id": "elapsed-move-right-v1",
+      "start": {
+        "position": {
+          "x": -744223.8056744909,
+          "y": -5473386.05884697,
+          "z": 3202039.505247089
+        },
+        "direction": {
+          "x": 0.36704585088703406,
+          "y": 0.9044233903355411,
+          "z": 0.21747568682631793
+        },
+        "up": {
+          "x": 0.20248062607303247,
+          "y": -0.30586980426556665,
+          "z": 0.930293103760109
+        },
+        "transform": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      "elapsedDurationMs": 60000,
+      "motionDistanceM": 19200
+    },
+    "fixtureCamera": {
+      "id": "austin-weather-oblique-v1",
+      "longitudeDeg": -97.7431,
+      "latitudeDeg": 30.2672,
+      "altitudeM": 12000,
+      "headingDeg": 20,
+      "pitchDeg": -45
+    },
+    "populations": [
+      {
+        "id": "weather-lightning",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-radar",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "wind",
+        "enabled": true,
+        "count": 65160
+      }
+    ],
+    "fixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 1800
+    },
+    "enabledLayers": [
+      {
+        "id": "wind",
+        "enabled": true,
+        "count": 65160
+      },
+      {
+        "id": "weather-radar",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": true,
+        "count": 1
+      },
+      {
+        "id": "weather-lightning",
+        "enabled": true,
+        "count": 1
+      }
+    ],
+    "powerScheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+  },
+  "roleSummary": {
+    "control": {
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "runs": 5,
+      "medianMotionP95Ms": 298,
+      "medianRenderedFrames": 352,
+      "motionP95Ms": [
+        240.79999999701977,
+        298,
+        300.5,
+        277.30000000074506,
+        301.4000000022352
+      ],
+      "frameCounts": [
+        332,
+        336,
+        351,
+        359,
+        363
+      ]
+    },
+    "candidate": {
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "runs": 5,
+      "medianMotionP95Ms": 254.30000000074506,
+      "medianRenderedFrames": 351,
+      "motionP95Ms": [
+        319.69999999925494,
+        346.5,
+        242.29999999701977,
+        227.59999999776483,
+        254.30000000074506
+      ],
+      "frameCounts": [
+        322,
+        338,
+        374,
+        359,
+        350
+      ]
+    }
+  },
+  "temporalPairs": [
+    {
+      "pairIndex": 0,
+      "order": [
+        "control",
+        "candidate"
+      ],
+      "controlStem": "1-control",
+      "candidateStem": "2-candidate",
+      "controlMotionP95Ms": 240.79999999701977,
+      "candidateMotionP95Ms": 319.69999999925494,
+      "changePct": 32.76578073223076,
+      "controlFrameCount": 332,
+      "candidateFrameCount": 322
+    },
+    {
+      "pairIndex": 1,
+      "order": [
+        "candidate",
+        "control"
+      ],
+      "controlStem": "4-control",
+      "candidateStem": "3-candidate",
+      "controlMotionP95Ms": 298,
+      "candidateMotionP95Ms": 346.5,
+      "changePct": 16.2751677852349,
+      "controlFrameCount": 336,
+      "candidateFrameCount": 338
+    },
+    {
+      "pairIndex": 2,
+      "order": [
+        "control",
+        "candidate"
+      ],
+      "controlStem": "5-control",
+      "candidateStem": "6-candidate",
+      "controlMotionP95Ms": 300.5,
+      "candidateMotionP95Ms": 242.29999999701977,
+      "changePct": -19.36772046688194,
+      "controlFrameCount": 351,
+      "candidateFrameCount": 374
+    },
+    {
+      "pairIndex": 3,
+      "order": [
+        "candidate",
+        "control"
+      ],
+      "controlStem": "8-control",
+      "candidateStem": "7-candidate",
+      "controlMotionP95Ms": 277.30000000074506,
+      "candidateMotionP95Ms": 227.59999999776483,
+      "changePct": -17.92282726391875,
+      "controlFrameCount": 359,
+      "candidateFrameCount": 359
+    },
+    {
+      "pairIndex": 4,
+      "order": [
+        "control",
+        "candidate"
+      ],
+      "controlStem": "9-control",
+      "candidateStem": "10-candidate",
+      "controlMotionP95Ms": 301.4000000022352,
+      "candidateMotionP95Ms": 254.30000000074506,
+      "changePct": -15.627073656649246,
+      "controlFrameCount": 363,
+      "candidateFrameCount": 350
+    }
+  ],
+  "captures": [
+    {
+      "index": 1,
+      "stem": "1-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "capturedAt": "2026-10-19T09:31:54.191Z",
+      "durationMs": 60027.5,
+      "renderedFrameCount": 333,
+      "frameCount": 332,
+      "frameIntervalMs": {
+        "p50": 178.80000000074506,
+        "p95": 240.79999999701977,
+        "max": 538.8000000007451,
+        "samples": 332,
+        "reason": null
+      },
+      "motionP95Ms": 240.79999999701977,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 2544.5,
+          "latenessMs": 2544.5,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22768.5,
+          "latenessMs": 2768.5,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42800.800000000745,
+          "latenessMs": 2800.800000000745,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 2,
+      "stem": "2-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "capturedAt": "2026-10-19T09:34:57.598Z",
+      "durationMs": 60038.900000002235,
+      "renderedFrameCount": 323,
+      "frameCount": 322,
+      "frameIntervalMs": {
+        "p50": 177.89999999850988,
+        "p95": 319.69999999925494,
+        "max": 1192.300000000745,
+        "samples": 322,
+        "reason": null
+      },
+      "motionP95Ms": 319.69999999925494,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 3726.60000000149,
+          "latenessMs": 3726.60000000149,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22697.60000000149,
+          "latenessMs": 2697.60000000149,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42949.400000002235,
+          "latenessMs": 2949.400000002235,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 3,
+      "stem": "3-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "capturedAt": "2026-10-19T09:37:56.528Z",
+      "durationMs": 60043.29999999702,
+      "renderedFrameCount": 339,
+      "frameCount": 338,
+      "frameIntervalMs": {
+        "p50": 171.10000000149012,
+        "p95": 346.5,
+        "max": 1089.9000000022352,
+        "samples": 338,
+        "reason": null
+      },
+      "motionP95Ms": 346.5,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 4326.79999999702,
+          "latenessMs": 4326.79999999702,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22843.599999997765,
+          "latenessMs": 2843.599999997765,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 43454.39999999851,
+          "latenessMs": 3454.39999999851,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 4,
+      "stem": "4-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "capturedAt": "2026-10-19T09:40:53.361Z",
+      "durationMs": 60052.10000000149,
+      "renderedFrameCount": 337,
+      "frameCount": 336,
+      "frameIntervalMs": {
+        "p50": 174.80000000074506,
+        "p95": 298,
+        "max": 735.5,
+        "samples": 336,
+        "reason": null
+      },
+      "motionP95Ms": 298,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 3071.699999999255,
+          "latenessMs": 3071.699999999255,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 23199.60000000149,
+          "latenessMs": 3199.60000000149,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42692.800000000745,
+          "latenessMs": 2692.800000000745,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 5,
+      "stem": "5-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "capturedAt": "2026-10-19T09:43:45.295Z",
+      "durationMs": 60035.10000000149,
+      "renderedFrameCount": 352,
+      "frameCount": 351,
+      "frameIntervalMs": {
+        "p50": 165.69999999925494,
+        "p95": 300.5,
+        "max": 1328.2000000029802,
+        "samples": 351,
+        "reason": null
+      },
+      "motionP95Ms": 300.5,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 4090.60000000149,
+          "latenessMs": 4090.60000000149,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22647.800000000745,
+          "latenessMs": 2647.800000000745,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42461,
+          "latenessMs": 2461,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 6,
+      "stem": "6-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "capturedAt": "2026-10-19T09:46:50.426Z",
+      "durationMs": 60034.89999999851,
+      "renderedFrameCount": 375,
+      "frameCount": 374,
+      "frameIntervalMs": {
+        "p50": 155.69999999925494,
+        "p95": 242.29999999701977,
+        "max": 479.1000000014901,
+        "samples": 374,
+        "reason": null
+      },
+      "motionP95Ms": 242.29999999701977,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 2656.7999999970198,
+          "latenessMs": 2656.7999999970198,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22541.89999999851,
+          "latenessMs": 2541.89999999851,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42694.39999999851,
+          "latenessMs": 2694.39999999851,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 7,
+      "stem": "7-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "capturedAt": "2026-10-19T09:49:54.198Z",
+      "durationMs": 60043.10000000149,
+      "renderedFrameCount": 360,
+      "frameCount": 359,
+      "frameIntervalMs": {
+        "p50": 162.60000000149012,
+        "p95": 227.59999999776483,
+        "max": 1187.300000000745,
+        "samples": 359,
+        "reason": null
+      },
+      "motionP95Ms": 227.59999999776483,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 2850.699999999255,
+          "latenessMs": 2850.699999999255,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22542.400000002235,
+          "latenessMs": 2542.400000002235,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42475,
+          "latenessMs": 2475,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 8,
+      "stem": "8-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "capturedAt": "2026-10-19T09:52:52.312Z",
+      "durationMs": 60031.199999999255,
+      "renderedFrameCount": 360,
+      "frameCount": 359,
+      "frameIntervalMs": {
+        "p50": 165.19999999925494,
+        "p95": 277.30000000074506,
+        "max": 519.3000000007451,
+        "samples": 359,
+        "reason": null
+      },
+      "motionP95Ms": 277.30000000074506,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 2410.800000000745,
+          "latenessMs": 2410.800000000745,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22712.89999999851,
+          "latenessMs": 2712.89999999851,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42863.5,
+          "latenessMs": 2863.5,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 9,
+      "stem": "9-control",
+      "role": "control",
+      "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+      "capturedAt": "2026-10-19T09:55:46.183Z",
+      "durationMs": 60029.699999999255,
+      "renderedFrameCount": 364,
+      "frameCount": 363,
+      "frameIntervalMs": {
+        "p50": 157.80000000074506,
+        "p95": 301.4000000022352,
+        "max": 1191.6000000014901,
+        "samples": 363,
+        "reason": null
+      },
+      "motionP95Ms": 301.4000000022352,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 2446,
+          "latenessMs": 2446,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22373.79999999702,
+          "latenessMs": 2373.7999999970198,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 44814.099999997765,
+          "latenessMs": 4814.099999997765,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    },
+    {
+      "index": 10,
+      "stem": "10-candidate",
+      "role": "candidate",
+      "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+      "capturedAt": "2026-10-19T09:58:40.931Z",
+      "durationMs": 60013.89999999851,
+      "renderedFrameCount": 351,
+      "frameCount": 350,
+      "frameIntervalMs": {
+        "p50": 165.90000000223517,
+        "p95": 254.30000000074506,
+        "max": 1087.3999999985099,
+        "samples": 350,
+        "reason": null
+      },
+      "motionP95Ms": 254.30000000074506,
+      "cameraPathId": "elapsed-move-right-v1",
+      "weatherFixtureSha256": "8174912f5f753a752ae6bb60b9fbb4ce0abe537522242867b3ccfaa9c9f6ce51",
+      "populations": [
+        {
+          "id": "weather-lightning",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-radar",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "weather-satellite",
+          "enabled": true,
+          "count": 1
+        },
+        {
+          "id": "wind",
+          "enabled": true,
+          "count": 65160
+        }
+      ],
+      "phases": [
+        {
+          "id": "early-history",
+          "sourceTime": "2026-10-08T11:50:00.000Z",
+          "scheduledAtMs": 0,
+          "observedAtElapsedMs": 4271.699999999255,
+          "latenessMs": 4271.699999999255,
+          "sourceObservationTimes": [
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z",
+            "2026-10-08T11:50:00.000Z"
+          ]
+        },
+        {
+          "id": "middle-history",
+          "sourceTime": "2026-10-08T11:55:00.000Z",
+          "scheduledAtMs": 20000,
+          "observedAtElapsedMs": 22838,
+          "latenessMs": 2838,
+          "sourceObservationTimes": [
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z",
+            "2026-10-08T11:55:00.000Z"
+          ]
+        },
+        {
+          "id": "latest-history",
+          "sourceTime": "2026-10-08T12:00:00.000Z",
+          "scheduledAtMs": 40000,
+          "observedAtElapsedMs": 42737.699999999255,
+          "latenessMs": 2737.699999999255,
+          "sourceObservationTimes": [
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z",
+            "2026-10-08T12:00:00.000Z"
+          ]
+        }
+      ],
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      },
+      "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "focused": true,
+      "visible": true,
+      "renderDemandOwnership": {
+        "requested": true,
+        "beforeRequestRenderMode": true,
+        "beforeUseDefaultRenderLoop": true,
+        "defaultLoopQuiesced": true,
+        "manualFramePump": true,
+        "restored": true,
+        "restoreReason": "restored-original-default-loop-state"
+      },
+      "power": {
+        "before": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        },
+        "after": {
+          "powerLine": "Online",
+          "batteryPercent": 96,
+          "scheme": "Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)"
+        }
+      }
+    }
+  ],
+  "preservedPriorQualificationFlags": {
+    "reviewPath": "docs/performance-evidence/s69-native-matrix-20261019/weather-confirmation-review.json",
+    "sha256": "95f1830d0bdbaf19b8bb0c132566d3dee81fab3cc28d39622f7956395a6d4cf3",
+    "status": "motion-regression-unresolved",
+    "flaggedScenarios": [
+      "scripted-motion"
+    ],
+    "scriptedMotion": {
+      "status": "measured",
+      "baselineMedianP95Ms": 274.19999999925494,
+      "candidateMedianP95Ms": 308,
+      "changePct": 12.326768782216229,
+      "regressionOver10Pct": true
+    },
+    "action": "Historical 12.3% and 17.0% motion regression flags remain in force; this diagnostic does not promote acceptance."
+  },
+  "limitations": [
+    "The ten captures are a one-run-per-block diagnostic, not a qualification matrix or acceptance result.",
+    "Motion frame intervals and p95 values do not measure exclusive GPU execution time.",
+    "Timing differences remain observational and do not identify a source-level cause.",
+    "The idle scenario is omitted; existing full qualification reports remain authoritative for idle behavior."
+  ],
+  "productionChanged": false
+}

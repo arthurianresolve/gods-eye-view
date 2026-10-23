@@ -1,0 +1,85 @@
+{
+  "schema": "gev-foreground-diagnostic-artifacts/v1",
+  "diagnosticOnly": true,
+  "performanceEvidence": false,
+  "applicationCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "harnessCommit": "9721b20206eed438bdc7299a2ce067e5cebfb1de",
+  "archive": "/opt/gods-eye-view-validation/s61-s70-20261018/windows-evidence-9721b202",
+  "files": [
+    {
+      "name": "matrix-run.log",
+      "bytes": 1245,
+      "sha256": "8700d5143fcd750ce4b52b230d7375548fcb6f2d267536bc2419d7049dc8dcd4"
+    },
+    {
+      "name": "matrix-run.exit",
+      "bytes": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    {
+      "name": "operating-view-baseline.json",
+      "bytes": 229869,
+      "sha256": "a5c94f1f10e3c16607f525b4315fcbd5062d31045efd83cad21b868ee36f22d9"
+    },
+    {
+      "name": "foreground-phase-diagnostic.log",
+      "bytes": 564,
+      "sha256": "66a44ee21810c119295edfd73a1475c7e3b5fbcde90791bde8a4785d5ff6923f"
+    },
+    {
+      "name": "foreground-phase-diagnostic.exit",
+      "bytes": 2,
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "name": "foreground-phase-diagnostic-capture.json",
+      "bytes": 229812,
+      "sha256": "3fa8b905566864927b7589369fcbbd83a42a96732e49130e2dff4f8d518f61ba"
+    },
+    {
+      "name": "foreground-phase-trace.jsonl",
+      "bytes": 9397,
+      "sha256": "afe3db70cb40ab2f37e3600c06ccb5e2f74a298611c3a387e16bbf455e8a7d6e"
+    },
+    {
+      "name": "foreground-phase-diagnostic-metadata.json",
+      "bytes": 346,
+      "sha256": "20756a88ec4e7c661cc93b74b58fe89d3f2958e4b6101cc3bc4d75606da6556c"
+    },
+    {
+      "name": "foreground-phase-timing.log",
+      "bytes": 324,
+      "sha256": "382dd22bb4004356ee5934dca70e3032250402fa47c3cec42a615cd34dac1811"
+    },
+    {
+      "name": "foreground-phase-timing.exit",
+      "bytes": 2,
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "name": "foreground-phase-timing.jsonl",
+      "bytes": 18106,
+      "sha256": "6444b36ca3932783d0135a56d31833512e141a89057d37406f9583579a32981a"
+    },
+    {
+      "name": "foreground-phase-timing-capture.json",
+      "bytes": 3480133,
+      "sha256": "365e25a97dbe05e8f8d1f7f04d60f134dd89b2a4aae71c44b665ab2fee83e49d"
+    },
+    {
+      "name": "foreground-phase-timing-metadata.json",
+      "bytes": 463,
+      "sha256": "0902fcf24027c51c0df9650782d770467f34f667a35381c46be2baa36261ef70"
+    },
+    {
+      "name": "foreground-phase-trace-hook.mjs",
+      "bytes": 3338,
+      "sha256": "9481e42d6727fa219e076955cfb2e7d8ed15d46473925d6eb1fb51bbc7d86775"
+    },
+    {
+      "name": "foreground-phase-timing-hook.mjs",
+      "bytes": 3773,
+      "sha256": "4c268e55fc37a45ceca3987a88cc073e3ddb82c4fd302886a2af9078da1be1d8"
+    }
+  ]
+}

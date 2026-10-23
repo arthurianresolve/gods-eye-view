@@ -1,0 +1,69 @@
+{
+  "schema": "gev-hosted-ci-summary/v1",
+  "timestamp": "2026-10-10T10:06:22.477Z",
+  "conclusion": "failure",
+  "headSha": "9fc5bc9b6671aae510efbe2bdd44f299e9b6dff1",
+  "jobs": [
+    {
+      "name": "Isolated import and workspace lifecycle",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188161905"
+    },
+    {
+      "name": "Free hosted Mac rendering diagnostic",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188162716"
+    },
+    {
+      "name": "60-minute rendered application soak",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188162721"
+    },
+    {
+      "name": "Free hosted Mac accelerated retention diagnostic",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188162844"
+    },
+    {
+      "name": "Install and update recovery (${{ matrix.os }})",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188162872"
+    },
+    {
+      "name": "Node ${{ matrix.node }}",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188162922"
+    },
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188162943"
+    },
+    {
+      "name": "Native WebGL probe (${{ matrix.os }})",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188163035"
+    },
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188163112"
+    },
+    {
+      "name": "Baseline-compatible performance build smoke",
+      "status": "completed",
+      "conclusion": "skipped",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194/job/114188163202"
+    }
+  ],
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38043457194"
+}

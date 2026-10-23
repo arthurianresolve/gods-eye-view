@@ -1,0 +1,149 @@
+{
+  "schema": "gev-ci-review/v1",
+  "reviewedAt": "2026-10-19T00:03:38.731Z",
+  "commit": "c9c61d019272a6fa85b7a2eb04ddc2a0e62df1d2",
+  "runs": [
+    {
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "c9c61d019272a6fa85b7a2eb04ddc2a0e62df1d2",
+      "rawSha256": "bed66882087e95235184b116ba86be6d061c9337fa9a41d4e338b58fe0518298",
+      "jobs": [
+        {
+          "name": "Node 24.14.0",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933661"
+        },
+        {
+          "name": "Install and update recovery (windows-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933742"
+        },
+        {
+          "name": "Install and update recovery (macos-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933751"
+        },
+        {
+          "name": "Node 26.x",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933827"
+        },
+        {
+          "name": "Street Level browser gate",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933839"
+        },
+        {
+          "name": "Windows onboarding",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933851"
+        },
+        {
+          "name": "Install and update recovery (ubuntu-latest)",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820933916"
+        },
+        {
+          "name": "Isolated mission render-demand correctness",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934344"
+        },
+        {
+          "name": "Aircraft tracking regression",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934452"
+        },
+        {
+          "name": "Native WebGL probe (${{ matrix.os }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934494"
+        },
+        {
+          "name": "Isolated import and workspace lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934582"
+        },
+        {
+          "name": "Free hosted Mac rendering diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934586"
+        },
+        {
+          "name": "Isolated CCTV lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934620"
+        },
+        {
+          "name": "Isolated terrain and picking lifecycle",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934628"
+        },
+        {
+          "name": "Baseline-compatible performance build smoke",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934648"
+        },
+        {
+          "name": "Isolated rendered mixed-use smoke",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820934712"
+        },
+        {
+          "name": "Free hosted Mac accelerated retention diagnostic",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820958889"
+        },
+        {
+          "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820965291"
+        },
+        {
+          "name": "60-minute rendered application soak",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702754/job/117820968746"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702769",
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "c9c61d019272a6fa85b7a2eb04ddc2a0e62df1d2",
+      "rawSha256": "8c20e2a309c61d8e620433a86d92ab8a0dc6bf520b85ac64501f69a3873ad85e",
+      "jobs": [
+        {
+          "name": "Build and verify release artifact",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39176702769/job/117820750447"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Optional diagnostic skips are not hardware or soak passes.",
+    "Exact application qualification remains attached to 19065997; these later commits change QA only."
+  ]
+}

@@ -15,15 +15,66 @@ const newKey = () => randomBytes(32).toString('base64url');
 const notShared = (error) =>
   `panel key not shared (${error.code || error.message}); using a key of this process`;
 
+function readKeyState(file) {
+  try {
+    const text = fs.readFileSync(file, 'utf8').trim();
+    return KEY_PATTERN.test(text)
+      ? { kind: 'valid', key: text }
+      : { kind: 'malformed', key: null };
+  } catch (error) {
+    if (error.code === 'ENOENT') return { kind: 'absent', key: null };
+    throw error;
+  }
+}
+
 function readKey(file) {
-  const text = fs.readFileSync(file, 'utf8').trim();
-  return KEY_PATTERN.test(text) ? text : null;
+  return readKeyState(file).key;
+}
+
+function readKeyIfPresent(file) {
+  return readKeyState(file).key;
+}
+
+/** Publish only if absent; a late first creator always wins. */
+function publishIfAbsent(file, tmp, key) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      fs.linkSync(tmp, file);
+      return key;
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      const state = readKeyState(file);
+      if (state.kind === 'valid') return state.key;
+      if (state.kind === 'malformed') return publishRepairedKey(file, tmp, key);
+    }
+  }
+  throw Object.assign(new Error('panel key publication kept racing'), {
+    code: 'EAGAIN',
+  });
+}
+
+/** Replace malformed contents without depending on Windows rename-over-file. */
+function publishRepairedKey(file, tmp, key) {
+  try {
+    fs.renameSync(tmp, file);
+    return key;
+  } catch (error) {
+    if (error.code !== 'EPERM') throw error;
+    // Under the repair lock, remove only the still-malformed destination and
+    // publish with link(), whose no-overwrite behavior resolves a concurrent
+    // first creator to one persisted winner.
+    const state = readKeyState(file);
+    if (state.kind === 'valid') return state.key;
+    if (state.kind === 'absent') return publishIfAbsent(file, tmp, key);
+    fs.rmSync(file, { force: true });
+    return publishIfAbsent(file, tmp, key);
+  }
 }
 
 /** Serialize malformed-file repair; ordinary first creation still uses link(). */
 function repairKey(file, tmp, key) {
   const lock = `${file}.repair-lock`;
-  const deadline = Date.now() + 2000;
+  const deadline = Date.now() + 5000;
   const pause = new Int32Array(new SharedArrayBuffer(4));
   let fd;
   for (;;) {
@@ -33,7 +84,7 @@ function repairKey(file, tmp, key) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error;
       // Another repair may already have published a usable key.
-      const winner = readKey(file);
+      const winner = readKeyIfPresent(file);
       if (winner) return winner;
       if (Date.now() >= deadline) {
         throw Object.assign(new Error('panel key repair is busy'), {
@@ -45,10 +96,10 @@ function repairKey(file, tmp, key) {
   }
   try {
     // A repair completed between our earlier read and acquiring the lock.
-    const winner = readKey(file);
-    if (winner) return winner;
-    fs.renameSync(tmp, file);
-    return key;
+    const state = readKeyState(file);
+    if (state.kind === 'valid') return state.key;
+    if (state.kind === 'absent') return publishIfAbsent(file, tmp, key);
+    return publishRepairedKey(file, tmp, key);
   } finally {
     fs.closeSync(fd);
     fs.rmSync(lock, { force: true });
@@ -64,7 +115,7 @@ function repairKey(file, tmp, key) {
  * Per-process keys then mismatch, and the panel refuses the request.
  * The first process to run creates the key, without replacing one
  * another process created at the same moment; the rest read it. When the file
- * cannot be read or written, or repair stays busy for two seconds, the process
+ * cannot be read or written, or repair stays busy for five seconds, the process
  * falls back to its own key, as every process did before.
  *
  * As before, the key keeps `panel_request` from clients that only list it; it
@@ -103,8 +154,8 @@ export function sharedPanelKey({
       fs.linkSync(tmp, file);
       return key;
     } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-      const winner = readKey(file);
+      if (error.code !== 'EEXIST' && error.code !== 'EPERM') throw error;
+      const winner = readKeyIfPresent(file);
       if (winner) return winner;
       return repairKey(file, tmp, key);
     }

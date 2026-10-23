@@ -1,0 +1,10 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "failure": {
+    "phase": "setup",
+    "message": "Receipt-only worker auditing requires the Austin operating fixture."
+  },
+  "finishedAt": "2026-10-13T16:28:47.191Z"
+}

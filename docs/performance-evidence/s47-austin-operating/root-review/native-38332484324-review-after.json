@@ -1,0 +1,52 @@
+{
+  "schema": "gev-austin-report-contract-review/v1",
+  "checkedAt": "2026-10-13T01:52:47.334Z",
+  "integrationCommit": "a753faa722b61978aaf3f7c1a3ce892f72407511",
+  "implementationCommit": "2ca802a0457151b2f7453d23427e433f14b9ef3c",
+  "rawSha256": "eddeff6538198e2854875effaed7d3e830cd9fc2488017377881d9ef498d371e",
+  "rawByteLength": 3676548,
+  "fullValidator": {
+    "status": "passed",
+    "captureCount": 4
+  },
+  "controls": [
+    {
+      "name": "missing-contract",
+      "status": "rejected"
+    },
+    {
+      "name": "unexpected-delivery-field",
+      "status": "rejected"
+    },
+    {
+      "name": "changed-browser",
+      "status": "rejected"
+    },
+    {
+      "name": "changed-route",
+      "status": "rejected"
+    },
+    {
+      "name": "changed-population",
+      "status": "rejected"
+    },
+    {
+      "name": "changed-visual",
+      "status": "rejected"
+    },
+    {
+      "name": "missing-sample",
+      "status": "rejected"
+    },
+    {
+      "name": "changed-timing",
+      "status": "rejected"
+    }
+  ],
+  "wrongCommit": "rejected",
+  "wrongWorkerBundle": "rejected",
+  "canonicalFixture": "independently regenerated exact match",
+  "cesiumWorkerContract": "independently derived installed pinned bundle and worker assets exact match",
+  "scope": "Historical structural replay only. App-asset paths and receipt hash pinned to historical report; no new verification of built or served application bytes. Failed hosted run remains failed until fresh exact-commit rerun.",
+  "performanceAcceptance": false
+}

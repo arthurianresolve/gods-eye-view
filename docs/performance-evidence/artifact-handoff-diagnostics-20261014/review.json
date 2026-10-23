@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "da7a33082644d6c1200dc7df66d300941170ce8c",
+  "run": 38522620108,
+  "job": 115715567825,
+  "originalOutcome": "failed",
+  "failedStep": "Download candidate artifact for verification",
+  "fullLogSha256": "2d0836e501c366ecbd36a9ea1cfc6576f44048947e202ccd622b13aa326bddee",
+  "failureOrigin": "Unresolved: original catch conflates gh transport/process errors and JSON parse errors. No HTTP status or stderr was retained.",
+  "laterObservation": "The exact artifact ID is now retrievable with matching run/head/digest metadata. This does not establish what the original request returned or verify its downloaded bytes.",
+  "change": "Distinguish request and malformed JSON failures; retain only HTTP status, process exit code and allowlisted process error. No retry, fallback, gate relaxation, or raw stderr/body logging.",
+  "hashes": {
+    "failed-step.log": "c77276034cba9f013b861d83b773dabf8c4f56872f26ae47f9149c586a203f94",
+    "metadata-recheck.json": "7690d305d5e1b7bc96bf45403150e7a7afad22aa3ee46456b105c40d027450a7",
+    "tests.log": "ab250a9cdd36ab807a3f2b73a96819f84ae9f402d8c15de327a79b52f153c5c2"
+  }
+}

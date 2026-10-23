@@ -1,0 +1,1 @@
+Production host: validate asset manifests before listening, preserve shared embed and Host policies, serve conditional encoded assets safely, and bound shutdown. Include provider support imports in standalone release packages while preserving historical recovery staging.

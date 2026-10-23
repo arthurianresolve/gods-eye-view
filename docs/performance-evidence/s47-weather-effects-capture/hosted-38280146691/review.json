@@ -1,0 +1,110 @@
+{
+  "schema": "gev-weather-fixture-failure-review/v1",
+  "runId": 38280146691,
+  "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38280146691",
+  "commit": "580cac115f00ef94264f686ea2a80fa209881b09",
+  "status": "failed",
+  "failure": {
+    "phase": "configure-weather-effects-fixture",
+    "scenario": null,
+    "run": null,
+    "message": "Waiting failed: 60000ms exceeded",
+    "operator": null
+  },
+  "startupSampleCount": 1,
+  "completedSampleCount": 0,
+  "fixture": {
+    "id": "weather-effects-austin-v1",
+    "count": null,
+    "fixedTime": "2026-10-08T12:00:00.000Z",
+    "sha256": "708126e1bd1f0f82cf7a4b86ef0a807361661097c973cf7bcb47bed166b0ab4e",
+    "byteLength": null
+  },
+  "interceptionErrors": [
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Fulfilled response has no fixture route.",
+      "phase": "fulfillment-callback",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    },
+    {
+      "message": "Unexpected or malformed weather-effects fixture request.",
+      "phase": "request-command",
+      "documentRole": "main-measured",
+      "documentId": "main-measured-document",
+      "sessionOrdinal": 1,
+      "lifecycleStage": "active"
+    }
+  ],
+  "baselineSmoke": "passed",
+  "childCleanup": "confirmed by owned child outcome",
+  "attribution": "Source review finds the new responder expects request.method as a string, while fixtureRequestCommand supplies an accessor. Its delivery observer also treats unrelated default offline API fulfillments as weather responses. These are harness contract defects; this run cannot establish application or GPU performance.",
+  "files": {
+    "job-failure.log.gz": {
+      "byteLength": 764,
+      "sha256": "323d56b496b6e7456fda1f7fed097d2c4794e31fe7bf8114a972a764fbde94df"
+    },
+    "performance-build-smoke.json": {
+      "byteLength": 62224,
+      "sha256": "49e4628529c2153da7400176adf6c6c18e5c914b5c8b7a4b4bb660e8b4e6a0de"
+    },
+    "performance-build-smoke.json.capture-cli-report-candidate.json": {
+      "byteLength": 17740,
+      "sha256": "0556154d87b15e889082e1d359e97d1261a1af188f0900a8d9f64ec2b1bc3109"
+    },
+    "run.json": {
+      "byteLength": 9160,
+      "sha256": "8db84cc9d83f811855396c38918ad0ea35182322f7fcb6b895c181ae5fe5ad93"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+2026-10-14T06:37:04.5935096Z ##[group]Run node scripts/download-candidate-artifact.mjs --out downloaded-release
+2026-10-14T06:37:04.5935744Z [36;1mnode scripts/download-candidate-artifact.mjs --out downloaded-release[0m
+2026-10-14T06:37:04.5991044Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-10-14T06:37:04.5991401Z env:
+2026-10-14T06:37:04.5993996Z   GH_TOKEN: ***
+2026-10-14T06:37:04.5994226Z   ARTIFACT_ID: 11875300809
+2026-10-14T06:37:04.5994646Z   UPLOAD_ARTIFACT_DIGEST: 7e0dd489c2ef71ab8e447b066931d9e044729f1d01554d4d6bfa6dbefc5e1f4b
+2026-10-14T06:37:04.5995184Z   EXPECTED_SOURCE_COMMIT: da7a33082644d6c1200dc7df66d300941170ce8c
+2026-10-14T06:37:04.5995532Z ##[endgroup]
+2026-10-14T06:37:05.0908087Z Candidate artifact handoff failed: GitHub artifact metadata request or JSON parsing failed.
+2026-10-14T06:37:05.0951530Z ##[error]Process completed with exit code 1.

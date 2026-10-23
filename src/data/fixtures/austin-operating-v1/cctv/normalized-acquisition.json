@@ -1,0 +1,12 @@
+{
+  "schema": "austin-operating-cctv-normalized/v1",
+  "normalizer": "server/providers/cctv/sources.js::loadAustinSourcesFromOpenData",
+  "rawInput": "rows.json",
+  "rawByteLength": 585798,
+  "rawSha256": "555501e4ef8c966e19c40ca89e7bb57e72d4c85fd6c16d0b8c827661d2e86c21",
+  "normalizedByteLength": 125049,
+  "normalizedSha256": "b4eaf5700678309864193166d30e17fd06c1e8d54438a760bc2885e6e5b87d50",
+  "sourceCount": 250,
+  "selectedFrom": "official Austin Socrata rows snapshot; native production status/coordinate/name/heading filtering; nearest 250 to AUSTIN_DOWNTOWN",
+  "allSyntheticFrames": true
+}

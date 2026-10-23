@@ -1,0 +1,153 @@
+export const FULL_SOAK_MS = 60 * 60_000;
+const RETENTION_WINDOW_MS = 30 * 60_000;
+// Checkpoints are collected only after an equivalent mixed-use cycle drains.
+// A hardware-rendered cycle is intentionally atomic and can slightly exceed
+// ten minutes on the minimum Windows GPU, so allow a bounded twelve-minute
+// interval while still requiring at least four post-GC observations.
+const RETENTION_CHECKPOINT_MAX_GAP_MS = 12 * 60_000;
+// Gauges describe current ownership. Monotonic diagnostic counters (for example
+// providerCacheReuses or providerLoadsStarted) are expected to increase and must
+// never be interpreted as retained resources. Unknown metrics remain outside
+// this gate until their ownership/units are declared.
+const RESOURCE_GAUGES = new Set([
+  'listeners',
+  'timers',
+  'pendingJobs',
+  'primitives',
+  'entities',
+  'groundPrimitives',
+  'dataSources',
+  'dataLayers',
+  'cacheEntries',
+  'imageryLayers',
+  'renderHolds',
+  'scheduledUpdates',
+  'estimatedTileBytes',
+  'pointPrimitiveCount',
+]);
+const POINT_PRIMITIVE_COUNT_UNIT = 'instances';
+const POINT_PRIMITIVE_COVERAGE = 'owned-import-point-collection';
+
+function resourceCounts(metrics) {
+  const resources = metrics?.application?.resources;
+  if (!resources?.ownerResources) return null;
+  const counts = {};
+  for (const [key, value] of Object.entries(resources)) {
+    if (
+      RESOURCE_GAUGES.has(key) &&
+      key !== 'pointPrimitiveCount' &&
+      typeof value === 'number' &&
+      Number.isFinite(value)
+    )
+      counts[key] = value;
+  }
+  for (const [owner, owned] of Object.entries(resources.ownerResources)) {
+    for (const [key, value] of Object.entries(owned)) {
+      if (
+        key === 'pointPrimitiveCount' &&
+        (owned.pointPrimitiveCountUnit !== POINT_PRIMITIVE_COUNT_UNIT ||
+          owned.pointPrimitiveCoverage !== POINT_PRIMITIVE_COVERAGE ||
+          !Number.isSafeInteger(value) ||
+          value < 0 ||
+          value > 5_000)
+      )
+        continue;
+      if (
+        RESOURCE_GAUGES.has(key) &&
+        typeof value === 'number' &&
+        Number.isFinite(value)
+      )
+        counts[`${owner}.${key}`] = value;
+    }
+  }
+  return counts;
+}
+
+/** Conservative acceptance, independent of successful UI operation counts. */
+export function evaluateSoakStability({ durationMs, checkpoints = [] }) {
+  const failures = [],
+    pending = [];
+  if (!Number.isFinite(durationMs) || durationMs < FULL_SOAK_MS)
+    pending.push('Requires a 60-minute run.');
+  const first = checkpoints[0];
+  const last = checkpoints.at(-1);
+  for (const point of checkpoints) {
+    const workers = point.metrics?.application?.workers;
+    if (!workers?.instrumented || workers.overflow)
+      pending.push('Worker task ownership evidence is incomplete.');
+    else if (
+      workers.workers.some(
+        (worker) => worker.pending && worker.oldestPendingMs >= 10000,
+      )
+    )
+      failures.push(
+        `Worker tasks remained unsettled for at least ten seconds at ${point.elapsedMs} ms.`,
+      );
+  }
+  const baseline = resourceCounts(first?.metrics);
+  if (!baseline || !Object.keys(baseline).length)
+    pending.push('Application-owned resource baseline is unavailable.');
+  else {
+    for (const point of checkpoints.slice(1)) {
+      const current = resourceCounts(point.metrics);
+      if (!current || Object.keys(baseline).some((key) => !(key in current))) {
+        pending.push('Application resource checkpoint is incomplete.');
+        continue;
+      }
+      for (const [key, value] of Object.entries(current)) {
+        if (value > (baseline[key] ?? 0))
+          failures.push(
+            `Resource ${key} grew from ${baseline[key] ?? 0} to ${value} at ${point.elapsedMs} ms.`,
+          );
+      }
+    }
+  }
+  // Include the last checkpoint at or before the start of the final 30 minutes.
+  const startIndex = checkpoints.findLastIndex(
+    (point) => point.elapsedMs <= (last?.elapsedMs ?? 0) - RETENTION_WINDOW_MS,
+  );
+  const window = startIndex >= 0 ? checkpoints.slice(startIndex) : [];
+  let heapGrowthRatio = null;
+  if (
+    window.length < 4 ||
+    window.some(
+      (p, index) =>
+        !(p.metrics?.JSHeapUsedSize > 0) ||
+        (index > 0 &&
+          p.elapsedMs - window[index - 1].elapsedMs >
+            RETENTION_CHECKPOINT_MAX_GAP_MS),
+    )
+  )
+    pending.push('Final 30-minute post-GC heap checkpoints are unavailable.');
+  else {
+    const startHeap = window[0].metrics.JSHeapUsedSize;
+    heapGrowthRatio = (last.metrics.JSHeapUsedSize - startHeap) / startHeap;
+    const peakGrowth = Math.max(
+      ...window.map((p) => p.metrics.JSHeapUsedSize / startHeap - 1),
+    );
+    if (peakGrowth > 0.05)
+      failures.push(
+        'Retained heap exceeded 5% growth over the final 30-minute window.',
+      );
+  }
+  const listeners = window.map((p) => p.metrics?.JSEventListeners);
+  if (listeners.length >= 4 && listeners.every(Number.isFinite)) {
+    const changes = listeners.slice(1).map((value, i) => value - listeners[i]);
+    if (
+      changes.every((delta) => delta >= 0) &&
+      changes.filter((delta) => delta > 0).length >= 3
+    )
+      failures.push(
+        'Browser listener counts retain a persistent upward trend; attribution is required.',
+      );
+  } else
+    pending.push(
+      'Final 30-minute browser listener checkpoints are unavailable.',
+    );
+  return {
+    status: failures.length ? 'failed' : pending.length ? 'pending' : 'passed',
+    failures: [...new Set(failures)],
+    pending: [...new Set(pending)],
+    heapGrowthRatio,
+  };
+}

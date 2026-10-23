@@ -1,0 +1,48 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "2e839a449ce32582130b33267a1a276e8cb59224",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "browserVersion": "Chrome/152.0.7977.75",
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-09T18:06:35.808Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "passed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "status": "failed",
+      "step": "application-ready",
+      "error": "Waiting failed: 90000ms exceeded; startup diagnostics: {\"state\":{\"readyState\":\"interactive\",\"applicationPresent\":true,\"canvasCount\":8,\"cesiumError\":null},\"errors\":[],\"messages\":[\"[Init] Google 3D Tiles unavailable, using the keyless globe: Error: Google 3D tokens are not offered\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"[MapStack] Re:Earth terrain unavailable, falling back to flat ellipsoid terrain: [object rR]\",\"[MapStack] Esri Satellite is unavailable; using OSM\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: the server responded with a status of 503 (Service Unavailable)\",\"Failed to load resource: the server responded with a status of 503 (Service Unavailable)\",\"Failed to load resource: the server responded with a status of 503 (Service Unavailable)\"]}"
+    }
+  ],
+  "status": "failed",
+  "failure": {
+    "check": "upgraded-application-same-profile",
+    "step": "application-ready",
+    "error": "Waiting failed: 90000ms exceeded; startup diagnostics: {\"state\":{\"readyState\":\"interactive\",\"applicationPresent\":true,\"canvasCount\":8,\"cesiumError\":null},\"errors\":[],\"messages\":[\"[Init] Google 3D Tiles unavailable, using the keyless globe: Error: Google 3D tokens are not offered\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"[MapStack] Re:Earth terrain unavailable, falling back to flat ellipsoid terrain: [object rR]\",\"[MapStack] Esri Satellite is unavailable; using OSM\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector\",\"Failed to load resource: the server responded with a status of 503 (Service Unavailable)\",\"Failed to load resource: the server responded with a status of 503 (Service Unavailable)\",\"Failed to load resource: the server responded with a status of 503 (Service Unavailable)\"]}"
+  }
+}

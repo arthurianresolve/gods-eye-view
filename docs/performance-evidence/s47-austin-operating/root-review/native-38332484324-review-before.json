@@ -1,0 +1,23 @@
+{
+  "schema": "gev-austin-report-contract-review/v1",
+  "checkedAt": "2026-10-13T01:43:43.911Z",
+  "candidate": "78e0417244856a2a3d2905ab618d32b909507eb6",
+  "rawSha256": "eddeff6538198e2854875effaed7d3e830cd9fc2488017377881d9ef498d371e",
+  "rawByteLength": 3676548,
+  "canonicalFixture": "exact-match",
+  "canonicalComparisonContract": "exact-match",
+  "satelliteEpochs": "passed",
+  "cesiumWorkerContract": "matches independently hashed installed pinned Cesium bytes",
+  "outerValidation": {
+    "status": "failed",
+    "name": "AssertionError",
+    "operator": "deepStrictEqual",
+    "stack": [
+      "    at validateAustinOperatingCaptureCliReport (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.mjs:1650:10)",
+      "    at validateCaptureCliReport (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.mjs:788:12)",
+      "    at file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/[eval1]:15:49"
+    ]
+  },
+  "scope": "Historical structural replay. Receipt hash and app-asset names are pinned historical report values, not a new verification of built or served application bytes. Canonical fixture and Cesium worker bytes independently loaded from checkout.",
+  "performanceAcceptance": false
+}

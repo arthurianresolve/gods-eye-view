@@ -1,0 +1,50 @@
+{
+  "schema": "gev-local-test-observation/v1",
+  "recordedAt": "2026-10-10T10:44:40.752Z",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.16.0"
+  },
+  "source": {
+    "observedHead": "88a984ca7dd17150e61f0af521d188d6669b72dd",
+    "immutableCandidate": false,
+    "note": "The full suite overlapped ongoing edits. This is a working-tree diagnostic, not exact-commit candidate acceptance."
+  },
+  "checks": [
+    {
+      "id": "node24-parallel-unit-suite",
+      "status": "failed",
+      "total": 6695,
+      "passed": 6684,
+      "failed": 1,
+      "skipped": 10,
+      "durationMs": 410137.4678,
+      "failure": {
+        "file": "src/data/cctvMediaRange.test.mjs",
+        "test": "a live feed that keeps producing is not cut off by the idle deadline",
+        "message": "a healthy feed was torn down"
+      },
+      "artifact": {
+        "file": "qa-artifacts/unit-s51-node24.log",
+        "sha256": "ac5a0df9f710ed4055ec76e57d6b929e480e6ee9508c1eba9264b49ea15ff612"
+      },
+      "note": "The unchanged test file passed all 21 tests in an isolated rerun. Production behavior has not been changed; deterministic deadline-test correction is pending."
+    },
+    {
+      "id": "node24-serialized-allocation-gates",
+      "status": "passed",
+      "total": 14,
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "durationMs": 138433.55,
+      "artifact": {
+        "file": "qa-artifacts/allocations-s51-node24.log",
+        "sha256": "174689d2cf606134f967cf71165b45e97e558e167588f9380a9250d961de7248"
+      },
+      "note": "Run separately because the full unit runner returns before allocation gates when its parallel stage fails."
+    }
+  ],
+  "performanceAcceptance": false,
+  "hardwareAcceptance": false
+}

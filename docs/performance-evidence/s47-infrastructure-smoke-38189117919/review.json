@@ -1,0 +1,33 @@
+{
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38189117919",
+  "commit": "f8469919a8e82460dc6774afc6e3ed4e336c564b",
+  "rawSha256": "886c4adf416e6ab490962a77186b2ccac7f93c19a0467628d82710c860641ba2",
+  "status": "failed",
+  "failure": {
+    "message": "The expression evaluated to a falsy value:   assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 6) ",
+    "phase": "candidate"
+  },
+  "captureSummary": {
+    "reportSchema": "gev-performance-capture/v1",
+    "status": null,
+    "failure": null,
+    "source": {
+      "appCommit": "f8469919a8e82460dc6774afc6e3ed4e336c564b",
+      "harnessCommit": "f8469919a8e82460dc6774afc6e3ed4e336c564b",
+      "provenanceStatus": "verified-local-build-and-served-assets-before-and-after"
+    },
+    "fixtureDelivery": {
+      "status": "observed",
+      "fixtureSha256": "44ee5e37da85bba7fb2b720a1c0e77303f28ad1ae138084a319ac7332f664454"
+    },
+    "completedSampleCount": 4,
+    "completedSamplesRetained": 4,
+    "evidenceTruncated": null
+  },
+  "limitations": [
+    "Four capture samples were completed but the outer worker-audit count validation failed.",
+    "The failure envelope discarded the completed raw capture report; actual audit counts and per-sample evidence cannot be independently verified from this artifact.",
+    "The frozen-clock fix advanced beyond the previous setup failure, but infrastructure validation is not yet passed.",
+    "Software-rendered short smoke only; no hardware or performance acceptance."
+  ]
+}

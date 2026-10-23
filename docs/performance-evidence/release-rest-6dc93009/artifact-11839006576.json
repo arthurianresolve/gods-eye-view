@@ -1,0 +1,20 @@
+{
+  "id": 11839006576,
+  "node_id": "MDg6QXJ0aWZhY3QxMTgzOTAwNjU3Ng==",
+  "name": "gev-release-evidence-6dc93009efd2c80fd1b3a72fd7f1ba8f3b748100",
+  "size_in_bytes": 765,
+  "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11839006576",
+  "archive_download_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/artifacts/11839006576/zip",
+  "expired": false,
+  "digest": "sha256:98c8d0190e25ce679df7399a12e40e433bdcf29ea43474afc55a75b2f22e080b",
+  "created_at": "2026-10-13T18:34:27Z",
+  "updated_at": "2026-10-13T18:34:27Z",
+  "expires_at": "2027-01-11T18:30:03Z",
+  "workflow_run": {
+    "id": 38447239483,
+    "repository_id": 1362432886,
+    "head_repository_id": 1362432886,
+    "head_branch": "qa/release-rest-artifact-20261013",
+    "head_sha": "6dc93009efd2c80fd1b3a72fd7f1ba8f3b748100"
+  }
+}

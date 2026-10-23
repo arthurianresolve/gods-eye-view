@@ -1,0 +1,764 @@
+export const WEATHER_IDLE_DIAGNOSTIC_SCHEMA =
+  'gev-weather-idle-render-demand-diagnostic/v1';
+export const WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON =
+  'weather-idle-render-demand-diagnostic-is-diagnostic-only';
+
+export const WEATHER_IDLE_DIAGNOSTIC_MAX_FRAME_EVENTS = 512;
+export const WEATHER_IDLE_DIAGNOSTIC_MAX_GOVERNOR_SAMPLES = 300;
+export const WEATHER_IDLE_DIAGNOSTIC_MAX_GAP_REPORTS = 128;
+export const WEATHER_GOVERNOR_MODE_TRACE_SCHEMA =
+  'gev-weather-governor-mode-write-trace/v1';
+export const WEATHER_GOVERNOR_MODE_TRACE_MAX_EVENTS = 256;
+export const WEATHER_GOVERNOR_MODE_TRACE_WINDOW_NAME =
+  '__gevWeatherGovernorModeWriteTraceV1';
+
+const WEATHER_WORKLOAD_ID = 'austin-weather-effects-phased-v2';
+const PHASE_IDS = new Set([
+  'early-history',
+  'middle-history',
+  'latest-history',
+]);
+
+/**
+ * Serialized by Puppeteer before an idle weather sample. It observes only
+ * writes to Cesium's public requestRenderMode data property; it does not wrap
+ * scene.requestRender or infer GPU/CPU cost.
+ */
+export function installWeatherGovernorModeTraceInPage() {
+  const globalName = '__gevWeatherGovernorModeWriteTraceV1';
+  const schema = 'gev-weather-governor-mode-write-trace/v1';
+  const maxEvents = 256;
+  const target = window.__godsEyeView?.viewer?.scene;
+  const trace = {
+    schema,
+    installed: false,
+    status: 'unavailable',
+    descriptorKind: null,
+    descriptorConfigurable: null,
+    descriptorEnumerable: null,
+    descriptorWritable: null,
+    initialValue: null,
+    finalValue: null,
+    startAtMs: null,
+    endAtMs: null,
+    eventsObserved: 0,
+    events: [],
+    eventsOmitted: 0,
+    nonBooleanWriteObserved: false,
+    ownershipReplaced: false,
+    replacementObservedAtMs: null,
+    cleanup: {
+      attempted: false,
+      descriptorRestored: false,
+      descriptorVerified: false,
+      replacementOwnerPreserved: false,
+      windowBindingRestored: false,
+    },
+  };
+  if (!target || Object.hasOwn(window, globalName)) {
+    trace.status = 'install-rejected';
+    return trace;
+  }
+  const original = Object.getOwnPropertyDescriptor(target, 'requestRenderMode');
+  trace.descriptorKind = original?.get || original?.set ? 'accessor' : 'data';
+  trace.descriptorConfigurable = original?.configurable ?? null;
+  trace.descriptorEnumerable = original?.enumerable ?? null;
+  trace.descriptorWritable = original?.writable ?? null;
+  if (
+    !original ||
+    original.get ||
+    original.set ||
+    typeof original.value !== 'boolean' ||
+    original.configurable !== true ||
+    original.writable !== true
+  ) {
+    trace.status = 'unsupported-descriptor';
+    return trace;
+  }
+  let currentValue = original.value;
+  let active = false;
+  let disposed = false;
+  let getter;
+  let setter;
+  const ownDescriptor = () =>
+    Object.getOwnPropertyDescriptor(target, 'requestRenderMode');
+  const descriptorMatches = (left, right) =>
+    Boolean(
+      left &&
+      right &&
+      left.configurable === right.configurable &&
+      left.enumerable === right.enumerable &&
+      left.writable === right.writable &&
+      left.value === right.value &&
+      left.get === right.get &&
+      left.set === right.set,
+    );
+  const descriptorIsOriginal = () =>
+    descriptorMatches(ownDescriptor(), original);
+  const descriptorIsOurs = () => {
+    const descriptor = ownDescriptor();
+    return descriptor?.get === getter && descriptor?.set === setter;
+  };
+  const observeOwnership = (at = performance.now()) => {
+    if (descriptorIsOurs()) return true;
+    if (!trace.ownershipReplaced) {
+      trace.ownershipReplaced = true;
+      trace.replacementObservedAtMs =
+        trace.startAtMs === null ? null : Math.max(0, at - trace.startAtMs);
+    }
+    return false;
+  };
+  const record = (value, at = performance.now()) => {
+    if (!active) return;
+    trace.eventsObserved += 1;
+    if (typeof value !== 'boolean') trace.nonBooleanWriteObserved = true;
+    if (trace.events.length < maxEvents)
+      trace.events.push({
+        atMs: Math.max(0, at - trace.startAtMs),
+        value: typeof value === 'boolean' ? value : null,
+      });
+    else trace.eventsOmitted += 1;
+  };
+  getter = function () {
+    observeOwnership();
+    return currentValue;
+  };
+  setter = function (value) {
+    observeOwnership();
+    currentValue = value;
+    record(value);
+  };
+  try {
+    Object.defineProperty(target, 'requestRenderMode', {
+      configurable: original.configurable,
+      enumerable: original.enumerable,
+      get: getter,
+      set: setter,
+    });
+    Object.defineProperty(window, globalName, {
+      configurable: true,
+      enumerable: false,
+      writable: false,
+      value: null,
+    });
+    const controller = {
+      start(startAtMs) {
+        if (disposed || active || !descriptorIsOurs()) return false;
+        trace.startAtMs = Number.isFinite(startAtMs)
+          ? startAtMs
+          : performance.now();
+        trace.initialValue = currentValue;
+        active = true;
+        trace.status = 'recording';
+        return true;
+      },
+      check() {
+        return observeOwnership();
+      },
+      stop(endAtMs) {
+        if (!active) return false;
+        observeOwnership();
+        trace.endAtMs = Number.isFinite(endAtMs) ? endAtMs : performance.now();
+        active = false;
+        trace.status = 'stopped';
+        return true;
+      },
+      dispose() {
+        if (disposed) return trace;
+        disposed = true;
+        trace.cleanup.attempted = true;
+        const stillOwned = observeOwnership();
+        const current = ownDescriptor();
+        if (stillOwned) {
+          const finalValue = currentValue;
+          trace.finalValue = finalValue;
+          try {
+            Object.defineProperty(target, 'requestRenderMode', {
+              ...original,
+              value: finalValue,
+            });
+            trace.cleanup.descriptorRestored = true;
+            const restored = ownDescriptor();
+            trace.cleanup.descriptorVerified = Boolean(
+              restored &&
+              !restored.get &&
+              !restored.set &&
+              restored.configurable === original.configurable &&
+              restored.enumerable === original.enumerable &&
+              restored.writable === original.writable &&
+              restored.value === finalValue,
+            );
+          } catch {
+            trace.cleanup.descriptorRestored = false;
+          }
+        } else {
+          trace.finalValue =
+            current &&
+            !current.get &&
+            !current.set &&
+            typeof current.value === 'boolean'
+              ? current.value
+              : null;
+          trace.cleanup.replacementOwnerPreserved = true;
+        }
+        try {
+          if (window[globalName] === controller) delete window[globalName];
+          trace.cleanup.windowBindingRestored = !Object.hasOwn(
+            window,
+            globalName,
+          );
+        } catch {
+          trace.cleanup.windowBindingRestored = false;
+        }
+        if (trace.endAtMs === null) trace.endAtMs = performance.now();
+        if (trace.status === 'recording' || trace.status === 'installed')
+          trace.status = 'incomplete';
+        else if (trace.status === 'stopped') trace.status = 'completed';
+        return trace;
+      },
+    };
+    Object.defineProperty(window, globalName, {
+      configurable: true,
+      enumerable: false,
+      writable: false,
+      value: controller,
+    });
+    trace.installed = true;
+    trace.status = 'installed';
+  } catch {
+    trace.status = 'install-failed';
+    try {
+      if (Object.hasOwn(window, globalName) && window[globalName] === null)
+        delete window[globalName];
+      trace.cleanup.windowBindingRestored = !Object.hasOwn(window, globalName);
+    } catch {
+      trace.cleanup.windowBindingRestored = false;
+    }
+    try {
+      if (descriptorIsOurs()) {
+        Object.defineProperty(target, 'requestRenderMode', original);
+        trace.cleanup.descriptorRestored = true;
+        trace.cleanup.descriptorVerified = descriptorIsOriginal();
+      } else if (descriptorIsOriginal()) {
+        trace.cleanup.descriptorRestored = true;
+        trace.cleanup.descriptorVerified = true;
+      } else {
+        trace.ownershipReplaced = true;
+        trace.cleanup.replacementOwnerPreserved = true;
+      }
+    } catch {
+      trace.cleanup.descriptorRestored = false;
+    }
+  }
+  return trace;
+}
+
+/** Serialized by Puppeteer when setup fails before the measurement callback owns cleanup. */
+export function disposeWeatherGovernorModeTraceInPage() {
+  const controller = window.__gevWeatherGovernorModeWriteTraceV1;
+  if (!controller) return { status: 'already-disposed' };
+  let stopErrorName = null;
+  try {
+    controller.stop?.(performance.now());
+  } catch (error) {
+    stopErrorName = String(error?.name || 'Error').slice(0, 64);
+  }
+  let trace = null;
+  let disposeErrorName = null;
+  try {
+    trace = controller.dispose?.() ?? null;
+  } catch (error) {
+    disposeErrorName = String(error?.name || 'Error').slice(0, 64);
+  }
+  return {
+    status: trace ? 'disposed' : 'dispose-failed',
+    trace,
+    stopErrorName,
+    disposeErrorName,
+  };
+}
+
+export function resolveWeatherIdleDiagnosticContract({
+  enabled = false,
+  workloadId,
+  warmupMs,
+  seconds,
+  runs,
+  otherWeatherDiagnostic = false,
+  visibleWindProbe = false,
+} = {}) {
+  if (visibleWindProbe && !enabled)
+    throw new TypeError(
+      '--weather-visible-wind-probe requires --weather-idle-diagnostic.',
+    );
+  if (!enabled) return null;
+  if (workloadId !== WEATHER_WORKLOAD_ID)
+    throw new TypeError(
+      '--weather-idle-diagnostic requires the phased weather/effects fixture.',
+    );
+  if (otherWeatherDiagnostic)
+    throw new TypeError(
+      '--weather-idle-diagnostic cannot be combined with another weather diagnostic or qualification mode.',
+    );
+  if (warmupMs !== 30_000 || seconds !== 60 || runs !== 1)
+    throw new TypeError(
+      '--weather-idle-diagnostic requires exactly 30s warmup, 60s measurement and one run.',
+    );
+  return Object.freeze({
+    mode: 'idle-render-demand-diagnostic',
+    scenarios: Object.freeze(['idle']),
+    diagnosticOnly: true,
+    performanceAcceptanceEligible: false,
+    ineligibleReason: WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+    ...(visibleWindProbe ? { visibleWindProbe: 'after-measurement-only' } : {}),
+  });
+}
+
+/** Wrap only phase-selection evaluations and preserve the page API. */
+export function observeWeatherPhaseRequests(
+  page,
+  { now = () => performance.now(), onEvent = () => {} } = {},
+) {
+  if (!page || typeof page.evaluate !== 'function')
+    throw new TypeError('A Puppeteer page with evaluate() is required.');
+  if (typeof now !== 'function' || typeof onEvent !== 'function')
+    throw new TypeError('Phase observation callbacks are invalid.');
+
+  const events = [];
+  const observedPage = new Proxy(page, {
+    get(target, property) {
+      if (property === 'evaluate')
+        return (...args) => {
+          const payload = args[1];
+          const phaseId = payload?.phase?.id;
+          if (
+            typeof phaseId !== 'string' ||
+            !PHASE_IDS.has(phaseId) ||
+            !/^[a-f0-9]{64}$/i.test(payload?.fixtureSha256 || '')
+          )
+            return Reflect.apply(target.evaluate, target, args);
+
+          const event = {
+            phaseId,
+            fixtureSha256: payload.fixtureSha256,
+            requestHostPerformanceNowMs: now(),
+            completionHostPerformanceNowMs: null,
+            status: 'pending',
+            pageObservedAtElapsedMs: null,
+          };
+          events.push(event);
+          onEvent({ ...event });
+          let result;
+          try {
+            result = Reflect.apply(target.evaluate, target, args);
+          } catch (error) {
+            event.status = 'rejected';
+            event.completionHostPerformanceNowMs = now();
+            event.errorName = String(error?.name || 'Error').slice(0, 64);
+            onEvent({ ...event });
+            throw error;
+          }
+          return Promise.resolve(result).then(
+            (value) => {
+              event.status = 'fulfilled';
+              event.completionHostPerformanceNowMs = now();
+              event.pageObservedAtElapsedMs = Number.isFinite(
+                value?.observedAtElapsedMs,
+              )
+                ? value.observedAtElapsedMs
+                : null;
+              onEvent({ ...event });
+              return value;
+            },
+            (error) => {
+              event.status = 'rejected';
+              event.completionHostPerformanceNowMs = now();
+              event.errorName = String(error?.name || 'Error').slice(0, 64);
+              onEvent({ ...event });
+              throw error;
+            },
+          );
+        };
+
+      const value = Reflect.get(target, property, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  return { page: observedPage, events };
+}
+
+function normalizeGovernorState(state) {
+  const safeLabel = (value) =>
+    typeof value === 'string' && /^[A-Za-z0-9:_./-]{1,96}$/.test(value)
+      ? value
+      : '[redacted]';
+  const mode = state?.mode;
+  const holds = Array.isArray(state?.holds)
+    ? state.holds
+        .filter((value) => typeof value === 'string')
+        .slice(0, 32)
+        .map(safeLabel)
+    : null;
+  const scheduledUpdates = Array.isArray(state?.scheduledUpdates)
+    ? state.scheduledUpdates
+        .filter((value) => typeof value === 'string')
+        .slice(0, 32)
+        .map(safeLabel)
+    : null;
+  const recentRequests = Array.isArray(state?.recentRequests)
+    ? state.recentRequests.slice(-4).map((request) => ({
+        reason: safeLabel(request?.reason),
+        atEpochMs: Number.isFinite(request?.at) ? request.at : null,
+      }))
+    : null;
+  return {
+    mode: mode === 'idle' || mode === 'continuous' ? mode : null,
+    holds,
+    scheduledUpdates,
+    recentRequests,
+  };
+}
+
+function hasContinuousDemand(state) {
+  if (!state || state.mode == null || !Array.isArray(state.holds)) return null;
+  return state.mode === 'continuous' || state.holds.length > 0;
+}
+
+function normalizeWindRenderer(state) {
+  if (!state || typeof state !== 'object') return null;
+  const count = (value) =>
+    Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000
+      ? value
+      : null;
+  const boolean = (value) => (typeof value === 'boolean' ? value : null);
+  const gpu =
+    state.gpu && typeof state.gpu === 'object'
+      ? {
+          ready: boolean(state.gpu.ready),
+          heightFade:
+            Number.isFinite(state.gpu.heightFade) &&
+            state.gpu.heightFade >= 0 &&
+            state.gpu.heightFade <= 1
+              ? state.gpu.heightFade
+              : null,
+          visibleCells: count(state.gpu.visibleCells),
+          visibleVertexCount: count(state.gpu.visibleVertexCount),
+          pathCount: count(state.gpu.pathCount),
+          displayHeightMeters:
+            Number.isFinite(state.gpu.displayHeightMeters) &&
+            state.gpu.displayHeightMeters >= 0 &&
+            state.gpu.displayHeightMeters <= 10_000_000
+              ? state.gpu.displayHeightMeters
+              : null,
+        }
+      : null;
+  return {
+    renderMode: ['gpu-streamlines', 'canvas-fallback'].includes(
+      state.renderMode,
+    )
+      ? state.renderMode
+      : null,
+    paused: boolean(state.paused),
+    reducedMotion: boolean(state.reducedMotion),
+    hidden: boolean(state.hidden),
+    framePending: boolean(state.framePending),
+    gpu,
+  };
+}
+
+function classifyWindRendering(observations) {
+  const states = observations.map((observation) =>
+    normalizeWindRenderer(observation?.windRenderer),
+  );
+  if (!states.length) return 'unknown';
+  const modes = new Set(
+    states
+      .map((state) => state?.renderMode ?? null)
+      .filter((mode) => mode !== null),
+  );
+  if (!modes.size) return 'unknown';
+  if (modes.size > 1) return 'mixed-render-modes';
+  if (modes.has('canvas-fallback')) return 'canvas-visibility-unknown';
+  if (states.some((state) => state?.renderMode !== 'gpu-streamlines'))
+    return 'gpu-visibility-incomplete';
+  const gpu = states.map((state) => state.gpu);
+  if (
+    gpu.some(
+      (state) =>
+        !state || state.heightFade === null || state.visibleCells === null,
+    )
+  )
+    return 'gpu-visibility-incomplete';
+  if (gpu.every((state) => state.heightFade === 0 && state.visibleCells === 0))
+    return 'gpu-streamlines-fully-faded';
+  if (
+    gpu.some(
+      (state) =>
+        Number.isFinite(state.heightFade) &&
+        state.heightFade > 0 &&
+        Number.isInteger(state.visibleCells) &&
+        state.visibleCells > 0,
+    )
+  )
+    return 'gpu-cells-eligible';
+  return 'gpu-streamlines-not-observed-visible';
+}
+
+function stateSignature(state) {
+  const normalized = normalizeGovernorState(state);
+  return JSON.stringify({
+    mode: normalized.mode,
+    holds: normalized.holds,
+    scheduledUpdates: normalized.scheduledUpdates,
+  });
+}
+
+/** Add bounded owner-change and >1s gap summaries without classifying a pass. */
+export function summarizeWeatherIdleDiagnostic({
+  raw,
+  phaseObservations,
+  phaseRequestEvents = [],
+} = {}) {
+  if (!raw || typeof raw !== 'object')
+    throw new TypeError('Weather idle raw diagnostic is required.');
+  const frameEvents = Array.isArray(raw.frameEvents) ? raw.frameEvents : [];
+  const governorSamples = Array.isArray(raw.governorSamples)
+    ? raw.governorSamples
+    : [];
+  const validFrames = frameEvents
+    .filter((frame) => Number.isFinite(frame?.atMs))
+    .slice(0, WEATHER_IDLE_DIAGNOSTIC_MAX_FRAME_EVENTS);
+  const validSamples = governorSamples
+    .filter((sample) => Number.isFinite(sample?.atMs))
+    .slice(0, WEATHER_IDLE_DIAGNOSTIC_MAX_GOVERNOR_SAMPLES);
+  const ownerChanges = [];
+  let previousSignature = null;
+  for (const sample of validSamples) {
+    const signature = stateSignature(sample.governor);
+    if (previousSignature !== null && signature !== previousSignature)
+      ownerChanges.push({
+        atMs: sample.atMs,
+        governor: normalizeGovernorState(sample.governor),
+      });
+    previousSignature = signature;
+  }
+
+  const gapsOverOneSecond = [];
+  let omittedGapCount = 0;
+  for (let index = 1; index < validFrames.length; index += 1) {
+    const before = validFrames[index - 1];
+    const after = validFrames[index];
+    const intervalMs = after.atMs - before.atMs;
+    if (intervalMs <= 1_000) continue;
+    const observations = [
+      { ...before, source: 'frame' },
+      { ...after, source: 'frame' },
+    ];
+    for (const sample of validSamples)
+      if (sample.atMs >= before.atMs && sample.atMs <= after.atMs)
+        observations.push({ ...sample, source: 'sample' });
+    const states = observations.map((observation) => observation.governor);
+    const demand = states
+      .map(hasContinuousDemand)
+      .filter((value) => value !== null);
+    const continuousDemandDuringGap =
+      demand.length !== states.length
+        ? 'partially-observed'
+        : demand.some(Boolean)
+          ? 'observed-present'
+          : 'observed-absent';
+    if (gapsOverOneSecond.length < WEATHER_IDLE_DIAGNOSTIC_MAX_GAP_REPORTS) {
+      const seenWindStates = new Set();
+      const windRendererObservations = [];
+      let windRendererObservationsOmitted = 0;
+      for (const observation of observations) {
+        const windRenderer = normalizeWindRenderer(observation.windRenderer);
+        if (!windRenderer) continue;
+        const signature = JSON.stringify(windRenderer);
+        if (seenWindStates.has(signature)) continue;
+        seenWindStates.add(signature);
+        if (windRendererObservations.length < 8)
+          windRendererObservations.push({
+            atMs: Number.isFinite(observation.atMs) ? observation.atMs : null,
+            source: observation.source === 'frame' ? 'frame' : 'sample',
+            state: windRenderer,
+          });
+        else windRendererObservationsOmitted += 1;
+      }
+      gapsOverOneSecond.push({
+        startAtMs: before.atMs,
+        endAtMs: after.atMs,
+        intervalMs,
+        continuousDemandDuringGap,
+        observedGovernorStateCount: states.length,
+        observedModes: [...new Set(states.map((state) => state?.mode ?? null))],
+        observedHolds: [
+          ...new Set(states.flatMap((state) => state?.holds ?? [])),
+        ].slice(0, 32),
+        observedScheduledUpdates: [
+          ...new Set(states.flatMap((state) => state?.scheduledUpdates ?? [])),
+        ].slice(0, 32),
+        observedRequestReasons: [
+          ...new Set(
+            states.flatMap((state) =>
+              (state?.recentRequests ?? []).map((request) => request.reason),
+            ),
+          ),
+        ].slice(0, 16),
+        windRenderingAssessment: classifyWindRendering(observations),
+        windRendererObservations,
+        windRendererObservationsOmitted,
+      });
+    } else omittedGapCount += 1;
+  }
+
+  const phases = Array.isArray(phaseObservations?.phases)
+    ? phaseObservations.phases
+        .filter((phase) => PHASE_IDS.has(phase?.id))
+        .slice(0, 3)
+        .map((phase) => ({
+          id: phase.id,
+          scheduledTargetElapsedMs: Number.isFinite(phase.scheduledAtMs)
+            ? phase.scheduledAtMs
+            : null,
+          pageObservedCompletionElapsedMs: Number.isFinite(
+            phase.observedAtElapsedMs,
+          )
+            ? phase.observedAtElapsedMs
+            : null,
+          sourceObservationTimes: Array.isArray(phase.sourceObservationTimes)
+            ? phase.sourceObservationTimes
+                .slice(0, 3)
+                .map((value) =>
+                  typeof value === 'string' &&
+                  /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(value)
+                    ? value
+                    : null,
+                )
+            : [],
+        }))
+    : [];
+  const phaseRequests = phaseRequestEvents
+    .filter((event) => PHASE_IDS.has(event?.phaseId))
+    .slice(0, 3)
+    .map((event) => ({
+      phaseId: event.phaseId,
+      requestHostPerformanceNowMs: Number.isFinite(
+        event.requestHostPerformanceNowMs,
+      )
+        ? event.requestHostPerformanceNowMs
+        : null,
+      completionHostPerformanceNowMs: Number.isFinite(
+        event.completionHostPerformanceNowMs,
+      )
+        ? event.completionHostPerformanceNowMs
+        : null,
+      status: ['pending', 'fulfilled', 'rejected'].includes(event.status)
+        ? event.status
+        : 'unknown',
+      pageObservedCompletionElapsedMs: Number.isFinite(
+        event.pageObservedAtElapsedMs,
+      )
+        ? event.pageObservedAtElapsedMs
+        : null,
+      errorName:
+        typeof event.errorName === 'string'
+          ? event.errorName.slice(0, 64)
+          : null,
+    }));
+
+  return {
+    schema: WEATHER_IDLE_DIAGNOSTIC_SCHEMA,
+    diagnosticOnly: true,
+    performanceAcceptanceEligible: false,
+    ineligibleReason: WEATHER_IDLE_DIAGNOSTIC_INELIGIBLE_REASON,
+    timingSemantics: {
+      pageTimesUse: 'performance.now() relative to measurement start',
+      phaseRequestTimesUse: 'host performance.now(); separate clock origin',
+      phaseCompletionTimesUse:
+        'host promise-settlement time plus page observation time',
+      noCrossClockOrderingClaim: true,
+    },
+    requestAttribution: {
+      directWindSceneRequestRenderCaptured: false,
+      note: 'Wind GPU draw and camera paths call scene.requestRender directly; these calls do not appear in the render governor recent-request reason list.',
+      governorModeTraceSemantics:
+        'The event trace observes writes to the public requestRenderMode field, which the installed governor synchronously derives from continuous holds. It does not observe one-shot scene.requestRender calls or attribute individual frame causes.',
+    },
+    instrumentation: {
+      samplePeriodMs: raw.samplePeriodMs ?? 250,
+      maximumFrameEvents: WEATHER_IDLE_DIAGNOSTIC_MAX_FRAME_EVENTS,
+      maximumGovernorSamples: WEATHER_IDLE_DIAGNOSTIC_MAX_GOVERNOR_SAMPLES,
+      frameEventsObserved: raw.frameEventsObserved ?? validFrames.length,
+      frameEventsRecorded: validFrames.length,
+      frameEventsOmitted: Math.max(
+        0,
+        Number(raw.frameEventsOmitted) || 0,
+        (raw.frameEventsObserved ?? validFrames.length) - validFrames.length,
+      ),
+      governorSamplesObserved:
+        raw.governorSamplesObserved ?? validSamples.length,
+      governorSamplesRecorded: validSamples.length,
+      governorSamplesOmitted: Math.max(
+        0,
+        Number(raw.governorSamplesOmitted) || 0,
+        (raw.governorSamplesObserved ?? validSamples.length) -
+          validSamples.length,
+      ),
+      samplingMaxGapMs: Number.isFinite(raw.samplingMaxGapMs)
+        ? raw.samplingMaxGapMs
+        : null,
+      snapshotReadCount: raw.snapshotReadCount ?? 0,
+      snapshotReadFailureCount: raw.snapshotReadFailureCount ?? 0,
+      snapshotReadTotalDurationMs: Number.isFinite(
+        raw.snapshotReadTotalDurationMs,
+      )
+        ? raw.snapshotReadTotalDurationMs
+        : null,
+      snapshotReadMaxDurationMs: Number.isFinite(raw.snapshotReadMaxDurationMs)
+        ? raw.snapshotReadMaxDurationMs
+        : null,
+      phaseRequestEventsOmitted: Math.max(
+        0,
+        phaseRequestEvents.length - phaseRequests.length,
+      ),
+      gapsOverOneSecondOmitted: omittedGapCount,
+      governorModeTraceEventsObserved:
+        raw.governorModeTrace?.eventsObserved ?? null,
+      governorModeTraceEventsRecorded: Array.isArray(
+        raw.governorModeTrace?.events,
+      )
+        ? raw.governorModeTrace.events.length
+        : null,
+      governorModeTraceEventsOmitted:
+        raw.governorModeTrace?.eventsOmitted ?? null,
+      governorModeTraceCleanupVerified:
+        raw.governorModeTrace?.cleanup?.descriptorVerified === true &&
+        raw.governorModeTrace?.cleanup?.windowBindingRestored === true,
+    },
+    frameEvents: validFrames.map((frame) => ({
+      atMs: frame.atMs,
+      diagnosticsObservedAtMs: Number.isFinite(frame.diagnosticsObservedAtMs)
+        ? frame.diagnosticsObservedAtMs
+        : null,
+      intervalMs: Number.isFinite(frame.intervalMs) ? frame.intervalMs : null,
+      governor: normalizeGovernorState(frame.governor),
+      windRenderer: normalizeWindRenderer(frame.windRenderer),
+    })),
+    governorSamples: validSamples.map((sample) => ({
+      atMs: sample.atMs,
+      governor: normalizeGovernorState(sample.governor),
+      windRenderer: normalizeWindRenderer(sample.windRenderer),
+    })),
+    ownerChanges,
+    gapsOverOneSecond,
+    phaseRequests,
+    phases,
+    governorModeTrace: raw.governorModeTrace ?? null,
+    interpretationLimitations: [
+      'Governor-mode writes are event-traced for the measurement interval; one-shot scene.requestRender calls are not traced.',
+      'Wind/frame state remains sampled. samplingMaxGapMs is reported as observed and has no predeclared maximum-gap acceptance bound.',
+      'A stationary rendered-frame interval describes cadence only; it is not CPU execution time, GPU execution time, or comparative speedup.',
+    ],
+  };
+}

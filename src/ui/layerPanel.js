@@ -11,6 +11,7 @@ import {
 } from './layerNames.js';
 export { localizeLayerName } from './layerNames.js';
 import { createWeatherPanel } from './weatherPanel.js';
+import { createInvestigationTimeline } from './investigationTimeline.js';
 import { translateFeedError, translateStatusLine } from './statusText.js';
 import {
   formatNumber,
@@ -204,8 +205,24 @@ export class LayerPanel {
     subscribeRowControls,
     onHiddenRefresh = () => {},
     weatherClock,
+    investigationTime,
+    aircraftSource,
+    vesselSource,
+    timelineArbiter,
+    workspaceStorage,
+    recordingService,
+    vesselRecordingService,
+    getDataManager = () => null,
   }) {
     this.weatherClock = weatherClock;
+    this.investigationTime = investigationTime;
+    this.aircraftSource = aircraftSource;
+    this.vesselSource = vesselSource;
+    this.timelineArbiter = timelineArbiter;
+    this.workspaceStorage = workspaceStorage;
+    this.recordingService = recordingService;
+    this.vesselRecordingService = vesselRecordingService;
+    this.getDataManager = getDataManager;
     this.getAll = getLayers;
     this.isEnabled = isEnabled;
     this.setEnabled = setEnabled;
@@ -231,6 +248,22 @@ export class LayerPanel {
       container:
         container?.ownerDocument?.getElementById?.('weather-panel-body'),
       setLayerParams: this.setLayerParams,
+    });
+    this._investigationTimeline?.destroy();
+    const dataManager = this.getDataManager?.();
+    this._investigationTimeline = createInvestigationTimeline({
+      container: container?.ownerDocument?.getElementById?.(
+        'investigation-timeline-host',
+      ),
+      storage: this.workspaceStorage,
+      aircraftSource: this.aircraftSource,
+      vesselSource: this.vesselSource,
+      investigationTime: this.investigationTime,
+      timelineArbiter: this.timelineArbiter,
+      dataManager,
+      viewer: dataManager?.viewer,
+      recordingService: this.recordingService,
+      vesselRecordingService: this.vesselRecordingService,
     });
     this._mountRecentImagery();
     this._renderToggles();
@@ -271,6 +304,8 @@ export class LayerPanel {
     this._releaseBindings();
     this._weatherPanel?.destroy();
     this._weatherPanel = null;
+    this._investigationTimeline?.destroy();
+    this._investigationTimeline = null;
     this._recentImageryPanel?.destroy();
     this._recentImageryPanel = null;
     this._recentImageryFactory = null;
@@ -521,7 +556,8 @@ export class LayerPanel {
     const legend = controls?.legend || [];
     const infoText = controls?.info;
     this._syncRowList(listContainer, controls?.list || null);
-    container.hidden = chips.length === 0 && legend.length === 0 && !infoText;
+    const hidden = chips.length === 0 && legend.length === 0 && !infoText;
+    if (container.hidden !== hidden) container.hidden = hidden;
 
     const info = container._rowControlsInfo || null;
     const firstLegend = container.querySelector('.data-toggle-legend-item');
@@ -758,20 +794,25 @@ export class LayerPanel {
         (layer.enabled || unavailable) && !uncertain && feedState === state,
       );
     }
-    button.dataset.feedState = transitioning
+    const presentedFeedState = transitioning
       ? layer.lifecycleState
       : uncertain
         ? 'uncertain'
         : feedState;
+    if (button.dataset.feedState !== presentedFeedState)
+      button.dataset.feedState = presentedFeedState;
     // A busy toggle remains the keyboard focus owner. `aria-disabled` plus the
     // click guard above prevents repeat activation without the focus loss caused
     // by native `disabled`.
-    button.disabled = false;
-    button.setAttribute(
-      'aria-disabled',
-      String(transitioning || (unavailable && !layer.enabled)),
+    if (button.disabled !== false) button.disabled = false;
+    const ariaDisabled = String(
+      transitioning || (unavailable && !layer.enabled),
     );
-    button.setAttribute('aria-busy', String(transitioning));
+    if (button.getAttribute?.('aria-disabled') !== ariaDisabled)
+      button.setAttribute('aria-disabled', ariaDisabled);
+    const ariaBusy = String(transitioning);
+    if (button.getAttribute?.('aria-busy') !== ariaBusy)
+      button.setAttribute('aria-busy', ariaBusy);
     const showsFeedState =
       !transitioning && !uncertain && (layer.enabled || unavailable);
     const stateText = transitioning
@@ -783,10 +824,13 @@ export class LayerPanel {
           : t('OFF');
     // The chip may abbreviate where a language's word is wider than the
     // status column; the meta line and the accessible name keep the full word.
-    button.textContent =
+    const buttonText =
       showsFeedState && feedState === 'unavailable'
         ? t('UNAVAILABLE', { context: 'status chip' })
         : stateText;
+    // Unchanged text replacement still emits childList mutations, waking the
+    // rail's intrinsic measurement on every otherwise unchanged refresh.
+    if (button.textContent !== buttonText) button.textContent = buttonText;
     const keyGuidance = unavailable
       ? String(
           translateFeedError(layer.stats.error) || t('Data source unavailable'),
@@ -795,15 +839,16 @@ export class LayerPanel {
     // Name the missing key on the control itself: a row reading KEY REQUIRED
     // without saying WHICH key leaves a dead control and no next step. Empty
     // when the layer needs no key, or already has one.
-    button.title = keyGuidance;
+    if (button.title !== keyGuidance) button.title = keyGuidance;
     const ariaLabel = t('{name}: {state}', {
       name: panelLabel(layer),
       state: stateText,
     });
-    button.setAttribute(
-      'aria-label',
-      keyGuidance ? `${ariaLabel}. ${keyGuidance}` : ariaLabel,
-    );
+    const accessibleLabel = keyGuidance
+      ? `${ariaLabel}. ${keyGuidance}`
+      : ariaLabel;
+    if (button.getAttribute?.('aria-label') !== accessibleLabel)
+      button.setAttribute('aria-label', accessibleLabel);
   }
 
   _formatCount(n) {

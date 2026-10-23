@@ -1,0 +1,51 @@
+{
+  "schema": "gev-weather-wind-visibility-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-19T22:24:22.335Z",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-weather-wind-visibility-20261020",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "bytes": 320386,
+      "sha256": "05c91b9556a174f982d9b6482e873a2b146c7e9f51dc36e4b08d72beb48edf4c",
+      "previousSha256": "30be1d7374f6fb6d4bad80727b5ae9cc81b0748feaf5a7d973b42978e3b2c6a3"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.mjs",
+      "bytes": 16891,
+      "sha256": "13578ae9a32cdf088003ba035a6cdb9ebecc372e816666b3a07e77ebdc97c1b2",
+      "previousSha256": "00a334b78b390f6c5af983d4b7cce576fde357481cc00543710c1e753ce7c9a4"
+    },
+    {
+      "name": "scripts/performance/weatherIdleDiagnostic.test.mjs",
+      "bytes": 12063,
+      "sha256": "67b8d80a2838b1e0dac13b04a916fee18f507528ff7ad4ebb06d96a9c0e9cd5b",
+      "previousSha256": "490e53f44b046549bae29a5ffa55ebbd64565f1dea4a8cd3f3ca8dec8aea5aa3"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "bf99be0f37eac2d9be0e7a90dbeae6ea8a51075543b579e8f3f5a49aa54351a9",
+      "summary": "ed route failure and disposes late handles (4.896119ms)\n✔ weather failure snapshot is page-serializable and exposes only bounded selected-layer state (1.109159ms)\n✔ weather delivery fails closed on missing source, wrong bytes or population drift (26.359952ms)\n✔ delivery summary requires and hashes each distinct weather history frame (19.999081ms)\n✔ pending fixture delivery wait is canceled and releases its timer on disposal (13.001768ms)\n✔ aborted fixture delivery wait preserves cancellation and removes its waiter (12.625387ms)\n✔ weather clock assertion checks exact wall and Cesium epoch on both boundaries (12.833466ms)\n✔ weather idle diagnostic is exact-duration and explicitly ineligible (1.571206ms)\n✔ phase observer timestamps request and settlement without replacing page methods (0.54234ms)\n✔ idle summary binds long gaps to sampled render demand and preserves phase clocks (1.691587ms)\n✔ diagnostic sanitizes request labels and caps retained frame records (2.256712ms)\n✔ idle gaps retain bounded public wind state and distinguish GPU fade from unknown canvas visibility (0.66121ms)\n✔ wind renderer diagnostics null invalid values, omit payload fields, and bound per-gap samples (0.405709ms)\n✔ missing or malformed wind observations cannot certify a fully faded interval (0.422031ms)\nℹ tests 31\nℹ suites 0\nℹ pass 31\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3449.774688\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "a4fccad4cb960550bc0e07b645fd4428f579b36896502917c6ca3e051f0f5f28",
+      "summary": "d route failure and disposes late handles (1.800707ms)\n✔ weather failure snapshot is page-serializable and exposes only bounded selected-layer state (1.174555ms)\n✔ weather delivery fails closed on missing source, wrong bytes or population drift (30.579022ms)\n✔ delivery summary requires and hashes each distinct weather history frame (18.871086ms)\n✔ pending fixture delivery wait is canceled and releases its timer on disposal (12.615859ms)\n✔ aborted fixture delivery wait preserves cancellation and removes its waiter (13.044801ms)\n✔ weather clock assertion checks exact wall and Cesium epoch on both boundaries (13.181204ms)\n✔ weather idle diagnostic is exact-duration and explicitly ineligible (2.29695ms)\n✔ phase observer timestamps request and settlement without replacing page methods (0.496593ms)\n✔ idle summary binds long gaps to sampled render demand and preserves phase clocks (1.056127ms)\n✔ diagnostic sanitizes request labels and caps retained frame records (2.414365ms)\n✔ idle gaps retain bounded public wind state and distinguish GPU fade from unknown canvas visibility (0.664105ms)\n✔ wind renderer diagnostics null invalid values, omit payload fields, and bound per-gap samples (0.369179ms)\n✔ missing or malformed wind observations cannot certify a fully faded interval (0.417651ms)\nℹ tests 31\nℹ suites 0\nℹ pass 31\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3024.358606\n"
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "sha256": "7315916a5c5a981e31c631c57a6d258bc9b47fa4c53b55f53259e4f16acf6757",
+      "summary": "Capture harness no-undef: 75 files passed.\n"
+    }
+  ],
+  "completedAt": "2026-10-19T22:24:31.233Z"
+}

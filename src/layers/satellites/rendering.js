@@ -1,6 +1,11 @@
 import * as Cesium from 'cesium';
 import { gstime } from 'satellite.js';
-import { ISS_NORAD, POSITION_UPDATE_MS, RING_ROTATION_MS } from './policy.js';
+import {
+  FOCUS_UPDATE_MS,
+  ISS_NORAD,
+  POSITION_UPDATE_MS,
+  RING_ROTATION_MS,
+} from './policy.js';
 
 export function createRendering({
   state: layerState,
@@ -155,10 +160,19 @@ export function createRendering({
         pos.longitude,
         pos.latitude,
         pos.altitude,
+        undefined,
+        layerState._scratchPropagationCartesian,
       );
       const point = layerState._points.get(noradId);
       if (point) {
-        point.position = cartesian;
+        const previous = point.position;
+        if (
+          !previous ||
+          previous.x !== cartesian.x ||
+          previous.y !== cartesian.y ||
+          previous.z !== cartesian.z
+        )
+          point.position = cartesian;
         updated++;
       }
     }
@@ -220,12 +234,16 @@ export function createRendering({
 
   function _updatePointFocus(nowMs) {
     const target = getFocusTarget();
-    if (
-      !layerState._params.showPoints ||
-      !focusPassIsNeeded(target, layerState._activeFocusCount)
-    )
+    if (!layerState._params.showPoints) return;
+    if (!focusPassIsNeeded(target, layerState._activeFocusCount)) {
+      if (layerState._focusPassPending || layerState._focusTransitioning) {
+        layerState._focusPassPending = false;
+        layerState._focusTransitioning = false;
+        parts.lifecycle?.methods?.syncRenderDemand?.();
+      }
       return;
-    if (nowMs - layerState._lastFocusUpdate < 80) return;
+    }
+    if (nowMs - layerState._lastFocusUpdate < FOCUS_UPDATE_MS) return;
     layerState._lastFocusUpdate = nowMs;
     const scene = layerState._viewer.scene;
     const camera = layerState._viewer.camera;
@@ -250,6 +268,11 @@ export function createRendering({
         ).color,
     });
     layerState._activeFocusCount = result.activeCount;
+    layerState._focusTransitioning = result.transitioning;
+    if (result.ran) {
+      layerState._focusPassPending = false;
+      parts.lifecycle?.methods?.syncRenderDemand?.();
+    }
   }
 
   /**
@@ -299,7 +322,14 @@ export function createRendering({
       if (focus.active) activeCount += 1;
       const base = baseColorFor(noradId);
       const alpha = base.alpha * focus.factor;
-      if (focusAlphaNeedsWrite(point.color?.alpha, alpha, params)) {
+      if (
+        focusAlphaNeedsWrite(
+          point.color?.alpha,
+          alpha,
+          params,
+          focus.endpointCompleted,
+        )
+      ) {
         // Point stays continuously present at the non-zero emphasis floor; its
         // own alpha yields around the tracked target, independent of draw order.
         point.color = base.withAlpha(alpha);

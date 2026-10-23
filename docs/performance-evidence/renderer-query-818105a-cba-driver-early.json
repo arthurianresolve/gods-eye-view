@@ -1,0 +1,70 @@
+{
+  "scope": "prior-install-browser-profile-recovery",
+  "candidateCommit": "818105acea3e752b16f55a472f8aea3664285021",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "platform": "win32",
+  "os": "10.0.26100",
+  "node": "v24.14.0",
+  "hostEnvironment": {
+    "cpuModel": "AMD EPYC 9V45 96-Core Processor                ",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 17174360064
+  },
+  "requestedRenderingBackend": "swiftshader-gl-driver",
+  "rendererExperiment": {
+    "variant": "driver-early",
+    "queryTiming": "early",
+    "sequenceOrder": "CBA",
+    "sequenceIndex": 0,
+    "runId": "CBA-818105acea3e-3720"
+  },
+  "browserVersion": "Chrome/152.0.7977.75",
+  "viewport": {
+    "width": 960,
+    "height": 640
+  },
+  "hardwareRenderingValidated": false,
+  "timestamp": "2026-10-09T22:17:20.777Z",
+  "sourceDirtyAtStart": false,
+  "sourceChangedDuringRun": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "failed",
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+      "timing": {
+        "rendererQueryTiming": "early",
+        "rendererQueryDurationClock": "page-performance-clock",
+        "rendererQueryMeasurement": "page-query",
+        "bootElapsedMs": 13301,
+        "rendererQueryDurationMs": 0.20000000001164153,
+        "bootPlusQueryCriticalPathMs": 13308,
+        "rendererCheckpointElapsedMs": 14956
+      },
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "renderedFeatures": 1,
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "pageOwnership": {
+        "initialPageCount": 1,
+        "appPagesBeforeNavigation": 0,
+        "appPagesAfterBoot": 1,
+        "appPagesAfterWorkspace": 1,
+        "unexpectedCreatedPageTargets": 0,
+        "closeCompleted": true,
+        "openPagesBeforeBrowserClose": 0,
+        "browserCloseCompleted": false,
+        "forcedBrowserProcessTermination": true,
+        "cleanupError": "Graceful browser close did not complete."
+      },
+      "step": "owned-page-cleanup",
+      "error": "Graceful browser close did not complete."
+    }
+  ],
+  "status": "failed",
+  "failure": {
+    "check": "prior-install-saves-browser-workspace",
+    "step": "verify-persisted-workspace",
+    "error": "Graceful browser close did not complete."
+  }
+}

@@ -60,6 +60,11 @@ export function createState({ services }) {
 
   layerState._healthById = new Map();
 
+  // Browser-side decode observations supplement (and never overwrite) the
+  // proxy's transport/source health. They are kept across health refreshes so
+  // a late server response cannot erase a recent local failure.
+  layerState._clientHealthById = new Map();
+
   layerState._calibrationById = new Map();
 
   layerState._listeners = new Set();
@@ -79,6 +84,10 @@ export function createState({ services }) {
   // Staggered geometry-load queue state (see startGeometryLoadQueue).
 
   layerState._geoQueue = [];
+
+  // Cursor-based draining avoids shifting the entire pending queue on every
+  // bounded batch. The cursor is reset whenever a new queue is assembled.
+  layerState._geoQueueCursor = { index: 0 };
 
   layerState._geoQueueTimer = 0;
 
@@ -120,6 +129,11 @@ export function createState({ services }) {
   // regime) don't trigger a pointless full-catalog rewrite.
 
   layerState._lastAppliedRegime = null;
+
+  // Identity of the last visible Google 3D tileset that owned runtime mesh
+  // ground samples. DEM and shipped footprint samples have separate owners.
+  layerState._googleGroundSource = null;
+  layerState._hasGoogleGroundSource = false;
 
   // Task 5: window listener handle for the 'gev:map-stack-changed' CustomEvent
   // main.js dispatches from MapStackController's onChange (removed in destroy).

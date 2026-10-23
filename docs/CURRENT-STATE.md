@@ -1,5 +1,259 @@
 # God's Eye View Current State
 
+## Current S61–S70 checkpoint — October 19, 2026
+
+Current application candidate: `b3c49b19`; production: `e7a878e`. Engineering
+closure across S47–S70 remains **21/24 (87.5%)**. S60, S69 and S70 remain open
+for qualification and delivery. Exact-candidate standard CI, tracking, signed
+artifact, all 2,126 packaged files and 16 private VM105 HTTP checks pass.
+Recorded-pose correctness passes the 158-test suite on Node 24/26 and all eight
+fleet/eight tracked native Windows observations.
+
+The current cable comparison passes. Dam motion p95 is within the 10% limit,
+but its original startup result fails at +10.43%. The predeclared ten-shard
+balanced confirmation completed: app-ready startup is -20.75% and
+loading-screen-hidden startup is -14.51%, with all foreground and cleanup
+checks passing. The original failure is preserved. The latest `aa400dfe` visual
+capture completes all four states but fails pixel comparison: settled and
+HUD-visible images each differ at 7,751 pixels around the logo; HUD-hidden is
+identical; HUD-restored differs at 772 logo/badge pixels. Recorded gaze and
+style inputs match. This remains an unresolved rendering/capture diagnosis,
+not a visual pass. Replay metrics now validate the five observations retained from four
+fixture timestamps, including an altitude correction. The latest attempt
+completed twenty controls and twenty seeks per build, then failed at a hidden
+import control before heap sampling. The harness now opens Workspace disclosures
+through application controls while retaining the visibility check. All 28
+browser-free QA tests pass on both VM Node versions; 39 PNG consumer tests pass
+on Windows. Current map qualification passes: motion p95 is 392.3 versus
+359.2 ms (-8.44%), map-switch readiness is 14,413.9 versus 14,608.3 ms
+(+1.35%), and app-ready startup is 5,075 versus 3,961 ms (-21.95%).
+All six original files were independently hash-verified on VM105.
+The mixed-use fixture also missed Vite's hashed datacenter asset URL and loaded
+the bundled catalog despite declaring eight synthetic features. The correction
+requires verified fixture delivery and exact materialization before timing.
+Historical full-catalog reports remain unchanged; full-population matrix
+workloads are unaffected. The corrected interaction observer includes trusted
+input delivery time and requires matching state/output in the same natural
+preRender/postRender pair. It no longer normalizes the catalog repeatedly or
+requests an extra frame solely for timing. Both successful receipt APIs include
+the bounded, cloned request proof, and disabled controls retain their actual
+false state. The reviewed QA changes pass 71/71 tests on each VM Node version,
+format/syntax checks, and the 71-file capture no-undef check. New hardware evidence
+is required; the earlier 69-test receipt predates the review corrections.
+The initial balanced weather attempt failed foreground initialization before
+any measurement. A fresh run is prepared with the owned blank-page handoff.
+Failed attempts remain archived.
+Remaining workload comparisons, interaction/heap evidence, private browser
+workspace verification and the final Ampfing soak must bind the current candidate.
+The [current evidence ledger](performance-evidence/s69-native-matrix-20261019/README.md)
+separates these results from the historical reports below.
+
+## Historical qualification sequence — earlier candidates
+
+The application remains frozen at `19065997`; subsequent changes affect QA and
+documentation. Exact CI, tracking, signed artifact and VM105 package verification
+pass. The production service continues to run verified release `e7a878e`.
+The eight-row native Windows matrix completed six pairs before its weather
+baseline failed. Dams and cables exceed the 10% motion regression threshold;
+map streaming has not run. These findings block candidate deployment. The
+[current matrix report](performance-evidence/s69-native-matrix-20261019/README.md)
+keeps complete comparisons, failed attempts and diagnostic-only results separate.
+
+The Windows UHD 620 operating and Dense pairs are complete and comparable at
+native DPR 2, Manual/DENSE/75% and unchanged populations. Operating motion p95
+is 456.4 ms baseline versus 454.0 ms candidate. Dense motion/tracking changes are
++2.9%/+0.3%; the proposed 20% objectives are missed, with no material speedup claimed.
+
+The parked Austin +80.8% inter-render interval is separately resolved by a
+hash-bound diagnostic disposition at `7aa89243`. Wind is intentionally invisible
+at 12,000 m on both builds, satellites still move, and wind resumes with matching
+geometry and advancing phase at 60,000 m. The raw regression flag remains true;
+this disposition clears no other metric. All twelve reports from the six
+completed pairs are preserved unchanged. Dam motion p95 rises from 300.1 to
+409.9 ms (+36.6%); cables rise from 339.2 to 549.7 ms (+62.1%). Combined
+infrastructure is 2.7% lower, so a blanket inference about all infrastructure
+would be unsupported.
+
+A separate four-capture dam trace repeats the tail slowdown. Most of the
+additional interval occurs between the return from `viewer.render` and the next
+animation-frame callback; this is not a measurement of GPU execution time. A
+one-change HUD control produced 295.3 ms p95, but the paired unchanged candidate
+also produced 299.0 ms. This does not establish the guard as the cause; its
+temporary removal is not retained. No runtime fix or acceptance waiver follows
+from these traces alone.
+
+Full 60-second cable browser traces at `7f793116` further localize the extra
+tail to Chrome presentation: overlay scheduling wall-time p95 is 3.3 ms on the
+baseline and 260.7 ms on the candidate, while thread CPU p95 stays below 1 ms
+on both. Candidate animation callbacks are faster in this diagnostic. A temporary
+Windows composition control at `c9c61d01` tests this boundary without changing
+the application or persistent browser settings. That control completed with
+candidate and baseline motion p95 of 351.5 and 357.7 ms; overlay-scheduling
+events disappear from both traces. This supports a presentation interaction
+but is insufficient to clear the default-browser regression. All 45 focused
+tests pass under Node 24/26; the earlier CI test-discovery failure is fixed at
+`6c32dba4`.
+Neither this evidence nor the control constitutes performance acceptance.
+
+All seven selected CI jobs and release verification pass at `c9c61d01`.
+The opt-in framebuffer diagnostic at `9dbec028` passes 49 focused
+tests on each supported Node runtime and records actual context attributes at
+both sample boundaries. It changes no application default and cannot produce
+acceptance evidence. Three of four planned hardware arms completed: preservation
+enabled measured 324.2 ms motion p95; disabled measured 570.6 and 552.5 ms.
+Windows refused foreground activation for the final enabled arm. This incomplete
+control demonstrates no benefit from disabling preservation, so the default
+remains enabled. The original dam/cable failures are still unresolved. Raw traces
+remain safely on Windows pending verified transfer to VM105.
+
+Weather QA revision `fb8a6c33` retains bounded expected/observed phase timestamps
+when the existing transition check fails; its predicates and deadline remain
+unchanged. All 30 focused checks pass under Node 24 and 26 on VM105. One short
+baseline and candidate weather diagnostic both completed, but they do not replace
+the failed five-run block or establish weather qualification.
+[CI at `fb8a6c33`](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39172161048)
+passes all seven selected jobs, including Node 24/26, platform recovery and
+browser journeys. Its
+[release verification](https://github.com/arthurianresolve/gods-eye-view/actions/runs/39172161051)
+also passes. Optional diagnostic job skips are not hardware passes.
+
+The subsequent full baseline weather replay completed all ten samples but failed
+its final settings comparison. Both application versions map `filtered` to
+numeric infrared strength `100`; the final validator lacked that existing alias.
+The correction at `73ac762b` preserves raw values and rejects other strengths. All 93 related
+weather, capture and diagnostic tests pass on VM105 under Node 24/26. The failed
+replay remains failed: its bounded report retains only four samples, so a full
+corrected pair is still required. The earlier timeline-transition failure remains
+separate and is not explained by this representation mismatch.
+
+The corrected CCTV visual fixture waits for the globe before activation and
+pauses captures at a task boundary. Three states match exactly; the fourth has
+seven varying rounded-border pixels independently reproduced within both builds.
+Consumer `f174cbf2` validates complete same-build control images and strict bounds,
+without masks or pixel edits. All 137 focused Windows checks pass. All 118 paired,
+manifest, matrix and disposition checks pass on VM105 under Node 24 and 26.
+
+The signed candidate release is prepared on VM105 with all 2,126 packaged files
+verified. Qualified deployment, HTTPS/workspace verification, final visual
+evidence packaging and the 60-minute native-resolution Ampfing soak remain pending.
+Builds, dependencies and Linux validation use VM storage; a nested LXC would
+inherit its CPU limits and is not needed. See [the current ledger](CESIUM_PERFORMANCE_PLAN.md)
+for engineering, automatic validation and hardware qualification separately.
+
+## Earlier S61–S70 checkpoint at `9721b202` — October 18, 2026
+
+At `9721b202`, exact Node 24/26 CI, production builds, browser gates,
+Windows onboarding, platform installation/recovery, tracking and signed
+candidate packaging pass. VM105 independently verified the downloaded archive,
+all 2,126 manifest entries, expected GitHub attestation and 16 private production
+HTTP checks. The live service remains on `e7a878e`.
+
+The shared Windows matrix failed before operating-view motion sample 2 because
+the foreground helper exceeded its timeout. Separate diagnostic phase traces
+attribute most observed helper time to repeated PowerShell startup and native
+declaration compilation; they do not establish a Cesium or GPU failure. The
+[diagnosis](performance-evidence/windows-foreground-20261018/README.md) records
+the evidence. A persistent helper now passes 49 focused Windows checks, including
+the actual PowerShell parser and capture CLI. Its replacement candidate
+requires fresh exact-commit checks and hardware qualification. Builds,
+dependencies and large evidence files use isolated VM105 storage, without
+nesting LXC or changing the working service.
+
+## S63 production host — October 18, 2026
+
+The candidate now includes a Vite-free Node HTTP production host. It loads
+operator settings with process environment precedence, composes the existing
+provider, MCP and voice middleware, returns JSON 404s for unknown APIs, and
+serves the S62 manifest with MIME, ETag, conditional, HEAD, range and gzip or
+Brotli negotiation. Shared browser security headers are used by build and host;
+explicit embed ancestors are opt-in through `GEV_EMBED_FRAME_ANCESTORS` and
+`?embed=1`. Previous roots can provide only manifest-owned immutable assets.
+The release staging script includes the host, provider/source modules and
+shared headers, with `ws` declared as a runtime dependency. Node-only host
+checks pass. A clean install and production build now pass on VM105; an
+unpacked production-only dependency install and actual HTTP startup/shutdown
+smoke also pass. The live service remains on its verified release.
+
+The host correction hardens this boundary with Node's dotenv parser, startup
+manifest fail-closed behavior, cached manifest maps, symlink rejection, GET and
+HEAD gating, range suffix handling, stream error handling, strong encoding
+specific ETags, and embed framing that removes X-Frame-Options only when the
+shared embed-document policy permits it. Focused host tests cover these paths;
+packaged dependency startup and route checks subsequently passed on VM105.
+
+## S64 bounded diagnostics and Auto eligibility — October 18, 2026
+
+Auto quality now evaluates only consecutive visible continuous-demand frames;
+request-render gaps and the first frame after demand resumes reset eligibility,
+while genuinely slow continuous frames remain eligible. Diagnostics retain a
+bounded 120-sample history, report frame p50/p95/p99 values, optionally observe
+long tasks with teardown and generation guards, and cache renderer identity per
+WebGL context with loss/restoration invalidation. Unsupported GPU, draw-call,
+long-task and tile-backlog metrics remain explicitly unavailable. Focused
+controller and monitor tests pass; browser/integration gates remain pending.
+
+## S65 CCTV demand gating — October 18, 2026
+
+Still-image projection loops release their continuous render hold once the
+image, pose and visual output settle, then schedule a bounded one-shot wakeup
+for the next still refresh. Live video and active focus fades retain continuous
+rendering; selection, health fallback, cancellation and late-result ownership
+remain unchanged. CCTV browser validation is pending VM dependency install.
+
+## S66 hidden HUD and unchanged-write suppression — October 18, 2026
+
+HUD telemetry writes now compare the next text with the current DOM value before
+mutating it. Timestamp and REC maintenance pause while the document is hidden,
+then resume their existing cadence and blink phase; data collection and
+accessible state remain active through established paths. S65 projection demand
+contracts have focused cadence, media-edge and disposal checks; full CCTV
+browser behavior remains a VM gate.
+
+## S67 asynchronous locale preparation — October 18, 2026
+
+Locale preparation now exposes coalesced asynchronous loading and explicit
+retry APIs while preserving synchronous `t`, plural and formatter behavior for
+existing callers. Standalone startup prepares the requested locale before UI
+construction, keeps English as the visible failure fallback, and applies the
+resolved preference without blank untranslated startup. Locale preparation
+tests cover Spanish/Russian success and coalesced retry compatibility; browser
+startup and dynamic import failure injection remain VM gates.
+
+The locale catalogs are now dynamic imports rather than eager module imports;
+failed requests fall back to English without overwriting the requested
+preference, and an explicit retry can install the recovered catalog.
+
+## S68 heavy voice adapter experiment — October 18, 2026
+
+The narrow lazy realtime-adapter experiment was evaluated and rejected after
+saving only 940 gzip / 610 Brotli bytes. The paired VM build evidence is in
+[the S68 report](performance-evidence/s68-voice-bundle-20261018/README.md).
+The production voice session still constructs its adapter synchronously and
+binds push-to-talk from the trusted gesture path. The shared action runner,
+controls, cancellation, radio/cost state and permission handling stay unchanged.
+
+The reproducible `scripts/audit-bundle-chunks.mjs` report consumes Vite's
+generated manifest and measures uncompressed initial static-import bytes
+separately from dynamic voice/locale chunks. It does not claim a split until a
+VM build supplies before/after reports and the corresponding lifecycle and
+gesture checks pass.
+
+## S62 distribution assets — October 18, 2026
+
+The build now derives a deterministic SHA-256 digest from the patched Cesium
+distribution bytes in path order and supplies the digest path through
+`vite-plugin-cesium`'s supported `cesiumBaseUrl` option. The reusable Node-only
+asset helper emits deterministic raw, gzip and Brotli artifact metadata and
+the production Vite build writes `asset-manifest.json` plus bounded `.gz` and
+`.br` sidecars after the Cesium copy hook completes. Rollup bundle ownership
+drives immutable application classification rather than filename guessing, while
+classifies only content-addressed application assets and the Cesium digest path
+as immutable; HTML, webmanifest and build metadata remain revalidation assets.
+Traversal and symlinked asset paths are rejected. The helper does not alter API
+privacy or caching and leaves old-tab asset retention available for S63's host.
+Focused helper tests pass; dependency-backed Vite build verification remains
+pending local dependency installation.
+
 Analyst region queries resolve unique Natural Earth names offline without
 geocoding, so Gold Coast and Ivory Coast name the West African natural regions.
 Duplicate names require a geocoded containment anchor; when several entries for
@@ -21,13 +275,128 @@ non-finite, and out-of-range points (latitude outside ±90, longitude outside
 ±180) return `Infinity`, so threshold and nearest-item consumers exclude invalid
 positions. Older exported `haversineKm` entry points remain as compatibility
 wrappers only. `src/data/approxDistance.js`, the equirectangular
-viewer-proximity approximation, is deliberately separate, as are intentional
-local angular, projection, ellipsoidal prefilter, and small-viewport
-approximations. Four great-circle copies remain for a follow-up:
-`src/data/adminBoundaries.js` and `src/tools/area.js` pass unwrapped longitudes
-across the antimeridian, so they cannot use the strict ±180 check as-is, and
+viewer-proximity approximation, is deliberately separate. Four great-circle
+copies remain for a follow-up: `src/data/adminBoundaries.js` and
+`src/tools/area.js` pass unwrapped longitudes across the antimeridian, while
 `src/sources/adsbRecords.js` and `server/providers/common/geo.js` keep their own
 implementations.
+
+## Candidate validation — October 8, 2026
+
+The refreshed local candidate matrix passes formatting, package boundaries, 6,328
+unit tests (10 skipped), the production build, six browser journeys and the
+repeated UHD 620 performance controls. Its report,
+[`candidate-report-20261008-final4.json`](../qa-artifacts/candidate-report-20261008-final4.json),
+has zero local failures and five external gates pending: cross-platform install/
+upgrade, a 60-minute mixed-use soak, the broader hardware matrix, manual
+accessibility and participant review, and signed-release matching. It records 11
+passing local checks against implementation commit
+[`fdd4d7d`](https://github.com/arthurianresolve/gods-eye-view/commit/fdd4d7de245ca50d11544574d22553accc01c10f).
+
+## Evidence and performance groundwork — October 8, 2026
+
+Branch `dev` now includes a versioned in-memory evidence envelope and deterministic
+synthetic fixture. Civil and military aircraft keep per-position source time,
+feed-snapshot time and local receipt separate; selection opens an inspector that
+labels smoothed/dead-reckoned display positions and safely renders known HTTPS
+provider links. Aircraft area/search query rows include evidence references and
+scope. Shared feed snapshots retain `PARTIAL`, coverage, completeness, freshness,
+and distinct observation versus forecast issue/valid times. Explicit no-coverage
+is partial rather than an all-clear. A new performance capture command records
+renderer, viewport, workload, object counts and frame-time percentiles; Auto
+quality is opt-in, adjusts detection-label density only, pauses in hidden tabs,
+and restores the saved manual density when disabled. A matched three-run UHD 620 comparison and passing positive/negative frame-budget controls are recorded in [PERFORMANCE.md](PERFORMANCE.md); Auto remains opt-in because it reduced labels without a consistent frame-time improvement. Other source-family
+evidence support is tracked in [EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
+
+The follow-up implementation extends provenance to live AIS vessel selections
+and analyst results. It preserves source observation time separately from local
+receipt time and labels received AIS positions as partial coverage. Analyst
+aircraft or vessel rows with evidence expose an accessible Inspect action; the
+inspector pins that result snapshot while live selection changes, and closing it
+returns keyboard focus to the initiating control.
+
+S04 follow-up adapters now carry NASA FIRMS acquisition/snapshot/receipt times
+through selected-fire context and analyst records, and USGS event/snapshot/
+receipt times through analyst records. Open-Meteo current-condition query data
+is explicitly labeled gridded model output; its valid time is not exposed as a
+direct observation. Wind samples and `get_wind` results keep forecast issue,
+valid and local receipt times separate, and the evidence inspector displays
+forecast provenance from the sampled model cell. NHC/CPHC cyclone analyst and
+tool records carry source position/issue times and partial basin coverage.
+Weather-map query evidence, camera frame acquisition evidence, traffic records
+and imported/static record evidence remain unsupported; see
+[EVIDENCE-SUPPORT.md](EVIDENCE-SUPPORT.md).
+
+Upstream issue fixes also harden TLE parsing against truncated records, decode
+Alpha-5 NORAD IDs consistently, cap Cesium render resolution to active WebGL
+limits, and close a stale compact Radio disclosure when Context is reopened. The
+investigation timeline uses a bounded internal scroll area so its capture controls
+leave Data layer toggles independently reachable.
+The constrained-WebGL browser gate and issue-by-issue status are in
+[UPSTREAM-BUG-TRIAGE.md](UPSTREAM-BUG-TRIAGE.md). The camera-controls report
+remains untriaged until it includes a reproducible action sequence.
+
+S08 implementation is present. A lost WebGL context now presents an accessible
+reload action that builds a current share-state URL, preserving the view across
+recovery. Existing AIS watchdog tests verify paced 429 retries and weather tests
+verify that failed fetch/decode/timeout refreshes keep the last frame visible.
+Recovery-state and teardown tests pass; real-GPU context-loss and the wider
+hardware matrix remain release evidence.
+
+S09 implementation is present. A separate investigation-time service supports live, paused and
+rate-controlled replay states without mutating wall-clock deadlines, Cesium time,
+weather playback or Director choreography. Analyst result ages use the selected
+investigation instant. Layer capability results distinguish current-only data,
+unsupported history, selected samples and missing coverage; stale resolution
+batches are cancelled by generation. A shared timeline arbiter requires an
+explicit owner handoff. The S13 timeline, Director and launch replay all use the
+same handoff service; accepted transitions stop the previous owner first, and
+refused transitions leave it in control.
+
+S10's storage foundation is implemented. Workspace documents, immutable
+revisions, observation chunks and binary assets share an IndexedDB transaction;
+the writer must supply its last-read revision and readers verify SHA-256
+checksums. Quota and interrupted writes preserve the previous commit, pinned
+workspaces cannot be deleted, and migration returns the previous data for export.
+Unsupported storage is labeled as temporary in-memory state. Browser acceptance
+covers reload, two-tab revision contention, abort recovery, migration, quota
+preservation, pinning and corruption detection. S19 adds the workspace library,
+debounced authored-state saves and recovery. Chrome QA covers create, duplicate,
+explicit reopen after reload, imported GeoJSON rendering, stale-write conflict,
+and the clearly marked offline synthetic demo.
+
+## Local movement history and shared time — October 8, 2026
+
+The aircraft recorder stores bounded regional observations in IndexedDB with
+source-policy checks, correction links, outage intervals and explicit interruption
+recovery. Live aircraft sources remain unavailable for recording until retention
+and export permission is documented. Replay reads actual prior observations,
+rejects requests outside coverage, and never falls through to a live source.
+
+The timeline provides camera-centered region capture controls for aircraft and
+vessels, with editable coordinates, a 0.01–250 km radius, current enabled-source
+labels, per-recorder fix/gap counts and stop/save actions. Accepted normalized feed
+snapshots reach the recorders with provider position times; provider gaps and source
+changes remain explicit. Start is not published as active until its first durable
+revision commits, preventing ingestion from racing that initial write. The UI
+reports retention/export policy denials before any unapproved live data is saved.
+
+The Data Layers panel now offers separate local aircraft and vessel recording
+selectors over one UTC timeline. It shows coverage gaps and requested versus
+sample times, supports stepping, playback, export, deletion and return to live,
+and seeks selected aircraft and vessel sources to the same instant. Real Chrome QA
+covers aligned replay, source-policy denials, bounded capture start/stop and live
+return. Vessel history stores AIS position fixes and
+separate receipt-timed metadata revisions; trails stop at long silence and provider
+outage boundaries. AISStream remains recording-disabled because the source register
+has no formal retention/export terms.
+
+Observed weather now follows investigation time at product-frame boundaries. Its
+capabilities use each product's at-or-before frame and existing maximum-gap rules,
+without requesting an image every clock tick. Bounded USGS earthquake and NASA
+FIRMS history use no current-data fallback; Director and launch playback use the
+shared timeline handoff. Named-hardware seek-latency measurements and provider
+retention approval remain external acceptance work.
 
 Vessel sources can report healthy empty coverage using a current, complete
 snapshot with zero raw rows, a healthy transport and a positive last-message
@@ -100,7 +469,7 @@ what to show. See [tools and the MCP server](TOOLS.md).
 Stdio processes from one install share the panel key in
 `.gev-cache/mcp-panel-key`, resolved from the checkout rather than the client's
 working directory. First creation is atomic; malformed-file repairs select one
-winner and concurrent processes re-read it. A busy repair waits at most two
+winner and concurrent processes re-read it. A busy repair waits at most five
 seconds before falling back. If the cache cannot be read/written or repair remains
 busy, stderr reports the fallback to a per-process key; cross-process panels can
 still fail in that mode. An abandoned `.repair-lock` is left intact: after
@@ -866,11 +1235,6 @@ fresh core rebuild or lifecycle reset replaces the corresponding ownership.
 Source adapters retain the existing CelesTrak and Launch Library
 endpoints; standalone entries provide scene services and the satellite dependency.
 The mission factory separates paths, replay, camera, panel, overlays and placement.
-Launch Library pad coordinates retain unknown values: missing fields use the
-reported location coordinates when available, and launches without a known pad
-position stay off the map. Genuine zero coordinates remain valid. Undisclosed
-stage coordinates, downrange distance and flight numbers remain unknown; the
-mission panel omits the flight-number label when no number was reported.
 Pending mission requests abort on disable/destruction and malformed launch
 snapshots preserve the last accepted display. A Launch Library stale-cache fallback
 retains its missions but reports STALE in Data Layers; a fresh snapshot clears that
@@ -1453,13 +1817,7 @@ String arrays regardless of the reported feed version. Nonempty English text
 (including regional `en-*` tags, case-insensitive) takes precedence, then the first
 usable translation. An unusable `name` falls back to `short_name` with the same
 rules; if neither supplies text, the station remains available with an empty name
-(the globe uses its station-ID label and the tool returns `null`). A run of underscores,
-with the spaces around it, reads as one word break and the ends are trimmed:
-JCDecaux's Spanish contracts publish `_PLAZA_MUSICO_LOPEZ_CHAVARRI`. Other spacing
-stays as published. Capacity counts docks: PBSC adds the bikes a station accepts
-in its geofenced area to `capacity` and reports that part as `geofenced_capacity`
-(Bilbao Bizi: 839 = 39 docks + 800), so the layer, its colour ratio and
-`get_bike_share` read `capacity − geofenced_capacity` when the extension is present. Malformed
+(the globe uses its station-ID label and the tool returns `null`). Malformed
 translation entries do not interrupt loading of the other stations. This covers
 station names, not complete GBFS v3 support.
 `scripts/qa-gbfs-names.mjs` checks synthetic localized names through the real layer,
@@ -1683,10 +2041,7 @@ standard public access needs no key, and its field can remain blank.
 
 The shared TLE text parser skips incomplete named sets and resumes at the next
 complete set. A missing orbital line does not discard the later satellites in
-the catalog. A set whose two lines carry different catalog numbers, or a
-malformed catalog number, is skipped the same way, so a spliced catalog cannot
-pair one satellite's elements with another's. Satellite layers and next-pass
-tools use the same parser.
+the catalog; satellite layers and next-pass tools use the same parser.
 
 ## Build configuration and local provider boundaries
 
@@ -3549,7 +3904,7 @@ Shipped locales: **en** (source and fallback), **es**, **ru** and **zh-CN**. The
 [`docs/TRANSLATORS.md`](./TRANSLATORS.md).
 
 - **Keys are the English text.** `t('Save keys')`, `tn(count, '{count} camera',
-  '{count} cameras')`, and `msg('Live Flights')` for text stored in data and
+'{count} cameras')`, and `msg('Live Flights')` for text stored in data and
   translated later. Markup opts in with `data-i18n` (element text) and
   `data-i18n-title` / `-aria-label` / `-placeholder` (that attribute's English
   value). English has no catalog; every other locale is
@@ -3611,30 +3966,30 @@ nearby place—always use station selection. Unqualified “turn on/start the ra
 requests use Play; a qualified Play-shaped tool call is normalized to Select so
 its criteria cannot be silently ignored.
 
-| Layer                  | Source                                                                                                                                                                                          | File                                                  | Proxy                                                    | Update Interval                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Live Flights ✈️        | OpenSky Network; bounded adsb.lol regional fallback                                                                                                                                             | `src/data/flights.js`                                 | `/api/flights` (OAuth + fallback)                        | 30s                                                                               |
-| Military Flights 🎖️    | adsb.lol /v2/mil                                                                                                                                                                                | `src/data/militaryFlights.js`                         | `/api/military`                                       | 15s                                                                               |
-| Live AIS Vessels 🚢    | AISStream websocket                                                                                                                                                                             | `src/data/aisLiveVessels.js`                          | `/api/vessels`                                          | 60s (+800ms visibility pass)                                                      |
-| Mapped Installations ⌖ | OpenFreeMap military areas; optional configured Overpass names and Google Places search | `src/data/militaryInstallations.js` | OpenFreeMap tiles, `/api/military-installations`, `/api/google/text-search` | viewport-driven; transient errors back off, missing capability switches to tiles |
-| Earthquakes            | USGS                                                                                                                                                                                            | `src/data/earthquakes.js`                             | —                                                        | 60s                                                                               |
-| Air quality            | ECCC MSC GeoMet OGC API (AQHI, Canada only)                                                                                                                                                      | `src/layers/airQuality/`                              | —                                                        | 20 min readings, 12 h station catalog                                             |
-| Satellites             | CelesTrak                                                                                                                                                                                       | `src/data/satellites.js`                              | `/api/celestrak`                                         | 120s                                                                              |
-| Space Missions (30d)   | Launch Library 2 + CelesTrak                                                                                                                                                                    | `src/data/rocketLaunches.js`                          | `/api/launches` + `/api/celestrak/active`                | 5 min                                                                             |
-| Traffic | Selectable TomTom / OpenStreetMap / Hybrid roads; optional TomTom flow (BYOK) | `src/data/traffic.js` | browser-direct OpenFreeMap tiles; `/api/tomtom` for flow | viewport-driven; capped tile cache |
-| CCTV                   | Austin + Caltrans (CA) + TfL London + Ontario 511 + Fintraffic (FI) + DriveBC (BC) + TxDOT (TX) + Estonia (Tallinn, Tarktee) + Live Traffic NSW + Open Calgary Open Data + Statens vegvesen (NO, stills + live HLS, Kartverket ground heights) + King County (WA) Open Data + WSDOT (WA) Open Data + NYC DOT TMC (opt-in) + City of Toronto RESCU + Catalonia (Servei Català de Trànsit) + Hong Kong Transport Department + FL511 (FL, opt-in) + Freeway Bureau, MOTC (Taiwan) + Street View fallback | `src/data/cctv.js`                                    | `/api/cctv`                                              | 10s (active)                                                                      |
-| Radio                  | Radio Browser (public-domain station directory)                                                                                                                                                 | `src/data/radio.js`                                   | `/api/radio/stations`, `/api/radio/click/:uuid`          | 45 min directory refresh                                                          |
-| Transit 🚌             | Operator GTFS-Realtime VehiclePositions (7 keyless regions, `src/data/transitFeeds.js`)                                                                                                         | `src/layers/transit/` via `src/app/layers/transit.js` | `/api/transit`                                           | 15s (poll + delayed playback)                                                     |
-| Bikeshare 🚲           | GBFS (Lyft + BCycle + Social Bicycles + PBSC incl. Bike Share Toronto, Bike Itaú (Brazil), Bicing (Barcelona) and seven other Spanish cities + Urban Sharing, Entur, JCDecaux (Lillestrøm, Valencia, Seville) + nextbike (AMBici))                                                                                                                                        | `src/data/bikeshare.js`                               | `/api/gbfs`                                              | 60s                                                                               |
-| Directions 🧭          | OSRM on FOSSGIS servers (OpenStreetMap)                                                                                                                                                         | `src/data/directions.js`                              | `/api/route` (`steps=1`)                                 | on placement / mode change                                                        |
-| Datacenters ▣          | OSM extract (bundled)                                                                                                                                                                           | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
-| Dams ▰                 | OpenInfraMap/OSM extract (bundled)                                                                                                                                                              | `src/data/localLayers.js`                             | —                                                        | static                                                                            |
-| Submarine Cables ◠     | TeleGeography public map (bundled)                                                                                                                                                              | `src/data/telegeographySubmarineCables.js`            | —                                                        | static                                                                            |
-| FIRMS Active Fires ▲   | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h)                                                                                                                                        | `src/data/firmsHeatmap.js`                            | `/api/firms` (`FIRMS_MAP_KEY`)                           | 10 min (proxy TTL 30 min)                                                         |
-| Street Level 📷 | Mapillary street-level imagery (vector tiles, Graph API, MapillaryJS) | `src/layers/streetLevel/` via `src/app/layers/streetLevel.js` | `/api/mapillary/status`, `/api/mapillary/tiles/coverage/{z}/{x}/{y}` (`MAPILLARY_CLIENT_TOKEN`) | camera-driven (320 ms debounce, ≤9 tiles, server memory cache 24 h) |
-| Wind 🌬                 | NOAA GFS 10 m wind (keyless, 0.25°→1° grid; animated particles)                                                                                                                                 | `src/data/wind.js`                                    | `/api/wind`                                              | 1 h (forecast cycle)                                                              |
-| GNSS Integrity 📡 (`gnss-integrity`) | adsb.lol point snapshot, low navigation accuracy binned per 0.5° cell (GEV NIC/NACp threshold + gpsjam.org formula and bands, keyless, ODbL) | `src/layers/gnss/` via `src/app/layers/gnss.js` | `/api/gnss-integrity` | camera-driven (600 ms debounce, minimum 2.5 s between reads) + 60s poll (server cache 60 s; 30 min rolling window) |
-| Fire Perimeters 🔥 | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap); InciWeb catalog + incident page origin and update time checks for verified incident-page links | `src/layers/perimeters/` via `src/app/layers/perimeters.js` | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*` | 5 min (server caches: catalog 1 h; publication 30 min) |
+| Layer                                | Source                                                                                                                                                                                                                                                                                                                                                                               | File                                                          | Proxy                                                                                           | Update Interval                                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Live Flights ✈️                      | OpenSky Network; bounded adsb.lol regional fallback                                                                                                                                                                                                                                                                                                                                  | `src/data/flights.js`                                         | `/api/flights` (OAuth + fallback)                                                               | 30s                                                                                                                |
+| Military Flights 🎖️                  | adsb.lol /v2/mil                                                                                                                                                                                                                                                                                                                                                                     | `src/data/militaryFlights.js`                                 | `/api/military`                                                                                 | 15s                                                                                                                |
+| Live AIS Vessels 🚢                  | AISStream websocket                                                                                                                                                                                                                                                                                                                                                                  | `src/data/aisLiveVessels.js`                                  | `/api/vessels`                                                                                  | 60s (+800ms visibility pass)                                                                                       |
+| Mapped Installations ⌖               | OpenFreeMap military areas; optional configured Overpass names and Google Places search                                                                                                                                                                                                                                                                                              | `src/data/militaryInstallations.js`                           | OpenFreeMap tiles, `/api/military-installations`, `/api/google/text-search`                     | viewport-driven; transient errors back off, missing capability switches to tiles                                   |
+| Earthquakes                          | USGS live GeoJSON plus historical FDSN Event API windows aligned to investigation time                                                                                                                                                                                                                                                                                               | `src/data/earthquakes.js`                                     | —                                                                                               | 60s live; bounded historical query cache                                                                           |
+| Air quality                          | ECCC MSC GeoMet OGC API (AQHI, Canada only)                                                                                                                                                                                                                                                                                                                                          | `src/layers/airQuality/`                                      | —                                                                                               | 20 min readings, 12 h station catalog                                                                              |
+| Satellites                           | CelesTrak                                                                                                                                                                                                                                                                                                                                                                            | `src/data/satellites.js`                                      | `/api/celestrak`                                                                                | 120s                                                                                                               |
+| Space Missions (30d)                 | Launch Library 2 + CelesTrak                                                                                                                                                                                                                                                                                                                                                         | `src/data/rocketLaunches.js`                                  | `/api/launches` + `/api/celestrak/active`                                                       | 5 min                                                                                                              |
+| Traffic                              | Selectable TomTom / OpenStreetMap / Hybrid roads; optional TomTom flow (BYOK)                                                                                                                                                                                                                                                                                                        | `src/data/traffic.js`                                         | browser-direct OpenFreeMap tiles; `/api/tomtom` for flow                                        | viewport-driven; capped tile cache                                                                                 |
+| CCTV                                 | Austin + Caltrans (CA) + TfL London + Ontario 511 + Fintraffic (FI) + DriveBC (BC) + TxDOT (TX) + Estonia (Tallinn, Tarktee) + Live Traffic NSW + Open Calgary Open Data + Statens vegvesen (NO, stills + live HLS, Kartverket ground heights) + King County (WA) + WSDOT (WA) + NYC DOT TMC (opt-in) + Toronto RESCU + Catalonia + Hong Kong Transport Department + FL511 (opt-in) + Taiwan Freeway Bureau + Street View fallback | `src/data/cctv.js` | `/api/cctv` | 10s (active) |
+| Radio                                | Radio Browser (public-domain station directory)                                                                                                                                                                                                                                                                                                                                      | `src/data/radio.js`                                           | `/api/radio/stations`, `/api/radio/click/:uuid`                                                 | 45 min directory refresh                                                                                           |
+| Transit 🚌                           | Operator GTFS-Realtime VehiclePositions (7 keyless regions, `src/data/transitFeeds.js`)                                                                                                                                                                                                                                                                                              | `src/layers/transit/` via `src/app/layers/transit.js`         | `/api/transit`                                                                                  | 15s (poll + delayed playback)                                                                                      |
+| Bikeshare 🚲                         | GBFS (Lyft + BCycle + Social Bicycles + PBSC incl. Bike Share Toronto, Bike Itaú, Bicing and seven other Spanish cities + Urban Sharing, Entur, JCDecaux + nextbike) | `src/data/bikeshare.js` | `/api/gbfs` | 60s |
+| Directions 🧭                        | OSRM on FOSSGIS servers (OpenStreetMap)                                                                                                                                                                                                                                                                                                                                              | `src/data/directions.js`                                      | `/api/route` (`steps=1`)                                                                        | on placement / mode change                                                                                         |
+| Datacenters ▣                        | OSM extract (bundled)                                                                                                                                                                                                                                                                                                                                                                | `src/data/localLayers.js`                                     | —                                                                                               | static                                                                                                             |
+| Dams ▰                               | OpenInfraMap/OSM extract (bundled)                                                                                                                                                                                                                                                                                                                                                   | `src/data/localLayers.js`                                     | —                                                                                               | static                                                                                                             |
+| Submarine Cables ◠                   | TeleGeography public map (bundled)                                                                                                                                                                                                                                                                                                                                                   | `src/data/telegeographySubmarineCables.js`                    | —                                                                                               | static                                                                                                             |
+| FIRMS Active Fires ▲                 | NASA FIRMS live (VIIRS ×3 NRT + MODIS NRT, trailing 24h) and bounded historical investigation snapshots                                                                                                                                                                                                                                                                              | `src/data/firmsHeatmap.js`                                    | `/api/firms`, `/api/firms/history` (`FIRMS_MAP_KEY`)                                            | 10 min (proxy TTL 30 min; bounded historical cache)                                                                |
+| Street Level 📷                      | Mapillary, KartaView and Panoramax street-level imagery with shared line coverage and sequence cones | `src/layers/streetLevel/` via `src/app/layers/streetLevel.js` | `/api/mapillary/status`, `/api/mapillary/tiles/{layer}/{z}/{x}/{y}` (`MAPILLARY_CLIENT_TOKEN`) | camera-driven (320 ms debounce, bounded tiles, memory + disk cache) |
+| Wind 🌬                               | NOAA GFS 10 m wind (keyless, 0.25°→1° grid; animated particles)                                                                                                                                                                                                                                                                                                                      | `src/data/wind.js`                                            | `/api/wind`                                                                                     | 1 h (forecast cycle)                                                                                               |
+| GNSS Integrity 📡 (`gnss-integrity`) | adsb.lol point snapshot, low navigation accuracy binned per 0.5° cell (GEV NIC/NACp threshold + gpsjam.org formula and bands, keyless, ODbL)                                                                                                                                                                                                                                         | `src/layers/gnss/` via `src/app/layers/gnss.js`               | `/api/gnss-integrity`                                                                           | camera-driven (600 ms debounce, minimum 2.5 s between reads) + 60s poll (server cache 60 s; 30 min rolling window) |
+| Fire Perimeters 🔥                   | NIFC WFIGS current interagency perimeters (keyless, paged past the 2000-record cap); InciWeb catalog + incident page origin and update time checks for verified incident-page links                                                                                                                                                                                                  | `src/layers/perimeters/` via `src/app/layers/perimeters.js`   | `/api/fire-perimeters` + `/api/fire-perimeters/inciweb/*`                                       | 5 min (server caches: catalog 1 h; publication 30 min)                                                             |
 
 GNSS Integrity samples a 250 nm circle around the Earth point under the screen
 centre. Camera reads debounce for 600 ms with a monotonic 2.5 s minimum gap;
@@ -3659,7 +4014,6 @@ MLAT-positioned GPS loss, derived-field exclusions and the NIC 0 exception.
 `scripts/qa-gnss.mjs` covers live freshness, bands, built primitives, camera/globe
 anchors, recovery, keyboard and mobile states; emergency repainting is covered
 by `scripts/qa-emergency-squawk.mjs`. Both accept `--timeout-ms` for slow boot.
-
 
 Fire Perimeters uses capped, timed server reads with stale-on-error caching and a per-client limit. Unchanged snapshots retain geometry; link checks cancel on disable or selection change, and the row legend shows reported containment.
 
@@ -3727,13 +4081,12 @@ Providers implement the contract in `src/layers/streetLevel/registry.js`. The
 core routes clicks by pick prefix, swaps viewer adapters in the one host,
 manages each provider's credit and fans the filter out to every provider. To
 add a provider: implement the definition, register it in
-`src/app/layers/streetLevel.js` and add its modules to
-`scripts/package-boundaries.json`; its share switch travels in `r` by id.
-A provider with line coverage builds it on `lineCoverage.js` (camera-driven
-XYZ tiles near the ground, draped, the selected sequence drawn again over
-them) and its cones
-on `sequenceCones.js`, passing its tile fetch, zoom ladder, colours and pick
-prefixes; Mapillary, KartaView and Panoramax all do. With providers on different keys the
+`src/app/layers/streetLevel.js`, add its boolean option to the `street-level`
+group in `src/data/layerState.js`, add its modules to
+`scripts/package-boundaries.json`, and carry its share switch in `r` by id.
+Providers with line coverage build it through `lineCoverage.js` and their cones
+through `sequenceCones.js`; Mapillary, KartaView and Panoramax all do. With
+providers on different keys the
 layer's `requiresKeyId` is null and each chip reports its own key.
 
 Google Street View (`providers/google/`) runs on the Maps JavaScript API with
@@ -3820,8 +4173,7 @@ that does not answer in 20 s is asked once more, and one that is not a line
 list is not cached. A click on a line reaches
 `handlePick(id, {groundPoint})`, and the provider asks the core
 (`actions.openNearest`) for its nearest showable photo within 50 m, without
-framing: many photos are archived (their file answers 409, while a HEAD says
-200) or have no file, so the six nearest are probed at once with a GET cut
+framing: many photos are archived (their file answers 409, while a HEAD says 200) or have no file, so the six nearest are probed at once with a GET cut
 off at the headers, and where all are gone the panel says KartaView's photos
 there are archived. Only a definite answer (403/404/409/410, or 200) is
 remembered; a storage timeout or 5xx is asked again. The open photo's
@@ -4567,7 +4919,6 @@ silently demoting every later lookup for the session.
 - **The DENSE chip reports the dense LOAD, not the catalog param.** The param flips synchronously while the Starlink shell takes seconds to arrive over a chunked load, and CelesTrak 502s that feed regularly. So the chip reads `DENSE ···` (busy, disabled) while loading, ACTIVE only once dense points are actually on screen, and `DENSE ✕` with the reason on hover when the load fails — a failure also reverts `catalog` to `core`, drops any partial chunk, and leaves the chip clickable to retry. A load is judged by points added, not by HTTP status: a 200 carrying an empty body, a passed-through HTML error page, or only TLEs the core catalog already owns fails with the same revert semantics as a 502. Any explicit request for `core` clears a latched error even when the mode does not change, so a Space Missions restore of an already-core snapshot never leaves the user with a failure they did not cause. Because the load settles asynchronously, the layer pushes a re-render through the optional `setRowControlsListener()` hook; nothing else would repaint that row before the 5-minute catalog refresh, so the count and legend would otherwise sit stale.
 - **A dependency owner takes the row with it.** Space Missions borrows this layer for TLE lookup with `showPoints:false`; while points are hidden the layer returns empty row controls, so the legend never describes an empty sky and the chip cannot accept a write that the owner's restore would silently revert.
 - The detection-overlay record cache (`_detectionObjects`) is cleared with the catalog on every rebuild: it stamps id/class at creation only, and a rebuild can re-tag a satellite when a partial CelesTrak outage changes which group wins dedupe.
-- **Catalog numbers above 99999** can be written in a TLE as Alpha-5: a letter A–Z, skipping I and O, for the first two digits, so `A0000` is 100000 and `Z9999` is 339999. CelesTrak's TLE feed carries no satellite above 99999 (that needs the OMM feed, #1191), so this is compatibility with Alpha-5 TLEs. `src/sources/tle.js` decodes the field through one shared helper: `noradIdFromSatnum()` for the satellites layer, which keys and deduplicates its catalog by that number, and `tleCatalogNumber()` for the satellite tools. Plain digits read as before (`noradIdFromSatnum()` accepts any length, as an OMM satrec carries the number unpadded); a malformed field — a sign, decimal point, hex, exponent, embedded space, stray or lowercase letter, or blank — is rejected rather than partly read, as `NaN` in the layer and `null` in the tools.
 - **CCTV estimated bearings:** a camera whose pack marks `headingConfidence: 'low'` (the id-hash
   `fallbackHeadingFromId` bearing) shows `HDG n° (ESTIMATED)` in the HUD and draws its coverage
   wireframe dashed; colours, widths and active/idle emphasis are unchanged. A manual calibration
@@ -5722,9 +6073,9 @@ When runtime behavior or architecture changes, update this file in the same chan
 
 ## Dependency security baseline
 
-The lockfile uses DOMPurify 3.4.17, protobufjs 8.8.0, PostCSS 8.5.28,
-source-map-js 1.2.2 and nanoid 3.3.19. Cesium remains on 1.138.0. Browser QA
-uses Puppeteer 25.10.0; image-processing tools use Sharp 0.35.5. QA scripts await Puppeteer's asynchronous
+The lockfile uses DOMPurify 3.4.15, protobufjs 8.8.0, PostCSS 8.5.28, and
+nanoid 3.3.19. Cesium remains on 1.138.0. Browser QA uses Puppeteer 25.10.0;
+image-processing tools use Sharp 0.35.4. QA scripts await Puppeteer's asynchronous
 executable-path lookup before testing or passing the path to Chrome. Supported Node versions remain
 24.14.x and 26.x. Use `npm ci` to reproduce the checked-in dependency tree.
 
@@ -6045,6 +6396,49 @@ datacenters, dams and the Nepal locator retain that shared credit while displaye
 
 Military fragments stitch by source identity. Different mapped parcels merge only
 when their footprints touch or contain one another, never across a seam tolerance gap.
+
+## S63 review corrections — 18 October 2026
+
+Production hosting now validates its asset manifests before opening a socket,
+uses indexed current and retained asset records, applies the existing embed
+framing policy, and gates API requests with the shared Host allowlist. Static
+responses support byte-identified gzip/Brotli, conditional GET/HEAD and bounded
+ranges. Shutdown drains connections with a deadline and fires provider cleanup.
+
+The first deployment with content-digested Cesium paths can retain a verified
+copy of the previous distribution through `GEV_PREVIOUS_ASSET_ROOTS`. Besides
+declared immutable assets, only manifest-listed legacy `Cesium.js`, Workers,
+Assets, ThirdParty and Widgets files with distribution file types are eligible.
+Legacy paths use `no-cache` and conditional validation; current assets take
+precedence. Old HTML, configuration, unlisted files and directory escapes stay
+unavailable. Provision the retained copy and its manifest separately; do not
+modify an already verified release or add files to the new attested artifact.
+Fourteen production-host tests pass, including old-tab worker/texture delivery.
+
+The release packager includes the provider registry's runtime helpers and keeps
+historical recovery packages readable. The focused Windows Node 24 host/staging
+suite passes 26 checks. VM105 clean unpacked production installation and the
+full dependency-backed integration gates remain separate validation steps.
+
+## S64 diagnostic review — 18 October 2026
+
+The local performance snapshot now reports tile-load backlog only after a real
+Cesium progress event, explicit long-task availability, bounded render-hold
+owners, and unavailable draw/GPU execution counts as null. Renderer identity is
+cached until context recovery or re-enabling instrumentation. Context, tile,
+visibility and long-task observers are removed on disable/dispose; stale observer
+callbacks cannot enter a new observation session. Seventeen focused Node 24
+snapshot/Auto tests pass. No hardware improvement is inferred from diagnostics.
+
+## S65 still projection ownership — October 18, 2026
+
+Still CCTV refreshes now use one disposable render-governor schedule per layer.
+Waiting for network or decode no longer holds continuous rendering. Image
+completion paints before another due fetch, retains a final throttled texture
+upload, and schedules the existing refresh cadence. Selection, visibility,
+disable, reinitialization and disposal reject stale wakeups. Video and focus
+fades keep continuous demand and their final frame. Focused tests exercise the
+actual model, projection and frame functions; hardware benefit is still pending.
 
 ### Shared native dropdowns and numeric fields
 

@@ -1,0 +1,278 @@
+{
+  "schema": "gev-framebuffer-control-review/v1",
+  "diagnosticOnly": true,
+  "status": "incomplete; fourth arm failed foreground activation",
+  "disposition": "No demonstrated benefit; retain application framebuffer preservation. Original dam and cable regressions remain unresolved.",
+  "applicationCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+  "harnessCommit": "9dbec028570198b03f9929de16bb6136788d1d0e",
+  "matrixPlanSha256": "02d8e0b8d91257bb1450ae21ff1a3ed02ec33b2e89395d3eca4608440491c5e3",
+  "wrapperSha256": "dd1b4426d66ecc11ab3bede6d7476206826fc11c0bd36c32e077dcf874b9acda",
+  "reviewScriptSha256": "eb8f80f037243db17f647e4a71277526c946b1126aea489378838de2a83e6917",
+  "order": ["preserved-a", "released-a", "released-b", "preserved-b"],
+  "warmupMs": 30000,
+  "durationPerSampleMs": 60000,
+  "environment": {
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 1800
+    }
+  },
+  "unchangedContextAttributes": {
+    "alpha": false,
+    "antialias": true,
+    "depth": true,
+    "failIfMajorPerformanceCaveat": false,
+    "powerPreference": "high-performance",
+    "premultipliedAlpha": true,
+    "stencil": true,
+    "desynchronized": false
+  },
+  "visualSettings": {
+    "qualityMode": "manual",
+    "densityPct": 75,
+    "detectionMode": "DENSE",
+    "resolutionScale": 1,
+    "antialias": true,
+    "msaaSamples": 4,
+    "fxaa": false,
+    "bloom": false,
+    "bloomIntensity": 0,
+    "sharpen": true,
+    "sharpenIntensity": 49,
+    "style": "normal",
+    "map": "esri-imagery",
+    "visualState": {
+      "style": "normal",
+      "bloom": {
+        "enabled": false,
+        "intensity": 0,
+        "version": 2
+      },
+      "sharpen": {
+        "enabled": true,
+        "intensity": 49
+      },
+      "hud": {
+        "visible": true,
+        "variant": "tactical"
+      },
+      "detection": {
+        "mode": "DENSE",
+        "density": 75,
+        "allocation": "ELASTIC",
+        "fadePct": 7,
+        "outsideOpacityPct": 1
+      },
+      "scope": {
+        "enabled": true,
+        "featherPct": 11
+      },
+      "mapStack": "esri-imagery",
+      "styleParams": {
+        "retro": {
+          "pixelation": 5,
+          "distortion": 0,
+          "instability": 0.4
+        },
+        "surveillance": {
+          "gain": 0.55,
+          "bloom": 0.3,
+          "scanlineStr": 1,
+          "pixelation": 2.5
+        },
+        "thermal": {
+          "sensitivity": 0.75,
+          "bloom": 0.65,
+          "mode": 0,
+          "pixelation": 1.5,
+          "palette": 0
+        },
+        "anime": {
+          "saturation": 1,
+          "edgeThick": 0.5
+        },
+        "noir": {
+          "contrastAmt": 1.2,
+          "grainAmt": 0.5,
+          "vignetteAmt": 0.5
+        },
+        "snow": {
+          "density": 0.6,
+          "wind": 0.5
+        }
+      }
+    },
+    "nativeSharpnessProfile": {
+      "id": "native-sharpness-v1",
+      "useBrowserRecommendedResolution": false,
+      "resolutionScale": 1,
+      "maximumScreenSpaceError": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    }
+  },
+  "captures": [
+    {
+      "label": "preserved-a",
+      "capturedAt": "2026-10-19T00:04:02.725Z",
+      "actualPreserveDrawingBuffer": true,
+      "motionIntervalMs": {
+        "p50": 271.09999999403954,
+        "p95": 324.19999998807907,
+        "max": 511.09999999403954,
+        "samples": 220,
+        "reason": null
+      },
+      "renderedFrames": 221,
+      "totalObjects": 2629,
+      "foregroundThroughout": true,
+      "browserTrace": {
+        "status": "completed",
+        "dataLossOccurred": false,
+        "truncated": false
+      }
+    },
+    {
+      "label": "released-a",
+      "capturedAt": "2026-10-19T00:08:13.429Z",
+      "actualPreserveDrawingBuffer": false,
+      "motionIntervalMs": {
+        "p50": 293,
+        "p95": 570.5999999940395,
+        "max": 599.5999999940395,
+        "samples": 207,
+        "reason": null
+      },
+      "renderedFrames": 208,
+      "totalObjects": 2629,
+      "foregroundThroughout": true,
+      "browserTrace": {
+        "status": "completed",
+        "dataLossOccurred": false,
+        "truncated": false
+      }
+    },
+    {
+      "label": "released-b",
+      "capturedAt": "2026-10-19T00:12:33.022Z",
+      "actualPreserveDrawingBuffer": false,
+      "motionIntervalMs": {
+        "p50": 280.39999997615814,
+        "p95": 552.5,
+        "max": 621.1999999880791,
+        "samples": 213,
+        "reason": null
+      },
+      "renderedFrames": 214,
+      "totalObjects": 2629,
+      "foregroundThroughout": true,
+      "browserTrace": {
+        "status": "completed",
+        "dataLossOccurred": false,
+        "truncated": false
+      }
+    }
+  ],
+  "failedArm": {
+    "label": "preserved-b",
+    "phase": "initialize-foreground-helper",
+    "message": "Windows could not activate the owned performance browser window.",
+    "completedSampleCount": 0,
+    "foregroundConfirmed": false
+  },
+  "archive": {
+    "location": "private Windows evidence directory cable-framebuffer-control-1792367992163",
+    "vmTransfer": "pending; temporary SSH credential expired and existing-session tool input unavailable",
+    "files": [
+      {
+        "file": "browser-trace-1-preserved-a.json",
+        "bytes": 29955760,
+        "sha256": "1b645f53ebab2cb75e55545e958fa651e157db170cc11b81da53d63feeb71f86"
+      },
+      {
+        "file": "browser-trace-2-released-a.json",
+        "bytes": 26046397,
+        "sha256": "ca7e00db2328dd57abb3fce14aa4a53efd7a102c6b57be3775b8866bd7f118e0"
+      },
+      {
+        "file": "browser-trace-3-released-b.json",
+        "bytes": 25090615,
+        "sha256": "eb348951fe7373cf8b8d957c1e3d0cb0516aabc09682df192ef31989d1e5b718"
+      },
+      {
+        "file": "capture-1-preserved-a.json",
+        "bytes": 249648,
+        "sha256": "6b77f86ade4dab9d60df21db6c58d706bd1f6a2b75939537f505d6b9370350dd"
+      },
+      {
+        "file": "capture-2-released-a.json",
+        "bytes": 243744,
+        "sha256": "e53a321ecd924ac8d483f55b23c365c9f658fbb71fcadc602c320011058b63f7"
+      },
+      {
+        "file": "capture-3-released-b.json",
+        "bytes": 247697,
+        "sha256": "90009a5b0abe4ba05276a7920b8ee8488965106b4d4bcd3658a7fad44da193c4"
+      },
+      {
+        "file": "capture-4-preserved-b.json",
+        "bytes": 3367,
+        "sha256": "3c2a0adda5cada8598d9c1b86bd724db0c715106c2199c2725a661a45cba09c5"
+      },
+      {
+        "file": "frame-trace-1-preserved-a.json",
+        "bytes": 156524,
+        "sha256": "88536a14a412c28361d5509a561cf93af6ff50707069f7e913f91fd433d16737"
+      },
+      {
+        "file": "frame-trace-2-released-a.json",
+        "bytes": 147298,
+        "sha256": "48ddbe9ba6f591975bc41d0bfd0a3f6c203272e274a4e0dae785f872c383e15d"
+      },
+      {
+        "file": "frame-trace-3-released-b.json",
+        "bytes": 151246,
+        "sha256": "d587c972eec1ad3a1255d5e707a0ec2ab00cfc6c058d7a829dda9db0f5085d84"
+      },
+      {
+        "file": "invocation-1.json",
+        "bytes": 2863,
+        "sha256": "c7b7a788d77a77c3dc3993654e2cfbcbfbb299b1d2f13cf51f39bd10237efe9c"
+      },
+      {
+        "file": "invocation-2.json",
+        "bytes": 2903,
+        "sha256": "090eb978a1b2e746890f27ea36429f6c88f0d5feba31e4dafb1f7f574ea2b42b"
+      },
+      {
+        "file": "invocation-3.json",
+        "bytes": 2903,
+        "sha256": "264d332ca7b732fb8ce1ca0d906a62d80b36cdefa0f72bf43cc2f46e7595c671"
+      },
+      {
+        "file": "partial-failure.json",
+        "bytes": 7773,
+        "sha256": "b4343fc45b8ccf90762121614734d334ece19d5f40b19fbd57dbf5001157dafd"
+      }
+    ]
+  },
+  "limitations": [
+    "Three of four planned diagnostic arms completed; this is not a complete ABBA control or acceptance evidence.",
+    "Instrumented one-run samples do not replace the five-run qualification matrix.",
+    "No capture-correctness or visual-equivalence acceptance for disabled preservation is claimed.",
+    "No application default, persistent browser setting, resolution, effect, population, or test deadline changed."
+  ]
+}

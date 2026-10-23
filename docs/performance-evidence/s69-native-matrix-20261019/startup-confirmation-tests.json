@@ -1,0 +1,127 @@
+{
+  "schema": "gev-startup-confirmation-unit-validation/v1",
+  "startedAt": "2026-10-19T16:44:58.552Z",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "3667dcf65c487504c84c4bcc111c44ba7e53fec4f1529de91a59162214c59340"
+    },
+    {
+      "name": "scripts/captureNoUndefConfig.mjs",
+      "sha256": "fa351488e9894cd713c5c491b887d685a5c15b44c6a8927f2898740f63cf71d4"
+    },
+    {
+      "name": "scripts/run-unit-tests.mjs",
+      "sha256": "f69f2825b856851e2e600a6450df88cd3d1663c5dddba60f099b6df14e144a57"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.mjs",
+      "sha256": "79bea55c4b0d15de91de05d98a31bf36bd9354a6be8ca5253e2d897fe6d59fe9"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "sha256": "7a01dc9ea8bbbd876c1c13062f06acf10a62ea3aa50ebbae9d0a135633e5c5ed"
+    },
+    {
+      "name": "scripts/review-balanced-startup-confirmation.mjs",
+      "sha256": "d1811851fe44f66662ab6dafe9abb1678649b4e41c46ae233ac8cb8c3434fb2f"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "log": "node24-v2.log",
+      "logSha256": "12afda14c57314f95f931dd2375dd728297378cbf5b750e5ea783f64e0cf0802",
+      "summary": [
+        "ℹ tests 75",
+        "ℹ pass 75",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 7294.434304"
+      ],
+      "tests": [
+        "scripts/performance/captureBrowserTrace.test.mjs",
+        "scripts/performance/captureBuildProvenance.test.mjs",
+        "scripts/performance/captureComparisonContract.test.mjs",
+        "scripts/performance/captureDiagnosticsControl.test.mjs",
+        "scripts/performance/captureFailureReport.test.mjs",
+        "scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs",
+        "scripts/performance/captureIntegrity.test.mjs",
+        "scripts/performance/captureProducerCli.test.mjs",
+        "scripts/performance/captureRendererProbeRetirementIntegration.test.mjs",
+        "scripts/performance/balancedStartupConfirmation.test.mjs",
+        "scripts/run-unit-tests.test.mjs"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "log": "node26-v2.log",
+      "logSha256": "b897b1ca4b97922db00335e80ee1bf9f78b4d1e343612efa5abb2d6d4a707d93",
+      "summary": [
+        "ℹ tests 75",
+        "ℹ pass 75",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 6893.145338"
+      ],
+      "tests": [
+        "scripts/performance/captureBrowserTrace.test.mjs",
+        "scripts/performance/captureBuildProvenance.test.mjs",
+        "scripts/performance/captureComparisonContract.test.mjs",
+        "scripts/performance/captureDiagnosticsControl.test.mjs",
+        "scripts/performance/captureFailureReport.test.mjs",
+        "scripts/performance/captureFixtureInterceptionReleaseIntegration.test.mjs",
+        "scripts/performance/captureIntegrity.test.mjs",
+        "scripts/performance/captureProducerCli.test.mjs",
+        "scripts/performance/captureRendererProbeRetirementIntegration.test.mjs",
+        "scripts/performance/balancedStartupConfirmation.test.mjs",
+        "scripts/run-unit-tests.test.mjs"
+      ]
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/startup-confirmation-review-20261019",
+  "initialFailure": {
+    "reason": "The sparse test checkout omitted server/, so discovery correctly failed its required server-test assertion.",
+    "report": "initial-incomplete-checkout-validation.json",
+    "log": "node24.log",
+    "logSha256": "5f146a5719f3098350e0d491d43134be14d1f9d643e5407793dfc0b3c9b7491f"
+  },
+  "completedAt": "2026-10-19T16:45:13.465Z",
+  "archivedFiles": [
+    {
+      "name": "validation-v2.json",
+      "bytes": 3872,
+      "sha256": "19d09d437dd6003e901f925c719ab9d19a943e1ce3d0f15222c5bd2b1ae5826d"
+    },
+    {
+      "name": "initial-incomplete-checkout-validation.json",
+      "bytes": 2355,
+      "sha256": "bc451cf415943012a66fd18102b866b22d61d86eae0edb30fd9c17fb50d75f0e"
+    },
+    {
+      "name": "node24-v2.log",
+      "bytes": 7068,
+      "sha256": "12afda14c57314f95f931dd2375dd728297378cbf5b750e5ea783f64e0cf0802"
+    },
+    {
+      "name": "node26-v2.log",
+      "bytes": 7068,
+      "sha256": "b897b1ca4b97922db00335e80ee1bf9f78b4d1e343612efa5abb2d6d4a707d93"
+    },
+    {
+      "name": "node24.log",
+      "bytes": 7872,
+      "sha256": "5f146a5719f3098350e0d491d43134be14d1f9d643e5407793dfc0b3c9b7491f"
+    }
+  ],
+  "reviewedAt": "2026-10-19T16:45:43.253Z",
+  "scope": "Startup-only and capture harness unit validation; no browser measurement or automatic acceptance override."
+}

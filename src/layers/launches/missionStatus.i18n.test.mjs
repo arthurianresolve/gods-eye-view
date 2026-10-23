@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('ru'), prepareTestLocale('es')]);
+setTestLocale('en');
 // A launch without a Launch Library status gets our 'Unknown'. The record keeps
 // it English; the mission panel translates it and shows provider statuses as sent.
 import assert from 'node:assert/strict';

@@ -1,0 +1,58 @@
+{
+  "schema": "gev-placement-fixed-review/v1",
+  "reviewedAt": "2026-10-11T00:44:58.014Z",
+  "sourceSha256": "936bd09078074958554d33e479e46046cf58822f05195082d7fae73e6889ddd6",
+  "workReportSha256": "e34ff389ffcd9a0c4f87891239d1f1234252dd57b41799e1f1ade743eb433411",
+  "verified": {
+    "exactSourceAndDependencyHashes": true,
+    "baselineSingleExpectedWorkFailure": true,
+    "candidateFourWitnessCasesPass": true,
+    "sampledOutputParity": true,
+    "allocationControlHashGuards": true
+  },
+  "buildCalls": {
+    "baseline": 28,
+    "candidate": 14
+  },
+  "tests": {
+    "focused": {
+      "path": "qa-artifacts/placement-revised-fixed-focused.txt",
+      "sha256": "f1b5a8ceff1d0669e6ac7ad4b02be2a4ba1d5f381f811ee2e1b370446843949d",
+      "encoding": "utf16le",
+      "passed": 86,
+      "failed": 0,
+      "skipped": 0
+    },
+    "allocation": {
+      "path": "qa-artifacts/placement-revised-fixed-allocation.txt",
+      "sha256": "0b953e8d2eebacf6f4d99a79fa657cb187d4666e45b099697b3c8de3c6a43c84",
+      "encoding": "utf16le",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    "allocation-control": {
+      "path": "qa-artifacts/placement-revised-fixed-allocation-control.txt",
+      "sha256": "a4911a776936725bd7fde288d4697174e1298c5b7672d20db75a25cd47bed46a",
+      "encoding": "utf16le",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "diagnosticProbes": {
+    "a42-hashbound-control": {
+      "sha256": "6b0553e26ec76cc954f9422eb74b5422643cdc179848b684492bb5688c1a121e",
+      "sourceSha256": "a42a7235062b379223aa29f8a21922f167514476d1500ef48ce998b5a3bbb616",
+      "medianBytesPerFrame": 13682
+    },
+    "anchor-fastguard-exact-hashbound": {
+      "sha256": "27c5cf3d9b1ffdd05f4d4a65c42101219f989aa4fcada2f773bb93359a299a9f",
+      "sourceSha256": "c4870b7db484546e3c958db67619235915b96829adaf480b9f717b6ae75bcc22",
+      "medianBytesPerFrame": 9681.666666666666
+    }
+  },
+  "diagnosis": "Within the revised signature experiment, rejecting unequal anchors before calling Object.is restores the 250-entry allocation median from 13682 to 9681.67 bytes/frame. Object.is still decides signed-zero and NaN equality for potentially matching values. Direct-anchor and direct-size local removal did not change the failing median. This isolates the measured miss-path allocation, without proving particular V8 boxing internals.",
+  "scope": "Work, behavior and allocation only. The isolated diagnostic module is followed by permanent tests on the applied, formatted runtime. Timing, rendered comparisons and integration at its frozen commit remain pending.",
+  "disposition": "Ready for frozen QA comparison; no dev promotion or full S52/GPU performance acceptance yet."
+}

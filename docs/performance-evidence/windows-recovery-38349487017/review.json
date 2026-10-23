@@ -1,0 +1,68 @@
+{
+  "schema": "gev-windows-recovery-review/v1",
+  "runId": "38349487017",
+  "jobId": "115138368132",
+  "candidateCommit": "14472b5b58174c7755f900278962c067d3d60e61",
+  "browserVersion": "Chrome/152.0.7977.75",
+  "reportSha256": "3e12af24f90f6ebd3c14de41811b2b6f7db0f8e2af81764bf2fa4a3b00c52360",
+  "reportBytes": 14725,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "browserCloseElapsedMs": 428.7127999999793,
+      "processExitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "browserCloseElapsedMs": 353.1849999999977,
+      "processExitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "browserCloseElapsedMs": 269.93559999996796,
+      "processExitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "browserCloseElapsedMs": 334.31220000004396,
+      "processExitCode": 0,
+      "forced": false
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "browserCloseElapsedMs": 315.8177999999607,
+      "processExitCode": 0,
+      "forced": false
+    }
+  ],
+  "limitations": [
+    "Successful recovery observation does not establish the cause or fix for earlier intermittent shutdown failures.",
+    "This run predates the optional Chrome version selector.",
+    "Hosted SwiftShader is not hardware performance evidence.",
+    "Native map workload run38349484331 failed separately on the baseline."
+  ]
+}

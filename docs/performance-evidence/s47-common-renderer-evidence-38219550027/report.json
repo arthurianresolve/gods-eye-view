@@ -1,0 +1,43 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "2de9501cb2dcc7a841b512068b86190c67728667",
+  "harnessSha": "2de9501cb2dcc7a841b512068b86190c67728667",
+  "captureWorkerAuditMode": "diagnostic",
+  "sceneFrameDiagnostics": true,
+  "firstMotionCpuProfile": true,
+  "cpuProfileArtifactDirectory": "performance-build-smoke.json.cpu-profile",
+  "candidateCaptureProviderFixture": "dense-investigation",
+  "startedAt": "2026-10-12T07:45:55.249Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "failed",
+      "failure": "Smoke cleanup failed.",
+      "failureDetails": {
+        "phase": "cleanup",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "cleanupErrors": [
+          "Early renderer probe cleanup was not confirmed."
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "The candidate provider-fixture selection applies to the additional capture CLI; baseline and candidate build-smoke pages still run the dense integration checks.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Smoke cleanup failed.",
+    "phase": "baseline"
+  },
+  "finishedAt": "2026-10-12T07:46:47.086Z",
+  "durationMs": 51837
+}

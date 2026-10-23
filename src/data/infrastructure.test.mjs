@@ -62,10 +62,23 @@ test('infrastructure factory preserves identity and creates independent state wi
   const first = createInfrastructureLayers(services());
   const second = createInfrastructureLayers(services());
   assert.deepEqual(
+    first.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+    ['entities', 'entities'],
+    'the application default remains Entity-backed',
+  );
+  assert.deepEqual(
     first.map(({ id, name, source }) => ({ id, name, source })),
     [
-      { id: 'local-datacenters', name: 'Datacenters', source: 'Local' },
-      { id: 'local-dams', name: 'Dams', source: 'USACE' },
+      {
+        id: 'local-datacenters',
+        name: 'Datacenters',
+        source: 'OpenStreetMap contributors · ODbL-1.0',
+      },
+      {
+        id: 'local-dams',
+        name: 'Dams',
+        source: 'Open Infrastructure Map / OpenStreetMap · ODbL-1.0',
+      },
     ],
   );
   first.forEach((layer, index) => {
@@ -79,6 +92,20 @@ test('infrastructure factory preserves identity and creates independent state wi
     second[index].destroy();
   });
 });
+
+for (const renderer of ['primitive-collections', 'stem-collection']) {
+  test(`infrastructure factory scopes the opt-in ${renderer} renderer to datacenters only`, () => {
+    const layers = createInfrastructureLayers({
+      ...services(),
+      datacenterSurfaceRenderer: renderer,
+    });
+    assert.deepEqual(
+      layers.map((layer) => layer.getSurfaceRendererDiagnostics().mode),
+      [renderer, 'entities'],
+    );
+    layers.forEach((layer) => layer.destroy());
+  });
+}
 
 test('dataset URLs still name the complete bundled sources', () => {
   for (const [file, count] of [
@@ -190,12 +217,16 @@ test('consumer build includes only infrastructure code and resolves assets under
   const output = result.output;
   const entry = output.find((item) => item.type === 'chunk' && item.isEntry);
   const sources = Object.keys(entry.modules).filter((id) => id.endsWith('.js'));
+  // marker.js is a no-runtime-cost compile-time i18n marker used by the
+  // infrastructure evidence data; it does not add an application dependency.
   assert.deepEqual(sources.map((id) => id.split('/').at(-1)).sort(), [
+    'evidence.js',
     'infrastructure.js',
     'infrastructureData.js',
     'infrastructureOverlayEntry.js',
     'localGeojsonCore.js',
     'localGeojsonLod.js',
+    'marker.js',
   ]);
   assert.deepEqual(
     entry.imports,

@@ -1,0 +1,80 @@
+{
+  "schema": "gev-normalized-interaction-heap-report/v1",
+  "status": "failed-local-control-gate",
+  "acceptanceEligible": false,
+  "scope": "v3 local-control feedback/readiness, loaded replay seek, and non-GC sampled peak heap",
+  "applicationCommits": {
+    "baseline": "76cc760b384da27e7cfc848a76f317112574826a",
+    "candidate": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841"
+  },
+  "captureProducerCommit": "cd4005dddb4ab536faeb0523cdf30761b27088c9",
+  "evidence": {
+    "rawRoot": "../gev-s61-evidence-19065997/qualification-metrics-190c5ab6-cd4005dd",
+    "capture": {
+      "path": "capture.json",
+      "sha256": "c7fb63bb8e216aa4d2e46d22a67e2bd423482dc8e2c46cff3aeabfd28776f2ef"
+    },
+    "review": {
+      "path": "review.json",
+      "sha256": "6f2f7f5800f5145bb15a3590044e4b96a8caa276489b3c46f5b43308f05a4998"
+    },
+    "process": {
+      "path": "process.json",
+      "sha256": "bdb3076129f692c873025d1c633b2ae000544d436b948b722f23f967b35a55ab"
+    },
+    "wrapperSha256": "38da90e85a18f356d4c648dc732c75a3b7c04cb7ad39bcad87d345b88bd5781c"
+  },
+  "sourceIdentityScope": {
+    "baseline": "76cc760b contains the same weather, recorded-pose, and workspace-visual correctness changes used for identity; it is not the original e7 runtime.",
+    "weatherIdentityEnvelopeSha256": "2afe87373bb090946e212dd209619db6b67c6c138f082bf8ce7289599a5036d8",
+    "coldStartupEligible": false,
+    "coldStartupStatus": "unavailable: identity captures are single weather shards and are not five-run startup evidence"
+  },
+  "localControl": {
+    "status": "failed",
+    "protocolVersion": 3,
+    "sampleCountPerBuild": 20,
+    "limits": {
+      "intentAndVisibleAcknowledgementP95Ms": 100,
+      "fullReadinessRegressionPct": 10
+    },
+    "baseline": {
+      "clickToAcceptedIntentP95Ms": 12.6,
+      "clickToVisibleFeedbackP95Ms": 602.6,
+      "clickToFullReadyStateP95Ms": 514.2,
+      "clickToFullRenderedReadinessP95Ms": 592.9
+    },
+    "candidate": {
+      "clickToAcceptedIntentP95Ms": 12.4,
+      "clickToVisibleFeedbackP95Ms": 709.3,
+      "clickToFullReadyStateP95Ms": 685.7,
+      "clickToFullRenderedReadinessP95Ms": 707.4
+    },
+    "fullReadinessChangePct": {
+      "state": 33.35278101905873,
+      "rendered": 19.311856974194637
+    },
+    "failedChecks": [
+      "candidate click-to-visible-feedback p95 exceeds 100ms",
+      "candidate click-to-full-ready state regression exceeds 10%",
+      "candidate click-to-full-rendered readiness regression exceeds 10%"
+    ]
+  },
+  "loadedReplaySeek": {
+    "status": "measured-within-limit",
+    "sampleCountPerBuild": 20,
+    "candidateInputToStateP95Ms": 82.9,
+    "candidateInputToRenderedFrameP95Ms": 91.3,
+    "limitMs": 250
+  },
+  "sampledPeakHeap": {
+    "status": "measured-within-limit",
+    "semantic": "maximum JSHeapUsedSize across raw one-second samples during six matched mixed-use cycles; non-GC sampled peak, not continuous or retained heap",
+    "sampleCount": { "baseline": 79, "candidate": 80 },
+    "actualDurationMs": { "baseline": 86719.0628, "candidate": 86435.6424 },
+    "peakBytes": { "baseline": 75083812, "candidate": 73105916 },
+    "changePct": -2.6342509088377133,
+    "regressionOver10Pct": false
+  },
+  "interpretation": "Replay and sampled-peak subchecks meet their declared limits. The full metrics report remains failed because local-control acknowledgement/readiness gates fail; these subchecks do not override that failure."
+}

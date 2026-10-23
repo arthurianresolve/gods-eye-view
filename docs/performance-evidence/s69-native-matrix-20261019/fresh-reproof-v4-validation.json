@@ -1,0 +1,100 @@
+{
+  "schema": "gev-fresh-feedback-reproof-v4-validation/v1",
+  "status": "focused-unit-validation-passed",
+  "completedAt": "2026-10-20T13:50:27.233Z",
+  "sources": [
+    {
+      "file": "scripts/performance/interactionEventTiming.mjs",
+      "bytes": 51357,
+      "sha256": "45f6a24ccc56fca2e2288f214e4bbe7ea1c4eaef12dabb1fcbd772bc5fe914af"
+    },
+    {
+      "file": "scripts/performance/interactionEventTiming.test.mjs",
+      "bytes": 63544,
+      "sha256": "8d007c2ef3d915d16ccd683b03ad4acf72ce98e1b99313109623bd95b2ccc0cf"
+    }
+  ],
+  "engine": {
+    "executable": "C:\\Program Files\\nodejs\\node.exe",
+    "version": "v24.16.0"
+  },
+  "focused": {
+    "command": [
+      "--test",
+      "--test-concurrency=1",
+      "scripts/performance/interactionEventTiming.test.mjs"
+    ],
+    "exitCode": 0,
+    "tests": 35,
+    "pass": 35,
+    "fail": 0,
+    "skipped": 0,
+    "log": "C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-quality-vm105\\qa-artifacts\\fresh-reproof-v4-validation-20261020-r1\\node24-prospective-installer-final.log",
+    "bytes": 3847,
+    "sha256": "9dac8eb8562c8cb5faa4aead9cf1da4dae03d5900e81f68b8c085c47a77b8659"
+  },
+  "scopedFormat": {
+    "files": [
+      "scripts/performance/interactionEventTiming.mjs",
+      "scripts/performance/interactionEventTiming.test.mjs"
+    ],
+    "passed": true
+  },
+  "diffCheck": {
+    "passed": true
+  },
+  "prospectivePlan": {
+    "policy": "trusted-click-event-timing-visible-intent-v4",
+    "sampleCount": 20,
+    "durationThresholdMs": 16,
+    "durationQuantumMs": 8,
+    "actionDrainMs": 1000,
+    "nextInputGuardMs": 8,
+    "maximumEntries": 128,
+    "maximumObservations": 1024,
+    "maximumMutationCallbacks": 4096,
+    "maximumMutationRecords": 65536,
+    "maximumGeometryProofsPerAction": 2,
+    "measurementRestoration": "source-owned-left-rail-render-boundary-v1",
+    "maximumMutationReasonsPerObservation": 8,
+    "maximumRenderBoundaryProofsPerAction": 8,
+    "feedbackReproof": "same-intent-current-geometry-raf-or-owned-ro-v1"
+  },
+  "legacyDefaultPolicy": "trusted-click-event-timing-visible-intent-v3",
+  "observationSourceReadback": {
+    "frozenQaCommit": "3fdbcf420c4bf5e4995503ef033b828221116698",
+    "frozenInstallerSha256": "e894f88268239d962d0a4e98efbe15214039da51382167882ba8bd8429234dd8",
+    "currentInstallerSha256": "3fffbce100fb5799f414c562fbdee1c772d3d516248140f25e0947589c93eb9d",
+    "observationAndLifecycleSectionsExact": true,
+    "sections": [
+      {
+        "section": "selector through read() entry",
+        "sha256": "c96335113fa7b8ac22cbceda6d0a83ab196ddbe6b67525dc67b1bce4b9b21c62"
+      },
+      {
+        "section": "read() status/limits through disposal and observer registration",
+        "sha256": "8a27b8cbccdbbedb9e784f520de74dd70738b451723533761e4ffe15a3b8bd79"
+      }
+    ],
+    "excludedDifferences": "Only installer argument validation/local policy selection and read() policy/feedbackReproof metadata differ."
+  },
+  "coverage": [
+    "explicit v4 plan and missing/unknown metadata rejection",
+    "mixed batch before a pure arm and mixed coalesced batch with timely complete RO",
+    "unknown geometry renewed by a fresh RO or existing natural RAF",
+    "known contrary state remains sticky",
+    "late/rounding-interval/invalidation/foreground/epoch/state/generation/ownership negatives",
+    "later RAF cannot replace any recognized measurement post-layout obligation",
+    "serialized unchanged geometry checker detects detached/replaced/hidden/clipped/changed-intent/changed-state/moved/scrolled control before later positive proofs",
+    "v3/v4 source-executed observer outputs match except declared metadata",
+    "strict v2/v3 regression cases retain their failures"
+  ],
+  "limits": "Existing source-bound browser feedback model only; no physical first-pixel or continuous visibility guarantee. No latency/readiness threshold, sample count, drain, geometry equality, actual negative or observation-work exemption is introduced.",
+  "integration": "Astra owns explicit collect/run/CLI plan selection and readiness v7/consumer integration. This receipt covers these two source files only.",
+  "browserStarted": false,
+  "gpuStarted": false,
+  "vmUsed": false,
+  "historicalReportsRerated": false,
+  "thresholdsChanged": false,
+  "productionChanged": false
+}

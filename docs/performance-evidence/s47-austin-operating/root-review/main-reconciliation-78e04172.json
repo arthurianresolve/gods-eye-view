@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-10-13T01:30:20.711Z",
+  "candidate": "78e0417244856a2a3d2905ab618d32b909507eb6",
+  "dev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+  "forkDev": "726e404b50a6586f9eb9085ca2478f605dfc698c",
+  "forkMain": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+  "upstreamMain": "8b8ccc9a81379e8b40d4be67610570ee5b159512",
+  "devVsMain": "608\t0",
+  "qaVsMain": "691\t0"
+}

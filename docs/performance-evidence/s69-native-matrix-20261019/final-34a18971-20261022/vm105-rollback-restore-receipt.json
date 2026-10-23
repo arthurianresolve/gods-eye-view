@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "candidateCommit": "34a1897150adf1c03eac72e04b9a9ec37fb09ba8",
+  "releaseCommit": "64fd4ea80a31927e070cd696cef8b877a7f038c0",
+  "startedAt": "2026-10-22T17:08:58.5195550Z",
+  "steps": [
+    {
+      "name": "activate-previous-release",
+      "output": "active\nMainPID=420385\nWorkingDirectory=/opt/gods-eye-view-releases/4e24ac0494cc39e2e06f2420ac6e3e4bca47d9fb-verified",
+      "at": "2026-10-22T17:08:59.1787340Z"
+    },
+    {
+      "label": "previous",
+      "sha256": "e49276d7812ab1eed3efb448accb9f25570a98ba16f39dfd9815ff06832bc164",
+      "bytes": 88145,
+      "verifiedAt": "2026-10-22T17:09:00.3814497Z"
+    },
+    {
+      "name": "restore-candidate-release",
+      "output": "active\nMainPID=420509\nWorkingDirectory=/opt/gods-eye-view-releases/64fd4ea80a31927e070cd696cef8b877a7f038c0-verified",
+      "at": "2026-10-22T17:09:00.8361848Z"
+    },
+    {
+      "label": "candidate-restored",
+      "sha256": "a59795afefa75d50336145ee3202dca90f6832749bd7327085a61222e807d46c",
+      "bytes": 88145,
+      "verifiedAt": "2026-10-22T17:09:01.9743298Z"
+    }
+  ],
+  "outcome": "passed",
+  "completedAt": "2026-10-22T17:09:01.9751015Z"
+}

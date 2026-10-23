@@ -1,0 +1,63 @@
+{
+  "run": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38186733917",
+  "commit": "bc892f7cb491c823bb8d7503cd036e5320f5c690",
+  "rawSha256": "406aed8a87612b685b1bf4359b020400f5b4fe3c0537da537bc2258923423e1e",
+  "fixtureSha256": "089144857a5ca001b0238c8f9316a3cc229b6c79a73558ac2660e206e0e59968",
+  "strictValidator": "passed",
+  "decodedImages": 20,
+  "exactPixelPairs": 10,
+  "sourceFeatureCount": 4351,
+  "entityCount": 4362,
+  "surfaceCount": 4362,
+  "renderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  },
+  "cleanup": {
+    "viewerDestroyed": true
+  },
+  "teardown": [
+    {
+      "mode": "entities",
+      "baseline": {
+        "dataSources": 0,
+        "scenePrimitives": 1,
+        "groundPrimitives": 1,
+        "rendererOwners": 0
+      },
+      "teardown": {
+        "layerDestroyed": true,
+        "dataSourceRemoved": true,
+        "rendererOwnersRemoved": true,
+        "viewerKeptForNextLifetime": true,
+        "instrumentationRestored": true,
+        "ownerCountAfterDestroy": 0,
+        "dataSourceCountAfterDestroy": 0,
+        "scenePrimitiveCountAfterDestroy": 1,
+        "groundPrimitiveCountAfterDestroy": 1
+      }
+    },
+    {
+      "mode": "primitive-collections",
+      "baseline": {
+        "dataSources": 0,
+        "scenePrimitives": 1,
+        "groundPrimitives": 1,
+        "rendererOwners": 0
+      },
+      "teardown": {
+        "layerDestroyed": true,
+        "dataSourceRemoved": true,
+        "rendererOwnersRemoved": true,
+        "viewerKeptForNextLifetime": true,
+        "instrumentationRestored": true,
+        "ownerCountAfterDestroy": 0,
+        "dataSourceCountAfterDestroy": 0,
+        "scenePrimitiveCountAfterDestroy": 1,
+        "groundPrimitiveCountAfterDestroy": 1
+      }
+    }
+  ],
+  "scope": "Fresh correctness snapshots on hosted Apple paravirtual Metal only. No latency/heap benefit, physical Windows, full-application motion or soak acceptance. Entity remains default."
+}

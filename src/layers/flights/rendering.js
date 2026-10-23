@@ -962,18 +962,23 @@ export function createRendering({
       // height, so a grounded contact's sprite ends up under the mesh it taxied
       // (or coasted) over. Re-floor at the DISPLAYED coordinate — read-only, and
       // never while a 3D model owns the visual (T7).
-      const display = parts.motion._floorGroundedDisplayPosition(
-        icao24,
-        info,
-        dr,
-        _modelOwnsVisual(icao24),
-        nowMs,
-      );
+      const recordedPosition = flightState._positionSourceMode === 'recorded';
+      const display = recordedPosition
+        ? dr
+        : parts.motion._floorGroundedDisplayPosition(
+            icao24,
+            info,
+            dr,
+            _modelOwnsVisual(icao24),
+            nowMs,
+          );
       // Gate the write — assigning Billboard.position dirties the whole
       // collection's vertex buffer, so skip sub-meter moves.
       if (
         display &&
-        Cesium.Cartesian3.distanceSquared(display, bb.position) > 1.0
+        (recordedPosition
+          ? !Cesium.Cartesian3.equals(display, bb.position)
+          : Cesium.Cartesian3.distanceSquared(display, bb.position) > 1.0)
       ) {
         bb.position = display;
       }
@@ -1078,8 +1083,9 @@ export function createRendering({
           ? flightState._drCourseDeg
           : (info && info.true_track) || 0;
       const prevCourse = flightState._displayCourse.get(icao24);
-      const course =
-        flightState._drCourseHold && prevCourse != null
+      const course = recordedPosition
+        ? rawCourse
+        : flightState._drCourseHold && prevCourse != null
           ? prevCourse
           : limitCourseStep(
               prevCourse,
@@ -1092,7 +1098,7 @@ export function createRendering({
               ),
               tickDtSec,
             );
-      flightState._displayCourse.set(icao24, course);
+      if (!recordedPosition) flightState._displayCourse.set(icao24, course);
 
       // 3D model takes over from the billboard for in-view planes (modelEligible). GAP-PROOF: the
       // billboard stays shown until the model is actually READY to render, so a plane is never both

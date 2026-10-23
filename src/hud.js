@@ -27,6 +27,12 @@ import {
 } from './data/geoid.js';
 import { getBasemapLabelContext } from './voice/gevActions.js';
 import {
+  canBuildHudSummaryContext,
+  getHudSummaryContextForRevision,
+  HUD_SUMMARY_CONTEXT_SKIPPED,
+  isHudSummaryContextCurrent,
+} from './hudSummaryContext.js';
+import {
   hudSummaryMatchesProvenance,
   hudSummaryLayerContext,
   hudTelemetryProvenance,
@@ -202,8 +208,19 @@ export class IntelHUD {
     this._dataManagerUnsubscribe = null;
     this._summaryDirty = true;
     this._summaryRequest = null;
+    this._summaryContextBuild = null;
+    this._destroyed = false;
     this._lastSummarySignature = '';
     this._summaryRevision = 0;
+    this._onVisibilityChange = () => {
+      if (document.hidden) return;
+      const timestamp = document.getElementById('hud-timestamp');
+      this._setHudText(timestamp, this._formatUTC());
+      const dot = document.getElementById('hud-rec-dot');
+      if (dot)
+        dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
+      if (this._visible) this._updateCameraData();
+    };
     // One-shot guards so the very first summary lands immediately instead of
     // waiting for the 15s interval tick: B) swap the "Awaiting telemetry..."
     // placeholder for the deterministic line as soon as metrics exist, then
@@ -250,6 +267,7 @@ export class IntelHUD {
 
     this._buildDOM();
     this.viewer.camera.moveEnd.addEventListener(this._onCameraMoveEnd);
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
     this._startTimers();
   }
 
@@ -336,13 +354,15 @@ export class IntelHUD {
   _startTimers() {
     // Timestamp — every second
     this._timestampInterval = setInterval(() => {
+      if (document.hidden) return;
       const el = document.getElementById('hud-timestamp');
-      if (el) el.textContent = this._formatUTC();
+      this._setHudText(el, this._formatUTC());
     }, 1000);
 
     // REC blink — every 800ms
     this._recBlinkInterval = setInterval(() => {
       this._recBlinkState = !this._recBlinkState;
+      if (document.hidden) return;
       const dot = document.getElementById('hud-rec-dot');
       if (dot)
         dot.style.visibility = this._recBlinkState ? 'visible' : 'hidden';
@@ -374,6 +394,11 @@ export class IntelHUD {
     const mi = String(now.getUTCMinutes()).padStart(2, '0');
     const s = String(now.getUTCSeconds()).padStart(2, '0');
     return `${y}-${mo}-${d} ${h}:${mi}:${s}Z`;
+  }
+
+  /** Update a HUD node only when its visible value changed. */
+  _setHudText(element, value) {
+    if (element && element.textContent !== value) element.textContent = value;
   }
 
   /**
@@ -434,20 +459,23 @@ export class IntelHUD {
       mgrsLabel = formatted;
       const el = document.getElementById('hud-mgrs');
       // i18n-ignore: sensor codes
-      if (el) el.textContent = `MGRS: ${formatted}`;
+      this._setHudText(el, `MGRS: ${formatted}`);
     } catch {
       const el = document.getElementById('hud-mgrs');
       // i18n-ignore: sensor codes
-      if (el) el.textContent = 'MGRS: ---';
+      this._setHudText(el, 'MGRS: ---');
     }
 
     // Lat/Lon DMS
     const llEl = document.getElementById('hud-latlon');
-    if (llEl) llEl.textContent = `${latDMS} ${lonDMS}`;
+    this._setHudText(llEl, `${latDMS} ${lonDMS}`);
     const bottomEl = document.getElementById('hud-bottom-line');
     if (bottomEl) {
       // i18n-ignore: sensor codes
-      bottomEl.textContent = `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`;
+      this._setHudText(
+        bottomEl,
+        `MGRS: ${mgrsLabel}  LAT: ${latDMS}  LON: ${lonDMS}`,
+      );
     }
 
     // GSD (Ground Sample Distance): approximate resolution in meters per pixel
@@ -463,7 +491,10 @@ export class IntelHUD {
     const gsdEl = document.getElementById('hud-gsd');
     if (gsdEl)
       // i18n-ignore: sensor codes
-      gsdEl.textContent = `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`;
+      this._setHudText(
+        gsdEl,
+        `GSD: ${gsd.toFixed(2)}m  NIIRS: ${niirs.toFixed(1)}`,
+      );
 
     // Altitude — reported as height above MEAN SEA LEVEL. `altM` is the raw
     // ellipsoidal camera height, which reads far below zero wherever the geoid
@@ -476,7 +507,10 @@ export class IntelHUD {
     const sunEl = this._estimateSunElevation(latDeg, lonDeg);
     if (altEl)
       // i18n-ignore: sensor codes
-      altEl.textContent = `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`;
+      this._setHudText(
+        altEl,
+        `ALT: ${Math.round(altMslM)}m   SUN: ${sunEl.toFixed(1)}° EL`,
+      );
 
     // Collection timestamp
     const collEl = document.getElementById('hud-coll');
@@ -486,7 +520,7 @@ export class IntelHUD {
       const m = String(now.getUTCMinutes()).padStart(2, '0');
       const s = String(now.getUTCSeconds()).padStart(2, '0');
       // i18n-ignore: sensor codes
-      collEl.textContent = `COLL: ${h}:${m}:${s}Z`;
+      this._setHudText(collEl, `COLL: ${h}:${m}:${s}Z`);
     }
 
     // Off-nadir angle (ONA): camera pitch of -90 deg is nadir (straight down),
@@ -495,7 +529,7 @@ export class IntelHUD {
     const ona = Math.max(0, 90 + pitchDeg);
     const onaEl = document.getElementById('hud-ona');
     // i18n-ignore: sensor codes
-    if (onaEl) onaEl.textContent = `ONA: ${ona.toFixed(1)}°`;
+    this._setHudText(onaEl, `ONA: ${ona.toFixed(1)}°`);
 
     // `altM` stays the raw ellipsoidal camera height the sensor model reads
     // (GSD/NIIRS, view band). `altMslM` is the ADDITIVE display datum — the
@@ -795,6 +829,7 @@ export class IntelHUD {
    *   by character; otherwise sets it instantly.
    */
   async _updateSummary(animate = false, force = false) {
+    if (!isHudSummaryContextCurrent(this, this._summaryRevision)) return;
     const fallbackText = this._composeSummary();
     if (!this._latestMetrics) {
       this._setSummaryText(fallbackText, animate);
@@ -802,6 +837,9 @@ export class IntelHUD {
     }
     if (!force && !this._summaryDirty) return;
     if (this.summaryPolicy.canRequest?.() === false) return;
+    // Context construction includes a center-depth pick. Do not repeat it
+    // while an already-built summary is waiting on its service response.
+    if (!canBuildHudSummaryContext(this)) return;
 
     const revision = this._summaryRevision;
     // Every caller invokes this as `void this._updateSummary(...)`, so nothing
@@ -812,15 +850,19 @@ export class IntelHUD {
     // fallback line, not a crash.
     let context;
     try {
-      context = await this._summaryContext();
+      context = await getHudSummaryContextForRevision(this, revision, () =>
+        this._summaryContext(),
+      );
     } catch (error) {
+      if (!isHudSummaryContextCurrent(this, revision)) return;
       console.warn('[HUD] summary context unavailable:', error);
       // Left dirty on purpose: the next periodic tick retries instead of
       // sticking on the fallback line for the rest of the session.
       this._setSummaryText(fallbackText, animate);
       return;
     }
-    if (revision !== this._summaryRevision) return;
+    if (context === HUD_SUMMARY_CONTEXT_SKIPPED) return;
+    if (!isHudSummaryContextCurrent(this, revision)) return;
     const signature = JSON.stringify(context);
     if (!force && signature === this._lastSummarySignature) {
       this._summaryDirty = false;
@@ -840,7 +882,7 @@ export class IntelHUD {
         signal: controller.signal,
       });
       const data = response.data;
-      if (revision !== this._summaryRevision) return;
+      if (!isHudSummaryContextCurrent(this, revision)) return;
       if (isHudSummaryUnconfigured(response.status, data)) {
         this._setSummaryText(fallbackText, animate);
         return;
@@ -855,14 +897,16 @@ export class IntelHUD {
         animate,
       );
     } catch (error) {
-      if (error?.name !== 'AbortError') {
-        console.warn('[HUD] AI summary unavailable:', error);
-        // Invalidate the committed signature so the next periodic tick
-        // retries instead of sticking on the fallback line forever.
-        this._lastSummarySignature = null;
-        this._summaryDirty = true;
+      if (isHudSummaryContextCurrent(this, revision)) {
+        if (error?.name !== 'AbortError') {
+          console.warn('[HUD] AI summary unavailable:', error);
+          // Invalidate the committed signature so the next periodic tick
+          // retries instead of sticking on the fallback line forever.
+          this._lastSummarySignature = null;
+          this._summaryDirty = true;
+        }
+        this._setSummaryText(fallbackText, animate);
       }
-      this._setSummaryText(fallbackText, animate);
     } finally {
       window.clearTimeout(timeout);
       if (this._summaryRequest === controller) this._summaryRequest = null;
@@ -875,15 +919,14 @@ export class IntelHUD {
       return;
     }
     const el = document.getElementById('hud-summary');
-    if (el) el.textContent = text;
+    this._setHudText(el, text);
   }
 
   async _summaryContext() {
-    const labels = await getBasemapLabelContext(
-      this.viewer,
-      this.placeSearch,
-      this.basemapContext,
-    );
+    const labels = await getBasemapLabelContext(this.viewer, this.placeSearch, {
+      ...this.basemapContext,
+      caller: 'hud-summary-context',
+    });
     const enabledLayers =
       this._dataManager
         ?.getAll?.()
@@ -1039,12 +1082,15 @@ export class IntelHUD {
 
   /** Tear down all running intervals. Call when discarding the HUD instance. */
   destroy() {
+    this._destroyed = true;
+    this._summaryContextBuild = null;
     clearInterval(this._updateInterval);
     clearInterval(this._recBlinkInterval);
     clearInterval(this._timestampInterval);
     clearInterval(this._summaryInterval);
     clearInterval(this._summaryTypingInterval);
     this.viewer.camera.moveEnd.removeEventListener(this._onCameraMoveEnd);
+    document.removeEventListener('visibilitychange', this._onVisibilityChange);
     this._dataManagerUnsubscribe?.();
     this._summaryRequest?.abort();
   }

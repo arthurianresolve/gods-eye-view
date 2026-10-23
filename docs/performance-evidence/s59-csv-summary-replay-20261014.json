@@ -1,0 +1,128 @@
+{
+  "schema": "gev-s59-csv-summary-replay/v1",
+  "status": "diagnostic-only",
+  "performanceAcceptanceEligible": false,
+  "capturedAt": "2026-10-14T06:01:29.863Z",
+  "environment": {
+    "node": "v24.16.0",
+    "platform": "win32",
+    "osRelease": "10.0.19045",
+    "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz"
+  },
+  "sources": {
+    "baselineCommit": "e20a84b863bb5a91d809bbdd78de4e59ced1897b",
+    "baselinePath": "src/imports/geojsonCsv.js",
+    "baselineSha256": "b641993b975f53d4c396736d1079aa144e67754a4222fec713dde3bf972f492d",
+    "candidateCommit": "0bde5882087d4059f265e51da881c6c0a544f2ec",
+    "candidatePath": "src/imports/geojsonCsv.js",
+    "candidateSha256": "45c9fe3097a768ee81b8dbc3d965be5baf8324ef71bb6e287e705a4ab14dc34f",
+    "harnessPath": "scripts/performance/compareCsvSummaryImplementations.mjs",
+    "harnessSha256": "b893f02086fc7f4666f56d1934a0302cf44b61de5a90de2991aec68e9102edd7"
+  },
+  "fixture": {
+    "generator": "createCsvFixture in scripts/performance/compareCsvSummaryImplementations.mjs",
+    "rows": 50000,
+    "accepted": 49999,
+    "rejected": 1,
+    "byteLength": 2653380,
+    "sha256": "ab91b100693f96638fbb19994dde0a8341a3eb9def021b56ba33c3851182451e",
+    "mapping": {
+      "id": "id",
+      "latitude": "latitude",
+      "longitude": "longitude",
+      "time": "observed_at"
+    },
+    "firstAcceptedId": "row-0",
+    "lastAcceptedId": "row-49998",
+    "bounds": [-180, -90, 179, 89],
+    "timeRange": [1767225600000, 1770225480000],
+    "invalidRow": 50000
+  },
+  "warmupCallsPerArm": 1,
+  "measuredPairs": 5,
+  "samples": [
+    {
+      "pair": 0,
+      "arm": "baseline",
+      "synchronousPrefixMs": 68.32590000000005,
+      "totalPreviewMs": 362.65419999999995,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 0,
+      "arm": "candidate",
+      "synchronousPrefixMs": 79.32529999999997,
+      "totalPreviewMs": 302.9828,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 1,
+      "arm": "candidate",
+      "synchronousPrefixMs": 68.79599999999982,
+      "totalPreviewMs": 347.58699999999976,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 1,
+      "arm": "baseline",
+      "synchronousPrefixMs": 68.01029999999992,
+      "totalPreviewMs": 311.28909999999996,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 2,
+      "arm": "baseline",
+      "synchronousPrefixMs": 60.678699999999935,
+      "totalPreviewMs": 338.8341999999998,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 2,
+      "arm": "candidate",
+      "synchronousPrefixMs": 72.8788999999997,
+      "totalPreviewMs": 443.605,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 3,
+      "arm": "candidate",
+      "synchronousPrefixMs": 92.41919999999982,
+      "totalPreviewMs": 429.1751999999997,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 3,
+      "arm": "baseline",
+      "synchronousPrefixMs": 111.79380000000037,
+      "totalPreviewMs": 531.4144999999999,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 4,
+      "arm": "baseline",
+      "synchronousPrefixMs": 105.17990000000009,
+      "totalPreviewMs": 454.0738000000001,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    },
+    {
+      "pair": 4,
+      "arm": "candidate",
+      "synchronousPrefixMs": 106.97759999999926,
+      "totalPreviewMs": 445.9417999999996,
+      "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9"
+    }
+  ],
+  "sameOutput": true,
+  "outputSha256": "6f4ca45965a63247b379027a9583fb60b19c6ea6052d4795e779e394d3e868e9",
+  "medianTotalPreviewMs": {
+    "baseline": 362.65419999999995,
+    "candidate": 429.1751999999997,
+    "relativeChangePct": 18.34281803436986
+  },
+  "scope": "Node-only CPU diagnostic: total CSV preview and synchronous call prefix. No browser, rendering, GPU, user-file, interaction-percentile or import-to-render qualification.",
+  "limitations": [
+    "The entire CSV decode/scan remains synchronous and cannot be interrupted by AbortSignal.",
+    "The measurement does not include workspace storage, layer application or catalog interaction.",
+    "The fixture is deterministic and synthetic; results do not qualify arbitrary large files."
+  ]
+}

@@ -68,6 +68,7 @@ export function createVesselState({ source, services }) {
     lastFocusUpdate: 0,
     /** Sprites whose animated emphasis remains outside the 1.0 deadband. */
     activeFocusCount: 0,
+    focusTransitioning: false,
     activeLabelCount: 0,
     selectedRecord: null,
     /** @type {{setPositions: Function, clear: Function, destroy: Function}|null} Selected-vessel fading trail */

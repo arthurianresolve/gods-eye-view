@@ -1,0 +1,431 @@
+{
+  "schema": "gev-release-test-and-soak-validation-completion/v1",
+  "status": "passed",
+  "baseCommit": "34c0ec0cf4b53276eff70bbbb6a78f348167367d",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020/source",
+  "inputs": [
+    {
+      "file": "scripts/qa-mixed-use-soak.mjs",
+      "bytes": 17106,
+      "sha256": "afd1e104ccf8d3b11933e549c7f9b6e0f4d3ac9dbbd69bf1da9629d93a709abc"
+    },
+    {
+      "file": "scripts/qa-mixed-use-soak.test.mjs",
+      "bytes": 82921,
+      "sha256": "8e9e60cef71d1417c0eeb0a4a2eb1bc7b804f0b0c617bee5e168fe9c83a00a52"
+    },
+    {
+      "file": "scripts/qa-rendered-soak-driver.mjs",
+      "bytes": 79222,
+      "sha256": "f0e79219bccc7c5b7a248b18399bd717a94f9f358a5bfdade10eae865e42eacf"
+    },
+    {
+      "file": "scripts/performance/nativeWindowViewport.mjs",
+      "bytes": 39434,
+      "sha256": "eec0118275785acf45085e282b9fcb555da7a24bdbf29d532bd8715d60eb1848"
+    },
+    {
+      "file": "scripts/performance/cesiumDisabledInputInertia.test.mjs",
+      "bytes": 24362,
+      "sha256": "b1cebf80db7ec15a3cca9bf9adba73fa2e14573c90aa401e414346908cdeb1f4"
+    },
+    {
+      "file": "scripts/performance/cesiumTerrainCollisionTransform.test.mjs",
+      "bytes": 17573,
+      "sha256": "4bb93501388ddd9995817c452967d6e83bea02df6802649f21521adf2526a442"
+    },
+    {
+      "file": "src/rightRailPolicy.test.mjs",
+      "bytes": 2874,
+      "sha256": "e55efb44b8afaf7f635eaddfa76a7862b05f9c07fded8474087a412f5d862f08"
+    },
+    {
+      "file": "src/ui/panelRails.test.mjs",
+      "bytes": 42475,
+      "sha256": "bf629c668247b74af2e534d4e8e95b1c6d9bcb0ad8cba50c3c6990f69a21937f"
+    },
+    {
+      "file": "patches/cesium-1.138.0-inertia.json",
+      "bytes": 6391,
+      "sha256": "934ca34f18a67e157dfa1813b65dd58f6a2a33571c590f047c27929281f5d951"
+    },
+    {
+      "file": "patches/cesium-1.138.0-collision-transform.json",
+      "bytes": 6995,
+      "sha256": "bad1eb891dbc9cb9198b4c24d276f4b14635afc44f2aaf54f9df6ee9dc7a4b79"
+    }
+  ],
+  "dependencyRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/visibility-paint-raf-8c14b106-source/node_modules",
+  "dependencyFiles": [
+    {
+      "file": "@cesium/engine/Source/Scene/ScreenSpaceCameraController.js",
+      "bytes": 98359,
+      "sha256": "a6fc009113bd302f45b100f0e8f22eae14b7ffc8a3b9ecef639af9e1ca07089e"
+    },
+    {
+      "file": "cesium/Build/CesiumUnminified/Cesium.js",
+      "bytes": 14418046,
+      "sha256": "7c0d49dd1c34eba8b740a5310b08fb59ced1405e7d399d710ef86d810224d063"
+    },
+    {
+      "file": "cesium/Build/CesiumUnminified/index.cjs",
+      "bytes": 10301959,
+      "sha256": "b2bdd3e35e38f2f7a985360bb955a343f239c71339f3b8fa549d5afa0c21f254"
+    },
+    {
+      "file": "cesium/Build/Cesium/Cesium.js",
+      "bytes": 5727384,
+      "sha256": "14312c40d18a203c98501266f70f0191830c158627e5d88d1ec96bf8f9b4e7f2"
+    },
+    {
+      "file": "cesium/Build/Cesium/index.cjs",
+      "bytes": 4532037,
+      "sha256": "3aafe7d915b7596edc501189dda0e9d8daae5a76238324591f7da64e9175efef"
+    }
+  ],
+  "previousReceipt": {
+    "path": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020/validation.json",
+    "sha256": "5ce0fcf6a0e1ad7a670b54ad776859addaffb8917f330da1c9def4d56e7af4dc",
+    "preserved": true
+  },
+  "preservedFailure": {
+    "label": "node24",
+    "name": "packages",
+    "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+    "args": [
+      "scripts/check-package-boundaries.mjs"
+    ],
+    "startedAt": "2026-10-20T13:39:23.115Z",
+    "completedAt": "2026-10-20T13:39:39.565Z",
+    "exitCode": null,
+    "signal": "SIGABRT",
+    "error": null,
+    "log": "node24-packages.log",
+    "bytes": 1537,
+    "sha256": "4acae106355abc78412bc075b52d71de1bce4593656b49a71ba1fae40ee4e499",
+    "tests": 0,
+    "pass": 0,
+    "fail": 0,
+    "skipped": 0,
+    "tail": "\n<--- Last few GCs --->\n\n[325851:0x40ecb000]    14992 ms: Mark-Compact 501.1 (518.3) -> 501.0 (519.3) MB, pooled: 5 MB, 287.99 / 0.00 ms  (average mu = 0.144, current mu = 0.012) allocation failure; scavenge might not succeed\n[325851:0x40ecb000]    15283 ms: Mark-Compact 524.4 (542.5) -> 524.3 (550.7) MB, pooled: 0 MB, 274.19 / 0.00 ms  (average mu = 0.104, current mu = 0.058) allocation failure; scavenge might not succeed\n\nFATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x744ae8 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 2: 0xc1a4b0  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 3: 0xc1a59f  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 4: 0xebdda5  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 5: 0xecf70c  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 6: 0xea4bc3  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 7: 0xe7a6d0  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 8: 0x1371f28  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n 9: 0x1a7a9b6  [/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node]\n"
+  },
+  "reusedChecks": [
+    {
+      "label": "node24",
+      "name": "focused",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "scripts/qa-mixed-use-soak.test.mjs",
+        "src/rightRailPolicy.test.mjs",
+        "src/ui/panelRails.test.mjs"
+      ],
+      "startedAt": "2026-10-20T13:38:48.632Z",
+      "completedAt": "2026-10-20T13:38:49.931Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-focused.log",
+      "bytes": 11878,
+      "sha256": "1c9a6ec3b5769870decdea49713dbc0dbf9c1a3a6c324bef8c9f68aedd69d27e",
+      "tests": 124,
+      "pass": 124,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "il falls back to the committed left target when the transition end is unreadable (0.119651ms)\n✔ right rail follows a settled left rail whose CSS overrides the committed target (0.137144ms)\n✔ natural height includes visible content, margins and wrapper chrome, excluding hidden rows (0.133126ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from normal (0.626939ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from focus (0.34263ms)\n✔ right rail keeps focus through 30 px content growth inside the hysteresis band (0.302363ms)\n✔ right rail enters focus only above available height and leaves below the full deadband (0.225936ms)\n✔ right rail auto-collapse requests only one retry and settles within two passes (0.33753ms)\n✔ right rail retry cannot enqueue another retry even if disclosure changes before it runs (0.175749ms)\n✔ right rail restores presentation even when intrinsic measurement throws (0.193503ms)\n✔ right rail measuring pass keeps an opted-in scroller position (0.251896ms)\n✔ right rail does not retry collapse that the minimal HUD immediately restores (0.251675ms)\n✔ right rail does not retry collapse that the full HUD immediately restores (0.206488ms)\n✔ narrow-screen rails pin every hosted panel glow inside its panel box (5.220726ms)\n✔ desktop Display owns Tactical exclusivity while mobile Display leaves sibling launchers accessible (1.122734ms)\n✔ right layout ignores a CSS-hidden expanded panel when deciding exclusivity (0.161381ms)\n✔ right layout still restores panels that exclusive presentation hides (0.183194ms)\n✔ right layout ignores a hidden panel: no lane, no gap, no auto-collapse (0.232769ms)\nℹ tests 124\nℹ suites 0\nℹ pass 124\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1271.792832\n",
+      "root": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020"
+    },
+    {
+      "label": "node24",
+      "name": "cesium-concurrent",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=2",
+        "scripts/performance/cesiumDisabledInputInertia.test.mjs",
+        "scripts/performance/cesiumTerrainCollisionTransform.test.mjs"
+      ],
+      "startedAt": "2026-10-20T13:38:49.932Z",
+      "completedAt": "2026-10-20T13:38:53.636Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-cesium-concurrent.log",
+      "bytes": 1114,
+      "sha256": "30ded35bba646231a651286e328ff5d4c468d567a263eabd3a3a6c36a8a499ba",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "✔ stock distribution fixtures keep shared dependency trees immutable and clean up on callback failure (12.238787ms)\n✔ stock source relocation rejects unsupported imports instead of silently changing dependency resolution (0.927097ms)\n✔ disabled camera input cancels stale inertia across every Cesium 1.138 distribution (2842.880653ms)\n✔ Cesium collision transform fast path preserves correction and avoids stationary no-op transforms in all five distributions (3247.117361ms)\nℹ @cesium/engine/Source/Scene/ScreenSpaceCameraController.js: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/Cesium/index.cjs: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/CesiumUnminified/index.cjs: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/Cesium/Cesium.js: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/CesiumUnminified/Cesium.js: 16 baseline switches vs 0 candidate; collision pose exact\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3674.074593\n",
+      "root": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020"
+    },
+    {
+      "label": "node24",
+      "name": "format",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "startedAt": "2026-10-20T13:38:53.637Z",
+      "completedAt": "2026-10-20T13:39:18.397Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Checked 1827 source files.\n",
+      "root": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020"
+    },
+    {
+      "label": "node24",
+      "name": "capture-no-undef",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-capture-no-undef.mjs"
+      ],
+      "startedAt": "2026-10-20T13:39:18.398Z",
+      "completedAt": "2026-10-20T13:39:21.079Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n",
+      "root": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020"
+    },
+    {
+      "label": "node24",
+      "name": "imports",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-import-directions.mjs"
+      ],
+      "startedAt": "2026-10-20T13:39:21.080Z",
+      "completedAt": "2026-10-20T13:39:23.114Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n",
+      "root": "/opt/gods-eye-view-validation/s61-s70-20261018/release-test-and-soak-34c0ec0c-validation-20261020"
+    }
+  ],
+  "checks": [
+    {
+      "label": "node26",
+      "name": "focused",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=1",
+        "scripts/qa-mixed-use-soak.test.mjs",
+        "src/rightRailPolicy.test.mjs",
+        "src/ui/panelRails.test.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1343084,
+        "swapFreeKiB": 1252516
+      },
+      "startedAt": "2026-10-20T13:40:54.384Z",
+      "completedAt": "2026-10-20T13:40:55.475Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-focused.log",
+      "bytes": 11870,
+      "sha256": "401b41fe1676013673d278ced84cec94d9b63d0bcb9a4dc6ff03a901b2c9922a",
+      "tests": 124,
+      "pass": 124,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "il falls back to the committed left target when the transition end is unreadable (0.146482ms)\n✔ right rail follows a settled left rail whose CSS overrides the committed target (0.154969ms)\n✔ natural height includes visible content, margins and wrapper chrome, excluding hidden rows (0.135692ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from normal (0.594817ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from focus (0.390734ms)\n✔ right rail keeps focus through 30 px content growth inside the hysteresis band (0.328113ms)\n✔ right rail enters focus only above available height and leaves below the full deadband (0.233601ms)\n✔ right rail auto-collapse requests only one retry and settles within two passes (0.372217ms)\n✔ right rail retry cannot enqueue another retry even if disclosure changes before it runs (0.190447ms)\n✔ right rail restores presentation even when intrinsic measurement throws (0.19189ms)\n✔ right rail measuring pass keeps an opted-in scroller position (0.426123ms)\n✔ right rail does not retry collapse that the minimal HUD immediately restores (0.249932ms)\n✔ right rail does not retry collapse that the full HUD immediately restores (0.202892ms)\n✔ narrow-screen rails pin every hosted panel glow inside its panel box (3.921932ms)\n✔ desktop Display owns Tactical exclusivity while mobile Display leaves sibling launchers accessible (0.260823ms)\n✔ right layout ignores a CSS-hidden expanded panel when deciding exclusivity (0.146282ms)\n✔ right layout still restores panels that exclusive presentation hides (0.173555ms)\n✔ right layout ignores a hidden panel: no lane, no gap, no auto-collapse (0.235113ms)\nℹ tests 124\nℹ suites 0\nℹ pass 124\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1060.89963\n"
+    },
+    {
+      "label": "node26",
+      "name": "cesium-concurrent",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "--test",
+        "--test-concurrency=2",
+        "scripts/performance/cesiumDisabledInputInertia.test.mjs",
+        "scripts/performance/cesiumTerrainCollisionTransform.test.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1288468,
+        "swapFreeKiB": 1252516
+      },
+      "startedAt": "2026-10-20T13:40:55.477Z",
+      "completedAt": "2026-10-20T13:40:59.217Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-cesium-concurrent.log",
+      "bytes": 1114,
+      "sha256": "0627d01144cc26c4d7bc2497bfe47130fa339cc5ed8b8eab7ca0690bc00c40da",
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "✔ stock distribution fixtures keep shared dependency trees immutable and clean up on callback failure (11.821292ms)\n✔ stock source relocation rejects unsupported imports instead of silently changing dependency resolution (1.012972ms)\n✔ disabled camera input cancels stale inertia across every Cesium 1.138 distribution (2878.785247ms)\n✔ Cesium collision transform fast path preserves correction and avoids stationary no-op transforms in all five distributions (3225.873668ms)\nℹ @cesium/engine/Source/Scene/ScreenSpaceCameraController.js: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/Cesium/index.cjs: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/CesiumUnminified/index.cjs: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/Cesium/Cesium.js: 16 baseline switches vs 0 candidate; collision pose exact\nℹ cesium/Build/CesiumUnminified/Cesium.js: 16 baseline switches vs 0 candidate; collision pose exact\nℹ tests 4\nℹ suites 0\nℹ pass 4\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 3711.821104\n"
+    },
+    {
+      "label": "node26",
+      "name": "format",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/format.mjs",
+        "--check"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1191072,
+        "swapFreeKiB": 1252516
+      },
+      "startedAt": "2026-10-20T13:40:59.218Z",
+      "completedAt": "2026-10-20T13:41:21.907Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-format.log",
+      "bytes": 27,
+      "sha256": "7e9471cc9ccbfb27333e0a210c384d47144eb2f605e1ada6d0d221d1c7cd16cf",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Checked 1827 source files.\n"
+    },
+    {
+      "label": "node26",
+      "name": "capture-no-undef",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/check-capture-no-undef.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1324640,
+        "swapFreeKiB": 1252516
+      },
+      "startedAt": "2026-10-20T13:41:21.907Z",
+      "completedAt": "2026-10-20T13:41:24.673Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-capture-no-undef.log",
+      "bytes": 44,
+      "sha256": "4022cc3fdabe8013ecf094c9049954fc420c0cafed8bc8dbf8c20c3aa9c8e15e",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "Capture harness no-undef: 107 files passed.\n"
+    },
+    {
+      "label": "node26",
+      "name": "imports",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/check-import-directions.mjs"
+      ],
+      "heapCapMiB": 512,
+      "resourcePreflight": {
+        "availableKiB": 1329952,
+        "swapFreeKiB": 1252516
+      },
+      "startedAt": "2026-10-20T13:41:24.674Z",
+      "completedAt": "2026-10-20T13:41:26.619Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-imports.log",
+      "bytes": 38,
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "label": "node24",
+      "name": "packages",
+      "node": "/opt/gods-eye-view-validation/s61-s70-20261018/runtime/node-v24.16.0-linux-x64/bin/node",
+      "args": [
+        "scripts/check-package-boundaries.mjs"
+      ],
+      "heapCapMiB": 1024,
+      "resourcePreflight": {
+        "availableKiB": 1284676,
+        "swapFreeKiB": 1252516
+      },
+      "startedAt": "2026-10-20T13:41:26.619Z",
+      "completedAt": "2026-10-20T13:41:49.733Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node24-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "odules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "label": "node26",
+      "name": "packages",
+      "node": "/opt/nodejs/current/bin/node",
+      "args": [
+        "scripts/check-package-boundaries.mjs"
+      ],
+      "heapCapMiB": 1024,
+      "resourcePreflight": {
+        "availableKiB": 1430300,
+        "swapFreeKiB": 1123452
+      },
+      "startedAt": "2026-10-20T13:41:49.736Z",
+      "completedAt": "2026-10-20T13:42:11.997Z",
+      "exitCode": 0,
+      "signal": null,
+      "error": null,
+      "log": "node26-packages.log",
+      "bytes": 7023,
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": 0,
+      "pass": 0,
+      "fail": 0,
+      "skipped": 0,
+      "tail": "odules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    }
+  ],
+  "completedAt": "2026-10-20T13:42:12.150Z",
+  "changedFiles": [],
+  "browserStarted": false,
+  "gpuStarted": false,
+  "dependenciesInstalled": false,
+  "productionChanged": false,
+  "scope": "Exact unchanged 34c0ec0c; completes missing Node26 tests/static checks and both package checks. Original 512MiB package runner OOM preserved; package-only capacity predeclared1024MiB with fresh1.2GiB RAM and512MiB swap reserve. No application acceptance budget changes."
+}

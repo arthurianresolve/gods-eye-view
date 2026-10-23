@@ -1,0 +1,11 @@
+--- src/data/trackedCamera.js
++++ isolated-mutant/trackedCamera.js
+@@ -191,7 +191,7 @@
+     // 150 m follow range that sub-frame difference becomes visible as the
+     // label swinging around the icon during an orbit, especially immediately
+     // after a 2D→3D→2D handoff.
+-    if (!framed) {
++    if (true) {
+       const position = trackedDisplayPositionForCamera(
+         entity,
+         viewer.clock.currentTime,

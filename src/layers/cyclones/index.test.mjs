@@ -2,6 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCyclonesLayer } from './index.js';
 import {
+  createInvestigationClock,
+  createLayerCapabilityRegistry,
+} from '../../time/index.js';
+import {
   claimPointer,
   releasePointer,
   isPointerFree,
@@ -342,7 +346,8 @@ function harness(
 ) {
   const applied = [],
     navigation = [],
-    opened = [];
+    opened = [],
+    visibility = [];
   let cleared = 0,
     destroyed = 0,
     selection = null;
@@ -353,6 +358,9 @@ function harness(
     },
     setSelection(id) {
       selection = id;
+    },
+    setVisible(value) {
+      visibility.push(value);
     },
     getFocusSphere: () => ({ radius: 500000 }),
     clear() {
@@ -390,6 +398,7 @@ function harness(
     applied,
     navigation,
     opened,
+    visibility,
     get cleared() {
       return cleared;
     },
@@ -401,6 +410,43 @@ function harness(
     },
   };
 }
+
+test('unsupported cyclone history hides live advisories until Live is explicitly restored', async () => {
+  let calls = 0;
+  const h = harness({
+    getSnapshot: async () => {
+      calls++;
+      return snapshot();
+    },
+  });
+  const clock = createInvestigationClock();
+  const capabilities = createLayerCapabilityRegistry();
+  const detach = h.layer.attachInvestigationTime(clock, capabilities);
+  h.layer.enable();
+  await h.layer.update();
+  assert.equal(h.layer.getStats().count, 1);
+
+  clock.seek(Date.parse(time) - 60_000);
+  assert.equal(h.visibility.at(-1), false);
+  assert.equal(h.layer.getStats().temporalAlignment, 'unsupported');
+  assert.match(h.layer.getStats().loadingLabel, /History unavailable/);
+  assert.deepEqual(h.layer.getAnalystRecords(), []);
+  assert.equal(await h.layer.update(), false);
+  assert.equal(
+    calls,
+    1,
+    'history mode must not poll a current advisory as if historical',
+  );
+
+  clock.returnLive();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(h.visibility.at(-1), true);
+  assert.equal(h.layer.getStats().count, 1);
+  detach();
+  h.layer.destroy();
+  clock.destroy();
+  capabilities.destroy();
+});
 test('refresh preserves selection intent, including explicit clears and missing storms', async () => {
   let next = snapshot([storm(), storm('ep162026')]);
   const h = harness({ getSnapshot: async () => next });

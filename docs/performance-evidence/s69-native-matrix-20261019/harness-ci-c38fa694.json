@@ -1,0 +1,52 @@
+{
+  "schema": "gev-soak-harness-ci-review/v1",
+  "reviewedAt": "2026-10-19T13:39:34.169Z",
+  "harnessCommit": "c38fa6945e749f9a8751d0ca88bce12472f35c1d",
+  "applicationCandidate": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "records": [
+    {
+      "kind": "ci",
+      "runId": 39258601162,
+      "commit": "c38fa6945e749f9a8751d0ca88bce12472f35c1d",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39258601162",
+      "event": "pull_request",
+      "passedJobs": [
+        "Windows onboarding",
+        "Install and update recovery (ubuntu-latest)",
+        "Install and update recovery (macos-latest)",
+        "Street Level browser gate",
+        "Install and update recovery (windows-latest)",
+        "Node 26.x",
+        "Node 24.14.0"
+      ],
+      "skippedJobs": [
+        "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "Isolated import and workspace lifecycle",
+        "60-minute rendered application soak",
+        "Isolated CCTV lifecycle",
+        "Isolated rendered mixed-use smoke",
+        "Free hosted Mac accelerated retention diagnostic",
+        "Isolated terrain and picking lifecycle",
+        "Baseline-compatible performance build smoke",
+        "Isolated mission render-demand correctness",
+        "Aircraft tracking regression",
+        "Free hosted Mac rendering diagnostic",
+        "Native WebGL probe (${{ matrix.os }})"
+      ],
+      "rawSha256": "cf6c17d104c716d14f7f34f6016857bbbf64d31593af3f04912832bcf5e32543"
+    },
+    {
+      "kind": "release",
+      "runId": 39258601218,
+      "commit": "c38fa6945e749f9a8751d0ca88bce12472f35c1d",
+      "status": "passed",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39258601218",
+      "event": "pull_request",
+      "passedJobs": ["Build and verify release artifact"],
+      "skippedJobs": [],
+      "rawSha256": "9a77ec84f7ffb10bdd20e3624a3c024120dc60815c114ac8619d78845173caac"
+    }
+  ],
+  "scope": "Exact-commit CI and packaging for the anchored checkpoint scheduler. Application and server sources are unchanged from d8ef9002. These automatic checks do not qualify the hardware retention run."
+}

@@ -1,0 +1,160 @@
+{
+  "candidateCommit": "2d18433cfd333691105ab5af2f1af48bddf54906",
+  "priorCommit": "6b896e2a8277fba12bc9577ad7772005a71e13c7",
+  "rawArtifact": {
+    "path": "report.json",
+    "bytes": 6389,
+    "sha256": "7f56c2a30aefd7ef359be2d3a573920c3089e65a21c8ad8d31bfd05cbdc25e2b",
+    "extraction": "QA_EVIDENCE_BEGIN/END record in completed Windows recovery job log; timestamp prefixes removed, JSON preserved."
+  },
+  "status": "failed",
+  "hardwareRenderingValidated": false,
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "bootElapsedMs": 3446,
+      "rendererQueryDurationMs": 189,
+      "openPagesBeforeBrowserClose": 0,
+      "closeCompleted": true,
+      "browserCloseCompleted": true,
+      "forcedBrowserProcessTermination": false,
+      "browserCloseObservation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 140601.4619,
+        "closeSettledHostMs": 141052.6974,
+        "closeElapsedMs": 451.2355000000098,
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 450.98750000001746
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.20910000000731088,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 5.832400000013877,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 23.010000000009313,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 3,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null,
+        "stderr": []
+      }
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "status": "passed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "bootElapsedMs": 3320,
+      "rendererQueryDurationMs": 197,
+      "openPagesBeforeBrowserClose": 0,
+      "closeCompleted": true,
+      "browserCloseCompleted": true,
+      "forcedBrowserProcessTermination": false,
+      "browserCloseObservation": {
+        "closeStatus": "completed",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 153997.6259,
+        "closeSettledHostMs": 154368.0561,
+        "closeElapsedMs": 370.4301999999734,
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 0,
+          "signal": null,
+          "elapsedMs": 370.32949999999255
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.060200000007171184,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 7.605199999990873,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 26.847700000012992,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 3,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "forceProcessStatus": "not-needed",
+        "forceProcessAttempted": false,
+        "forceProcessCallbackInvoked": false,
+        "forceProcessElapsedMs": null,
+        "stderr": []
+      }
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "status": "failed",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "renderedFeatures": 1,
+      "assetSha256": "0de37a471d02bb57a555ac30082025624f55ddc576d312db772d9deb62f66fcc",
+      "bootElapsedMs": 2770,
+      "rendererQueryDurationMs": 447,
+      "openPagesBeforeBrowserClose": 0,
+      "closeCompleted": true,
+      "browserCloseCompleted": false,
+      "forcedBrowserProcessTermination": true,
+      "browserCloseObservation": {
+        "closeStatus": "timed-out",
+        "closeDeadlineMs": 5000,
+        "closeStartHostMs": 266609.3465,
+        "closeSettledHostMs": 271609.4541,
+        "closeElapsedMs": 5000.107599999988,
+        "closeRejectionName": null,
+        "processExitedBeforeClose": false,
+        "processExit": {
+          "code": 1,
+          "signal": null,
+          "elapsedMs": 5351.781900000002
+        },
+        "protocolCloseTrace": {
+          "scope": "owned-browser-close-only",
+          "browserCloseRequestSeen": true,
+          "browserCloseRequestElapsedMs": 0.09570000000530854,
+          "browserCloseAcknowledgementSeen": true,
+          "browserCloseAcknowledgementElapsedMs": 7.848600000026636,
+          "browserCloseAcknowledgementLate": false,
+          "browserCloseAcknowledgementError": false,
+          "browserDisconnected": true,
+          "browserDisconnectedElapsedMs": 26.35910000000149,
+          "malformedCloseMessage": false,
+          "protocolMessageCount": 3,
+          "protocolMessageOverflow": false,
+          "protocolObservationComplete": true
+        },
+        "forceProcessStatus": "confirmed",
+        "forceProcessAttempted": true,
+        "forceProcessCallbackInvoked": true,
+        "forceProcessElapsedMs": 351.8027000000002,
+        "stderr": []
+      }
+    }
+  ],
+  "interpretation": "Chrome acknowledged Browser.close and disconnected promptly, but the owned browser process did not exit naturally within 5000ms. The recorded third-stage exit follows forced termination. Data preservation checks reached before shutdown passed; later recovery stages were not reached.",
+  "nextEvidence": "Bounded owned-process and target observations before forced cleanup; no deadline change or forced-exit pass."
+}

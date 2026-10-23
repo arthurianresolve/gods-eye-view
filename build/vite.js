@@ -3,6 +3,12 @@ import cesium from 'vite-plugin-cesium';
 import { DEFAULT_ALLOWED_HOSTS, hostCheckPlugin } from './allowedHosts.js';
 import { embedFramingPlugin } from './embed-framing.js';
 import { panelBuildPlugin } from './panel.js';
+import { cesiumDependencyIdentityPlugin } from './cesium-dependencies.js';
+import { BROWSER_HEADERS } from './securityHeaders.js';
+import {
+  assetDistributionPlugin,
+  computeCesiumDistributionDigestSync,
+} from './assetDistribution.js';
 
 /**
  * Content-Security-Policy for every document the dev/preview server serves.
@@ -17,56 +23,17 @@ import { panelBuildPlugin } from './panel.js';
  * checks against script-src (the dev server loads them by URL instead).
  * Widen any other directive only for a real violation.
  */
-export const BROWSER_CSP = [
-  "default-src 'self'",
-  // The Bhote Koshi event's embedded media: the YouTube player API, the
-  // Facebook video SDK and X's post widget (src/data/bhoteKoshiEmbeddedMedia.js);
-  // and the Maps JavaScript API that Street Level's Google Street View runs on.
-  "script-src 'self' 'unsafe-eval' blob: https://www.youtube.com https://connect.facebook.net https://platform.twitter.com https://maps.googleapis.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
-  "media-src 'self' blob: https:",
-  "connect-src 'self' blob: data: https: wss: ws:",
-  "worker-src 'self' blob:",
-  "child-src 'self' blob:",
-  // The same media's players and posts, which load in frames.
-  "frame-src 'self' blob: https://www.youtube-nocookie.com https://www.youtube.com https://www.facebook.com https://platform.twitter.com",
-  "manifest-src 'self'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-].join('; ');
+export const BROWSER_CSP = BROWSER_HEADERS['Content-Security-Policy'];
 
-/** Response headers shared by the dev and preview servers. */
-export const BROWSER_HEADERS = Object.freeze({
-  'X-Frame-Options': 'DENY',
-  'Content-Security-Policy': BROWSER_CSP,
-  // Responses are only ever used as the type the server declares.
-  'X-Content-Type-Options': 'nosniff',
-});
-
-/**
- * Content-Security-Policy for every `/api` response. API routes return data,
- * never a document, so a response opened directly in a tab gets no origin and
- * can load nothing.
- */
+/** API routes return data, not documents, including on direct navigation. */
 export const API_CSP = "default-src 'none'; sandbox";
 
-/** Response headers every `/api` response carries. */
 export const API_HEADERS = Object.freeze({
   'Content-Security-Policy': API_CSP,
   'X-Content-Type-Options': 'nosniff',
 });
 
-/**
- * Whether a request reaches an `/api` mount, by the router's own rule: the
- * prefix compared without case and followed by the end, `/` or `.`. The router
- * reads an absolute-form target's path without resolving dot segments, so the
- * path is taken here the same way (scheme and authority dropped, backslashes as
- * slashes), alongside the raw and the fully parsed path; any match counts.
- */
+/** Match the same /api mount spellings the router may accept. */
 function isApiPath(url) {
   const raw = String(url || '/');
   const target = raw
@@ -78,7 +45,7 @@ function isApiPath(url) {
   try {
     parsed = new URL(raw, 'http://localhost').pathname;
   } catch {
-    /* the unparsed paths still decide */
+    /* The unparsed paths still decide. */
   }
   return [raw.split(/[?#]/, 1)[0], target, parsed].some((path) =>
     /^\/api(?:$|[/.])/i.test(path),
@@ -123,22 +90,41 @@ export function createBrowserViteConfig({
   googleApiKey,
   cesiumToken,
   mapillaryToken,
+  appCommit,
   host = 'localhost',
   port = 4173,
   allowedHosts = DEFAULT_ALLOWED_HOSTS,
   command,
+  root = process.cwd(),
 } = {}) {
+  let cesiumBaseUrl = '/cesium/';
+  let cesiumDigest = null;
+  if (command === 'build') {
+    try {
+      cesiumDigest = computeCesiumDistributionDigestSync({ root });
+      cesiumBaseUrl = `/${cesiumDigest.path}/`;
+    } catch (error) {
+      throw new Error(
+        'Cannot digest the patched Cesium distribution before build. Run npm ci and apply the pinned Cesium patches in this checkout.',
+        { cause: error },
+      );
+    }
+  }
   return {
     plugins: [
       // First, so every API response, including a Host refusal, carries them.
       apiResponseHeadersPlugin(),
       // Next, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
-      cesium(),
+      cesiumDependencyIdentityPlugin(),
+      cesium({ cesiumBaseUrl }),
       applicationHtmlPlugin(),
       ...plugins,
       embedFramingPlugin(),
       panelBuildPlugin(),
+      ...(command === 'build'
+        ? [assetDistributionPlugin({ cesiumDigest: cesiumDigest.digest })]
+        : []),
     ],
     ...(publicDir === undefined ? {} : { publicDir }),
     // A production build must not clean the dependency cache a running dev
@@ -175,7 +161,10 @@ export function createBrowserViteConfig({
     },
     // The preview server serves the same documents, so it carries the same
     // framing + CSP hardening (one constant, no drift).
-    preview: { headers: BROWSER_HEADERS },
+    preview: {
+      allowedHosts: [...allowedHosts],
+      headers: BROWSER_HEADERS,
+    },
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(googleApiKey),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(cesiumToken),
@@ -183,6 +172,9 @@ export function createBrowserViteConfig({
       'import.meta.env.MAPILLARY_CLIENT_TOKEN': JSON.stringify(
         mapillaryToken ?? '',
       ),
+      // A commit is diagnostic metadata only; never use it for authorization.
+      // The harness can require this value to match the revision under test.
+      __GEV_APP_COMMIT__: JSON.stringify(appCommit || null),
     },
     build: { chunkSizeWarningLimit: 1500 },
   };

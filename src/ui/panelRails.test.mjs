@@ -5,6 +5,7 @@ import test from 'node:test';
 import {
   layoutLeftPanelRail,
   layoutRightPanelRail,
+  layoutPanelRails,
   measurePanelNaturalHeight,
 } from './panelRails.js';
 
@@ -68,10 +69,20 @@ function element(
   const properties = new Map();
   const attributes = new Map();
   const writes = [];
+  const datasetWrites = [];
+  const attributeWrites = [];
   const node = {
     id,
     children: [],
-    dataset: {},
+    dataset: new Proxy(
+      {},
+      {
+        set(target, key, value) {
+          datasetWrites.push([key, value]);
+          return Reflect.set(target, key, value);
+        },
+      },
+    ),
     parentElement: null,
     scrollHeight: height,
     clientHeight: height,
@@ -122,10 +133,23 @@ function element(
     querySelectorAll() {
       return this.children;
     },
-    setAttribute: (name, value) => attributes.set(name, value),
-    removeAttribute: (name) => attributes.delete(name),
-    getAttribute: (name) => attributes.get(name),
+    setAttribute(name, value) {
+      attributeWrites.push(['set', name, value]);
+      attributes.set(name, value);
+    },
+    removeAttribute(name) {
+      attributeWrites.push(['remove', name]);
+      attributes.delete(name);
+    },
+    getAttribute: (name) =>
+      name === 'style'
+        ? JSON.stringify([...properties])
+        : name === 'class'
+          ? [...classes].join(' ')
+          : attributes.get(name),
     writes,
+    datasetWrites,
+    attributeWrites,
   };
   return node;
 }
@@ -189,6 +213,352 @@ function fixture(
   };
 }
 
+function pairedFixture() {
+  const left = fixture('left');
+  const right = fixture('right');
+  left.expand(left.first, 200);
+  right.expand(right.first, 220);
+  right.options.leftStack = left.stack;
+  left.run();
+  right.run();
+  // The controller already owns the pending right pass; no caller callback is
+  // needed for alignment. A custom callback is separately tested as invalid.
+  left.options.onAligned = undefined;
+  return {
+    left,
+    right,
+    run: () =>
+      layoutPanelRails({
+        left: left.options,
+        readRight: () => right.options,
+      }),
+  };
+}
+
+function railSnapshot(f) {
+  return [f.stack, f.first, f.second].map((node) => ({
+    dataset: { ...node.dataset },
+    style: node.getAttribute('style'),
+    classes: node.getAttribute('class'),
+    ariaHidden: node.getAttribute('aria-hidden'),
+    scrollTop: node.scrollTop,
+  }));
+}
+
+test('paired intrinsic reads match sequential allocation even when the left corridor changes', () => {
+  const paired = pairedFixture();
+  const sequential = pairedFixture();
+  for (const f of [paired, sequential]) {
+    f.left.expand(f.left.first, 350);
+    f.left.stack.style.setProperty('--left-stack-safe-top', '0vh');
+  }
+  const phases = [];
+  for (const [name, f] of [
+    ['left', paired.left],
+    ['right', paired.right],
+  ]) {
+    const set = f.stack.setAttribute;
+    const remove = f.stack.removeAttribute;
+    f.stack.setAttribute = (key, value) => {
+      if (key === 'data-rail-measuring') phases.push(`${name}:enter`);
+      return set(key, value);
+    };
+    f.stack.removeAttribute = (key) => {
+      if (key === 'data-rail-measuring') phases.push(`${name}:leave`);
+      return remove(key);
+    };
+  }
+  Object.defineProperty(paired.left.first, 'scrollHeight', {
+    get() {
+      assert.equal(paired.left.stack.getAttribute('data-rail-measuring'), '');
+      assert.equal(paired.right.stack.getAttribute('data-rail-measuring'), '');
+      phases.push('left:read');
+      return 350;
+    },
+  });
+  const read = paired.right.first.getBoundingClientRect.bind(
+    paired.right.first,
+  );
+  paired.right.first.getBoundingClientRect = () => {
+    if (paired.right.stack.getAttribute('data-rail-measuring') === '') {
+      assert.equal(paired.left.stack.getAttribute('data-rail-measuring'), '');
+      phases.push('right:read');
+    }
+    return read();
+  };
+  paired.run();
+  sequential.left.options.onAligned = () => {};
+  sequential.left.run();
+  sequential.right.run();
+  assert.deepEqual(railSnapshot(paired.left), railSnapshot(sequential.left));
+  assert.deepEqual(railSnapshot(paired.right), railSnapshot(sequential.right));
+  assert.deepEqual(
+    phases,
+    [
+      'left:enter',
+      'right:enter',
+      'left:read',
+      'right:read',
+      'left:leave',
+      'right:leave',
+    ],
+    'one shared override/read phase; this is not a browser flush count',
+  );
+});
+
+for (const callback of ['onAligned', 'onCollapse', 'onRetry']) {
+  test(`paired pass falls back after left ${callback} mutates right width/content`, () => {
+    const f = pairedFixture();
+    let calls = 0;
+    let reads = 0;
+    const read = f.right.first.getBoundingClientRect.bind(f.right.first);
+    f.right.first.getBoundingClientRect = () => {
+      if (f.right.stack.getAttribute('data-rail-measuring') === '') reads++;
+      return read();
+    };
+    f.left.options[callback] = () => {
+      calls++;
+      f.right.stack.style.setProperty('width', '310px');
+      f.right.expand(f.right.first, 310);
+    };
+    if (callback === 'onAligned')
+      f.left.stack.style.setProperty('--left-stack-safe-top', '0vh');
+    else {
+      f.left.expand(f.left.first, 800);
+      f.left.expand(f.left.second, 800);
+    }
+    f.run();
+    assert.equal(calls, 1);
+    assert.equal(reads, 2);
+    assert.equal(
+      f.right.first.style.getPropertyValue('--right-panel-allocated-height'),
+      '310.0px',
+    );
+  });
+}
+
+test('changed placement and replacement participants use the original right measurement', () => {
+  const f = pairedFixture();
+  const replacement = element('replacement', { height: 310 });
+  layoutPanelRails({
+    left: f.left.options,
+    readRight: () => f.right.options,
+    syncRightPlacement() {
+      f.right.first.hidden = true;
+      replacement.parentElement = f.right.stack;
+      f.right.stack.children.push(replacement);
+      return false;
+    },
+  });
+  assert.equal(
+    replacement.style.getPropertyValue('--right-panel-allocated-height'),
+    '310.0px',
+  );
+  assert.equal(f.right.stack.dataset.expandedCount, '1');
+});
+
+for (const change of ['width-style', 'participant', 'viewport']) {
+  test(`late right ${change} input change discards the single-use snapshot`, () => {
+    const f = pairedFixture();
+    let preparations = 0;
+    let rightLifts = 0;
+    const set = f.right.stack.setAttribute;
+    f.right.stack.setAttribute = (key, value) => {
+      if (key === 'data-rail-measuring') rightLifts++;
+      return set(key, value);
+    };
+    layoutPanelRails({
+      left: f.left.options,
+      readRight() {
+        if (++preparations === 2) {
+          if (change === 'width-style')
+            f.right.stack.style.setProperty('width', '300px');
+          if (change === 'participant') f.right.first.hidden = true;
+          if (change === 'viewport')
+            f.right.options.windowRef.innerHeight = 850;
+        }
+        return f.right.options;
+      },
+    });
+    assert.equal(rightLifts, 2);
+  });
+}
+
+for (const kind of [
+  'mobile',
+  'cyber',
+  'auto-collapse',
+  'exclusive-change',
+  'expanded-aria',
+  'collapsed-aria',
+]) {
+  test(`paired pass does not premeasure right ${kind} reconciliation`, () => {
+    const f = pairedFixture();
+    if (kind === 'mobile')
+      f.right.options.windowRef.matchMedia = () => ({ matches: true });
+    if (kind === 'cyber')
+      f.right.options.hud = { visible: true, variant: 'cyber' };
+    if (kind === 'auto-collapse')
+      f.right.first.classList.add('collapsed', 'layout-auto-collapsed');
+    if (kind === 'exclusive-change')
+      f.right.stack.classList.remove('layout-exclusive');
+    if (kind === 'expanded-aria') {
+      f.right.first.setAttribute('aria-hidden', 'true');
+      // Model a restored ARIA-dependent hide: measuring before normalization
+      // would incorrectly retain a zero intrinsic height.
+      const rect = f.right.first.getBoundingClientRect.bind(f.right.first);
+      f.right.first.getBoundingClientRect = () =>
+        f.right.first.getAttribute('aria-hidden') === 'true'
+          ? { ...rect(), height: 0 }
+          : rect();
+      Object.defineProperty(f.right.first, 'scrollHeight', {
+        get: () =>
+          f.right.first.getAttribute('aria-hidden') === 'true' ? 0 : 220,
+      });
+    }
+    if (kind === 'collapsed-aria')
+      f.right.second.removeAttribute('aria-hidden');
+    const set = f.right.stack.setAttribute;
+    f.right.stack.setAttribute = (key, value) => {
+      if (key === 'data-rail-measuring')
+        assert.equal(
+          f.left.stack.getAttribute('data-rail-measuring'),
+          undefined,
+        );
+      return set(key, value);
+    };
+    f.run();
+    if (kind === 'expanded-aria') {
+      assert.equal(f.right.first.getAttribute('aria-hidden'), undefined);
+      assert.equal(
+        f.right.first.style.getPropertyValue('--right-panel-allocated-height'),
+        '220.0px',
+      );
+    }
+    if (kind === 'collapsed-aria')
+      assert.equal(f.right.second.getAttribute('aria-hidden'), 'true');
+  });
+}
+
+for (const side of ['left', 'right']) {
+  test(`paired ${side} measurement failure restores both overrides and right scroll`, () => {
+    const f = pairedFixture();
+    f.right.first.scrollTop = 31;
+    const set = f.right.stack.setAttribute;
+    f.right.stack.setAttribute = (key, value) => {
+      const result = set(key, value);
+      if (key === 'data-rail-measuring') f.right.first.scrollTop = 0;
+      return result;
+    };
+    if (side === 'left') {
+      Object.defineProperty(f.left.first, 'scrollHeight', {
+        get() {
+          throw new Error('intrinsic failed');
+        },
+      });
+    } else {
+      f.right.first.getBoundingClientRect = () => {
+        throw new Error('intrinsic failed');
+      };
+    }
+    assert.throws(f.run, /intrinsic failed/);
+    assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+    assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+    assert.equal(f.right.first.scrollTop, 31);
+  });
+}
+
+test('paired restoration releases right override even if left removal throws', () => {
+  const f = pairedFixture();
+  const remove = f.left.stack.removeAttribute;
+  f.left.stack.removeAttribute = (key) => {
+    remove(key);
+    if (key === 'data-rail-measuring') throw new Error('release failed');
+  };
+  assert.throws(f.run, /release failed/);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+});
+
+test('failed right override entry restores both markers and every remaining scroll owner', () => {
+  const f = pairedFixture();
+  f.right.first.scrollTop = 31;
+  f.right.second.scrollTop = 47;
+  const set = f.right.stack.setAttribute;
+  f.right.stack.setAttribute = (key, value) => {
+    const result = set(key, value);
+    if (key === 'data-rail-measuring') {
+      f.right.first.scrollTop = f.right.second.scrollTop = 0;
+      throw new Error('entry failed');
+    }
+    return result;
+  };
+  assert.throws(f.run, /entry failed/);
+  assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.first.scrollTop, 31);
+  assert.equal(f.right.second.scrollTop, 47);
+});
+
+test('one throwing scroll restore does not strand another scroll owner', () => {
+  const f = pairedFixture();
+  let top = 31;
+  Object.defineProperty(f.right.first, 'scrollTop', {
+    get: () => top,
+    set(value) {
+      if (value === 31) throw new Error('scroll restore failed');
+      top = value;
+    },
+  });
+  f.right.second.scrollTop = 47;
+  const set = f.right.stack.setAttribute;
+  f.right.stack.setAttribute = (key, value) => {
+    const result = set(key, value);
+    if (key === 'data-rail-measuring')
+      f.right.first.scrollTop = f.right.second.scrollTop = 0;
+    return result;
+  };
+  assert.throws(f.run, /scroll restore failed/);
+  assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.second.scrollTop, 47);
+});
+
+test('right geometry, scroll getter and final constrained clamp remain after left apply', () => {
+  const f = pairedFixture();
+  f.right.options.displayPanel = f.right.first;
+  f.right.first.scrollHeight = 400;
+  f.right.first.clientHeight = 350;
+  let applied = false;
+  const toggle = f.left.stack.classList.toggle;
+  f.left.stack.classList.toggle = (...args) => {
+    applied = true;
+    return toggle(...args);
+  };
+  const rightRect = f.right.stack.getBoundingClientRect.bind(f.right.stack);
+  f.right.stack.getBoundingClientRect = () => {
+    assert.equal(applied, true);
+    assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+    assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+    return rightRect();
+  };
+  f.right.options.readDisplayScrollTop = () => {
+    assert.equal(applied, true);
+    return 80;
+  };
+  f.run();
+  assert.equal(f.right.first.scrollTop, 50);
+});
+
+test('throwing right scroll getter leaves the completed shared transaction restored', () => {
+  const f = pairedFixture();
+  f.right.options.readDisplayScrollTop = () => {
+    throw new Error('scroll reader failed');
+  };
+  assert.throws(f.run, /scroll reader failed/);
+  assert.equal(f.left.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(f.right.stack.getAttribute('data-rail-measuring'), undefined);
+});
+
 test('missing rails are inert without browser globals', () => {
   layoutLeftPanelRail({});
   layoutRightPanelRail({});
@@ -203,6 +573,388 @@ test('left layout records collapsed heights and aligns the right rail without ch
   assert.equal(f.retries(), 0);
   assert.equal(f.stack.dataset.layoutMode, 'normal');
 });
+
+test('left alignment initializes restored coordinates and only wakes the right rail after corridor changes', () => {
+  const f = fixture('left');
+  f.stack.style.setProperty('--left-stack-safe-top', '26.000vh');
+  f.stack.style.setProperty('--left-stack-safe-bottom', '26.000vh');
+  f.stack.writes.length = 0;
+  f.run();
+  assert.equal(f.aligned(), 1, 'initialization still aligns the other rail');
+  assert.deepEqual(f.stack.writes, []);
+  f.run();
+  assert.equal(
+    f.aligned(),
+    1,
+    'equivalent content must not enqueue another right pass',
+  );
+  f.options.obstacles = [element('lower', { top: 600, height: 80 })];
+  f.run();
+  assert.equal(f.aligned(), 2);
+  assert.equal(
+    f.stack.style.getPropertyValue('--left-stack-safe-top'),
+    '34.533vh',
+  );
+  assert.equal(
+    f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+    '34.533vh',
+  );
+});
+
+test('left intrinsic measurement preserves stored allocations and always releases its CSS override', () => {
+  const f = fixture('left');
+  f.expand(f.first, 200);
+  f.first.style.setProperty('--left-panel-allocated-height', '60px');
+  let measured = 0;
+  Object.defineProperty(f.first, 'scrollHeight', {
+    get() {
+      assert.equal(f.stack.getAttribute('data-rail-measuring'), '');
+      assert.equal(
+        f.first.style.getPropertyValue('--left-panel-allocated-height'),
+        '60px',
+      );
+      measured++;
+      return 200;
+    },
+  });
+  f.first.writes.length = 0;
+  f.run();
+  assert.equal(measured, 1);
+  assert.equal(f.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.deepEqual(f.first.writes, [
+    ['set', '--left-panel-allocated-height', '200.0px'],
+  ]);
+
+  const failed = fixture('left');
+  failed.expand(failed.first, 200);
+  failed.first.style.setProperty('--left-panel-allocated-height', '60px');
+  Object.defineProperty(failed.first, 'scrollHeight', {
+    get() {
+      throw new Error('intrinsic measurement failed');
+    },
+  });
+  assert.throws(() => failed.run(), /intrinsic measurement failed/);
+  assert.equal(failed.stack.getAttribute('data-rail-measuring'), undefined);
+  assert.equal(
+    failed.first.style.getPropertyValue('--left-panel-allocated-height'),
+    '60px',
+  );
+});
+
+for (const side of ['left', 'right']) {
+  test(`${side} intrinsic pass snapshots invariant geometry before lifting allocations`, () => {
+    const f = fixture(side, { hud: { visible: true, variant: 'operator' } });
+    f.expand(f.first, 200);
+    let phase = 'constrained';
+    const reads = [];
+    const setAttribute = f.stack.setAttribute;
+    const removeAttribute = f.stack.removeAttribute;
+    f.stack.setAttribute = (name, value) => {
+      if (name === 'data-rail-measuring') phase = 'measuring';
+      setAttribute(name, value);
+    };
+    f.stack.removeAttribute = (name) => {
+      removeAttribute(name);
+      if (name === 'data-rail-measuring') phase = 'restored';
+    };
+    Object.defineProperty(f.stack.computed, 'rowGap', {
+      get() {
+        reads.push(['gap', phase]);
+        assert.equal(
+          phase,
+          'constrained',
+          'gap read would flush restored layout',
+        );
+        return '12px';
+      },
+    });
+    const collapsedRect = f.second.getBoundingClientRect.bind(f.second);
+    f.second.getBoundingClientRect = () => {
+      reads.push(['collapsed', phase]);
+      assert.notEqual(
+        phase,
+        'restored',
+        'collapsed read would flush restored layout',
+      );
+      return collapsedRect();
+    };
+    if (side === 'left') {
+      // Exercise the original rect fallback as well as the first cache read.
+      f.options.collapsedHeights.get = () => undefined;
+    }
+    f.run();
+    assert.equal(phase, 'restored');
+    assert.equal(reads.filter(([kind]) => kind === 'gap').length, 1);
+    assert.equal(f.first.classList.contains('collapsed'), false);
+    assert.equal(f.second.classList.contains('collapsed'), true);
+    assert.equal(
+      f.first.style.getPropertyValue(`--${side}-panel-allocated-height`),
+      '200.0px',
+    );
+    if (side === 'left') {
+      assert.equal(f.stack.dataset.layoutMode, 'tail');
+      assert.equal(
+        f.stack.style.getPropertyValue('--left-stack-safe-top'),
+        '26.000vh',
+      );
+      assert.equal(
+        f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+        '45.778vh',
+      );
+      assert.equal(f.stack.dataset.requiredHeightPct, '28.22');
+      assert.equal(reads.filter(([kind]) => kind === 'collapsed').length, 2);
+    } else {
+      assert.equal(f.stack.dataset.layoutMode, 'normal');
+      assert.equal(
+        f.stack.style.getPropertyValue('--right-stack-safe-top'),
+        '234.0px',
+      );
+      assert.equal(
+        f.stack.style.getPropertyValue('--right-stack-max-height'),
+        '630.0px',
+      );
+      assert.equal(f.stack.dataset.requiredHeight, '254.0');
+    }
+  });
+}
+
+test('left premeasurement sibling snapshot preserves hidden cache and zero fallbacks', () => {
+  for (const cached of [undefined, 0, 37]) {
+    const f = fixture('left', { hud: { visible: true, variant: 'operator' } });
+    f.expand(f.first, 200);
+    f.second.rect.height = 0;
+    if (cached !== undefined)
+      f.options.collapsedHeights.set(f.second.id, cached);
+    f.run();
+    assert.equal(f.options.collapsedHeights.get(f.second.id), cached);
+    assert.equal(
+      f.first.style.getPropertyValue('--left-panel-allocated-height'),
+      '200.0px',
+    );
+    assert.equal(
+      f.stack.dataset.requiredHeightPct,
+      (((200 + (cached || 0) + 12) / 900) * 100).toFixed(2),
+    );
+    assert.equal(
+      f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+      (((900 - 234 - 200 - (cached || 0) - 12) / 900) * 100).toFixed(3) + 'vh',
+    );
+    assert.equal(f.second.classList.contains('collapsed'), true);
+  }
+});
+
+test('intrinsic CSS overrides preserve row gaps and left collapsed sibling geometry', () => {
+  const css = readStylesheet(
+    new URL('../../style.css', import.meta.url),
+  ).replace(/\/\*[\s\S]*?\*\//g, '');
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
+    ([, selector]) => selector.includes('[data-rail-measuring]'),
+  );
+  assert.ok(rules.length > 0);
+  for (const [, selector, declarations] of rules) {
+    const properties = declarations
+      .split(';')
+      .map((declaration) => declaration.split(':')[0].trim())
+      .filter(Boolean);
+    const allowed = selector.includes('#left-panel-stack')
+      ? ['--left-panel-allocated-height']
+      : [
+          'height',
+          'max-height',
+          'transition',
+          '--right-panel-allocated-height',
+          'flex',
+          'display',
+        ];
+    for (const property of properties)
+      assert.ok(
+        allowed.includes(property),
+        `measurement can change snapshotted geometry: ${property}`,
+      );
+    if (selector.includes('#left-panel-stack'))
+      assert.match(selector, /\[data-panel-id\]:not\(\.collapsed\)/);
+  }
+});
+
+test('left content growth recomputes allocations inside an unchanged corridor and preserves disclosure geometry', () => {
+  const f = fixture('left', { hud: { visible: true, variant: 'operator' } });
+  const positions = [];
+  const record = () => {
+    f.run();
+    positions.push({
+      mode: f.stack.dataset.layoutMode,
+      top: f.stack.style.getPropertyValue('--left-stack-safe-top'),
+      bottom: f.stack.style.getPropertyValue('--left-stack-safe-bottom'),
+      first: f.first.style.getPropertyValue('--left-panel-allocated-height'),
+      second: f.second.style.getPropertyValue('--left-panel-allocated-height'),
+    });
+  };
+  record();
+  f.expand(f.first, 200);
+  record();
+  f.expand(f.first, 600);
+  f.expand(f.second, 400);
+  record();
+  const alignedBeforeGrowth = f.aligned();
+  f.expand(f.first, 700);
+  record();
+  assert.equal(f.aligned(), alignedBeforeGrowth);
+  f.options.obstacles = [element('lower', { top: 600, height: 80 })];
+  record();
+  assert.equal(f.aligned(), alignedBeforeGrowth + 1);
+  f.first.classList.add('collapsed');
+  f.second.classList.add('collapsed');
+  f.first.rect.height = f.first.scrollHeight = 42;
+  f.second.rect.height = f.second.scrollHeight = 42;
+  record();
+  // These coordinates and allocations are the original layout's six states.
+  assert.deepEqual(positions, [
+    {
+      mode: 'normal',
+      top: '26.000vh',
+      bottom: '26.000vh',
+      first: '',
+      second: '',
+    },
+    {
+      mode: 'tail',
+      top: '26.000vh',
+      bottom: '45.778vh',
+      first: '200.0px',
+      second: '',
+    },
+    {
+      mode: 'focus',
+      top: '4.000vh',
+      bottom: '4.000vh',
+      first: '485.2px',
+      second: '330.8px',
+    },
+    {
+      mode: 'focus',
+      top: '4.000vh',
+      bottom: '4.000vh',
+      first: '511.1px',
+      second: '304.9px',
+    },
+    {
+      mode: 'focus',
+      top: '4.000vh',
+      bottom: '34.533vh',
+      first: '328.3px',
+      second: '212.9px',
+    },
+    {
+      mode: 'normal',
+      top: '34.533vh',
+      bottom: '34.533vh',
+      first: '',
+      second: '',
+    },
+  ]);
+});
+
+for (const side of ['left', 'right']) {
+  for (const mobile of [false, true]) {
+    test(`${side} equivalent ${mobile ? 'mobile' : 'desktop'} passes retain allocations and metadata without redundant writes`, () => {
+      const f = fixture(side, { mobile });
+      f.expand(f.first, 200);
+      f.run();
+      const nodes = [f.stack, f.first, f.second];
+      const allocation = f.first.style.getPropertyValue(
+        `--${side}-panel-allocated-height`,
+      );
+      for (const node of nodes) {
+        node.writes.length = 0;
+        node.datasetWrites.length = 0;
+        node.attributeWrites.length = 0;
+      }
+      const aligned = f.aligned();
+      for (let pass = 0; pass < 4; pass++) f.run();
+      assert.deepEqual(
+        nodes.flatMap((node) => node.writes),
+        [],
+      );
+      assert.deepEqual(f.stack.datasetWrites, []);
+      assert.deepEqual(
+        nodes.flatMap((node) =>
+          node.attributeWrites.filter(([, name]) => name === 'aria-hidden'),
+        ),
+        [],
+      );
+      assert.equal(
+        f.first.style.getPropertyValue(`--${side}-panel-allocated-height`),
+        allocation,
+      );
+      assert.equal(f.aligned(), aligned);
+    });
+  }
+
+  test(`${side} metadata repairs live DOM corruption and follows disclosure and mobile changes`, () => {
+    const f = fixture(side);
+    f.expand(f.first, 200);
+    f.run();
+    const expected = { ...f.stack.dataset };
+    assert.equal(Object.keys(expected).length, side === 'left' ? 7 : 6);
+    for (const key of Object.keys(expected)) f.stack.dataset[key] = 'external';
+    delete f.stack.dataset.expandedCount;
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual({ ...f.stack.dataset }, expected);
+    assert.equal(f.stack.datasetWrites.length, Object.keys(expected).length);
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.stack.datasetWrites, []);
+
+    f.first.classList.add('collapsed');
+    f.first.rect.height = f.first.scrollHeight = 42;
+    f.run();
+    assert.equal(f.stack.dataset.expandedCount, '0');
+    assert.equal(f.stack.dataset.layoutMode, 'normal');
+    assert.ok(f.stack.datasetWrites.length > 0);
+    f.options.windowRef.matchMedia = () => ({ matches: true });
+    f.run();
+    assert.equal(f.stack.dataset.layoutMode, 'mobile');
+    f.stack.dataset.layoutMode = 'external';
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.stack.datasetWrites, [['layoutMode', 'mobile']]);
+    f.stack.datasetWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.stack.datasetWrites, []);
+    f.options.windowRef.matchMedia = () => ({ matches: false });
+    f.run();
+    assert.equal(f.stack.dataset.layoutMode, 'normal');
+  });
+
+  test(`${side} aria-hidden repairs external values and changes with the live layout`, () => {
+    const f = fixture(side);
+    f.expand(f.first, side === 'left' ? 900 : 200);
+    f.run();
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    assert.equal(f.second.getAttribute('aria-hidden'), 'true');
+    f.first.setAttribute('aria-hidden', 'true');
+    f.second.setAttribute('aria-hidden', 'false');
+    for (const panel of [f.first, f.second]) panel.attributeWrites.length = 0;
+    f.run();
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    assert.equal(f.second.getAttribute('aria-hidden'), 'true');
+    assert.deepEqual(f.first.attributeWrites, [['remove', 'aria-hidden']]);
+    assert.deepEqual(f.second.attributeWrites, [
+      ['set', 'aria-hidden', 'true'],
+    ]);
+    for (const panel of [f.first, f.second]) panel.attributeWrites.length = 0;
+    f.run();
+    assert.deepEqual(f.first.attributeWrites, []);
+    assert.deepEqual(f.second.attributeWrites, []);
+
+    f.first.classList.add('collapsed');
+    f.first.rect.height = f.first.scrollHeight = 42;
+    f.run();
+    assert.equal(f.second.getAttribute('aria-hidden'), undefined);
+    assert.deepEqual(f.second.attributeWrites, [['remove', 'aria-hidden']]);
+  });
+}
 
 test('left corridor respects a lower obstacle but ignores an obstacle hidden by its parent', () => {
   const f = fixture('left');
@@ -360,6 +1112,66 @@ test('right rail aligns to where a mid-transition left rail settles', () => {
   assert.equal(
     f.stack.style.getPropertyValue('--right-stack-safe-top'),
     '266.4px',
+  );
+});
+
+test('right allocation stays stable when a fractional transition target settles to layout units', () => {
+  const f = fixture('right');
+  f.options.windowRef.innerHeight = 537;
+  const left = f.options.leftStack;
+  left.rect.top = 100;
+  left.computed.top = '100px';
+  left.getAnimations = () => [
+    {
+      transitionProperty: 'top',
+      effect: { getKeyframes: () => [{ top: '100px' }, { top: '21.48px' }] },
+    },
+  ];
+  f.run();
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-safe-top'),
+    '21.5px',
+  );
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-max-height'),
+    '494.0px',
+  );
+  const styleWrites = f.stack.writes.length;
+  const metadataWrites = f.stack.datasetWrites.length;
+
+  left.rect.top = 21.46875;
+  left.computed.top = '21.46875px';
+  left.getAnimations = () => [];
+  f.run();
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-max-height'),
+    '494.0px',
+  );
+  assert.equal(f.stack.dataset.availableHeight, '494.0');
+  assert.equal(
+    f.stack.writes.length,
+    styleWrites,
+    'no allocation rewrite after settling',
+  );
+  assert.equal(
+    f.stack.datasetWrites.length,
+    metadataWrites,
+    'no metadata churn after settling',
+  );
+
+  left.rect.top = 22.46875;
+  f.run();
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-safe-top'),
+    '22.5px',
+  );
+  assert.equal(
+    f.stack.style.getPropertyValue('--right-stack-max-height'),
+    '493.0px',
+  );
+  assert.ok(
+    f.stack.writes.length > styleWrites,
+    'real movement still updates allocation',
   );
 });
 
@@ -676,6 +1488,43 @@ test('narrow-screen rails pin every hosted panel glow inside its panel box', () 
       ),
       `${rail} scrolls at ≤720px but does not pin its panel glows (inset: 0)`,
     );
+  }
+});
+
+test('desktop Display owns Tactical exclusivity while mobile Display leaves sibling launchers accessible', () => {
+  for (const mobile of [false, true]) {
+    const f = fixture('right', { mobile });
+    f.first.id = 'pp-toggles';
+    f.expand(f.first, 250);
+    f.run();
+    assert.equal(f.stack.classList.contains('layout-exclusive'), !mobile);
+    assert.equal(f.first.getAttribute('aria-hidden'), undefined);
+    assert.equal(
+      f.second.getAttribute('aria-hidden'),
+      mobile ? undefined : 'true',
+    );
+    f.first.attributeWrites.length = 0;
+    f.second.attributeWrites.length = 0;
+    f.run();
+    assert.deepEqual(
+      f.first.attributeWrites.filter(([, name]) => name === 'aria-hidden'),
+      [],
+    );
+    assert.deepEqual(
+      f.second.attributeWrites.filter(([, name]) => name === 'aria-hidden'),
+      [],
+    );
+
+    f.first.classList.add('collapsed');
+    f.run();
+    assert.equal(f.stack.classList.contains('layout-exclusive'), false);
+    assert.equal(f.second.getAttribute('aria-hidden'), undefined);
+
+    f.expand(f.second, 250);
+    f.run();
+    assert.equal(f.stack.classList.contains('layout-exclusive'), true);
+    assert.equal(f.first.getAttribute('aria-hidden'), 'true');
+    assert.equal(f.second.getAttribute('aria-hidden'), undefined);
   }
 });
 

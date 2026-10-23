@@ -1,0 +1,48 @@
+{
+  "schema": "gev-cable-idle-followup-review/v1",
+  "reviewedAt": "2026-10-20T06:15:25.003Z",
+  "status": "diagnostic-reviewed",
+  "acceptanceEligible": false,
+  "comparisonEligible": false,
+  "manifestSha256": "6780f4af1df36ee34de6ee8db405ce3d83ee3d70ac93aa20025e50ad75b5b462",
+  "filesIndependentlyVerified": 11,
+  "producerCommit": "324eebe10997474377899d0ee9b3b3154968fdb7",
+  "observation": [
+    {
+      "role": "control",
+      "applicationCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+      "reportSha256": "fc38a0a5e524e3d76b9f41c5a613180279ca969e45836099c93e1f0a02ea3dfe",
+      "traceSha256": "0a28bada4259de11808896cc7852a028133571663d6d15efc1079a89858bdba8",
+      "durationMs": 60005.40000000596,
+      "renderedFrames": 0,
+      "foregroundThroughout": true,
+      "tilesLoadedInitially": true,
+      "tilesLoadedFinally": true,
+      "tileProgressEvents": 0,
+      "completedResourceEntries": 0,
+      "resourceObserverErrors": 0,
+      "cleanupConfirmed": true
+    },
+    {
+      "role": "candidate",
+      "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+      "reportSha256": "21173b264cbd73b24b5220e9cb2a37b434c506754eb2fe4f2ec4a6ce16204a73",
+      "traceSha256": "9fdd50e508f1d37b61cbb8f28fc28bddb868bbb6a46bc9fdc39bd6465e2562aa",
+      "durationMs": 60002.60000000894,
+      "renderedFrames": 0,
+      "foregroundThroughout": true,
+      "tilesLoadedInitially": true,
+      "tilesLoadedFinally": true,
+      "tileProgressEvents": 0,
+      "completedResourceEntries": 0,
+      "resourceObserverErrors": 0,
+      "cleanupConfirmed": true
+    }
+  ],
+  "conclusion": "The earlier idle burst was not reproduced in this one predeclared pair. Both settled windows rendered zero frames. The original unavailable comparison remains unchanged.",
+  "limitations": [
+    "One diagnostic pair cannot qualify performance or retrospectively explain the earlier ten-frame burst.",
+    "Completed ResourceTiming entries cannot establish absence of in-flight requests or unreported entries.",
+    "No CPU or GPU execution-time improvement is claimed."
+  ]
+}

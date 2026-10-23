@@ -1,0 +1,26 @@
+{
+  "schema": "gev-command-palette-focus-review/v1",
+  "originalRuntimeCommit": "c3c6c5a7e890d0b9985249892cc601a76c9835a3",
+  "candidateCommit": "311cc5ea16fe31f0743a2fd7366851799c132d40",
+  "originalModuleSha256": "86f898a177db177945ca29e7fa10bb0134d76fed3e899bd1184621641cd7615a",
+  "regressionTestsSha256": "5a69336b3066e205e95f1bf6664476e908ebe27bc3f31e41cfb28e849138030b",
+  "originalUnitOutputSha256": "ad8154643886af17425108eadd411cf62aeca3b6e3c037b8dfc7dca48af0e835",
+  "original": {
+    "tests": 5,
+    "passed": 3,
+    "failed": 2,
+    "failedTests": [
+      "a delayed native close event does not steal focus from a newly opened inspector",
+      "an old close event cannot steal focus from a reopened palette"
+    ]
+  },
+  "candidateFocused": {
+    "tests": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "method": "Root imported the unchanged original commandPalette module bytes through a data URL in the candidate regression suite, then compared with the candidate module. The fake dialog models synchronous native focus restoration followed by a queued close event.",
+  "browserRegression": "CI opens the palette through its actual trigger, closes it and focuses the inspector synchronously, then awaits the native close event and checks that inspector focus survives.",
+  "historicalFailureAttribution": "The earlier a92c6921 failure has no focus trace; this reproduction demonstrates the application race but does not conclusively attribute that particular run.",
+  "humanAssistiveTechnologyValidated": false
+}

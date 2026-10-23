@@ -380,7 +380,6 @@ export function createTiming({ state: layerState, services, parts, source }) {
       expectedAnchor !== layerState._trafficTimingCurrentAnchor
     ) {
       layerState._trafficTimingDroppedTraces += 1;
-      await parts.ingestion.loadRoadsForBounds(bounds, altitude);
       return;
     }
     layerState._trafficTimingCurrentAnchor = null;

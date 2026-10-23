@@ -1,0 +1,742 @@
+{
+  "schema": "gev-wind-restore-cpu/v1",
+  "capturedAt": "2026-10-09T19:42:45.710Z",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "cpu": "Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz",
+  "fixture": "synthetic-360x181-wind-and-scalars/v1",
+  "scope": "Five alternating Node child-process pairs, three warmups and ten restores per overlay and equivalent/revised case. Actual application raster generation with mocked DOM and imagery ownership; no Cesium drawing, GPU, PNG encoding, forced GC or motion claim. Fresh input clones and output hashing are outside the timed restore.",
+  "samples": [
+    {
+      "pair": 0,
+      "variant": "baseline",
+      "commit": "5ae69691ab4007a975478d0f6693206cfa78aa01",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 94.93549999999996,
+          "perRestoreMs": 9.493549999999995,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 87.96219999999988,
+          "perRestoreMs": 8.796219999999987,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 69.10959999999989,
+          "perRestoreMs": 6.910959999999989,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 71.12389999999994,
+          "perRestoreMs": 7.112389999999993,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 112.07789999999989,
+          "perRestoreMs": 11.207789999999989,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 89.05090000000007,
+          "perRestoreMs": 8.905090000000007,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "commit": "b7e54c06d7b0ab64ff0ae7d97f130aad98389266",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 8.061900000000009,
+          "perRestoreMs": 0.8061900000000009,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 83.07829999999998,
+          "perRestoreMs": 8.30783,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.411000000000058,
+          "perRestoreMs": 0.2411000000000058,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 84.51459999999997,
+          "perRestoreMs": 8.451459999999997,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.7338000000000875,
+          "perRestoreMs": 0.2733800000000087,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 95.31610000000023,
+          "perRestoreMs": 9.531610000000024,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "variant": "candidate",
+      "commit": "b7e54c06d7b0ab64ff0ae7d97f130aad98389266",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 6.794700000000034,
+          "perRestoreMs": 0.6794700000000035,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 97.09149999999991,
+          "perRestoreMs": 9.70914999999999,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.2304999999999495,
+          "perRestoreMs": 0.22304999999999495,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 70.06939999999997,
+          "perRestoreMs": 7.0069399999999975,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 3.0546000000000504,
+          "perRestoreMs": 0.30546000000000506,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 90.3850000000001,
+          "perRestoreMs": 9.03850000000001,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "variant": "baseline",
+      "commit": "5ae69691ab4007a975478d0f6693206cfa78aa01",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 113.6534,
+          "perRestoreMs": 11.36534,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 83.24720000000008,
+          "perRestoreMs": 8.324720000000008,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 68.56989999999996,
+          "perRestoreMs": 6.856989999999996,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 68.92129999999997,
+          "perRestoreMs": 6.892129999999997,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 96.18159999999978,
+          "perRestoreMs": 9.618159999999978,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 88.47520000000009,
+          "perRestoreMs": 8.847520000000008,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "baseline",
+      "commit": "5ae69691ab4007a975478d0f6693206cfa78aa01",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 108.63819999999996,
+          "perRestoreMs": 10.863819999999995,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 89.69929999999982,
+          "perRestoreMs": 8.969929999999982,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 69.96229999999991,
+          "perRestoreMs": 6.996229999999992,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 68.86470000000008,
+          "perRestoreMs": 6.886470000000008,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 97.40870000000018,
+          "perRestoreMs": 9.740870000000019,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 89.36739999999986,
+          "perRestoreMs": 8.936739999999986,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "variant": "candidate",
+      "commit": "b7e54c06d7b0ab64ff0ae7d97f130aad98389266",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 7.143600000000021,
+          "perRestoreMs": 0.7143600000000021,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 88.01129999999998,
+          "perRestoreMs": 8.801129999999997,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 3.736099999999965,
+          "perRestoreMs": 0.3736099999999965,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 82.5471,
+          "perRestoreMs": 8.25471,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.5933999999999173,
+          "perRestoreMs": 0.25933999999999174,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 96.03720000000021,
+          "perRestoreMs": 9.60372000000002,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "candidate",
+      "commit": "b7e54c06d7b0ab64ff0ae7d97f130aad98389266",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 8.639400000000052,
+          "perRestoreMs": 0.8639400000000051,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 85.96780000000001,
+          "perRestoreMs": 8.59678,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.3980999999999995,
+          "perRestoreMs": 0.23980999999999994,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 72.78360000000009,
+          "perRestoreMs": 7.278360000000009,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.4587999999999397,
+          "perRestoreMs": 0.24587999999999396,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 116.99090000000024,
+          "perRestoreMs": 11.699090000000023,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "variant": "baseline",
+      "commit": "5ae69691ab4007a975478d0f6693206cfa78aa01",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 98.42009999999999,
+          "perRestoreMs": 9.842009999999998,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 87.04130000000004,
+          "perRestoreMs": 8.704130000000003,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 69.03019999999992,
+          "perRestoreMs": 6.903019999999993,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 67.9382999999998,
+          "perRestoreMs": 6.79382999999998,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 102.68869999999993,
+          "perRestoreMs": 10.268869999999993,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 95.95120000000009,
+          "perRestoreMs": 9.595120000000009,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "variant": "baseline",
+      "commit": "5ae69691ab4007a975478d0f6693206cfa78aa01",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 99.69349999999994,
+          "perRestoreMs": 9.969349999999995,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 85.298,
+          "perRestoreMs": 8.5298,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 67.16609999999991,
+          "perRestoreMs": 6.716609999999991,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 71.20849999999984,
+          "perRestoreMs": 7.120849999999985,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 98.77880000000016,
+          "perRestoreMs": 9.877880000000015,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 96.53570000000013,
+          "perRestoreMs": 9.653570000000013,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "variant": "candidate",
+      "commit": "b7e54c06d7b0ab64ff0ae7d97f130aad98389266",
+      "reports": [
+        {
+          "overlay": "speed",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 6.983400000000046,
+          "perRestoreMs": 0.6983400000000046,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "53ba4d1f18e9ba6f0c970a8c16260664a8395ceb5c5ebf39d3a9789b65509349"
+        },
+        {
+          "overlay": "speed",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 95.92629999999991,
+          "perRestoreMs": 9.59262999999999,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "45f7a6a7acd4ee75e9e568f8caece905c81eb5d08b28157bd1cfa824592c7a07"
+        },
+        {
+          "overlay": "temperature",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.7380999999999744,
+          "perRestoreMs": 0.27380999999999744,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "46d16208cb9e19415a5c2bc9c14839d65739f46e8cb82cce6ab07dcd69462312"
+        },
+        {
+          "overlay": "temperature",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 69.31240000000014,
+          "perRestoreMs": 6.931240000000014,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "ff155ee036c8d7ead6dbaeaa35e5cbb64a57d98d4d4a7157bd7a75f390d5b058"
+        },
+        {
+          "overlay": "pressure",
+          "update": "equivalent",
+          "restores": 10,
+          "elapsedMs": 2.152099999999905,
+          "perRestoreMs": 0.2152099999999905,
+          "textureBuilds": 0,
+          "removedImages": 0,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "5bfc4e7302c23fea635354d1deccd020d2c6bf8bcb8706165e1ceffb31c6a766"
+        },
+        {
+          "overlay": "pressure",
+          "update": "revised",
+          "restores": 10,
+          "elapsedMs": 86.64450000000011,
+          "perRestoreMs": 8.664450000000011,
+          "textureBuilds": 10,
+          "removedImages": 10,
+          "retainedImages": 1,
+          "rasterSequenceSha256": "8eb2d4967a89e79f714c1162da6861f25102698a9283951a9bb87fd1a7da5a66"
+        }
+      ]
+    }
+  ],
+  "rasterEquivalent": true
+}

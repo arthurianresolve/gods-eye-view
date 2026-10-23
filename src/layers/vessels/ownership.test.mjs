@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createVesselLayer } from './index.js';
+import { createLifecycle } from './lifecycle.js';
 import { createVesselState } from './state.js';
 
 const noop = () => {};
@@ -105,6 +106,222 @@ test('vessel construction is inert and each instance owns its records, icon cach
   assert.equal(other.getStats().loading, false);
   assert.equal(requested, 0);
   layer.testing._setVesselStateForTest({ enabled: false });
+});
+
+test('vessel periodic render demand accelerates only during active focus and releases cleanly', async () => {
+  const scheduled = new Map();
+  const held = [];
+  const released = [];
+  let focusTarget = null;
+  let focusListener = null;
+  let nextTransitioning = false;
+  let nextActiveCount = 0;
+  let timerSequence = 0;
+  let logicalNow = 1000;
+  const render = {
+    holdContinuousRender: (owner) => held.push(owner),
+    releaseContinuousRender: (owner) => released.push(owner),
+    scheduleRenderUpdate(owner, callback, delayMs) {
+      const update = { callback, delayMs };
+      scheduled.set(owner, update);
+      return () => {
+        if (scheduled.get(owner) === update) scheduled.delete(owner);
+      };
+    },
+  };
+  const serviceSet = {
+    overlay: {
+      setOverlayEntries: noop,
+      setOverlaySourceVisible: noop,
+      clearOverlaySource: noop,
+    },
+    sprites: { restoreSpriteOrder: noop, restoreSpriteOrderOnEnable: noop },
+    focus: {
+      focusNowMs: () => logicalNow,
+      getFocusTarget: () => focusTarget,
+      focusPassIsNeeded: (target, activeCount) =>
+        Boolean(target) || activeCount > 0,
+      onFocusTargetChange(listener) {
+        focusListener = listener;
+        return () => {
+          if (focusListener === listener) focusListener = null;
+        };
+      },
+    },
+    render,
+    geoid: { ensureGeoidReady: () => Promise.resolve() },
+    picking: { registerPickOwner: noop, unregisterPickOwner: noop },
+  };
+  const vesselState = createVesselState({
+    source: { getSnapshot: async () => snapshot([]) },
+    services: serviceSet,
+  });
+  vesselState._geoidReady = true;
+  vesselState._aisRuntime = {
+    now: () => 1000,
+    setTimeout: (callback) => {
+      const handle = ++timerSequence;
+      return handle;
+    },
+    clearTimeout: noop,
+  };
+  const state = vesselState.state;
+  state.records.all = [{}];
+  let lifecycle;
+  const parts = {
+    rendering: {
+      resetRecordVisuals: noop,
+      ensureCollections: noop,
+      setVisible: noop,
+      updateVisibility() {
+        state.lastVisibilityUpdate = logicalNow;
+        if (nextTransitioning || nextActiveCount > 0)
+          state.lastFocusUpdate = logicalNow;
+        state.focusTransitioning = nextTransitioning;
+        state.activeFocusCount = nextActiveCount;
+        lifecycle.syncPeriodicRenderDemand();
+      },
+    },
+    selection: {
+      installInteraction: noop,
+      clearVesselInspection: noop,
+      removeVesselInteraction: noop,
+    },
+    tracking: { destroySelectedVesselTrail: noop, refloorVesselRecords: noop },
+    ingestion: { loadLivePositions: async () => ({}) },
+  };
+  lifecycle = createLifecycle({
+    vesselState,
+    services: serviceSet,
+    parts,
+    layer: {},
+    options: {},
+  });
+  const viewer = {
+    camera: { moveEnd: { addEventListener: () => noop } },
+  };
+  const current = () => [...scheduled.values()][0];
+  const runCurrent = () => {
+    const update = current();
+    assert.ok(update, 'a periodic update is scheduled');
+    [...scheduled.keys()].forEach((owner) => scheduled.delete(owner));
+    update.callback();
+  };
+
+  await lifecycle.methods.enable(viewer);
+  assert.equal(current().delayMs, 0);
+  runCurrent();
+  assert.equal(current().delayMs, 800);
+
+  logicalNow += 200;
+  focusTarget = { ownerLayer: 'flights', id: 'A' };
+  focusListener(focusTarget, null);
+  assert.equal(current().delayMs, 0);
+  nextTransitioning = true;
+  nextActiveCount = 1;
+  runCurrent();
+  assert.equal(current().delayMs, 80);
+
+  logicalNow += 80;
+  nextTransitioning = false;
+  runCurrent();
+  assert.equal(
+    current().delayMs,
+    80,
+    'an active focus keeps its existing cadence',
+  );
+
+  focusTarget = null;
+  focusListener(null, { ownerLayer: 'flights', id: 'A' });
+  nextTransitioning = true;
+  logicalNow += 80;
+  runCurrent();
+  assert.equal(current().delayMs, 80, 'the release transition remains sampled');
+  nextTransitioning = false;
+  nextActiveCount = 0;
+  logicalNow += 80;
+  runCurrent();
+  assert.equal(current().delayMs, 800, 'settled focus returns to idle cadence');
+
+  const disposedListener = focusListener;
+  lifecycle.methods.disable();
+  assert.equal(focusListener, null);
+  assert.equal(scheduled.size, 0);
+  disposedListener({ ownerLayer: 'flights', id: 'B' }, null);
+  assert.equal(scheduled.size, 0, 'a stale notification cannot re-arm demand');
+  assert.deepEqual(held, []);
+  assert.ok(released.includes('ais-vessels'));
+  lifecycle.methods.destroy(viewer);
+});
+
+test('an early periodic wake keeps the original visibility deadline', (t) => {
+  const originalDocument = globalThis.document;
+  globalThis.document = { getElementById: () => null };
+  t.after(() => {
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  });
+  let logicalNow = 1000;
+  const scheduled = [];
+  const renderRequests = [];
+  const servicesForLayer = services();
+  servicesForLayer.focus.focusNowMs = () => logicalNow;
+  servicesForLayer.render = {
+    holdContinuousRender: noop,
+    releaseContinuousRender: noop,
+    scheduleRenderUpdate(_owner, callback, delayMs) {
+      const update = {
+        callback: () => {
+          update.fired = true;
+          callback();
+        },
+        delayMs,
+        disposed: false,
+        fired: false,
+      };
+      scheduled.push(update);
+      return () => {
+        update.disposed = true;
+      };
+    },
+    governorRequestRender: (reason) => renderRequests.push(reason),
+  };
+  const layer = createVesselLayer({
+    source: { getSnapshot: async () => snapshot([]) },
+    services: servicesForLayer,
+  });
+  layer.testing._setVesselStateForTest({
+    viewer: {},
+    records: [{ mmsi: '123456789' }],
+  });
+  layer.testing._setVesselOverlayHostForTest({
+    setEntries: noop,
+    setVisible: noop,
+    clearSource: noop,
+  });
+
+  layer.testing._updateVesselVisibilityForTest();
+  assert.equal(scheduled.at(-1).delayMs, 800);
+  const firstWake = scheduled.at(-1);
+  logicalNow += 200;
+  firstWake.callback();
+
+  assert.equal(firstWake.fired, true);
+  assert.equal(scheduled.at(-1).delayMs, 600);
+  assert.equal(
+    layer.testing._getVesselStateForTest().vesselCount,
+    1,
+    'the production pass keeps the live record while rearming the remaining deadline',
+  );
+  layer.testing._updateVesselVisibilityForTest(true);
+  layer.testing._setVesselVisibilityForTest(false);
+  assert.ok(renderRequests.includes('ais-vessels-update'));
+  assert.ok(renderRequests.includes('ais-vessels-visibility'));
+  const staleWake = scheduled.at(-1);
+  const renderRequestsAtDestroy = renderRequests.length;
+  layer.destroy();
+  staleWake?.callback();
+  assert.equal(renderRequests.length, renderRequestsAtDestroy);
 });
 
 test('missing vessel source fails before mutating the viewer', () => {

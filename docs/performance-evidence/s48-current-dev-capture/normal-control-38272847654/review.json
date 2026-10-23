@@ -1,0 +1,271 @@
+{
+  "schema": "gev-s48-normal-capture-control-review/v1",
+  "applicationCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+  "harnessCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38272847654",
+  "comparison": "Same runtime/harness as 73018ec5; optional scene-frame attribution, depth-pick attribution and CPU profiling disabled together. No matched latency comparison.",
+  "outcome": "failed",
+  "interpretation": "Optional profiling is not necessary for this warmup failure. It remains unresolved; a late completed render does not make the deadline pass.",
+  "failure": {
+    "phase": "warmup",
+    "scenario": "idle",
+    "run": 1,
+    "message": "Warmup boundary: host observation deadline elapsed.",
+    "operator": null
+  },
+  "completedSampleCount": 0,
+  "boundary": {
+    "schema": "gev-render-boundary-observation/v1",
+    "invocationId": "672c1eb2-2dbf-4a27-9670-329a3ce279ca",
+    "label": "Warmup boundary",
+    "status": "host-observation-deadline",
+    "hostTimeoutMs": 6000,
+    "hostElapsedMs": 7324.215770999996,
+    "hostDispatchElapsedMs": 3.3496779999986757,
+    "hostProgressBindingSetupElapsedMs": null,
+    "progressBindingOwnerId": "provider-sample-1:provider-document-1",
+    "progressBindingSetupElapsedMs": 2.3793860000005225,
+    "pageEntryObserved": true,
+    "pageEntryHostReceiptElapsedMs": 2399.2841289999997,
+    "progressEvents": [
+      {
+        "stage": "page-entry",
+        "hostReceiptElapsedMs": 2399.2841289999997,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0
+        }
+      },
+      {
+        "stage": "listener-registered",
+        "hostReceiptElapsedMs": 2402.1412619999974,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0,
+          "listenerRegistered": true
+        }
+      },
+      {
+        "stage": "fixture-clock-held",
+        "hostReceiptElapsedMs": 2402.48618,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.3000000000174623,
+          "fixtureClockPhase": "warmup-held",
+          "fixtureClockElapsedMs": 1000,
+          "fixtureClockEpochMs": 1791460801000,
+          "fixtureClockWarmupMs": 1000,
+          "fixtureClockMeasurementMs": 1000,
+          "fixtureClockWarmupNativeElapsedMs": 3400.5,
+          "fixtureClockMeasurementNativeElapsedMs": null,
+          "fixtureClockStartCount": 1,
+          "fixtureClockMeasurementStartCount": 0
+        }
+      },
+      {
+        "stage": "render-request-started",
+        "hostReceiptElapsedMs": 2403.4201269999976,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.3000000000174623,
+          "renderRequestAvailable": true,
+          "renderRequestStarted": true
+        }
+      },
+      {
+        "stage": "render-request-completed",
+        "hostReceiptElapsedMs": 2403.715462,
+        "afterHostDeadline": false,
+        "details": {
+          "pageElapsedMs": 0.40000000002328306,
+          "renderRequestCompleted": true
+        }
+      }
+    ],
+    "ignoredProgressEvents": {
+      "wrongInvocation": 0,
+      "malformed": 0,
+      "overflow": 0
+    },
+    "hostEvaluationOverheadResidualMs": 2414.515770999984,
+    "page": {
+      "status": "settled",
+      "settleElapsedMs": 4909.700000000012,
+      "error": null,
+      "diagnostics": {
+        "phase": "settled",
+        "pageEntryElapsedMs": 0,
+        "pageElapsedMs": 4909.700000000012,
+        "listenerRegistered": true,
+        "listenerRegistrationElapsedMs": 0,
+        "renderRequestAvailable": true,
+        "renderRequestStarted": true,
+        "renderRequestStartElapsedMs": 0.3000000000174623,
+        "renderRequestCompleted": true,
+        "renderRequestCompleteElapsedMs": 0.40000000002328306,
+        "postRenderObserved": true,
+        "postRenderElapsedMs": 4909.5,
+        "renderLoopRetirement": null,
+        "finalObservation": null,
+        "finalObservationErrorName": null,
+        "beforeRenderRequestObservation": {
+          "schema": "gev-phased-monotonic-wall-clock/v1",
+          "phase": "warmup-held",
+          "epochMs": 1791460801000,
+          "elapsedMs": 1000,
+          "warmupMs": 1000,
+          "measurementMs": 1000,
+          "warmupNativeElapsedMs": 3400.5,
+          "measurementNativeElapsedMs": null,
+          "startCount": 1,
+          "measurementStartCount": 0
+        },
+        "beforeRenderRequestErrorName": null,
+        "pageTimerFired": false,
+        "pageTimerElapsedMs": null,
+        "cleanup": {
+          "timerCleared": true,
+          "listenerRemoved": true
+        }
+      }
+    },
+    "pageError": null,
+    "hostError": {
+      "name": "TimeoutError",
+      "message": "Warmup boundary: host observation deadline elapsed."
+    },
+    "pendingPageResultAtDeadline": true,
+    "latePageResultObserved": true,
+    "cleanup": {
+      "hostTimerCleared": true,
+      "progressBindingRemoved": null,
+      "progressInvocationReleased": true,
+      "progressBindingCleanupElapsedMs": 0.10355499999423046,
+      "progressInvocationReleaseElapsedMs": 0.10355499999423046
+    }
+  },
+  "probeCleanups": [
+    {
+      "phase": "startup-document-retirement",
+      "confirmed": true,
+      "elapsedMs": 35.695903000001636
+    },
+    {
+      "phase": "provider-document-retirement",
+      "confirmed": true,
+      "elapsedMs": 7.586558999999397
+    },
+    {
+      "phase": "capture-final-document-retirement",
+      "confirmed": false,
+      "elapsedMs": 1000.8254650000017
+    }
+  ],
+  "fixtureReleases": [
+    {
+      "role": "startup-1",
+      "confirmed": true,
+      "targetClosed": true,
+      "stop": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      }
+    },
+    {
+      "role": "main-setup",
+      "confirmed": true,
+      "targetClosed": true,
+      "stop": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      }
+    },
+    {
+      "role": "provider-sample-1",
+      "confirmed": true,
+      "targetClosed": true,
+      "stop": {
+        "schema": "gev-fixture-interception-drain/v1",
+        "confirmed": true,
+        "listenerRemovalConfirmed": true,
+        "listenerRemovalVerification": "remove-listener-call-acknowledged",
+        "listenerRemovalErrorKind": null,
+        "pendingAtStop": 0,
+        "pendingPreparationAtStop": 0,
+        "pendingAbortSubscriptionsAtStop": 0,
+        "pendingCommandsAtStop": 0,
+        "pendingCommandsAfterDrain": 0,
+        "pendingPreparationsAfterDrain": 0,
+        "pendingAbortSubscriptionsAfterDrain": 0,
+        "rejectedDrainOperations": 0,
+        "drainCommandFailures": 0,
+        "cancelledPreparationCount": 0,
+        "unexpectedLateRequestCount": 0
+      }
+    }
+  ],
+  "source": {
+    "harnessCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+    "harnessDirtyWorktree": false,
+    "appCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+    "appWorktreeState": "clean",
+    "provenanceStatus": "pre-capture-served-assets-verified",
+    "reason": null,
+    "buildProvenance": {
+      "schema": "gev-capture-build-provenance/v1",
+      "status": "pre-capture-served-assets-verified",
+      "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+      "receiptSha256": "7c2ff9097e8e4df1fd218affde1da23eddd6366bc6135eab819cfc52572804d0",
+      "appCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+      "harnessCommit": "f7e0709c8536fb8ca63619fd5288ae3a4123602e",
+      "before": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "7c2ff9097e8e4df1fd218affde1da23eddd6366bc6135eab819cfc52572804d0",
+        "assetCount": 436,
+        "totalAssetBytes": 43983899
+      },
+      "after": null
+    }
+  },
+  "artifacts": [
+    {
+      "file": "performance-build-smoke.json",
+      "bytes": 69918,
+      "sha256": "3902624aa012ce8217116952dd942ac333b357678ee351266b6481b8a724cf80"
+    },
+    {
+      "file": "performance-build-smoke.json.capture-cli-report-candidate.json",
+      "bytes": 26727,
+      "sha256": "dfb87b1a01b0d036c3c31f0f99b5f5dd6e021e02bade304e2ee85a16df39473d"
+    }
+  ]
+}

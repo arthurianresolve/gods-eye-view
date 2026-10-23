@@ -1,0 +1,209 @@
+{
+  "schema": "s52-scalar-snapshot-storage-controls/v1",
+  "scope": "Diagnostic candidate moves eight numeric presentation snapshot values to a preallocated Float64Array; key/lane/zIndex/selected/corner remain object fields. All capture and comparison values preserve Object.is for numeric inputs. Non-number numeric-channel values conservatively invalidate reuse, retaining normal render output. No fields or candidate populations are removed.",
+  "referenceRuntimeSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+  "candidateRuntimeSha256": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302",
+  "runnerSha256": "e82f524ce9381e2ae441da863b9bea3ad8f71c484c278a104767934c60926c6e",
+  "workerSha256": "9dc24d3f9b017d19df6ca89270803c01bf811b1c93896e3495b27a4d16aff901",
+  "packageLockSha256": "671ba3b201cb29e8fb6662bb785cab51140f3d89c45e50d8b32b638bebbca7a6",
+  "node": "v24.16.0",
+  "platform": "win32",
+  "conditions": {
+    "warmupFrames": 3000,
+    "stabilizationChunks": 6,
+    "chunkFrames": 48,
+    "measuredChunks": 10,
+    "workloads": [
+      {
+        "profile": "local-infrastructure",
+        "entries": 320,
+        "order": [
+          "reference",
+          "candidate"
+        ]
+      },
+      {
+        "profile": "submarine-cables",
+        "entries": 160,
+        "order": [
+          "candidate",
+          "reference"
+        ]
+      }
+    ],
+    "parityKeys": [
+      "candidateCount",
+      "paintedCount",
+      "paintedBySource",
+      "solveCount"
+    ]
+  },
+  "results": {
+    "local-infrastructure-reference": {
+      "order": 0,
+      "runtimeSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+      "stdoutSha256": "ccf64fd5121fc8ba9fd4cd1b06e6b04fed9af8e02374045f615b8eab2368d486",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measured": {
+        "ok": true,
+        "profile": "local-infrastructure",
+        "ambientCardCapacity": null,
+        "entryCount": 320,
+        "warmupFrames": 3000,
+        "stabilizationChunks": 6,
+        "chunkFrames": 48,
+        "chunkCount": 10,
+        "measuredFrames": 480,
+        "paintedCount": 192,
+        "paintedBySource": {
+          "local-dams": 96,
+          "local-datacenters": 96
+        },
+        "candidateCount": 320,
+        "detectionSelectedCount": null,
+        "detectionCollectiveLabelBudget": null,
+        "solveCount": 60,
+        "maxBytesPerFrame": 44693,
+        "medianBytesPerFrame": 43984,
+        "maxBytesPerCandidatePerFrame": 139.665625,
+        "medianBytesPerCandidatePerFrame": 137.45,
+        "chunkBytesPerFrame": [
+          44244.666666666664,
+          43813.666666666664,
+          44351.5,
+          44251.5,
+          43977.166666666664,
+          43220.333333333336,
+          42480.166666666664,
+          43124.5,
+          43984,
+          44693
+        ]
+      }
+    },
+    "local-infrastructure-candidate": {
+      "order": 1,
+      "runtimeSha256": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302",
+      "stdoutSha256": "1723a71ba91a5ae8e63235bd1e95ce6b2a8ad6aca166491f2e3f589a422750d7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measured": {
+        "ok": true,
+        "profile": "local-infrastructure",
+        "ambientCardCapacity": null,
+        "entryCount": 320,
+        "warmupFrames": 3000,
+        "stabilizationChunks": 6,
+        "chunkFrames": 48,
+        "chunkCount": 10,
+        "measuredFrames": 480,
+        "paintedCount": 192,
+        "paintedBySource": {
+          "local-dams": 96,
+          "local-datacenters": 96
+        },
+        "candidateCount": 320,
+        "detectionSelectedCount": null,
+        "detectionCollectiveLabelBudget": null,
+        "solveCount": 60,
+        "maxBytesPerFrame": 45211,
+        "medianBytesPerFrame": 44548,
+        "maxBytesPerCandidatePerFrame": 141.284375,
+        "medianBytesPerCandidatePerFrame": 139.2125,
+        "chunkBytesPerFrame": [
+          44719.833333333336,
+          44319.166666666664,
+          44835.333333333336,
+          44741.333333333336,
+          44498.833333333336,
+          43849.333333333336,
+          43168.166666666664,
+          43749,
+          44548,
+          45211
+        ]
+      }
+    },
+    "submarine-cables-candidate": {
+      "order": 2,
+      "runtimeSha256": "a4925a109a9b106e1b80e433270c237dc7e64b58b89e136b7d1d66a39158f302",
+      "stdoutSha256": "c9ce5a150b6b6da237e95d3ab8b5dc2836ce53a6965971189889d6ee8a7f6468",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measured": {
+        "ok": true,
+        "profile": "submarine-cables",
+        "ambientCardCapacity": null,
+        "entryCount": 160,
+        "warmupFrames": 3000,
+        "stabilizationChunks": 6,
+        "chunkFrames": 48,
+        "chunkCount": 10,
+        "measuredFrames": 480,
+        "paintedCount": 96,
+        "paintedBySource": {
+          "telegeography-submarine-cables": 96
+        },
+        "candidateCount": 160,
+        "detectionSelectedCount": null,
+        "detectionCollectiveLabelBudget": null,
+        "solveCount": 60,
+        "maxBytesPerFrame": 22122.833333333332,
+        "medianBytesPerFrame": 21792,
+        "maxBytesPerCandidatePerFrame": 138.26770833333333,
+        "medianBytesPerCandidatePerFrame": 136.2,
+        "chunkBytesPerFrame": [
+          21321.5,
+          21398.333333333332,
+          21483.666666666668,
+          21612.333333333332,
+          22007.166666666668,
+          21851.666666666668,
+          21989.166666666668,
+          22122.833333333332,
+          21792,
+          21576
+        ]
+      }
+    },
+    "submarine-cables-reference": {
+      "order": 3,
+      "runtimeSha256": "233d6269e86dad4c32f3c8af823f2dfe439c63d0fc9384feb4709a6faaa3fde2",
+      "stdoutSha256": "97b954df154e01032c8cefaf935e32a4ac5b4bb16843c9ad57cd116f62632935",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "measured": {
+        "ok": true,
+        "profile": "submarine-cables",
+        "ambientCardCapacity": null,
+        "entryCount": 160,
+        "warmupFrames": 3000,
+        "stabilizationChunks": 6,
+        "chunkFrames": 48,
+        "chunkCount": 10,
+        "measuredFrames": 480,
+        "paintedCount": 96,
+        "paintedBySource": {
+          "telegeography-submarine-cables": 96
+        },
+        "candidateCount": 160,
+        "detectionSelectedCount": null,
+        "detectionCollectiveLabelBudget": null,
+        "solveCount": 60,
+        "maxBytesPerFrame": 21695.833333333332,
+        "medianBytesPerFrame": 21398.666666666668,
+        "maxBytesPerCandidatePerFrame": 135.59895833333331,
+        "medianBytesPerCandidatePerFrame": 133.74166666666667,
+        "chunkBytesPerFrame": [
+          20969.5,
+          21060.5,
+          21164,
+          21298.333333333332,
+          21604.666666666668,
+          21435.666666666668,
+          21576.333333333332,
+          21695.833333333332,
+          21398.666666666668,
+          21145.166666666668
+        ]
+      }
+    }
+  }
+}

@@ -519,6 +519,26 @@ test('a forwarded same-origin request reaches every CCTV route but not the Stree
         `${label} ${path}`,
       );
   }
+  const httpsProxy = {
+    host: 'vision.example:443',
+    origin: 'https://vision.example',
+    'sec-fetch-site': 'same-origin',
+    'x-forwarded-proto': 'https',
+  };
+  assert.equal((await app.call('/sources', httpsProxy)).statusCode, 200);
+  assert.equal(
+    (await app.call(`/frame/${STILL.id}`, httpsProxy)).headers['X-CCTV-Source'],
+    'synthetic',
+  );
+  assert.equal(
+    (
+      await app.call('/sources', {
+        ...httpsProxy,
+        origin: 'https://elsewhere.example',
+      })
+    ).statusCode,
+    403,
+  );
   assert.equal(streetViewCalls(), 0, 'a forwarded request spent the key');
   const direct = await app.call(`/frame/${STILL.id}`, {
     host,

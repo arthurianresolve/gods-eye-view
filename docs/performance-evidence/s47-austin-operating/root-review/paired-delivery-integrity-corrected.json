@@ -1,0 +1,56 @@
+{
+  "schema": "gev-root-austin-paired-integrity-audit/v1",
+  "recordedAt": "2026-10-12T20:51:05.487Z",
+  "scope": "Node report-validator audit using real fixture delivery and synthetic browser/build observations; no browser, hardware, or performance acceptance",
+  "checkoutHead": "cd44d1df2bdcbb0e9ed401c4f813ea2a5709b998",
+  "sourceState": "working-tree integration under development; exact file hashes recorded",
+  "sourceSha256": {
+    "scripts/performance/austinOperatingComparisonContract.test.mjs": "5911ab1c4398247d6597e617cf427691496d8f214185da27afcad25d5fe69034",
+    "scripts/performance/captureComparisonContract.mjs": "a9d97f71cb155c019cff7f1c36c0f1935ea4bc1872106cf9500bfa3b23975acf",
+    "scripts/performance/pairedReport.mjs": "13ef2577eb3662d97740a11c697125628d748ed85940806459e26db755d8e84d",
+    "scripts/performance/austinOperatingWorkloadFixture.mjs": "eea5d1d1805318e4e1e9978c9b504012f9b25082855022500abceed88b8f5e15",
+    "scripts/performance/pairedReportTestFixtures.mjs": "909ea829a4290f96f0eb4ade681e6c20863f69c9f9b5ae8afca8826af1ef186b"
+  },
+  "sourceStable": true,
+  "positiveControl": {
+    "status": "comparable",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    }
+  },
+  "controls": [
+    {
+      "id": "corrupt-delivered-asset-hash",
+      "expected": "reject",
+      "rejected": true,
+      "actual": "rejected",
+      "reason": "candidate: top-level per-document delivery differs from captured evidence",
+      "reasonSha256": "250fe254549dbd29ea5be8cf1df70da50f1f03dae5d3f6ceec582568273be8c0"
+    },
+    {
+      "id": "remove-acknowledged-alpr-tiles",
+      "expected": "reject",
+      "rejected": true,
+      "actual": "rejected",
+      "reason": "candidate: top-level per-document delivery differs from captured evidence",
+      "reasonSha256": "a85a330d2252335dced6f14068901bd55923a6abc9ee487decb6a6bc16bc9400"
+    },
+    {
+      "id": "remove-acknowledged-installation-identities",
+      "expected": "reject",
+      "rejected": true,
+      "actual": "rejected",
+      "reason": "candidate: top-level per-document delivery differs from captured evidence",
+      "reasonSha256": "3bf2e27f483c5ab13db690f1eb6b282a68218773b0ea9a1ec8b93f973ab0fbc2"
+    }
+  ],
+  "status": "passed",
+  "projection": {
+    "reason": "bounded first-line assertion messages; complete differences repeat public fixture records",
+    "originalArtifactSha256": "29a7041405f8ff98d962f2d7a3b45441cefdaace7a25900aff5dcdd7cb647977",
+    "originalBytes": 426882
+  }
+}

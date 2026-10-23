@@ -1,0 +1,133 @@
+{
+  "schema": "gev-satellite-sampled-epoch-feasibility/v1",
+  "recordedAt": "2026-10-12T21:26:25.229Z",
+  "scope": "Host-only native fleet renderer, native controls and SGP4 with pinned TLEs; simulated frame delivery and clone-equivalent point records. No browser/GPU, cross-engine precision or visual equivalence acceptance.",
+  "method": "Derive the unique integer-millisecond epoch from ISS public cached position within the previous 1000 ms; verify every observed cached position against the independent reference catalog at that epoch. Ground truth used only for this feasibility assertion.",
+  "candidateToleranceMeters": 0.001,
+  "negativeControlCorrection": "An initial wrong-orbit negative used POISK versus ISS, which share the same physical orbit in the pinned source and therefore did not create a position error. The distinct-orbit negative now uses CSS (48274) versus ISS. Source-byte and identity validation must remain separate; position validation cannot distinguish physically identical trajectories.",
+  "sourceSha256": {
+    "src/layers/satellites/rendering.js": "606b1642f92a9b11680d4c8d74df9c9a0b6355d906dfd6b2174192ac7a1d24b8",
+    "src/layers/satellites/controls.js": "87ba258bf943d4abff7bf849e260471dc421234b653cc9e414997f439efe7717",
+    "src/layers/satellites/orbits.js": "4b8a46697e21a86ea6ea3209079ae009fa0ad288654490706d13b76bc8c44b01",
+    "src/layers/satellites/policy.js": "918f3659ab7b396c6a6d944bc7f7162eb02f3590f22144cc6e571068baa970fa",
+    "src/sources/tle.js": "a687f5725295758b005a54fbb1258084123a8089d070b5649db84fa5cb8b7570",
+    "scripts/performance/productionFlightFixture.mjs": "82e9f64d57349f0ea2b357a4bd5cfae08566c622b86138e3b006bfff3bc8c801",
+    "src/data/fixtures/austin-operating-v1/tle/stations.tle": "e5a8e4eb8d98a8fa5f85fb04b50674d4935d3c7c71e96fe40b178fc96131aa9c",
+    "src/data/fixtures/austin-operating-v1/tle/visual.tle": "5274359f8f205af82ecc27351abb0b59a4446cae97e2a67ee870b971d37dbdf9",
+    "src/data/fixtures/austin-operating-v1/tle/gps-ops.tle": "f112834b2b956deab94364815c5ca007f0081e4730f00a5d917bc693db70f909",
+    "src/data/fixtures/austin-operating-v1/tle/glo-ops.tle": "d6b389d8d14b731f64579c5ac95d5f75efffc96a6d9c5ef0e158868a7f90546f",
+    "src/data/fixtures/austin-operating-v1/tle/galileo.tle": "706d5bbffda414235fa3d9a65fb74d7a962a750baf839dbf22ddf160e1b03255",
+    "src/data/fixtures/austin-operating-v1/tle/geo.tle": "688f70a23833e9108ff7d152516b13339de004cd4b81859d8de44c7109928e14"
+  },
+  "sourceStable": true,
+  "results": [
+    {
+      "frameStepMs": 16,
+      "before": {
+        "boundary": "warmup-held",
+        "boundaryEpochMs": 1791828030000,
+        "groundTruthEpochMs": 1791828029232,
+        "inferred": {
+          "epochMs": 1791828029232,
+          "ageMs": 768,
+          "matchedCount": 828,
+          "maximumResidualMeters": 0.000003141352562788422
+        },
+        "rawPositionSha256": "b72d822664993713498065c71209a7775a39cafb1b8601c1752773b1a3fc2ba6"
+      },
+      "after": {
+        "boundary": "complete",
+        "boundaryEpochMs": 1791828090000,
+        "groundTruthEpochMs": 1791828089712,
+        "inferred": {
+          "epochMs": 1791828089712,
+          "ageMs": 288,
+          "matchedCount": 828,
+          "maximumResidualMeters": 0.0000030943957672574175
+        },
+        "rawPositionSha256": "7b58c63a969324f05fcc36f1de2a772f906142522da201943a970a5c1a52bbcd"
+      }
+    },
+    {
+      "frameStepMs": 33,
+      "before": {
+        "boundary": "warmup-held",
+        "boundaryEpochMs": 1791828030000,
+        "groundTruthEpochMs": 1791828029667,
+        "inferred": {
+          "epochMs": 1791828029667,
+          "ageMs": 333,
+          "matchedCount": 828,
+          "maximumResidualMeters": 0.000003141352562788422
+        },
+        "rawPositionSha256": "456de180271b6cb1ce79ad33c324c0c2d1a2568e124f792341223edad1af543f"
+      },
+      "after": {
+        "boundary": "complete",
+        "boundaryEpochMs": 1791828090000,
+        "groundTruthEpochMs": 1791828089004,
+        "inferred": {
+          "epochMs": 1791828089004,
+          "ageMs": 996,
+          "matchedCount": 828,
+          "maximumResidualMeters": 0.000003101979823175005
+        },
+        "rawPositionSha256": "4927804af6b0a9c7185385e8451ac9fe3f02fe13c0a9589985aac6795325d1d3"
+      }
+    },
+    {
+      "frameStepMs": 120,
+      "before": {
+        "boundary": "warmup-held",
+        "boundaryEpochMs": 1791828030000,
+        "groundTruthEpochMs": 1791828029160,
+        "inferred": {
+          "epochMs": 1791828029160,
+          "ageMs": 840,
+          "matchedCount": 828,
+          "maximumResidualMeters": 0.0000031378756446727583
+        },
+        "rawPositionSha256": "fd6ccaf14ed00088785061bd95ddb82e8e86c005b717e86c2b26c4c9622f6fe6"
+      },
+      "after": {
+        "boundary": "complete",
+        "boundaryEpochMs": 1791828090000,
+        "groundTruthEpochMs": 1791828089640,
+        "inferred": {
+          "epochMs": 1791828089640,
+          "ageMs": 360,
+          "matchedCount": 828,
+          "maximumResidualMeters": 0.000003101249940652482
+        },
+        "rawPositionSha256": "569de5984935764a6c000449839bff25f14b07451d5c848d8a643349b18f8eb9"
+      }
+    }
+  ],
+  "negativeControls": [
+    {
+      "label": "one record missing",
+      "rejected": true
+    },
+    {
+      "label": "duplicate identity",
+      "rejected": true
+    },
+    {
+      "label": "cached fleet older than one-second cadence",
+      "rejected": true
+    },
+    {
+      "label": "one cached position displaced by one meter",
+      "rejected": true
+    },
+    {
+      "label": "one record from a different epoch",
+      "rejected": true
+    },
+    {
+      "label": "wrong source orbit for one identity",
+      "rejected": true
+    }
+  ],
+  "conclusion": "Explicit sampled-time validation is feasible in this host-only control without modifying native cadence or discarding raw position hashes. Capture integration, cross-engine precision verification and paired visual acceptance remain pending."
+}

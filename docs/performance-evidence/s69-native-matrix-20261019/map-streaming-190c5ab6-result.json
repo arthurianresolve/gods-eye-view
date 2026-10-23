@@ -1,0 +1,210 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-20T01:36:32.606Z",
+  "row": "map-streaming",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "scenarios": {
+      "map-streaming-route": {
+        "status": "measured",
+        "baselineMedianP95Ms": 14413.900000002235,
+        "candidateMedianP95Ms": 9078.79999999702,
+        "changePct": -37.01357717206577,
+        "regressionOver10Pct": false
+      },
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 13911.599999997765,
+        "candidateMedianP95Ms": 14044,
+        "changePct": 0.9517237413543838,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 392.29999999701977,
+        "candidateMedianP95Ms": 312.79999999701977,
+        "changePct": -20.265103237472328,
+        "regressionOver10Pct": false
+      }
+    },
+    "mapStreaming": {
+      "metric": "transition-readiness-p95-ms",
+      "baselineRuns": [
+        {
+          "run": 1,
+          "transitionReadinessMs": [19641.5, 6855.900000002235, 515],
+          "p95Ms": 19641.5
+        },
+        {
+          "run": 2,
+          "transitionReadinessMs": [17970.39999999851, 6150, 608.6000000014901],
+          "p95Ms": 17970.39999999851
+        },
+        {
+          "run": 3,
+          "transitionReadinessMs": [
+            12419.10000000149, 5177.39999999851, 704.5999999977648
+          ],
+          "p95Ms": 12419.10000000149
+        },
+        {
+          "run": 4,
+          "transitionReadinessMs": [
+            12495.599999997765, 4737.60000000149, 562.5999999977648
+          ],
+          "p95Ms": 12495.599999997765
+        },
+        {
+          "run": 5,
+          "transitionReadinessMs": [
+            14413.900000002235, 7536.79999999702, 682.9000000022352
+          ],
+          "p95Ms": 14413.900000002235
+        }
+      ],
+      "candidateRuns": [
+        {
+          "run": 1,
+          "transitionReadinessMs": [10903.79999999702, 5164, 553],
+          "p95Ms": 10903.79999999702
+        },
+        {
+          "run": 2,
+          "transitionReadinessMs": [
+            11509.40000000596, 4414.0999999940395, 551.8999999910593
+          ],
+          "p95Ms": 11509.40000000596
+        },
+        {
+          "run": 3,
+          "transitionReadinessMs": [
+            8617.29999999702, 3197.2999999970198, 401.09999999403954
+          ],
+          "p95Ms": 8617.29999999702
+        },
+        {
+          "run": 4,
+          "transitionReadinessMs": [
+            9077.29999999702, 3523.2999999970198, 521.2999999970198
+          ],
+          "p95Ms": 9077.29999999702
+        },
+        {
+          "run": 5,
+          "transitionReadinessMs": [
+            9078.79999999702, 4086.4000000059605, 361.20000000298023
+          ],
+          "p95Ms": 9078.79999999702
+        }
+      ],
+      "frameCaptureCoverage": "validated"
+    },
+    "fixtureDeliveryDiagnostics": {
+      "assetInventoryComparison": "independently-validated-pinned-manifest",
+      "baseline": {
+        "requestedAssetCount": 272,
+        "assetsOnlyInThisCapture": [],
+        "fulfilledResponseCount": 1991,
+        "perSample": null
+      },
+      "candidate": {
+        "requestedAssetCount": 281,
+        "assetsOnlyInThisCapture": [
+          "imagery/16/14978/26979.png",
+          "imagery/16/14978/26980.png",
+          "imagery/16/14978/26981.png",
+          "imagery/16/14978/26982.png",
+          "imagery/16/14978/26983.png",
+          "imagery/16/14978/26984.png",
+          "imagery/16/14979/26983.png",
+          "imagery/16/14979/26984.png",
+          "imagery/16/14980/26985.png"
+        ],
+        "fulfilledResponseCount": 2052,
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "measured",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 5075,
+    "candidateMedianMs": 3575,
+    "baselineInitialSettleMedianMs": 5090,
+    "candidateInitialSettleMedianMs": 4101,
+    "initialSettleChangePct": -19.43025540275049,
+    "initialSettleRegressionOver10Pct": false,
+    "baselineRunsMs": [11927, 5075, 5742, 4195, 4064],
+    "candidateRunsMs": [6496, 3575, 6057, 3425, 3311],
+    "changePct": -29.55665024630542,
+    "regressionOver10Pct": false,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6745,
+      "sha256": "71d82e3a206876579393d6048a589fa4765c37cc30458f903ff278b14b1082ee"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3237,
+      "sha256": "550012fe50401580d0a32806dee8ae2f1cf0ebf980888e0a4d511e83115a5b92"
+    },
+    {
+      "name": "retry-reuse-protocol.json",
+      "bytes": 7207,
+      "sha256": "5444de0ae27676d71f6bbc75823958649cebe479f20bd7355bb09c6291fb9c02"
+    },
+    {
+      "name": "map-streaming-baseline.json",
+      "bytes": 1119763,
+      "sha256": "2b76fb5b4e2b8e503ec070aa030eeeffd5e589f6adad164c571c68c8071b82df"
+    },
+    {
+      "name": "map-streaming-candidate.json",
+      "bytes": 1132602,
+      "sha256": "e5304231f1de57ee5247cc3a5bd27e2233a39c607af926f1f308a060c6aa8a30"
+    },
+    {
+      "name": "map-streaming-candidate.json.log",
+      "bytes": 691,
+      "sha256": "b17ecdb59bcbc7b9a0e6ac0f5695eabd2958e1e035b3b93987b04672c1ee6180"
+    },
+    {
+      "name": "map-streaming-candidate.json.invocation.json",
+      "bytes": 2567,
+      "sha256": "4cd1f8ea21f901a0e0fc27f6906bc2c85f96adad4babcc659dff83acc2a6d1ca"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/map-streaming-190c5ab6-native155-foreground-ready-2",
+  "productionChanged": false
+}

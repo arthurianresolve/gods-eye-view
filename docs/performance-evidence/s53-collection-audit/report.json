@@ -1,0 +1,188 @@
+{
+  "schema": "gev-satellite-collection-mutation-audit/v1",
+  "scope": "Component CPU object identities and setter notifications; deterministic propagation seam, actual Cesium primitives. No rendering, latency or GPU upload measurement.",
+  "prior": "510ed8d467b7e2e0611dab9e26c8bbbfacb49c11",
+  "current": "75cf32fe4b33623cad8b4c0452e1992f54f8af94",
+  "node": "v24.16.0",
+  "cesium": "1.138.0",
+  "sources": {
+    "510ed8d467b7e2e0611dab9e26c8bbbfacb49c11:src/layers/satellites/rendering.js": "f2dbe9fa8f8862e40a65a01d60a219c1a56c6b3fb44450f4c28f0a8aa79d0ca8",
+    "75cf32fe4b33623cad8b4c0452e1992f54f8af94:src/layers/satellites/rendering.js": "606b1642f92a9b11680d4c8d74df9c9a0b6355d906dfd6b2174192ac7a1d24b8",
+    "510ed8d467b7e2e0611dab9e26c8bbbfacb49c11:src/layers/satellites/catalog.js": "4bbf6bba7c9e4ca797fbaa12bac6652615106ed334046c0d5443b4ade4f4d474",
+    "75cf32fe4b33623cad8b4c0452e1992f54f8af94:src/layers/satellites/catalog.js": "29261bdf7a324e1121d7fb5f34e9a57639956cd6c20d2b4e48676d63ff4e82ef"
+  },
+  "cesiumPointSourceSha256": "409a74dddd43fb9ca7a0d829ddb05f1d1846a1d4335244462d91e49bff956353",
+  "comparisons": [
+    {
+      "control": {
+        "kind": "core",
+        "moving": false,
+        "population": 840,
+        "passes": 10,
+        "propagationCartesianCalls": 8400,
+        "suppliedResultCalls": 0,
+        "distinctReturnedCartesians": 8400,
+        "attemptedPositionWrites": 8400,
+        "dirtyNotifications": 0,
+        "finalCoordinatesSha256": "642efb1ed098c78ed80a008b9437331eaa1acfc3d80ffb011baa83e0cae0dba6",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      },
+      "candidate": {
+        "kind": "core",
+        "moving": false,
+        "population": 840,
+        "passes": 10,
+        "propagationCartesianCalls": 8400,
+        "suppliedResultCalls": 8400,
+        "distinctReturnedCartesians": 1,
+        "attemptedPositionWrites": 0,
+        "dirtyNotifications": 0,
+        "finalCoordinatesSha256": "642efb1ed098c78ed80a008b9437331eaa1acfc3d80ffb011baa83e0cae0dba6",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      }
+    },
+    {
+      "control": {
+        "kind": "core",
+        "moving": true,
+        "population": 840,
+        "passes": 10,
+        "propagationCartesianCalls": 8400,
+        "suppliedResultCalls": 0,
+        "distinctReturnedCartesians": 8400,
+        "attemptedPositionWrites": 8400,
+        "dirtyNotifications": 8400,
+        "finalCoordinatesSha256": "fd6fb8754d59826cc09e68aede342654e4444ca0bdf55302f29c68c2439e1873",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      },
+      "candidate": {
+        "kind": "core",
+        "moving": true,
+        "population": 840,
+        "passes": 10,
+        "propagationCartesianCalls": 8400,
+        "suppliedResultCalls": 8400,
+        "distinctReturnedCartesians": 1,
+        "attemptedPositionWrites": 8400,
+        "dirtyNotifications": 8400,
+        "finalCoordinatesSha256": "fd6fb8754d59826cc09e68aede342654e4444ca0bdf55302f29c68c2439e1873",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      }
+    },
+    {
+      "control": {
+        "kind": "dense",
+        "moving": false,
+        "population": 10000,
+        "passes": 300,
+        "propagationCartesianCalls": 10200,
+        "suppliedResultCalls": 0,
+        "distinctReturnedCartesians": 10200,
+        "attemptedPositionWrites": 10200,
+        "dirtyNotifications": 0,
+        "finalCoordinatesSha256": "b85ecd97666cb7eea949ee67c6700130a185bdcad4c98110aa924011b181eae7",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      },
+      "candidate": {
+        "kind": "dense",
+        "moving": false,
+        "population": 10000,
+        "passes": 300,
+        "propagationCartesianCalls": 10200,
+        "suppliedResultCalls": 10200,
+        "distinctReturnedCartesians": 1,
+        "attemptedPositionWrites": 0,
+        "dirtyNotifications": 0,
+        "finalCoordinatesSha256": "b85ecd97666cb7eea949ee67c6700130a185bdcad4c98110aa924011b181eae7",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      }
+    },
+    {
+      "control": {
+        "kind": "dense",
+        "moving": true,
+        "population": 10000,
+        "passes": 300,
+        "propagationCartesianCalls": 10200,
+        "suppliedResultCalls": 0,
+        "distinctReturnedCartesians": 10200,
+        "attemptedPositionWrites": 10200,
+        "dirtyNotifications": 10200,
+        "finalCoordinatesSha256": "6f3e1dfb51d7a28d9d5ca98b6fb51e69b18bb46e01da2ce97add162c944f5e14",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      },
+      "candidate": {
+        "kind": "dense",
+        "moving": true,
+        "population": 10000,
+        "passes": 300,
+        "propagationCartesianCalls": 10200,
+        "suppliedResultCalls": 10200,
+        "distinctReturnedCartesians": 1,
+        "attemptedPositionWrites": 10200,
+        "dirtyNotifications": 10200,
+        "finalCoordinatesSha256": "6f3e1dfb51d7a28d9d5ca98b6fb51e69b18bb46e01da2ce97add162c944f5e14",
+        "gpuUploadCalls": null,
+        "gpuUploadBytes": null
+      }
+    }
+  ],
+  "currentStyles": [
+    {
+      "id": "iss",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 2
+    },
+    {
+      "id": "stations",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    },
+    {
+      "id": "visual",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    },
+    {
+      "id": "gps-ops",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    },
+    {
+      "id": "glonass",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    },
+    {
+      "id": "galileo",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    },
+    {
+      "id": "geo",
+      "alpha": 1,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    },
+    {
+      "id": "dense",
+      "alpha": 0.9,
+      "outlineAlpha": 0.3,
+      "outlineWidth": 0
+    }
+  ],
+  "performanceAcceptanceEligible": false
+}

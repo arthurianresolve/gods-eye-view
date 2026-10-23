@@ -1,0 +1,37 @@
+{
+  "commit": "fa0e8a492286cd2dc032d28220400f0f98c88a52",
+  "jobsPassed": 7,
+  "hardwareQualified": false,
+  "profiles": [
+    {
+      "file": "linux-profile-recovery.json",
+      "sha256": "ef32ded3bd5a9c8ed54dcaaa302330a3f40483599e7955d8ae860bb393996129",
+      "checksPassed": 5,
+      "browser": "Chrome/152.0.7977.75",
+      "expectedBrowserVersion": null,
+      "browserVersionMatch": null,
+      "settingsAndAssetsMatch": true,
+      "normalCloses": true
+    },
+    {
+      "file": "macos-profile-recovery.json",
+      "sha256": "9849bc9e7c7b8a50bcf72c0e5b739b167dc7add2042604883c9786738b8f2150",
+      "checksPassed": 5,
+      "browser": "Chrome/152.0.7977.75",
+      "expectedBrowserVersion": null,
+      "browserVersionMatch": null,
+      "settingsAndAssetsMatch": true,
+      "normalCloses": true
+    },
+    {
+      "file": "windows-profile-recovery.json",
+      "sha256": "3534dd799298907c05169b8e447de8bd2cf791cb4190456cad5fe6a7d28c4c45",
+      "checksPassed": 5,
+      "browser": "Chrome/152.0.7977.75",
+      "expectedBrowserVersion": null,
+      "browserVersionMatch": null,
+      "settingsAndAssetsMatch": true,
+      "normalCloses": true
+    }
+  ]
+}

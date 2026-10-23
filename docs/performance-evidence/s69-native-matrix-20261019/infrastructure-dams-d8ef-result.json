@@ -1,0 +1,728 @@
+{
+  "schema": "gev-completed-current-matrix-row/v1",
+  "recordedAt": "2026-10-19T13:52:13.839Z",
+  "candidateCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "rowId": "infrastructure-dams",
+  "captureProducerCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "buildHarnessCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "wrapperSha256": "e212cea896ef39fab58d474736e4855a5669a071829a98494e93f9835024891e",
+  "plan": {
+    "name": "matrix-plan-d8ef9002-reused-baselines-native155.json",
+    "sha256": "50f5d9b730a24e103225129d09684934b99ba8bda8ec1e0bc4836182efe81e73"
+  },
+  "process": {
+    "name": "infrastructure-dams-process-snapshot-a9498e518ab6d53d.json",
+    "sha256": "a9498e518ab6d53d05ee4aeaf477cb2be448e7e7209d3bbca649d0a463dd7a3f",
+    "status": "running",
+    "originalName": "qualification-process-1792416862064.json"
+  },
+  "baselineReuse": {
+    "name": "baseline-reuse-protocol.json",
+    "sha256": "550e45f2b55c1d97561e1d51392a185fd0f0bc7be78b95bc4b5a90d26686360e"
+  },
+  "files": [
+    {
+      "name": "infrastructure-dams-baseline.json",
+      "bytes": 370488,
+      "sha256": "8b0bc3dfbd0578a9bbe56265a1b4bd3a58ec60e00057eed77f31c1faa7044c32",
+      "disposition": "verified-reuse"
+    },
+    {
+      "name": "infrastructure-dams-candidate.json",
+      "bytes": 371437,
+      "sha256": "955f9984709f4dee22e2af00b184e4371dd0c5e21c71df0586dfe8aeac833195",
+      "disposition": "new-capture"
+    }
+  ],
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 299.7000000011176,
+        "candidateMedianP95Ms": 284.3999999985099,
+        "changePct": -5.105105105956173,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "graphics": {
+    "browserVersion": "Chrome/155.0.8059.84",
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "",
+        "device": "Intel(R) UHD Graphics 620",
+        "driver": "30.0.101.1338"
+      },
+      {
+        "vendor": "",
+        "device": "Microsoft Basic Render Driver",
+        "driver": "10.0.19041.7802"
+      }
+    ]
+  },
+  "environment": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+    "platform": "Win32",
+    "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "vendor": "Google Inc. (Intel)",
+    "rendererEvidence": {
+      "source": "early-cesium-context-creation",
+      "canvasMatchesScene": true,
+      "contextMatchesScene": true,
+      "contextLost": false,
+      "contextRestored": false,
+      "parameterQueryCount": 2,
+      "queryDurationMs": 0.8999999985098839,
+      "contextAttributes": {
+        "alpha": false,
+        "antialias": true,
+        "depth": true,
+        "failIfMajorPerformanceCaveat": false,
+        "powerPreference": "high-performance",
+        "premultipliedAlpha": true,
+        "preserveDrawingBuffer": true,
+        "stencil": true,
+        "desynchronized": false
+      }
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "dpr": 2
+    },
+    "drawingBuffer": {
+      "width": 2880,
+      "height": 1800
+    },
+    "focused": true,
+    "visible": true,
+    "layers": [
+      {
+        "id": "bhote-koshi-2026",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "bhote-koshi-locator",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "flights",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-adsb",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "earthquakes",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "air-quality",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "fire-perimeters",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "gnss-integrity",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "alpr-cameras",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "street-level",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "satellites",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "rocket-launches",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "traffic",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "cctv",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "radio",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "transit",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "bikeshare",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "directions",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "recent-imagery",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "ais-live-vessels",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military-installations",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "military-awareness",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "wind",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-radar",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-satellite",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-lightning",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "weather-cyclones",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-datacenters",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-dams",
+        "enabled": true,
+        "count": 716
+      },
+      {
+        "id": "telegeography-submarine-cables",
+        "enabled": false,
+        "count": 0
+      },
+      {
+        "id": "local-firms",
+        "enabled": false,
+        "count": 0
+      }
+    ],
+    "totalObjects": 716,
+    "appCommit": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+    "startup": {
+      "runs": [
+        {
+          "run": 1,
+          "cacheDisabled": true,
+          "foregroundActivation": {
+            "schema": "gev-performance-foreground-activation/v1",
+            "visible": true,
+            "focused": true,
+            "visibilityState": "visible",
+            "timeoutMs": 5000,
+            "pollingMs": 50,
+            "waitOutcome": "condition-resolved",
+            "hostWindowActivation": {
+              "requestId": 1,
+              "schema": "gev-windows-owned-browser-foreground-activation/v1",
+              "status": "foreground-confirmed",
+              "browserPid": 32344,
+              "windowHandleAvailable": true,
+              "windowHandleSource": "process-main-window",
+              "handlePollAttempts": 1,
+              "inputAttached": false,
+              "mutationSkipped": true,
+              "showWindowAccepted": null,
+              "bringWindowToTopAccepted": null,
+              "setForegroundAccepted": null,
+              "foregroundConfirmed": true,
+              "foregroundPid": 32344,
+              "foregroundProcessName": "chrome",
+              "desktopState": "interactive"
+            }
+          },
+          "appReadyMs": 6696,
+          "initialSettleMs": 7816,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 4114.79999999702,
+          "memory": {
+            "usedJsHeapBytes": 44599980,
+            "reason": null
+          },
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "retired-with-final-observation",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "elapsedMs": 0.10000000149011612
+          },
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (Intel)",
+          "rendererEvidence": {
+            "source": "early-cesium-context-creation",
+            "contextAttributes": {
+              "alpha": false,
+              "antialias": true,
+              "depth": true,
+              "failIfMajorPerformanceCaveat": false,
+              "powerPreference": "high-performance",
+              "premultipliedAlpha": true,
+              "preserveDrawingBuffer": true,
+              "stencil": true,
+              "desynchronized": false
+            },
+            "queryDurationMs": 1.8999999985098839,
+            "parameterQueryCount": 2
+          }
+        },
+        {
+          "run": 2,
+          "cacheDisabled": true,
+          "foregroundActivation": {
+            "schema": "gev-performance-foreground-activation/v1",
+            "visible": true,
+            "focused": true,
+            "visibilityState": "visible",
+            "timeoutMs": 5000,
+            "pollingMs": 50,
+            "waitOutcome": "condition-resolved",
+            "hostWindowActivation": {
+              "requestId": 2,
+              "schema": "gev-windows-owned-browser-foreground-activation/v1",
+              "status": "foreground-confirmed",
+              "browserPid": 32344,
+              "windowHandleAvailable": true,
+              "windowHandleSource": "process-main-window",
+              "handlePollAttempts": 1,
+              "inputAttached": false,
+              "mutationSkipped": true,
+              "showWindowAccepted": null,
+              "bringWindowToTopAccepted": null,
+              "setForegroundAccepted": null,
+              "foregroundConfirmed": true,
+              "foregroundPid": 32344,
+              "foregroundProcessName": "chrome",
+              "desktopState": "interactive"
+            }
+          },
+          "appReadyMs": 3335,
+          "initialSettleMs": 4310,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 1904.1000000014901,
+          "memory": {
+            "usedJsHeapBytes": 40800620,
+            "reason": null
+          },
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "retired-with-final-observation",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "elapsedMs": 0.30000000447034836
+          },
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (Intel)",
+          "rendererEvidence": {
+            "source": "early-cesium-context-creation",
+            "contextAttributes": {
+              "alpha": false,
+              "antialias": true,
+              "depth": true,
+              "failIfMajorPerformanceCaveat": false,
+              "powerPreference": "high-performance",
+              "premultipliedAlpha": true,
+              "preserveDrawingBuffer": true,
+              "stencil": true,
+              "desynchronized": false
+            },
+            "queryDurationMs": 0.8999999985098839,
+            "parameterQueryCount": 2
+          }
+        },
+        {
+          "run": 3,
+          "cacheDisabled": true,
+          "foregroundActivation": {
+            "schema": "gev-performance-foreground-activation/v1",
+            "visible": true,
+            "focused": true,
+            "visibilityState": "visible",
+            "timeoutMs": 5000,
+            "pollingMs": 50,
+            "waitOutcome": "condition-resolved",
+            "hostWindowActivation": {
+              "requestId": 3,
+              "schema": "gev-windows-owned-browser-foreground-activation/v1",
+              "status": "foreground-confirmed",
+              "browserPid": 32344,
+              "windowHandleAvailable": true,
+              "windowHandleSource": "process-main-window",
+              "handlePollAttempts": 1,
+              "inputAttached": false,
+              "mutationSkipped": true,
+              "showWindowAccepted": null,
+              "bringWindowToTopAccepted": null,
+              "setForegroundAccepted": null,
+              "foregroundConfirmed": true,
+              "foregroundPid": 32344,
+              "foregroundProcessName": "chrome",
+              "desktopState": "interactive"
+            }
+          },
+          "appReadyMs": 3813,
+          "initialSettleMs": 4673,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 2096.10000000149,
+          "memory": {
+            "usedJsHeapBytes": 46391132,
+            "reason": null
+          },
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "retired-with-final-observation",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "elapsedMs": 0.3999999985098839
+          },
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (Intel)",
+          "rendererEvidence": {
+            "source": "early-cesium-context-creation",
+            "contextAttributes": {
+              "alpha": false,
+              "antialias": true,
+              "depth": true,
+              "failIfMajorPerformanceCaveat": false,
+              "powerPreference": "high-performance",
+              "premultipliedAlpha": true,
+              "preserveDrawingBuffer": true,
+              "stencil": true,
+              "desynchronized": false
+            },
+            "queryDurationMs": 0.8999999985098839,
+            "parameterQueryCount": 2
+          }
+        },
+        {
+          "run": 4,
+          "cacheDisabled": true,
+          "foregroundActivation": {
+            "schema": "gev-performance-foreground-activation/v1",
+            "visible": true,
+            "focused": true,
+            "visibilityState": "visible",
+            "timeoutMs": 5000,
+            "pollingMs": 50,
+            "waitOutcome": "condition-resolved",
+            "hostWindowActivation": {
+              "requestId": 4,
+              "schema": "gev-windows-owned-browser-foreground-activation/v1",
+              "status": "foreground-confirmed",
+              "browserPid": 32344,
+              "windowHandleAvailable": true,
+              "windowHandleSource": "process-main-window",
+              "handlePollAttempts": 1,
+              "inputAttached": false,
+              "mutationSkipped": true,
+              "showWindowAccepted": null,
+              "bringWindowToTopAccepted": null,
+              "setForegroundAccepted": null,
+              "foregroundConfirmed": true,
+              "foregroundPid": 32344,
+              "foregroundProcessName": "chrome",
+              "desktopState": "interactive"
+            }
+          },
+          "appReadyMs": 4511,
+          "initialSettleMs": 5346,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 2569.1999999955297,
+          "memory": {
+            "usedJsHeapBytes": 46528683,
+            "reason": null
+          },
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "retired-with-final-observation",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "elapsedMs": 0.20000000298023224
+          },
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (Intel)",
+          "rendererEvidence": {
+            "source": "early-cesium-context-creation",
+            "contextAttributes": {
+              "alpha": false,
+              "antialias": true,
+              "depth": true,
+              "failIfMajorPerformanceCaveat": false,
+              "powerPreference": "high-performance",
+              "premultipliedAlpha": true,
+              "preserveDrawingBuffer": true,
+              "stencil": true,
+              "desynchronized": false
+            },
+            "queryDurationMs": 1.3000000044703484,
+            "parameterQueryCount": 2
+          }
+        },
+        {
+          "run": 5,
+          "cacheDisabled": true,
+          "foregroundActivation": {
+            "schema": "gev-performance-foreground-activation/v1",
+            "visible": true,
+            "focused": true,
+            "visibilityState": "visible",
+            "timeoutMs": 5000,
+            "pollingMs": 50,
+            "waitOutcome": "condition-resolved",
+            "hostWindowActivation": {
+              "requestId": 5,
+              "schema": "gev-windows-owned-browser-foreground-activation/v1",
+              "status": "foreground-confirmed",
+              "browserPid": 32344,
+              "windowHandleAvailable": true,
+              "windowHandleSource": "process-main-window",
+              "handlePollAttempts": 1,
+              "inputAttached": false,
+              "mutationSkipped": true,
+              "showWindowAccepted": null,
+              "bringWindowToTopAccepted": null,
+              "setForegroundAccepted": null,
+              "foregroundConfirmed": true,
+              "foregroundPid": 32344,
+              "foregroundProcessName": "chrome",
+              "desktopState": "interactive"
+            }
+          },
+          "appReadyMs": 4111,
+          "initialSettleMs": 5042,
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+          "platform": "Win32",
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          },
+          "focused": true,
+          "visible": true,
+          "navigationMs": 2230.2999999970198,
+          "memory": {
+            "usedJsHeapBytes": 46130587,
+            "reason": null
+          },
+          "renderLoopRetirement": {
+            "requested": true,
+            "status": "retired-with-final-observation",
+            "before": true,
+            "after": false,
+            "confirmed": true,
+            "elapsedMs": 0.3999999985098839
+          },
+          "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+          "vendor": "Google Inc. (Intel)",
+          "rendererEvidence": {
+            "source": "early-cesium-context-creation",
+            "contextAttributes": {
+              "alpha": false,
+              "antialias": true,
+              "depth": true,
+              "failIfMajorPerformanceCaveat": false,
+              "powerPreference": "high-performance",
+              "premultipliedAlpha": true,
+              "preserveDrawingBuffer": true,
+              "stencil": true,
+              "desynchronized": false
+            },
+            "queryDurationMs": 0.7000000029802322,
+            "parameterQueryCount": 2
+          }
+        }
+      ],
+      "runCount": 5,
+      "measurement": "one measured app document; cache disabled before navigation",
+      "performancePageInitialSettleMs": 933
+    },
+    "hardwareEligible": true,
+    "nativeSharpnessProfile": {
+      "id": "native-sharpness-v1",
+      "useBrowserRecommendedResolution": false,
+      "resolutionScale": 1,
+      "maximumScreenSpaceError": 1,
+      "viewport": {
+        "width": 1440,
+        "height": 900,
+        "dpr": 2
+      },
+      "drawingBuffer": {
+        "width": 2880,
+        "height": 1800
+      }
+    }
+  },
+  "integrity": {
+    "status": "passed",
+    "sampleCount": 10
+  },
+  "comparisonEligible": true,
+  "scope": "Completed physical Windows capture and native fixture comparison for this row. Aggregate candidate review, other workloads, visual qualification, retention and deployment remain separate. Historical captures retain their original revisions."
+}

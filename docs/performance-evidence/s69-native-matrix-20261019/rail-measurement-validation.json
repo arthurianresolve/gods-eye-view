@@ -1,0 +1,214 @@
+{
+  "schema": "gev-rail-measurement-order-validation-completion/v1",
+  "status": "passed",
+  "source": "/opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r1/source",
+  "baseCommit": "3360f6720a7ca09cc823123edb3a40706b043c30",
+  "files": [
+    {
+      "name": "src/ui/leftPanelRail.js",
+      "bytes": 13020,
+      "sha256": "edf1f50d584875a78dfa1d7d5e9240d4d09e096abfd94360509f98e9401bb913"
+    },
+    {
+      "name": "src/ui/rightPanelRail.js",
+      "bytes": 13736,
+      "sha256": "01552b46ef1b9ae33bb58dc703cdf34fea867fb878803ae863ace7bbd27efe7a"
+    },
+    {
+      "name": "src/ui/panelRails.test.mjs",
+      "bytes": 37686,
+      "sha256": "0bee830f39d8dd5c10bd8f368111ca4c5681202346bc6eed8ecf152094a07ef0"
+    }
+  ],
+  "previousReceiptSha256": "0ab6dfb2d18c70369bfd8603376e1f206b759f06649ce5e49453dc82670af34c",
+  "previousFailedReceiptPreserved": true,
+  "previousResourceFailure": {
+    "node": "node24",
+    "name": "packages",
+    "exitCode": null,
+    "error": null,
+    "signal": "SIGKILL",
+    "log": "node24-packages.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tests": null,
+    "pass": null,
+    "fail": null,
+    "skipped": null,
+    "cancelled": null,
+    "tail": ""
+  },
+  "reusedChecks": [
+    {
+      "node": "node24",
+      "name": "focused",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-focused.log",
+      "sha256": "a4f2c27cf3df140037ee45e8a6f127f3996bb1130f8887ad5e79289887c407f4",
+      "tests": 96,
+      "pass": 96,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "tail": "\n✔ natural height includes visible content, margins and wrapper chrome, excluding hidden rows (0.149347ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from normal (0.79378ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from focus (0.47215ms)\n✔ right rail keeps focus through 30 px content growth inside the hysteresis band (0.25911ms)\n✔ right rail enters focus only above available height and leaves below the full deadband (0.282484ms)\n✔ right rail auto-collapse requests only one retry and settles within two passes (0.480467ms)\n✔ right rail retry cannot enqueue another retry even if disclosure changes before it runs (0.184356ms)\n✔ right rail restores presentation even when intrinsic measurement throws (0.208031ms)\n✔ right rail measuring pass keeps an opted-in scroller position (0.249923ms)\n✔ right rail does not retry collapse that the minimal HUD immediately restores (0.254691ms)\n✔ right rail does not retry collapse that the full HUD immediately restores (0.182952ms)\n✔ narrow-screen rails pin every hosted panel glow inside its panel box (10.376075ms)\n✔ right layout ignores a CSS-hidden expanded panel when deciding exclusivity (0.301371ms)\n✔ right layout still restores panels that exclusive presentation hides (1.126792ms)\n✔ right layout ignores a hidden panel: no lane, no gap, no auto-collapse (0.802848ms)\n✔ all themes keep the same Radio controls nested in Context (1.762639ms)\n✔ placement is inert before the complete shell exists (0.292172ms)\n✔ UI lifetime revokes listeners and nested presentation work synchronously (1.635793ms)\n✔ one-time UI listeners and cancelled notice timers release their registrations (0.287385ms)\n✔ panel layout coalesces each rail and cannot rearm after destruction (0.540873ms)\n✔ panel disposal cancels a live drag without saving or accepting later pointer movement (1.595135ms)\n✔ feedback disposal clears toast and polling work and rejects retained notices (0.454126ms)\n✔ recording restores the original HUD after repeated entry and revokes retained controls (0.413949ms)\n✔ weather rail orders between CCTV and Context, resets positions, observes and syncs chrome (1.544819ms)\n✔ busy traffic completion is polled promptly without accelerating idle or global reads (1.580027ms)\nℹ tests 96\nℹ suites 0\nℹ pass 96\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 1432.575717\n"
+    },
+    {
+      "node": "node24",
+      "name": "format",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "tests": null,
+      "pass": null,
+      "fail": null,
+      "skipped": null,
+      "cancelled": null,
+      "tail": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "node": "node24",
+      "name": "imports",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-imports.log",
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": null,
+      "pass": null,
+      "fail": null,
+      "skipped": null,
+      "cancelled": null,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "node": "node26",
+      "name": "focused",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-focused.log",
+      "sha256": "a63de6ce6daba0d0a9b1200f243794af4b56957dac4d3d115429d8f387653790",
+      "tests": 96,
+      "pass": 96,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "tail": "es from normal (0.615066ms)\n✔ right rail settles mode-dependent CCTV and weather heights within two passes from focus (0.496989ms)\n✔ right rail keeps focus through 30 px content growth inside the hysteresis band (0.263908ms)\n✔ right rail enters focus only above available height and leaves below the full deadband (0.318925ms)\n✔ right rail auto-collapse requests only one retry and settles within two passes (0.486729ms)\n✔ right rail retry cannot enqueue another retry even if disclosure changes before it runs (0.182672ms)\n✔ right rail restores presentation even when intrinsic measurement throws (0.237968ms)\n✔ right rail measuring pass keeps an opted-in scroller position (0.233611ms)\n✔ right rail does not retry collapse that the minimal HUD immediately restores (0.237187ms)\n✔ right rail does not retry collapse that the full HUD immediately restores (0.21809ms)\n✔ narrow-screen rails pin every hosted panel glow inside its panel box (5.768812ms)\n✔ right layout ignores a CSS-hidden expanded panel when deciding exclusivity (0.263709ms)\n✔ right layout still restores panels that exclusive presentation hides (1.331718ms)\n✔ right layout ignores a hidden panel: no lane, no gap, no auto-collapse (0.242157ms)\n✔ all themes keep the same Radio controls nested in Context (3.941558ms)\n✔ placement is inert before the complete shell exists (1.142603ms)\n(node:309724) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.\n(Use `node --trace-warnings ...` to show where the warning was created)\n✔ UI lifetime revokes listeners and nested presentation work synchronously (1.753431ms)\n✔ one-time UI listeners and cancelled notice timers release their registrations (0.294148ms)\n✔ panel layout coalesces each rail and cannot rearm after destruction (0.543107ms)\n✔ panel disposal cancels a live drag without saving or accepting later pointer movement (1.739875ms)\n✔ feedback disposal clears toast and polling work and rejects retained notices (0.456039ms)\n✔ recording restores the original HUD after repeated entry and revokes retained controls (0.487901ms)\n✔ weather rail orders between CCTV and Context, resets positions, observes and syncs chrome (1.557413ms)\n✔ busy traffic completion is polled promptly without accelerating idle or global reads (1.54548ms)\nℹ tests 96\nℹ suites 0\nℹ pass 96\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 2215.754185\n"
+    },
+    {
+      "node": "node26",
+      "name": "format",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-format.log",
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "tests": null,
+      "pass": null,
+      "fail": null,
+      "skipped": null,
+      "cancelled": null,
+      "tail": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "node": "node26",
+      "name": "imports",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-imports.log",
+      "sha256": "6225d63a050868f1363b3d233a4b1206f0433540e7d804dab85b29eb75825186",
+      "tests": null,
+      "pass": null,
+      "fail": null,
+      "skipped": null,
+      "cancelled": null,
+      "tail": "{\"modules\":1077,\"portableEntries\":82}\n"
+    },
+    {
+      "node": "node26",
+      "name": "packages",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node26-packages.log",
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": null,
+      "pass": null,
+      "fail": null,
+      "skipped": null,
+      "cancelled": null,
+      "tail": "ed military-flight-ingestion: 1 exports, 2 owned modules.\nChecked vessel-records: 1 exports, 2 owned modules.\nChecked vessel-ingestion: 1 exports, 3 owned modules.\nChecked directions-source: 1 exports, 1 owned modules.\nChecked recent-imagery-source: 1 exports, 3 owned modules.\nChecked directions-layer: 1 exports, 10 owned modules.\nChecked radio-browser-source: 1 exports, 2 owned modules.\nChecked cctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    }
+  ],
+  "checks": [
+    {
+      "node": "node24",
+      "name": "packages",
+      "exitCode": 0,
+      "error": null,
+      "signal": null,
+      "log": "node24-packages.log",
+      "sha256": "6944db2225bad48f1c6668d32259d2b8273908897f93a52045107caa8b47d46c",
+      "tests": null,
+      "pass": null,
+      "fail": null,
+      "skipped": null,
+      "tail": "d modules.\nChecked application-layer-construction: 1 exports, 544 owned modules.\nChecked application-operations: 1 exports, 48 owned modules.\nChecked layer-lifecycle: 1 exports, 4 owned modules.\nChecked ui-navigation: 1 exports, 8 owned modules.\nChecked ui-share-restoration: 1 exports, 19 owned modules.\nChecked ui-visual-settings: 1 exports, 26 owned modules.\nChecked ui-panel-chrome: 1 exports, 18 owned modules.\nChecked civil-flight-records: 1 exports, 8 owned modules.\nChecked civil-flight-ingestion: 1 exports, 3 owned modules.\nChecked military-flight-records: 1 exports, 7 owned modules.\nChecked military-flight-ingestion: 1 exports, 2 owned modules.\nChecked vessel-records: 1 exports, 2 owned modules.\nChecked vessel-ingestion: 1 exports, 3 owned modules.\nChecked directions-source: 1 exports, 1 owned modules.\nChecked recent-imagery-source: 1 exports, 3 owned modules.\nChecked directions-layer: 1 exports, 10 owned modules.\nChecked radio-browser-source: 1 exports, 2 owned modules.\nChecked cctv-types-source: 1 exports, 1 owned modules.\nChecked regional-source: 1 exports, 2 owned modules.\nChecked voice-action-schemas: 1 exports, 3 owned modules.\nChecked voice-session: 1 exports, 1 owned modules.\nChecked voice-session-controls: 1 exports, 20 owned modules.\nChecked alpr-source: 1 exports, 9 owned modules.\nChecked bikeshare-source: 1 exports, 1 owned modules.\nChecked cctv-source: 1 exports, 2 owned modules.\nChecked earthquakes-source: 1 exports, 2 owned modules.\nChecked firms-source: 1 exports, 2 owned modules.\nChecked installations-source: 1 exports, 15 owned modules.\nChecked launches-source: 1 exports, 1 owned modules.\nChecked radio-source: 1 exports, 2 owned modules.\nChecked satellites-source: 1 exports, 1 owned modules.\nChecked traffic-source-factory: 1 exports, 15 owned modules.\nChecked reference-sources: 2 exports, 10 owned modules.\nChecked nominatim-provider: 1 exports, 9 owned modules.\nChecked source-http-body: 1 exports, 2 owned modules.\nChecked overpass-lexer: 1 exports, 1 owned modules.\nChecked nominatim-source: 1 exports, 7 owned modules.\nChecked transit-provider: 1 exports, 11 owned modules.\nChecked transit-source: 1 exports, 5 owned modules.\nChecked transit-standalone: 1 exports, 59 owned modules.\nChecked transit-layer: 1 exports, 29 owned modules.\nChecked transit-source-factory: 1 exports, 2 owned modules.\nChecked transit-service: 1 exports, 10 owned modules.\nChecked map-feature-source: 1 exports, 5 owned modules.\nChecked perimeters: 1 exports, 11 owned modules.\nChecked gnss: 1 exports, 11 owned modules.\nChecked gnss-source: 1 exports, 3 owned modules.\nChecked perimeters-source: 1 exports, 3 owned modules.\nChecked tools: 1 exports, 56 owned modules.\nChecked tools-mcp: 1 exports, 5 owned modules.\nChecked tools-panel: 1 exports, 3 owned modules.\nChecked tools-services: 1 exports, 67 owned modules.\nChecked view: 1 exports, 8 owned modules.\nChecked air-quality: 1 exports, 11 owned modules.\nChecked air-quality-source: 1 exports, 4 owned modules.\n"
+    },
+    {
+      "node": "node24",
+      "name": "parent-negative",
+      "exitCode": 1,
+      "error": null,
+      "signal": null,
+      "log": "node24-parent-negative.log",
+      "sha256": "1b31e1e6e8de8325ed87dfbcced6ed84ac93bb275ea5edacf095701b73d09183",
+      "tests": 2,
+      "pass": 0,
+      "fail": 2,
+      "skipped": 0,
+      "tail": "SSERTION]: collapsed read would flush restored layout\n      at f.second.getBoundingClientRect (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:307:14)\n      at file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/leftPanelRail.js:178:39\n      at Array.reduce (<anonymous>)\n      at layoutLeftPanelRail (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/leftPanelRail.js:175:32)\n      at Object.run (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:175:67)\n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:318:7)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1306:25)\n      at Test.start (node:internal/test_runner/test:1177:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'restored',\n    expected: 'restored',\n    operator: 'notStrictEqual',\n    diff: 'simple'\n  }\n\ntest at src/ui/panelRails.test.mjs:278:3\n✖ right intrinsic pass snapshots invariant geometry before lifting allocations (1.117524ms)\n  AssertionError [ERR_ASSERTION]: gap read would flush restored layout\n  + actual - expected\n  \n  + 'restored'\n  - 'constrained'\n  \n      at Object.get [as rowGap] (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:296:16)\n      at layoutRightPanelRail (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/rightPanelRail.js:224:49)\n      at Object.run (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:175:67)\n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:318:7)\n      at Test.runInAsyncScope (node:async_hooks:227:14)\n      at Test.run (node:internal/test_runner/test:1306:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:897:18)\n      at Test.postRun (node:internal/test_runner/test:1447:19)\n      at Test.run (node:internal/test_runner/test:1372:12)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'restored',\n    expected: 'constrained',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+      "expectedResult": "both new read-boundary controls reject unchanged parent runtime"
+    },
+    {
+      "node": "node26",
+      "name": "parent-negative",
+      "exitCode": 1,
+      "error": null,
+      "signal": null,
+      "log": "node26-parent-negative.log",
+      "sha256": "71eeff54af12a2d9606e536d986fea8befc5b1ad0fb83e2112d7329971b19916",
+      "tests": 2,
+      "pass": 0,
+      "fail": 2,
+      "skipped": 0,
+      "tail": "SSERTION]: collapsed read would flush restored layout\n      at f.second.getBoundingClientRect (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:307:14)\n      at file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/leftPanelRail.js:178:39\n      at Array.reduce (<anonymous>)\n      at layoutLeftPanelRail (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/leftPanelRail.js:175:32)\n      at Object.run (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:175:67)\n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:318:7)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.start (node:internal/test_runner/test:1262:17)\n      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'restored',\n    expected: 'restored',\n    operator: 'notStrictEqual',\n    diff: 'simple'\n  }\n\ntest at src/ui/panelRails.test.mjs:278:3\n✖ right intrinsic pass snapshots invariant geometry before lifting allocations (1.115962ms)\n  AssertionError [ERR_ASSERTION]: gap read would flush restored layout\n  + actual - expected\n  \n  + 'restored'\n  - 'constrained'\n  \n      at Object.get [as rowGap] (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:296:16)\n      at layoutRightPanelRail (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/rightPanelRail.js:224:49)\n      at Object.run (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:175:67)\n      at TestContext.<anonymous> (file:///opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative/src/ui/panelRails.test.mjs:318:7)\n      at Test.runInAsyncScope (node:async_hooks:226:14)\n      at Test.run (node:internal/test_runner/test:1402:25)\n      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)\n      at Test.postRun (node:internal/test_runner/test:1542:19)\n      at Test.run (node:internal/test_runner/test:1467:12)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'restored',\n    expected: 'constrained',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n",
+      "expectedResult": "both new read-boundary controls reject unchanged parent runtime"
+    }
+  ],
+  "browserStarted": false,
+  "gpuStarted": false,
+  "dependenciesInstalled": false,
+  "productionChanged": false,
+  "validationSchedule": "sole VM Node validation lease; sequential package check then two negative controls",
+  "parentNegative": {
+    "source": "/opt/gods-eye-view-validation/s61-s70-20261018/rail-measurement-order-validation-20261020-r2/parent-source-negative",
+    "testSha256": "0bee830f39d8dd5c10bd8f368111ca4c5681202346bc6eed8ecf152094a07ef0",
+    "runtimeFiles": [
+      {
+        "name": "src/ui/leftPanelRail.js",
+        "sha256": "78604a776ac8071968f67d3b52aadbbf4cb0377206ff5a3173e711eba6dedbb3"
+      },
+      {
+        "name": "src/ui/rightPanelRail.js",
+        "sha256": "fcefcc38b2eb453896f75df62808c9d313aa881f178b81b8aa01e07dc9bef043"
+      }
+    ]
+  },
+  "completedAt": "2026-10-20T10:49:35.999Z",
+  "scope": "Exact same patched bytes reuse both96of96 focused suites, both format/import checks and Node26 package check from preserved failed-resource r1; this receipt supplies only missing Node24 package result plus meaningful parent-runtime negatives."
+}

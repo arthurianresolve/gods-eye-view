@@ -1,0 +1,2 @@
+*.log -text -whitespace
+*.json -text whitespace=cr-at-eol

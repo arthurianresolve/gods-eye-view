@@ -1,0 +1,129 @@
+{
+  "schema": "gev-independent-matrix-row-review/v1",
+  "reviewedAt": "2026-10-20T02:51:47.307Z",
+  "row": "infrastructure-datacenters",
+  "candidateCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "baselineCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "captureProducer": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "consumerCommit": "16cddc9889569a26e631b6acd97ede803cd1adb6",
+  "comparison": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {
+        "scripted-motion": false,
+        "selected-aircraft-tracking": null
+      }
+    },
+    "scenarios": {
+      "idle": {
+        "status": "unavailable",
+        "baselineMedianP95Ms": null,
+        "candidateMedianP95Ms": null,
+        "changePct": null,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 288.09999999403954,
+        "candidateMedianP95Ms": 259.20000000298023,
+        "changePct": -10.031239150176054,
+        "regressionOver10Pct": false
+      }
+    },
+    "fixtureDeliveryDiagnostics": {
+      "baseline": {
+        "perSample": null
+      },
+      "candidate": {
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "startup": {
+    "status": "measured",
+    "semantic": "navigation-to-viewer-existence and navigation-to-loading-screen-hidden; neither proves all source tiles ready or local UI activation",
+    "baselineMedianMs": 3413,
+    "candidateMedianMs": 3048,
+    "baselineInitialSettleMedianMs": 4429,
+    "candidateInitialSettleMedianMs": 3920,
+    "initialSettleChangePct": -11.492436215850079,
+    "initialSettleRegressionOver10Pct": false,
+    "baselineRunsMs": [
+      4955,
+      3228,
+      5264,
+      3413,
+      3212
+    ],
+    "candidateRunsMs": [
+      4713,
+      2862,
+      3172,
+      3048,
+      2520
+    ],
+    "changePct": -10.694403750366247,
+    "regressionOver10Pct": false,
+    "thresholdPct": 10
+  },
+  "rawFiles": [
+    {
+      "name": "matrix-plan.json",
+      "bytes": 6745,
+      "sha256": "71d82e3a206876579393d6048a589fa4765c37cc30458f903ff278b14b1082ee"
+    },
+    {
+      "name": "baseline-reuse-protocol.json",
+      "bytes": 3237,
+      "sha256": "550012fe50401580d0a32806dee8ae2f1cf0ebf980888e0a4d511e83115a5b92"
+    },
+    {
+      "name": "retry-reuse-protocol.json",
+      "bytes": 7207,
+      "sha256": "5444de0ae27676d71f6bbc75823958649cebe479f20bd7355bb09c6291fb9c02"
+    },
+    {
+      "name": "infrastructure-datacenters-baseline.json",
+      "bytes": 371047,
+      "sha256": "271923de1fb46c23ba800e468d6fe9e444796910ab58f88753228122a27705c4"
+    },
+    {
+      "name": "infrastructure-datacenters-candidate.json",
+      "bytes": 371553,
+      "sha256": "78509a68eb1356990a99457d96107b92da340135631b29791fcd4a3e6b7dcc36"
+    },
+    {
+      "name": "infrastructure-datacenters-candidate.json.log",
+      "bytes": 704,
+      "sha256": "dbe5707b4852c2e4d5bc1385228b6c1b1a31a21fce2f603e0f9c7a84a6d852eb"
+    },
+    {
+      "name": "infrastructure-datacenters-candidate.json.invocation.json",
+      "bytes": 2530,
+      "sha256": "a9a4b8a527ae90823125ea21f25af7e6544de6606f583a4b63fe35bcd125187f"
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/infrastructure-datacenters-190c5ab6-native155-foreground-ready-2",
+  "productionChanged": false
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "gev-build-input-audit/v1",
+  "checkedAt": "2026-10-13T01:59:12.591Z",
+  "checkoutCommit": "3127858f95c615f52386269e9e90022ddf2a9aec",
+  "loader": "installed Vite loadEnv(production, fixture directory, empty prefix)",
+  "fixtureInput": ".env.production.local",
+  "ambientMarkerAbsent": true,
+  "observedMarker": "local-file-input",
+  "rootDotenvPathsIgnored": [
+    ".env",
+    ".env.local",
+    ".env.production",
+    ".env.production.local"
+  ],
+  "sourceFinding": "readSourceIdentity accepts git-clean checkouts; git status omits ignored .env files. Application Vite config explicitly loadEnv(mode, root, empty prefix). buildEnvironment omits ambient keys, but does not reject these file inputs.",
+  "scope": "Isolated inert-marker input audit only. Does not establish any dotenv contamination in earlier hosted fresh checkouts. No credential files were inspected.",
+  "requiredM2": "Explicit deterministic build-profile identity, with hidden dotenv inputs rejected or bound before and after build/verification; never pass arbitrary ambient credentials."
+}

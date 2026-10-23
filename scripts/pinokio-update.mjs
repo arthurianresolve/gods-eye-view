@@ -12,7 +12,7 @@
  *
  * @module scripts/pinokio-update
  */
-import { realpathSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,6 +24,52 @@ import {
 
 const MODULE_PATH = fileURLToPath(import.meta.url);
 const ROOT = realpathSync(path.resolve(path.dirname(MODULE_PATH), '..'));
+const SCHEMA_READERS = Object.freeze([
+  {
+    key: 'workspace',
+    path: 'src/workspaces/document.js',
+    pattern: /export const WORKSPACE_DOCUMENT_VERSION = (\d+);/,
+  },
+  {
+    key: 'director',
+    path: 'src/director/document.js',
+    pattern: /export const SCENE_DOCUMENT_VERSION = (\d+);/,
+  },
+  {
+    key: 'settings',
+    path: 'src/diagnostics/portable.js',
+    pattern: /export const SETTINGS_BACKUP_VERSION = (\d+);/,
+  },
+]);
+
+function schemaVersions(readSource) {
+  const versions = {};
+  for (const entry of SCHEMA_READERS) {
+    const source = readSource(entry.path);
+    const match =
+      typeof source === 'string' ? entry.pattern.exec(source) : null;
+    if (!match) return null;
+    versions[entry.key] = Number(match[1]);
+  }
+  return versions;
+}
+
+function localSchemaVersions() {
+  return schemaVersions((relative) => {
+    try {
+      return readFileSync(path.join(ROOT, relative), 'utf8');
+    } catch {
+      return null;
+    }
+  });
+}
+
+export function schemaUpgradeCompatible(current, target) {
+  if (!current || !target) return false;
+  return SCHEMA_READERS.every(
+    (entry) => current[entry.key] === target[entry.key],
+  );
+}
 
 /**
  * Read a git value.
@@ -105,6 +151,23 @@ export function reportIncomingChanges(io = {}) {
     read = (args) => readGit(args, { cwd }),
   } = io;
 
+  const dirtyStatus = read(['status', '--porcelain']);
+  if (dirtyStatus === null) {
+    warn(
+      '[update] Could not inspect the working tree; stopping before fetch or install.',
+    );
+    return { apply: null, fallback: false, stopped: true };
+  }
+  if (dirtyStatus.trim()) {
+    warn(
+      '[update] Local changes are present; stopping before fetch or install so user work stays untouched.',
+    );
+    warn(
+      '[update] Save or export your work, then review the changes before updating.',
+    );
+    return { apply: null, fallback: false, stopped: true };
+  }
+
   const upstream = read([
     'rev-parse',
     '--abbrev-ref',
@@ -147,6 +210,19 @@ export function reportIncomingChanges(io = {}) {
     warn(`[update] Could not resolve ${upstream} after fetching.`);
     warn(
       '[update] Stopping: nothing is applied, because nothing can be shown.',
+    );
+    return { apply: null, fallback: false, stopped: true };
+  }
+  const currentSchemas = localSchemaVersions();
+  const targetSchemas = schemaVersions((relative) =>
+    read(['show', `${target}:${relative}`]),
+  );
+  if (!schemaUpgradeCompatible(currentSchemas, targetSchemas)) {
+    warn(
+      '[update] Workspace, Director or settings schema differs or could not be read.',
+    );
+    warn(
+      '[update] Stopping before merge and install; export workspaces and use the documented compatible recovery path.',
     );
     return { apply: null, fallback: false, stopped: true };
   }

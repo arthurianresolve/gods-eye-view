@@ -1,0 +1,109 @@
+{
+  "schema": "gev-resumed-ci-receipt/v1",
+  "checkedAt": "2026-10-19T01:04:53.5102307Z",
+  "applicationCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+  "headCommit": "6753d21113a86653ae8ac8b4174ac703c2a776d6",
+  "testedMergeCommit": "55aa2af0aeb0d94ef1cc82f9fd45d36ebe32c573",
+  "sameTree": "98cb3ec0fa6f673ea5a6b48cbdeb831611953863",
+  "ci": {
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39180625642",
+    "headCommit": "6753d21113a86653ae8ac8b4174ac703c2a776d6",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Street Level browser gate",
+        "conclusion": "success"
+      },
+      {
+        "name": "Install and update recovery (ubuntu-latest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Node 26.x",
+        "conclusion": "success"
+      },
+      {
+        "name": "Install and update recovery (windows-latest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Node 24.14.0",
+        "conclusion": "success"
+      },
+      {
+        "name": "Install and update recovery (macos-latest)",
+        "conclusion": "success"
+      },
+      {
+        "name": "Windows onboarding",
+        "conclusion": "success"
+      },
+      {
+        "name": "Isolated CCTV lifecycle",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Isolated terrain and picking lifecycle",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Isolated mission render-demand correctness",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Isolated import and workspace lifecycle",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Native WebGL probe (${{ matrix.os }})",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Free hosted Mac rendering diagnostic",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Baseline-compatible performance build smoke",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Isolated rendered mixed-use smoke",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "60-minute rendered application soak",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Free hosted Mac accelerated retention diagnostic",
+        "conclusion": "skipped"
+      },
+      {
+        "name": "Aircraft tracking regression",
+        "conclusion": "skipped"
+      }
+    ]
+  },
+  "release": {
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/39180625615",
+    "headCommit": "6753d21113a86653ae8ac8b4174ac703c2a776d6",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "Build and verify release artifact",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "limitations": [
+    "PR checks tested the merge commit; equal Git trees do not rename the tested commit.",
+    "Skipped optional diagnostics are not hardware or soak passes.",
+    "This is QA evidence; production remains at e7a878e and the prepared application remains 19065997."
+  ]
+}

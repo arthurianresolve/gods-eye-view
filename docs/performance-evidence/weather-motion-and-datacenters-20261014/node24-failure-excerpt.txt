@@ -1,0 +1,25 @@
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6874970Z ℹ skipped 5
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6875185Z ℹ todo 0
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6875439Z ℹ duration_ms 183794.18839
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6875598Z 
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6875717Z ✖ failing tests:
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6875853Z 
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6876163Z test at scripts/performance/cesiumTerrainCollisionTransform.test.mjs:403:1
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6877083Z ✖ Cesium collision transform fast path preserves correction and avoids stationary no-op transforms in all five distributions (151.252845ms)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6878076Z   Error: ENOENT, No such file or directory '/tmp/gev-collision-distributions-Jg2jjF/candidate-ee2807d7-8a6a-47ad-ae6a-448217e6d649-source/Source/Scene'
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6878786Z       at copyDir (node:internal/fs/cp/cp-sync:145:22)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6879165Z       at onDir (node:internal/fs/cp/cp-sync:136:25)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6879534Z       at getStats (node:internal/fs/cp/cp-sync:68:12)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6879956Z       at cpSyncFn (node:internal/fs/cp/cp-sync:58:10)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6880295Z       at cpSync (node:fs:3146:3)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6880932Z       at loadSource (file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cesiumTerrainCollisionTransform.test.mjs:278:3)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6881876Z       at loadDistribution (file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cesiumTerrainCollisionTransform.test.mjs:391:12)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6882857Z       at TestContext.<anonymous> (file:///home/runner/work/gods-eye-view/gods-eye-view/scripts/performance/cesiumTerrainCollisionTransform.test.mjs:430:29)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6883548Z       at async Test.run (node:internal/test_runner/test:1125:7)
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6884026Z       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6884503Z     errno: 2,
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6884723Z     code: 'ENOENT',
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6885270Z     path: '/tmp/gev-collision-distributions-Jg2jjF/candidate-ee2807d7-8a6a-47ad-ae6a-448217e6d649-source/Source/Scene',
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6885802Z     syscall: 'cp'
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6886025Z   }
+Node 24.14.0	Run unit tests	2026-10-14T05:35:54.6896115Z ##[error]Process completed with exit code 1.

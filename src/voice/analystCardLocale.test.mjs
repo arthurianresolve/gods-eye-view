@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // The analyst card shows its headline, scope, chips and caveats in the UI
 // language; the spoken headline stays English for the model.
 import assert from 'node:assert/strict';

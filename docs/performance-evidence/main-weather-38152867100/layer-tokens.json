@@ -1,0 +1,18 @@
+{
+  "candidateCommit": "7ef32a74afc7574d5fcad0dc19d2b4b33c49e815",
+  "scope": "local published token contract against both frozen refs; not a representative pull-request CI run",
+  "checks": [
+    {
+      "baseRef": "fork/main",
+      "baseCommit": "591f299d11f38a612629a274463196d57ae3862e",
+      "published": 29,
+      "added": 0
+    },
+    {
+      "baseRef": "fork/dev",
+      "baseCommit": "a14ebe81888a0ec538460f43561d952dd8290435",
+      "published": 29,
+      "added": 0
+    }
+  ]
+}

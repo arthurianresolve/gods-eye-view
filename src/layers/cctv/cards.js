@@ -20,6 +20,7 @@ import {
 } from './policy.js';
 
 export function createCards({ state: layerState, services, parts, source }) {
+  const cancelledCardFetchImages = new WeakSet();
   /**
    * Configures optional CCTV card presentation without changing card density.
    * The active-camera thumbnail defaults OFF, preserving the shipped behavior
@@ -297,7 +298,10 @@ export function createCards({ state: layerState, services, parts, source }) {
 
     const image = new Image();
     layerState._cardFetchImages.add(image);
+    let settled = false;
     const settle = (ok) => {
+      if (settled || cancelledCardFetchImages.has(image)) return;
+      settled = true;
       image.onload = null;
       image.onerror = null;
       if (layerState._cardFetchImages.delete(image)) {
@@ -344,16 +348,22 @@ export function createCards({ state: layerState, services, parts, source }) {
 
   /** Stops the pacer and detaches all in-flight fetch handlers. */
 
+  function cancelCardFetchImage(image) {
+    cancelledCardFetchImages.add(image);
+    image.onload = null;
+    image.onerror = null;
+    // Removing src from a detached Image can register a persistent viewport
+    // listener in Chromium. An empty src cancels the request without that owner.
+    image.src = '';
+  }
+
   function stopCardFrameLoop() {
     if (layerState._cardFetchTimer) {
       clearInterval(layerState._cardFetchTimer);
       layerState._cardFetchTimer = 0;
     }
-    for (const image of layerState._cardFetchImages) {
-      image.onload = null;
-      image.onerror = null;
-      image.removeAttribute('src');
-    }
+    for (const image of layerState._cardFetchImages)
+      cancelCardFetchImage(image);
     layerState._cardFetchImages.clear();
     layerState._cardFetchPendingIds.clear();
     layerState._cardFetchInFlightCount = 0;
@@ -381,11 +391,8 @@ export function createCards({ state: layerState, services, parts, source }) {
   }
   function handleVisibilityChange() {
     if (!document.hidden) return;
-    for (const image of layerState._cardFetchImages) {
-      image.onload = null;
-      image.onerror = null;
-      image.removeAttribute('src');
-    }
+    for (const image of layerState._cardFetchImages)
+      cancelCardFetchImage(image);
     layerState._cardFetchImages.clear();
     layerState._cardFetchPendingIds.clear();
     layerState._cardFetchInFlightCount = 0;

@@ -130,6 +130,7 @@ export function createAnnotationEngine({
   const annotations = new Map();
   let destroyed = false;
   let tickHandle = null;
+  let fadeWakeHandle = null;
   let assistFlightUntil = 0; // camera-assist debounce (see ensureMarksVisible)
   // Generation token + in-flight fetch controllers guard against clear / new-topic
   // races: a slow resolve belonging to a superseded annotate() call must never
@@ -186,12 +187,18 @@ export function createAnnotationEngine({
     if (c._retain <= 0) activeControllers.delete(c);
   }
 
-  // World annotations carry persistent per-frame scene animation (pulsing
-  // live colors, camera-scaled rings, route-flow uniforms in the renderer),
-  // so the scene must render continuously while any mark exists. (perf wave 2)
+  // World annotations carry live Cesium color/route animation. Screen-only
+  // marks pulse in SVG/CSS and are reprojected on actual scene renders; they
+  // must not keep the globe rendering continuously when the camera is parked.
+  // An older/custom renderer without this capability retains the old hold.
   function syncAnnotationHold() {
-    if (annotations.size > 0) holdContinuousRender('annotations');
-    else releaseContinuousRender('annotations');
+    for (const anno of annotations.values()) {
+      if (renderer.requiresContinuousRender?.(anno) ?? true) {
+        holdContinuousRender('annotations');
+        return;
+      }
+    }
+    releaseContinuousRender('annotations');
   }
 
   /**
@@ -214,11 +221,17 @@ export function createAnnotationEngine({
   }
 
   function ensureTicking() {
-    if (destroyed || tickHandle != null) return;
+    if (destroyed) return;
+    if (fadeWakeHandle != null) {
+      clearTimeout(fadeWakeHandle);
+      fadeWakeHandle = null;
+    }
+    if (tickHandle != null) return;
     const tick = () => {
       const now = performance.now();
       let changed = false;
-      let pending = false; // any mark still fading in / out, or with a TTL fade ahead
+      let pending = false; // a mark is actually fading in or out now
+      let nextFadeAt = Number.POSITIVE_INFINITY;
       for (const anno of annotations.values()) {
         const next = computeAlpha(anno, now);
         if (next !== anno.alpha) {
@@ -232,6 +245,13 @@ export function createAnnotationEngine({
           continue;
         }
         if (pendingAnimation(anno, now)) pending = true;
+        else if (anno.ttlMs != null && !anno.expiring) {
+          const fadeStart =
+            anno.fadeStart != null
+              ? anno.fadeStart
+              : anno.createdAt + (anno.ttlMs || 0);
+          if (fadeStart > now) nextFadeAt = Math.min(nextFadeAt, fadeStart);
+        }
       }
       if (changed) {
         renderer.sync(annotations);
@@ -244,6 +264,18 @@ export function createAnnotationEngine({
       if (annotations.size === 0 || !pending) {
         cancelAnimationFrame(tickHandle);
         tickHandle = null;
+        if (annotations.size > 0 && Number.isFinite(nextFadeAt)) {
+          // A stable TTL mark needs one wake at its fade boundary, not a RAF
+          // every frame for its entire lifetime. Long TTLs are chunked to the
+          // browser timer limit; the next wake will check the clock again.
+          fadeWakeHandle = setTimeout(
+            () => {
+              fadeWakeHandle = null;
+              ensureTicking();
+            },
+            Math.min(Math.max(1, nextFadeAt - now), 2_147_483_647),
+          );
+        }
         return;
       }
       tickHandle = requestAnimationFrame(tick);
@@ -725,6 +757,9 @@ export function createAnnotationEngine({
         }
       }
       renderer.sync(annotations);
+      // A deferred footprint can move a screen-only point onto an animated
+      // world surface without any alpha change to trigger the RAF tick path.
+      syncAnnotationHold();
       // Final outcome → the voice layer (place names ride as structured DATA fields).
       // 'failed' covers both the definitive no-polygon and an exhausted transient
       // retry — either way the mark honestly stays a point.
@@ -965,6 +1000,10 @@ export function createAnnotationEngine({
     generation += 1;
     abortPending();
     dropQueuedOutlineUpgrades();
+    if (fadeWakeHandle != null) {
+      clearTimeout(fadeWakeHandle);
+      fadeWakeHandle = null;
+    }
     if (!annotations.size) return;
     for (const anno of annotations.values()) renderer.remove(anno);
     annotations.clear();
@@ -1108,6 +1147,8 @@ export function createAnnotationEngine({
       } finally {
         if (tickHandle != null) cancelAnimationFrame(tickHandle);
         tickHandle = null;
+        if (fadeWakeHandle != null) clearTimeout(fadeWakeHandle);
+        fadeWakeHandle = null;
         outlineListeners.clear();
         releaseContinuousRender('annotations');
         renderer.destroy();
@@ -1390,7 +1431,7 @@ function pendingAnimation(anno, now) {
       anno.fadeStart != null
         ? anno.fadeStart
         : anno.createdAt + (anno.ttlMs || 0);
-    return now < fadeStart + FADE_MS; // TTL fade still ahead or in progress
+    return now >= fadeStart && now < fadeStart + FADE_MS;
   }
   return false; // persistent + faded in → stable
 }

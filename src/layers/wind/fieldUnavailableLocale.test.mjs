@@ -1,3 +1,9 @@
+import {
+  prepareLocale as prepareTestLocale,
+  setLocale as setTestLocale,
+} from '../../i18n/index.js';
+await Promise.all([prepareTestLocale('es'), prepareTestLocale('ru')]);
+setTestLocale('en');
 // A scalar overlay that cannot be drawn reports a marked English status
 // (rendering.js), which the Wind row shows through t() in the UI language.
 import test from 'node:test';

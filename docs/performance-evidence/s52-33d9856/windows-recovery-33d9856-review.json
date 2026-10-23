@@ -1,0 +1,38 @@
+{
+  "candidateCommit": "33d985657c8949a02cfce2f0f1ad4131d3da774c",
+  "status": "passed",
+  "scope": "independent inspection of five hosted Windows persisted-content and shutdown observations; no physical GPU claim",
+  "rawSha256": "5c8b7ef95561796ff9020b468c3c89f5a1081cc1eadc0d2c0085f0d550bdecc0",
+  "checks": [
+    {
+      "id": "prior-install-saves-browser-workspace",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeMs": 456.1316999999981
+    },
+    {
+      "id": "interrupted-update-retained-application",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeMs": 368.43619999999646
+    },
+    {
+      "id": "prior-install-rollback-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeMs": 314.0198000000091
+    },
+    {
+      "id": "upgraded-application-same-profile",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeMs": 323.3794999999809
+    },
+    {
+      "id": "failed-verification-rolls-back-and-reopens-assets",
+      "settingsMatch": true,
+      "workspaceBundleMatches": true,
+      "closeMs": 333.6037999999826
+    }
+  ]
+}

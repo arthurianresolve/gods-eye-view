@@ -1,0 +1,18 @@
+{
+  "failedSource": "e53df5188d1f416acd4c9319b6efb5d5b2068f65",
+  "fixedSource": "d8506d3bf4509bb6c5ac2eb61d070abbc35340f1",
+  "productionHelperUnchanged": true,
+  "helperSha256": "000c8ead07b74104937280bf6bb6c4e092decdf365c14489851beebd707ccac1",
+  "focused": {
+    "pass": 6,
+    "fail": 0
+  },
+  "fixedFullSuite": {
+    "ordinaryPass": 7832,
+    "ordinarySkip": 10,
+    "ordinaryFail": 0,
+    "allocationPass": 14,
+    "exitCode": 0
+  },
+  "scope": "Windows test fixture process ownership; not the earlier unexplained recovery timeout"
+}

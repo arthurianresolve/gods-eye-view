@@ -1,0 +1,789 @@
+{
+  "schema": "gev-import-geometry-wake-independent-review/v1",
+  "sourceSha256": "342acf8a4b136e81a2ceaf3b04a12df25199501a914608e1b19650a06e486ba7",
+  "candidateCommit": "844edfc901c1307c494e64c404b453443379d9b5",
+  "outcome": "correctness-passed; optimization-not-accepted",
+  "sourceHashesVerifiedAgainstGit": [
+    "runtimeLayerSha256",
+    "cooperativeSha256",
+    "fixtureSha256",
+    "fixtureHtmlSha256",
+    "schedulerSha256",
+    "packageLockSha256",
+    "runnerSha256",
+    "validatorSha256"
+  ],
+  "imageCount": 30,
+  "exactImageGroups": [
+    {
+      "type": "LineString",
+      "images": 15,
+      "geometrySha256": "74fccdb194475b32c4b93fead20e5cb7a92f313243a1a1bd0795c7c733de963f",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "type": "Polygon",
+      "images": 15,
+      "geometrySha256": "fcc656d967cc111e8f70ed7fe47f07301d4476256e10583f7ea761d162b88fb7",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    }
+  ],
+  "settings": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+    "canvas": {
+      "cssWidth": 960,
+      "cssHeight": 640,
+      "drawingBufferWidth": 960,
+      "drawingBufferHeight": 640
+    },
+    "sceneMode": 3,
+    "renderLoop": true,
+    "requestRenderMode": false,
+    "globeShow": true,
+    "terrainProvider": "EllipsoidTerrainProvider",
+    "imageryLayerCount": 0,
+    "clockCurrentTime": "2025-01-01T00:00:00.000Z",
+    "clockShouldAnimate": false,
+    "cameraPosition": [
+      -686390.040485531,
+      -5590198.274425677,
+      3230373.7353836372
+    ],
+    "cameraDirection": [
+      0.1055386661162648,
+      0.8595434583972056,
+      -0.5000466309065296
+    ],
+    "drawingBufferWidth": 960,
+    "drawingBufferHeight": 640,
+    "msaa": true,
+    "webglContextAttributes": {
+      "alpha": false,
+      "antialias": true,
+      "depth": true,
+      "desynchronized": false,
+      "failIfMajorPerformanceCaveat": false,
+      "powerPreference": "high-performance",
+      "premultipliedAlpha": true,
+      "preserveDrawingBuffer": true,
+      "stencil": true,
+      "xrCompatible": false
+    },
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "cesiumVersion": "1.138.0",
+    "contextLost": false,
+    "sceneMsaaSamples": 4,
+    "resolutionScale": 1
+  },
+  "comparisons": [
+    {
+      "type": "LineString",
+      "arm": "chunked-timer",
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "loadChangePercent": 45.97647058824077,
+          "maximumSpanChangePercent": 7.228915662730873,
+          "totalActiveChangePercent": 198.88268156385703
+        },
+        {
+          "pairIndex": 1,
+          "loadChangePercent": 175.3012048190898,
+          "maximumSpanChangePercent": -58.19209039570503,
+          "totalActiveChangePercent": 159.1623036638381
+        },
+        {
+          "pairIndex": 2,
+          "loadChangePercent": 141.12627986365652,
+          "maximumSpanChangePercent": -46.76616915410927,
+          "totalActiveChangePercent": 101.75438596501532
+        },
+        {
+          "pairIndex": 3,
+          "loadChangePercent": 221.3500784928952,
+          "maximumSpanChangePercent": -64.59330143561324,
+          "totalActiveChangePercent": 82.95964125517112
+        },
+        {
+          "pairIndex": 4,
+          "loadChangePercent": 249.75688816847267,
+          "maximumSpanChangePercent": 7.361963189877341,
+          "totalActiveChangePercent": 278.78787878698796
+        }
+      ],
+      "medianPairedLoadChangePercent": 175.3012048190898,
+      "slowerLoadPairs": 5,
+      "loadRegressionsAbove10Percent": 5,
+      "medianPairedMaximumSpanChangePercent": -46.76616915410927,
+      "medianPairedTotalActiveChangePercent": 159.1623036638381
+    },
+    {
+      "type": "LineString",
+      "arm": "chunked-message-channel",
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "loadChangePercent": 62.258823529406286,
+          "maximumSpanChangePercent": -27.108433734627134,
+          "totalActiveChangePercent": 209.49720670331294
+        },
+        {
+          "pairIndex": 1,
+          "loadChangePercent": 151.80722891535706,
+          "maximumSpanChangePercent": -46.32768361585451,
+          "totalActiveChangePercent": 137.6963350776118
+        },
+        {
+          "pairIndex": 2,
+          "loadChangePercent": 90.95563139943302,
+          "maximumSpanChangePercent": -46.76616915410927,
+          "totalActiveChangePercent": 63.15789473723177
+        },
+        {
+          "pairIndex": 3,
+          "loadChangePercent": 260.7535321820194,
+          "maximumSpanChangePercent": -5.263157894898085,
+          "totalActiveChangePercent": 172.6457399096924
+        },
+        {
+          "pairIndex": 4,
+          "loadChangePercent": 112.1555915721209,
+          "maximumSpanChangePercent": -34.969325153702854,
+          "totalActiveChangePercent": 138.88888888856226
+        }
+      ],
+      "medianPairedLoadChangePercent": 112.1555915721209,
+      "slowerLoadPairs": 5,
+      "loadRegressionsAbove10Percent": 5,
+      "medianPairedMaximumSpanChangePercent": -34.969325153702854,
+      "medianPairedTotalActiveChangePercent": 138.88888888856226
+    },
+    {
+      "type": "Polygon",
+      "arm": "chunked-timer",
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "loadChangePercent": 234.1880341880002,
+          "maximumSpanChangePercent": 11.711711712155793,
+          "totalActiveChangePercent": 206.25000000168905
+        },
+        {
+          "pairIndex": 1,
+          "loadChangePercent": 110.63829787169483,
+          "maximumSpanChangePercent": -26.37362637378101,
+          "totalActiveChangePercent": 107.60869565097728
+        },
+        {
+          "pairIndex": 2,
+          "loadChangePercent": 126.47058823537805,
+          "maximumSpanChangePercent": 1.0309278354103668,
+          "totalActiveChangePercent": 126.26262626350524
+        },
+        {
+          "pairIndex": 3,
+          "loadChangePercent": 47.40740740757987,
+          "maximumSpanChangePercent": -48.83720930191633,
+          "totalActiveChangePercent": 42.74809160339601
+        },
+        {
+          "pairIndex": 4,
+          "loadChangePercent": -9.604519773773479,
+          "maximumSpanChangePercent": -73.96449704122854,
+          "totalActiveChangePercent": -12.20930232514067
+        }
+      ],
+      "medianPairedLoadChangePercent": 110.63829787169483,
+      "slowerLoadPairs": 4,
+      "loadRegressionsAbove10Percent": 4,
+      "medianPairedMaximumSpanChangePercent": -26.37362637378101,
+      "medianPairedTotalActiveChangePercent": 107.60869565097728
+    },
+    {
+      "type": "Polygon",
+      "arm": "chunked-message-channel",
+      "pairs": [
+        {
+          "pairIndex": 0,
+          "loadChangePercent": 112.82051282050007,
+          "maximumSpanChangePercent": -34.23423423420117,
+          "totalActiveChangePercent": 114.28571428712493
+        },
+        {
+          "pairIndex": 1,
+          "loadChangePercent": 189.36170212644745,
+          "maximumSpanChangePercent": -21.978021978577278,
+          "totalActiveChangePercent": 151.08695651957973
+        },
+        {
+          "pairIndex": 2,
+          "loadChangePercent": 16.66666666619112,
+          "maximumSpanChangePercent": -48.453608247484546,
+          "totalActiveChangePercent": 14.141414141028118
+        },
+        {
+          "pairIndex": 3,
+          "loadChangePercent": 82.9629629630492,
+          "maximumSpanChangePercent": -39.534883720856776,
+          "totalActiveChangePercent": 72.51908397003888
+        },
+        {
+          "pairIndex": 4,
+          "loadChangePercent": -21.468926553663024,
+          "maximumSpanChangePercent": -53.84615384612735,
+          "totalActiveChangePercent": -22.67441860484791
+        }
+      ],
+      "medianPairedLoadChangePercent": 82.9629629630492,
+      "slowerLoadPairs": 4,
+      "loadRegressionsAbove10Percent": 4,
+      "medianPairedMaximumSpanChangePercent": -39.534883720856776,
+      "medianPairedTotalActiveChangePercent": 72.51908397003888
+    }
+  ],
+  "samples": [
+    {
+      "pairIndex": 0,
+      "arm": "whole-feature-timer",
+      "type": "LineString",
+      "loadElapsedMs": 212.5,
+      "maximumActiveSpanMs": 16.599999999976717,
+      "totalActiveSpanMs": 17.900000000023283,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 194.59999999997672
+    },
+    {
+      "pairIndex": 0,
+      "arm": "whole-feature-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 11.700000000011642,
+      "maximumActiveSpanMs": 11.099999999976717,
+      "totalActiveSpanMs": 11.199999999953434,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 0.40000000002328306
+    },
+    {
+      "pairIndex": 0,
+      "arm": "chunked-timer",
+      "type": "LineString",
+      "loadElapsedMs": 310.20000000001164,
+      "maximumActiveSpanMs": 17.79999999998836,
+      "totalActiveSpanMs": 53.5,
+      "activeSpansOver4ms": 6,
+      "totalWakeMs": 257.29999999993015
+    },
+    {
+      "pairIndex": 0,
+      "arm": "chunked-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 39.100000000034925,
+      "maximumActiveSpanMs": 12.400000000023283,
+      "totalActiveSpanMs": 34.300000000046566,
+      "activeSpansOver4ms": 4,
+      "totalWakeMs": 5.099999999976717
+    },
+    {
+      "pairIndex": 0,
+      "arm": "chunked-message-channel",
+      "type": "LineString",
+      "loadElapsedMs": 344.79999999998836,
+      "maximumActiveSpanMs": 12.100000000034925,
+      "totalActiveSpanMs": 55.399999999965075,
+      "activeSpansOver4ms": 9,
+      "totalWakeMs": 297.20000000006985
+    },
+    {
+      "pairIndex": 0,
+      "arm": "chunked-message-channel",
+      "type": "Polygon",
+      "loadElapsedMs": 24.900000000023283,
+      "maximumActiveSpanMs": 7.2999999999883585,
+      "totalActiveSpanMs": 24.000000000058208,
+      "activeSpansOver4ms": 4,
+      "totalWakeMs": 1.3999999999650754
+    },
+    {
+      "pairIndex": 1,
+      "arm": "whole-feature-timer",
+      "type": "LineString",
+      "loadElapsedMs": 49.800000000046566,
+      "maximumActiveSpanMs": 17.70000000001164,
+      "totalActiveSpanMs": 19.100000000034925,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 30.70000000001164
+    },
+    {
+      "pairIndex": 1,
+      "arm": "whole-feature-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 9.400000000023283,
+      "maximumActiveSpanMs": 9.100000000034925,
+      "totalActiveSpanMs": 9.20000000006985,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 0.19999999995343387
+    },
+    {
+      "pairIndex": 1,
+      "arm": "chunked-timer",
+      "type": "LineString",
+      "loadElapsedMs": 137.10000000003492,
+      "maximumActiveSpanMs": 7.399999999965075,
+      "totalActiveSpanMs": 49.499999999883585,
+      "activeSpansOver4ms": 8,
+      "totalWakeMs": 88.00000000005821
+    },
+    {
+      "pairIndex": 1,
+      "arm": "chunked-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 19.79999999998836,
+      "maximumActiveSpanMs": 6.7000000000116415,
+      "totalActiveSpanMs": 19.100000000034925,
+      "activeSpansOver4ms": 4,
+      "totalWakeMs": 0.6999999999534339
+    },
+    {
+      "pairIndex": 1,
+      "arm": "chunked-message-channel",
+      "type": "LineString",
+      "loadElapsedMs": 125.39999999996508,
+      "maximumActiveSpanMs": 9.5,
+      "totalActiveSpanMs": 45.39999999990687,
+      "activeSpansOver4ms": 6,
+      "totalWakeMs": 80.40000000008149
+    },
+    {
+      "pairIndex": 1,
+      "arm": "chunked-message-channel",
+      "type": "Polygon",
+      "loadElapsedMs": 27.199999999953434,
+      "maximumActiveSpanMs": 7.099999999976717,
+      "totalActiveSpanMs": 23.099999999976717,
+      "activeSpansOver4ms": 4,
+      "totalWakeMs": 4.599999999976717
+    },
+    {
+      "pairIndex": 2,
+      "arm": "whole-feature-timer",
+      "type": "LineString",
+      "loadElapsedMs": 58.59999999997672,
+      "maximumActiveSpanMs": 20.099999999976717,
+      "totalActiveSpanMs": 22.79999999998836,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 35.79999999998836
+    },
+    {
+      "pairIndex": 2,
+      "arm": "whole-feature-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 10.200000000011642,
+      "maximumActiveSpanMs": 9.700000000011642,
+      "totalActiveSpanMs": 9.900000000023283,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 0.20000000001164153
+    },
+    {
+      "pairIndex": 2,
+      "arm": "chunked-timer",
+      "type": "LineString",
+      "loadElapsedMs": 141.30000000004657,
+      "maximumActiveSpanMs": 10.700000000011642,
+      "totalActiveSpanMs": 46,
+      "activeSpansOver4ms": 7,
+      "totalWakeMs": 95.69999999995343
+    },
+    {
+      "pairIndex": 2,
+      "arm": "chunked-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 23.100000000034925,
+      "maximumActiveSpanMs": 9.800000000046566,
+      "totalActiveSpanMs": 22.4000000001397,
+      "activeSpansOver4ms": 3,
+      "totalWakeMs": 0.8999999999650754
+    },
+    {
+      "pairIndex": 2,
+      "arm": "chunked-message-channel",
+      "type": "LineString",
+      "loadElapsedMs": 111.90000000002328,
+      "maximumActiveSpanMs": 10.700000000011642,
+      "totalActiveSpanMs": 37.20000000006985,
+      "activeSpansOver4ms": 6,
+      "totalWakeMs": 75.40000000002328
+    },
+    {
+      "pairIndex": 2,
+      "arm": "chunked-message-channel",
+      "type": "Polygon",
+      "loadElapsedMs": 11.899999999965075,
+      "maximumActiveSpanMs": 5,
+      "totalActiveSpanMs": 11.299999999988358,
+      "activeSpansOver4ms": 2,
+      "totalWakeMs": 0.7000000000116415
+    },
+    {
+      "pairIndex": 3,
+      "arm": "whole-feature-timer",
+      "type": "LineString",
+      "loadElapsedMs": 63.70000000001164,
+      "maximumActiveSpanMs": 20.900000000023283,
+      "totalActiveSpanMs": 22.300000000046566,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 41.399999999965075
+    },
+    {
+      "pairIndex": 3,
+      "arm": "whole-feature-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 13.5,
+      "maximumActiveSpanMs": 12.899999999965075,
+      "totalActiveSpanMs": 13.099999999976717,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 0.3999999999650754
+    },
+    {
+      "pairIndex": 3,
+      "arm": "chunked-timer",
+      "type": "LineString",
+      "loadElapsedMs": 204.70000000001164,
+      "maximumActiveSpanMs": 7.399999999965075,
+      "totalActiveSpanMs": 40.79999999998836,
+      "activeSpansOver4ms": 8,
+      "totalWakeMs": 164.79999999998836
+    },
+    {
+      "pairIndex": 3,
+      "arm": "chunked-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 19.900000000023283,
+      "maximumActiveSpanMs": 6.600000000034925,
+      "totalActiveSpanMs": 18.70000000001164,
+      "activeSpansOver4ms": 2,
+      "totalWakeMs": 1.2000000000116415
+    },
+    {
+      "pairIndex": 3,
+      "arm": "chunked-message-channel",
+      "type": "LineString",
+      "loadElapsedMs": 229.79999999998836,
+      "maximumActiveSpanMs": 19.79999999998836,
+      "totalActiveSpanMs": 60.79999999998836,
+      "activeSpansOver4ms": 7,
+      "totalWakeMs": 171.79999999998836
+    },
+    {
+      "pairIndex": 3,
+      "arm": "chunked-message-channel",
+      "type": "Polygon",
+      "loadElapsedMs": 24.70000000001164,
+      "maximumActiveSpanMs": 7.7999999999883585,
+      "totalActiveSpanMs": 22.600000000034925,
+      "activeSpansOver4ms": 4,
+      "totalWakeMs": 2.7000000000116415
+    },
+    {
+      "pairIndex": 4,
+      "arm": "whole-feature-timer",
+      "type": "LineString",
+      "loadElapsedMs": 61.70000000001164,
+      "maximumActiveSpanMs": 16.300000000046566,
+      "totalActiveSpanMs": 19.800000000046566,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 41.79999999998836
+    },
+    {
+      "pairIndex": 4,
+      "arm": "whole-feature-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 17.699999999953434,
+      "maximumActiveSpanMs": 16.899999999965075,
+      "totalActiveSpanMs": 17.199999999953434,
+      "activeSpansOver4ms": 1,
+      "totalWakeMs": 0.5
+    },
+    {
+      "pairIndex": 4,
+      "arm": "chunked-timer",
+      "type": "LineString",
+      "loadElapsedMs": 215.79999999998836,
+      "maximumActiveSpanMs": 17.5,
+      "totalActiveSpanMs": 75,
+      "activeSpansOver4ms": 8,
+      "totalWakeMs": 141.19999999995343
+    },
+    {
+      "pairIndex": 4,
+      "arm": "chunked-timer",
+      "type": "Polygon",
+      "loadElapsedMs": 16,
+      "maximumActiveSpanMs": 4.400000000023283,
+      "totalActiveSpanMs": 15.100000000034925,
+      "activeSpansOver4ms": 2,
+      "totalWakeMs": 1
+    },
+    {
+      "pairIndex": 4,
+      "arm": "chunked-message-channel",
+      "type": "LineString",
+      "loadElapsedMs": 130.90000000002328,
+      "maximumActiveSpanMs": 10.599999999976717,
+      "totalActiveSpanMs": 47.300000000046566,
+      "activeSpansOver4ms": 7,
+      "totalWakeMs": 84.69999999995343
+    },
+    {
+      "pairIndex": 4,
+      "arm": "chunked-message-channel",
+      "type": "Polygon",
+      "loadElapsedMs": 13.899999999965075,
+      "maximumActiveSpanMs": 7.7999999999883585,
+      "totalActiveSpanMs": 13.29999999993015,
+      "activeSpansOver4ms": 2,
+      "totalWakeMs": 0.7000000000116415
+    }
+  ],
+  "images": [
+    {
+      "name": "pair-0-whole-feature-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-0-whole-feature-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-0-chunked-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-0-chunked-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-0-chunked-message-channel-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-0-chunked-message-channel-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-1-whole-feature-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-1-whole-feature-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-1-chunked-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-1-chunked-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-1-chunked-message-channel-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-1-chunked-message-channel-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-2-whole-feature-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-2-whole-feature-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-2-chunked-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-2-chunked-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-2-chunked-message-channel-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-2-chunked-message-channel-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-3-whole-feature-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-3-whole-feature-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-3-chunked-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-3-chunked-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-3-chunked-message-channel-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-3-chunked-message-channel-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-4-whole-feature-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-4-whole-feature-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-4-chunked-timer-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-4-chunked-timer-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    },
+    {
+      "name": "pair-4-chunked-message-channel-LineString",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "2d1a081c7f7cf9b9c68ae666d1fc8acbe4b7642833ad0b70cc573de642ce0050",
+      "rgbaSha256": "a15328c11f0f4c7551cf016b4a3337ecb80ec90bf3bb9f20651fdd59582c159c"
+    },
+    {
+      "name": "pair-4-chunked-message-channel-Polygon",
+      "width": 960,
+      "height": 640,
+      "pngSha256": "23cbf4645bdebf429fd1c44038a0d9aa630a607a742c541dfa25c3378c368ea0",
+      "rgbaSha256": "45fe237e13f04f675c2944861f842dc6ea73a1b2b4607b809c0d89167b136550"
+    }
+  ],
+  "browserCleanup": {
+    "closeCompleted": true,
+    "forcedProcessTermination": false,
+    "observation": {
+      "closeStatus": "completed",
+      "closeDeadlineMs": 5000,
+      "closeStartHostMs": 140841.087333,
+      "closeSettledHostMs": 141490.195917,
+      "closeElapsedMs": 649.1085840000014,
+      "closeRejectionName": null,
+      "processExitedBeforeClose": false,
+      "processExit": {
+        "code": 0,
+        "signal": null,
+        "elapsedMs": 584.7235419999924
+      },
+      "protocolCloseTrace": null,
+      "forceProcessStatus": "not-needed",
+      "forceProcessAttempted": false,
+      "forceProcessCallbackInvoked": false,
+      "forceProcessElapsedMs": null
+    }
+  },
+  "limitations": [
+    "One shared hosted browser process with fresh page/viewer per arm.",
+    "Hosted Apple paravirtual Metal does not establish physical Windows coverage.",
+    "Both chunked arms regress completion time; measured active spans still exceed four ms.",
+    "Coordinate hashes are matched as reported; the full coordinate arrays are not retained for offline reconstruction.",
+    "No production scheduling or coordinate-preparation default is changed."
+  ]
+}

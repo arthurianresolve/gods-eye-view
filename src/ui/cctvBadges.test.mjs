@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CctvControls } from './cctvControls.js';
 import { railFixture } from './railTestFixture.mjs';
-import { setLocale, t } from '../i18n/index.js';
+import { prepareLocale, setLocale, t } from '../i18n/index.js';
 
 function fixture(t) {
   const { document } = railFixture();
@@ -85,9 +85,10 @@ test('calibration labels follow supplied provenance and dirty/save/reset transit
   assert.equal(controls._cctvQualityChip.dataset.calBadge, '');
 });
 
-test('localization changes badge copy while preserving machine state ids', (testContext) => {
+test('localization changes badge copy while preserving machine state ids', async (testContext) => {
   const { controls } = fixture(testContext);
   testContext.after(() => setLocale('en'));
+  await prepareLocale('ru');
   setLocale('ru');
   controls._syncCctvSourceBadge(
     { sourceKind: 'snapshot', sourceStatus: 'degraded' },

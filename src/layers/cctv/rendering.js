@@ -116,7 +116,14 @@ export function createRendering({
       if (focus.active) activeCount += 1;
       const base = baseColorFor(record);
       const alpha = base.alpha * focus.factor;
-      if (focusAlphaNeedsWrite(bb.color?.alpha, alpha, params)) {
+      if (
+        focusAlphaNeedsWrite(
+          bb.color?.alpha,
+          alpha,
+          params,
+          focus.endpointCompleted,
+        )
+      ) {
         // Order-independent narrow amendment to always-visible icons: CCTV
         // contacts retain a non-zero floor while yielding near the tracked target.
         bb.color = base.withAlpha(alpha);
@@ -161,25 +168,21 @@ export function createRendering({
   /**
    * Hides every per-record CCTV visual without recomputing coverage membership or
    * styles. Disabling makes every visibility branch false, so a direct sweep is
-   * sufficient; live viewshed primitives still require explicit destruction.
+   * sufficient; the bounded current viewshed cohort is hidden for re-entry.
    *
    * @param {Object[]} records CCTV runtime records.
-   * @param {(record: Object) => void} destroyVolume Viewshed teardown callback.
+   * @param {(record: Object) => void} hideVolume Viewshed visibility callback.
    * @param {string|null} [activeCameraId=null] Active camera whose activation probe must be re-armed.
    */
 
-  function hideCctvRecordVisuals(
-    records,
-    destroyVolume,
-    activeCameraId = null,
-  ) {
+  function hideCctvRecordVisuals(records, hideVolume, activeCameraId = null) {
     for (const record of Array.isArray(records) ? records : []) {
       if (record) {
         record.probeClampRangeM = null;
         if (record.camera?.id === activeCameraId) record.activationDone = false;
       }
       for (const entity of record?.coverageEntities || []) entity.show = false;
-      if (record?.viewshedPrimitive) destroyVolume?.(record);
+      if (record?.viewshedPrimitive) hideVolume?.(record);
       if (record?.projection?.planeEntity)
         record.projection.planeEntity.show = false;
     }
@@ -188,12 +191,52 @@ export function createRendering({
   function hideCctvVisuals() {
     hideCctvRecordVisuals(
       layerState._records,
-      parts.geometry.destroyViewshedVolume,
+      parts.geometry.hideViewshedVolume,
       layerState._activeCameraId,
     );
     parts.projection.clearProjectionOverlay();
     if (layerState._billboards) layerState._billboards.show = false;
     parts.projection.pauseInactiveProjectionFeeds(null);
+  }
+
+  // Reassigning equal raw values creates fresh Cesium properties and signals
+  // geometryChanged; keep the existing constant wrapper when style is equal.
+  function materialColorMatches(property, color, dashed) {
+    const expectedType = dashed
+      ? Cesium.PolylineDashMaterialProperty
+      : Cesium.ColorMaterialProperty;
+    if (!(property instanceof expectedType)) return false;
+    if (
+      dashed &&
+      (property.gapColor !== undefined ||
+        property.dashLength !== undefined ||
+        property.dashPattern !== undefined)
+    )
+      return false;
+    if (!(property.color instanceof Cesium.ConstantProperty)) return false;
+    return Cesium.Color.equals(property.color.getValue(), color);
+  }
+
+  function setCoverageMaterial(polyline, key, color, dashed) {
+    const current = polyline[key];
+    if (color === undefined) {
+      if (current !== undefined) polyline[key] = undefined;
+      return;
+    }
+    if (materialColorMatches(current, color, dashed)) return;
+    polyline[key] = dashed
+      ? new Cesium.PolylineDashMaterialProperty({ color })
+      : color;
+  }
+
+  function setCoverageWidth(polyline, width) {
+    const current = polyline.width;
+    if (
+      current instanceof Cesium.ConstantProperty &&
+      current.getValue() === width
+    )
+      return;
+    polyline.width = width;
   }
 
   /** Applies coverage visibility/style state and lazily builds eligible sets. */
@@ -206,6 +249,13 @@ export function createRendering({
       parts.geometry.buildCoverageVisibleSet(activeRecord);
     const coverageOn = layerState._coverageMode !== 'off';
     const viewshedOn = layerState._coverageMode === 'viewshed';
+    // The visible-set policy already caps the active cohort. Evict anything
+    // outside it before adding/reusing volumes so hidden retention never grows
+    // beyond that same bound.
+    for (const record of layerState._records) {
+      if (record?.viewshedPrimitive && !coverageVisible.has(record.camera.id))
+        parts.geometry.destroyViewshedVolume(record);
+    }
     if (coverageOn) {
       parts.geometry.ensureVisibleCoverageEntities(
         layerState._records,
@@ -244,10 +294,6 @@ export function createRendering({
       // rather than rendering identically to a surveyed one (#639). Colors,
       // widths, and the active/idle emphasis are unchanged.
       const bearingEstimated = isHeadingEstimated(record.camera);
-      const lineMaterial = (color) =>
-        bearingEstimated
-          ? new Cesium.PolylineDashMaterialProperty({ color })
-          : color;
       for (const entity of record.coverageEntities || []) {
         // The frustum wireframe is part of the projection representation —
         // force it on for the active camera and let it read through geometry
@@ -261,44 +307,56 @@ export function createRendering({
         // adjacent cones read as distinct coverage claims (design §3b); the
         // active camera keeps its width/alpha emphasis in both schemes.
         const hue = viewshedOn ? record.viewshedColors : null;
+        let materialColor;
+        let depthFailColor;
+        let width;
         if (entity._coverageRole === 'cap') {
-          entity.polyline.material = lineMaterial(
-            hue
-              ? isActive
-                ? hue.lineActive
-                : hue.line
-              : isActive
-                ? ACTIVE_COVERAGE_CENTER
-                : IDLE_COVERAGE_CENTER_MUTED,
-          );
-          entity.polyline.width = isActive ? 2.2 : 1.0;
-          entity.polyline.depthFailMaterial = planeShowing
+          materialColor = hue
+            ? isActive
+              ? hue.lineActive
+              : hue.line
+            : isActive
+              ? ACTIVE_COVERAGE_CENTER
+              : IDLE_COVERAGE_CENTER_MUTED;
+          width = isActive ? 2.2 : 1.0;
+          depthFailColor = planeShowing
             ? hue
               ? hue.line.withAlpha(0.26)
               : ACTIVE_COVERAGE_CENTER_DEPTHFAIL
             : undefined;
         } else {
-          entity.polyline.material = lineMaterial(
-            hue
-              ? isActive
-                ? hue.lineActive
-                : hue.line.withAlpha(0.6)
-              : isActive
-                ? ACTIVE_COVERAGE_EDGE
-                : IDLE_COVERAGE_EDGE_MUTED,
-          );
-          entity.polyline.width = isActive ? 1.8 : 0.9;
-          entity.polyline.depthFailMaterial = planeShowing
+          materialColor = hue
+            ? isActive
+              ? hue.lineActive
+              : hue.line.withAlpha(0.6)
+            : isActive
+              ? ACTIVE_COVERAGE_EDGE
+              : IDLE_COVERAGE_EDGE_MUTED;
+          width = isActive ? 1.8 : 0.9;
+          depthFailColor = planeShowing
             ? hue
               ? hue.line.withAlpha(0.18)
               : ACTIVE_COVERAGE_EDGE_DEPTHFAIL
             : undefined;
         }
+        setCoverageMaterial(
+          entity.polyline,
+          'material',
+          materialColor,
+          bearingEstimated,
+        );
+        setCoverageWidth(entity.polyline, width);
+        setCoverageMaterial(
+          entity.polyline,
+          'depthFailMaterial',
+          depthFailColor,
+          false,
+        );
       }
 
-      // Viewshed volume lifecycle: exists iff enabled + viewshed mode + in the
-      // visible set. Rebuild on active-tint flips (rare); otherwise leave the
-      // primitive alone so idle refreshes never churn geometry.
+      // Viewshed volume lifecycle: render iff enabled + viewshed mode + in the
+      // visible set. Retain the current bounded cohort while hidden; tint flips
+      // update the ready primitive's per-instance color without rebuilding.
       const wantVolume = !!(
         layerState._enabled &&
         viewshedOn &&
@@ -306,14 +364,14 @@ export function createRendering({
         record.frustumPositions
       );
       if (wantVolume) {
-        if (
-          !record.viewshedPrimitive ||
-          record.viewshedActiveTint !== isActive
-        ) {
+        if (!record.viewshedPrimitive) {
           parts.geometry.rebuildViewshedVolume(record, isActive);
+        } else {
+          record.viewshedPrimitive.show = true;
+          parts.geometry.updateViewshedVolumeTint?.(record, isActive);
         }
       } else if (record.viewshedPrimitive) {
-        parts.geometry.destroyViewshedVolume(record);
+        parts.geometry.hideViewshedVolume?.(record);
       }
 
       if (record.projection) {

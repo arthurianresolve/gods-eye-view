@@ -7,7 +7,7 @@ import {
 } from './policy.js';
 
 export function createControls({ state: layerState, services, parts, source }) {
-  const { holdContinuousRender, releaseContinuousRender } = services.render;
+  const requestRender = services.render?.governorRequestRender || (() => {});
   const { CCTV_ACTIVATION_RESULT } = services.activation;
 
   const methods = {
@@ -56,8 +56,8 @@ export function createControls({ state: layerState, services, parts, source }) {
         if (layerState._showProjection) {
           const active = parts.selection.getActiveRecord();
           if (active) parts.projection.ensureProjectionRuntime(active);
-          parts.projection.startProjectionLoop();
         }
+        parts.projection.startProjectionLoop();
       }
       if (typeof params.autoHop === 'boolean') {
         layerState._autoHop = params.autoHop;
@@ -106,6 +106,7 @@ export function createControls({ state: layerState, services, parts, source }) {
             parts.ground.resolveCommittedGroundAnchor(targetRecord);
             void parts.ground.resolveFootprintGround(targetRecord);
             parts.frames.refreshProjectionImage(targetRecord, true);
+            requestRender('cctv-calibration-reset');
           }
           if (
             calibrationCfg.patch &&
@@ -151,12 +152,10 @@ export function createControls({ state: layerState, services, parts, source }) {
         if (layerState._calibrationMode) {
           parts.calibration.ensureGizmo();
           layerState._gizmo?.setEnabled(true);
-          // ADJUST mode: gizmo drags mutate entity geometry from pointer events,
-          // which don't trigger renders in requestRenderMode. (perf wave 2)
-          holdContinuousRender('cctv-adjust');
+          requestRender('cctv-adjust-enabled');
         } else {
-          releaseContinuousRender('cctv-adjust');
           layerState._gizmo?.setEnabled(false);
+          requestRender('cctv-adjust-disabled');
         }
       }
       if (params.focusSelected && layerState._activeCameraId) {
@@ -250,6 +249,49 @@ export function createControls({ state: layerState, services, parts, source }) {
       };
     },
 
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics() {
+      let viewshedPrimitives = 0;
+      let sceneEntities = 0;
+      for (const record of layerState._records) {
+        viewshedPrimitives += Number(Boolean(record.viewshedPrimitive));
+        sceneEntities +=
+          (record.coverageEntities?.length || 0) +
+          Number(Boolean(record.projection?.planeEntity));
+      }
+      return {
+        listeners:
+          Number(Boolean(layerState._clickHandler)) +
+          Number(Boolean(layerState._mapStackListener)) +
+          Number(Boolean(layerState._horizonCullListener)) +
+          Number(Boolean(layerState._moveStartListener)) +
+          Number(Boolean(layerState._removeFocusAppearListener)) +
+          (layerState._listeners?.size || 0),
+        timers:
+          Number(Boolean(layerState._geoQueueTimer)) +
+          Number(Boolean(layerState._projectionRaf)) +
+          Number(Boolean(layerState._cardFetchTimer)) +
+          Number(Boolean(layerState._hoverReleaseTimer)),
+        pendingJobs:
+          Math.max(
+            0,
+            layerState._geoQueue.length -
+              (layerState._geoQueueCursor?.index || 0),
+          ) +
+          (layerState._cardFetchInFlightCount || 0) +
+          (layerState._cardFetchPendingIds?.size || 0),
+        primitives:
+          Number(Boolean(layerState._billboards)) + viewshedPrimitives,
+        entities: sceneEntities,
+        dataSources: 0,
+        cacheEntries:
+          (layerState._cardFrameSlots?.size || 0) +
+          (layerState._healthById?.size || 0) +
+          (layerState._clientHealthById?.size || 0) +
+          (layerState._calibrationById?.size || 0),
+      };
+    },
+
     /**
      * Registers a callback that receives the full UI state on every change.
      * The callback is invoked immediately with the current state.
@@ -294,7 +336,9 @@ export function createControls({ state: layerState, services, parts, source }) {
      * @returns {boolean} True if the camera was found and selected.
      */
     selectCamera(cameraId, options = {}) {
-      const result = parts.selection.setActiveCamera(cameraId);
+      const result = parts.selection.setActiveCamera(cameraId, {
+        publish: true,
+      });
       if (result === CCTV_ACTIVATION_RESULT.NOT_FOUND) return false;
       if (options.focus) {
         parts.navigation.focusCamera(cameraId, options.durationSec || 1.8);
@@ -329,7 +373,7 @@ export function createControls({ state: layerState, services, parts, source }) {
         layerState._records.length,
       );
       const nextId = layerState._records[nextIdx].camera.id;
-      parts.selection.setActiveCamera(nextId);
+      parts.selection.setActiveCamera(nextId, { publish: true });
       if (options.focus) {
         parts.navigation.focusCamera(nextId, options.durationSec || 1.8);
       }
@@ -346,7 +390,7 @@ export function createControls({ state: layerState, services, parts, source }) {
     focusNearest(options = {}) {
       const nearest = parts.navigation.nearestCameraIdToViewer();
       if (!nearest) return null;
-      parts.selection.setActiveCamera(nearest);
+      parts.selection.setActiveCamera(nearest, { publish: true });
       if (options.focus !== false) {
         parts.navigation.focusCamera(nearest, options.durationSec || 1.8);
       }

@@ -1,0 +1,43 @@
+{
+  "schema": "gev-qualification-metrics-tests-review/v1",
+  "reviewedAt": "2026-10-19T15:17:24.517Z",
+  "consumerCommit": "cb3a7c1889b9ebc9411470ffc9a6b2f3228a87cd",
+  "applicationCandidate": "d8ef90024db6e6f1c96b5645c24b85586f9e337a",
+  "status": "passed",
+  "hardwareStatus": "pending",
+  "tests": [
+    {
+      "node": "24",
+      "tests": 174,
+      "passed": 174,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "node": "26",
+      "tests": 174,
+      "passed": 174,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "vmRoot": "/opt/gods-eye-view-validation/s61-s70-20261018/qualification-metrics-cb3a7c18-validation",
+  "files": [
+    {
+      "name": "validation.json",
+      "bytes": 1088,
+      "sha256": "e18b1c05bc0deaa1f1aa598c11a23e16f61bdcf2b94a748e5675bb5f167c551a"
+    },
+    {
+      "name": "node24.log",
+      "bytes": 14727,
+      "sha256": "1db9a0017ba2afc8300cdf7cc1a628c303f8b860de4368bdcf1119cb81152ef6"
+    },
+    {
+      "name": "node26.log",
+      "bytes": 14739,
+      "sha256": "fdd377905598581cc696dbc1d973dbc3c6d021a375ce43e10e81f9adebca71bf"
+    }
+  ],
+  "productionChanged": false
+}

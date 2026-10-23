@@ -1,0 +1,48 @@
+{
+  "schema": "gev-infrastructure-cli-import-control/v1",
+  "reviewedAt": "2026-10-13T00:12:30.320Z",
+  "node": "v24.16.0",
+  "method": "Actual CLI processes under the same import-resolution hook; the hook throws on cesium or @cesium/* and does not replace application code.",
+  "loaderSource": "export async function resolve(specifier,context,next){if(specifier==='cesium'||specifier.startsWith('@cesium/'))throw new Error('ROOT_CONTROL_FORBIDDEN_CESIUM_IMPORT');return next(specifier,context);}\n",
+  "before": {
+    "commit": "6b675ff90ade278438ae6111ea2354463bfc01df",
+    "node": "v24.16.0",
+    "args": [
+      "--provider-fixture",
+      "infrastructure-datacenters",
+      "--provider-fixture-time",
+      "2026-10-08T12:00:00.000Z"
+    ],
+    "exitCode": 1,
+    "signal": null,
+    "errorCode": null,
+    "forbiddenImport": true,
+    "expectedRejection": false
+  },
+  "after": {
+    "commit": "29b06390276bee67ea882d7e0393e7150ff109c8",
+    "node": "v24.16.0",
+    "args": [
+      "--provider-fixture",
+      "infrastructure-datacenters",
+      "--provider-fixture-time",
+      "2026-10-08T12:00:00.000Z"
+    ],
+    "exitCode": 1,
+    "signal": null,
+    "errorCode": null,
+    "forbiddenImport": false,
+    "expectedRejection": true
+  },
+  "independentFocusedTests": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "artifact": "infrastructure-cli-focused-tests.txt"
+  },
+  "scopeGate": {
+    "files": 17,
+    "status": "passed"
+  },
+  "limitation": "Proves that invalid requests no longer perform the eager Cesium import. It does not establish the cause of the earlier intermittent 15-second timeout or full browser capture acceptance."
+}

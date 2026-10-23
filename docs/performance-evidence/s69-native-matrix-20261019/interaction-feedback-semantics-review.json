@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "status": "prospective-design-rationale-only",
+  "date": "2026-10-20",
+  "scope": "Independent read-only review of native Event Timing, semantic feedback attribution and exact layout-restoration requirements. No producer, consumer, runtime, threshold or frozen outcome changed.",
+  "evidence": {
+    "capture": "../gev-s61-evidence-19065997/qualification-metrics-a18c6a76-3fdbcf42-native-window/capture.json",
+    "captureSha256": "02aad9c28228c1cf8525395e60c3f7e64201e450a460474e8378de83abb2eae9",
+    "baselineCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+    "candidateCommit": "a18c6a76fa01fe2b4b7310c30e80796a2b02698f",
+    "frozenQaRevisionPrefix": "3fdbcf42",
+    "eventTimingObserverSha256": "93edd4ba681453101d64a1fc5f68a78a034266c00d54ad4348040374569fa7ee",
+    "originalReviewStatus": "failed",
+    "originalLocalFailure": "Source-owned measurement needs an eligible post-layout proof before rendering",
+    "candidateRawEventTimingP95Ms": 160,
+    "candidateRawEventTimingLimitMs": 100,
+    "candidateRawEventTimingDisposition": "Independently exceeds the unchanged latency limit; semantic uncertainty must not hide this failure.",
+    "method": "Source inspection, bounded existing-JSON reads and primary specifications. No browser, tests, VM jobs or new capture."
+  },
+  "observations": [
+    {
+      "role": "baseline",
+      "generation": 4,
+      "eventDurationMs": 96,
+      "policyEndpointIntervalRelativeToClickMs": [92, 100],
+      "mixedMeasurementMutationAtMs": 72.5,
+      "mixedBatchCallback": 46,
+      "mixedBatchDescription": "Restored inline allocation plus an unknown layout-root attribute change. The producer deliberately does not arm RO for a mixed batch.",
+      "laterRoCompletedAtMs": 117.4,
+      "laterRoVisible": true,
+      "laterRoRestoredGeometry": false,
+      "conclusion": "The first failure is not solely a four-millisecond endpoint-quantization problem. The mixed batch occurs well before the earliest endpoint, and the later proof is too late."
+    },
+    {
+      "role": "candidate",
+      "generation": 3,
+      "eventDurationMs": 48,
+      "policyEndpointIntervalRelativeToClickMs": [44, 52],
+      "mixedMeasurementMutationAtMs": 18.5,
+      "mixedBatchCallback": 28,
+      "laterRoCompletedAtMs": 178,
+      "laterRoVisible": true,
+      "laterRoRestoredGeometry": false,
+      "controlAndClipVerticalDeltaCssPx": -1.140625,
+      "ancestorScrollOffsetsChanged": false,
+      "controlRectEqualsClipRectAtLaterRo": true,
+      "conclusion": "The later observation establishes an unclipped control under the retained clipping model at a changed position. It cannot establish what was visible at the earlier ET endpoint."
+    },
+    {
+      "role": "candidate",
+      "generation": 18,
+      "eventDurationMs": 96,
+      "policyEndpointIntervalRelativeToClickMs": [92, 100],
+      "roStartedAtMs": 93,
+      "roCompletedAtMs": 93.2,
+      "roVisible": true,
+      "roRestoredGeometry": false,
+      "controlAndClipVerticalDeltaCssPx": 0.3203125,
+      "ancestorScrollOffsetsChanged": false,
+      "controlRectEqualsClipRectAtRo": true,
+      "conclusion": "The observation is inside the endpoint uncertainty interval. It is not proven to precede rendering; retain semantic attribution as unavailable rather than moving the endpoint bound. Position inequality alone is not visibility loss."
+    },
+    {
+      "role": "candidate",
+      "generation": 1,
+      "eventDurationMs": 328,
+      "firstRafProofCompletedAtMs": 74.7,
+      "unknownChildListMutationAtMs": 92.3,
+      "nextRafProofCompletedAtMs": 512.6,
+      "laterRoCompletedAtMs": 657.3,
+      "conclusion": "The retained record lacks a timely renewed visibility proof after the child-list change. Removing exact-position equality would not close this evidence gap."
+    }
+  ],
+  "sourceFindings": [
+    {
+      "path": "docs/CESIUM_PERFORMANCE_PLAN.md",
+      "line": 6289,
+      "finding": "The original response requirement is local-control p95 at most 100 ms. It does not require the control to remain at identical coordinates. Full readiness has its separate regression contract."
+    },
+    {
+      "path": "scripts/performance/qualificationMetrics.mjs",
+      "line": 1415,
+      "finding": "The current Event Timing validator runs before the metrics result is assembled; a semantic proof assertion prevents reporting the otherwise retained native durations in that result. Separate statuses would preserve both the latency failure and attribution uncertainty."
+    },
+    {
+      "path": "scripts/performance/interactionEventTiming.mjs",
+      "line": 382,
+      "finding": "restoredGeometry requires exact equality of control rectangle, effective clip and every ancestor scroll offset. This proves restoration but is stronger than same-intent visible feedback."
+    },
+    {
+      "path": "scripts/performance/interactionEventTiming.mjs",
+      "line": 1240,
+      "finding": "Every in-interval batch containing a recognized measurement must be pure-source and have an eligible exact-restoration RO proof. A mixed batch fails independently of whether a later observation finds the control visible."
+    },
+    {
+      "path": "scripts/performance/interactionEventTiming.mjs",
+      "line": 1304,
+      "finding": "The current consumer treats restoredGeometry:false as a visibility contradiction. A small visible movement without scroll change does not logically establish that contradiction."
+    },
+    {
+      "path": "scripts/performance/interactionEventTiming.mjs",
+      "line": 157,
+      "finding": "The visible predicate checks CSS visibility and the control center inside the effective clip, not complete rectangle containment or occlusion. For the three selected later RO observations, direct raw readback additionally finds controlRect equal to clipRect. Do not generalize visible:true into full-button or physical-presentation proof."
+    },
+    {
+      "path": "src/ui/leftPanelRail.js",
+      "line": 303,
+      "finding": "The rail writes layout metadata as well as visual properties. Raw mutation reasons coarsen unlisted attribute names to other, so these records cannot identify which exact metadata attribute changed. No harmless-attribute exemption can be justified from this raw evidence alone."
+    }
+  ],
+  "primaryReferences": [
+    {
+      "url": "https://www.w3.org/TR/2026/WD-event-timing-20261013/",
+      "section": "1.5 When events are measured",
+      "relevance": "Native duration describes input to the next associated-document rendering update with eight-millisecond granularity. It does not identify the application's rendered feedback or completion of all asynchronous work."
+    },
+    {
+      "url": "https://html.spec.whatwg.org/multipage/webappapis.html#update-the-rendering",
+      "section": "Update the rendering, steps 14-16",
+      "relevance": "Natural RAF callbacks precede style/layout and ResizeObserver delivery. This permits a post-layout observation but does not bind an arbitrary later callback to a particular already-reported Event Timing endpoint."
+    },
+    {
+      "url": "https://drafts.csswg.org/resize-observer/",
+      "section": "1 Introduction and 3 Processing Model",
+      "relevance": "Starting observation produces notification; transforms alone do not trigger observations. RO is a layout observation mechanism, not a physical-presentation or continuous-visibility guarantee."
+    }
+  ],
+  "prospectiveContractRecommendation": {
+    "nativeLatency": "Validate exact trusted target/event matching, finite native entry, chronology, foreground, fixed cohort, drain and isolation independently. Report native p95 even if semantic attribution is unavailable. Keep candidate p95 at most 100 ms.",
+    "semanticFeedback": "To claim a responsiveness pass, separately require a timely positive proof of the same accepted intent and effectively visible owned control, with no later unresolved change or observed contrary state before the possible rendering endpoint. A proof may use a different valid position. Unknown changes are uncertainty, not proof of hidden feedback; actual observed hidden/disconnected/contrary-intent/foreground loss remains a contradiction.",
+    "restoration": "Retain exact rectangle, clip and scroll equality as a diagnostic of whether a temporary measurement restored geometry. Do not universally equate its failure with lost feedback. Source-owned temporary measurements still cannot inherit visibility merely because attributes returned to their original values.",
+    "quantization": "Retain the conservative earliest/latest endpoint bounds. A proof within the uncertainty interval is unavailable for endpoint attribution unless an independent causal rendering-cycle identity is established; do not select a convenient endpoint.",
+    "fullReadiness": "Keep full-ready application state and matching completed scene rendering separately measured, with the existing candidate-versus-control 10% regression gates.",
+    "reporting": "Overall pass requires the native latency, semantic feedback and full-readiness requirements. A known latency failure remains failure even when a different requirement is unavailable. Do not suppress numeric latency because a separate semantic validator throws.",
+    "implementationDisposition": "No implementation proposed for immediate capture. Preserve frozen 3fdb failure and existing raw evidence; prioritize the bounded runtime causal trace before further QA changes or recapture."
+  }
+}

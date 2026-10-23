@@ -1,0 +1,59 @@
+{
+  "runId": 38203843444,
+  "headSha": "2d18433cfd333691105ab5af2f1af48bddf54906",
+  "statusAtReview": "completed",
+  "conclusionAtReview": "failure",
+  "jobs": [
+    {
+      "name": "Node 24.14.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662857813"
+    },
+    {
+      "name": "Install and update recovery (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858075"
+    },
+    {
+      "name": "Node 26.x",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858107"
+    },
+    {
+      "name": "Windows onboarding",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858112"
+    },
+    {
+      "name": "Install and update recovery (windows-latest)",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858132"
+    },
+    {
+      "name": "Street Level browser gate",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858133"
+    },
+    {
+      "name": "Install and update recovery (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858230"
+    }
+  ],
+  "failedJob": {
+    "id": 114662858132,
+    "name": "Install and update recovery (windows-latest)",
+    "status": "completed",
+    "conclusion": "failure",
+    "startedAt": "2026-10-12T04:27:20Z",
+    "completedAt": "2026-10-12T04:33:00Z",
+    "url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38203843444/job/114662858132"
+  }
+}

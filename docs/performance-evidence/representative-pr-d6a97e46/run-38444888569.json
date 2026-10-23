@@ -1,0 +1,1692 @@
+{
+  "run": {
+    "id": 38444888569,
+    "name": "CI",
+    "node_id": "WFR_kwLOUTUTds8AAAAI835x-Q",
+    "head_branch": "qa/s47-austin-receipt-only",
+    "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+    "path": ".github/workflows/ci.yml",
+    "display_title": "Validate current Cesium development against main",
+    "run_number": 575,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "workflow_id": 377833272,
+    "check_suite_id": 104171348230,
+    "check_suite_node_id": "CS_kwDOUTUTds8AAAAYQRihBg",
+    "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+    "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+    "pull_requests": [
+      {
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/pulls/4",
+        "id": 4847263177,
+        "number": 4,
+        "head": {
+          "ref": "qa/s47-austin-receipt-only",
+          "sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+          "repo": {
+            "id": 1362432886,
+            "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view",
+            "name": "gods-eye-view"
+          }
+        },
+        "base": {
+          "ref": "main",
+          "sha": "9beadbda6333b83f79aa03047e2d851830f01f6b",
+          "repo": {
+            "id": 1362432886,
+            "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view",
+            "name": "gods-eye-view"
+          }
+        }
+      },
+      {
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/pulls/3",
+        "id": 4847262666,
+        "number": 3,
+        "head": {
+          "ref": "qa/s47-austin-receipt-only",
+          "sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+          "repo": {
+            "id": 1362432886,
+            "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view",
+            "name": "gods-eye-view"
+          }
+        },
+        "base": {
+          "ref": "dev",
+          "sha": "e8ccc268608fbece8b6d87a0b6db86e1800ddf90",
+          "repo": {
+            "id": 1362432886,
+            "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view",
+            "name": "gods-eye-view"
+          }
+        }
+      }
+    ],
+    "created_at": "2026-10-13T18:12:40Z",
+    "updated_at": "2026-10-13T18:29:00Z",
+    "actor": {
+      "login": "arthurianresolve",
+      "id": 268402532,
+      "node_id": "U_kgDOD_9_ZA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/268402532?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arthurianresolve",
+      "html_url": "https://github.com/arthurianresolve",
+      "followers_url": "https://api.github.com/users/arthurianresolve/followers",
+      "following_url": "https://api.github.com/users/arthurianresolve/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arthurianresolve/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arthurianresolve/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arthurianresolve/subscriptions",
+      "organizations_url": "https://api.github.com/users/arthurianresolve/orgs",
+      "repos_url": "https://api.github.com/users/arthurianresolve/repos",
+      "events_url": "https://api.github.com/users/arthurianresolve/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arthurianresolve/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "run_attempt": 1,
+    "referenced_workflows": [],
+    "run_started_at": "2026-10-13T18:12:40Z",
+    "triggering_actor": {
+      "login": "arthurianresolve",
+      "id": 268402532,
+      "node_id": "U_kgDOD_9_ZA",
+      "avatar_url": "https://avatars.githubusercontent.com/u/268402532?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/arthurianresolve",
+      "html_url": "https://github.com/arthurianresolve",
+      "followers_url": "https://api.github.com/users/arthurianresolve/followers",
+      "following_url": "https://api.github.com/users/arthurianresolve/following{/other_user}",
+      "gists_url": "https://api.github.com/users/arthurianresolve/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/arthurianresolve/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/arthurianresolve/subscriptions",
+      "organizations_url": "https://api.github.com/users/arthurianresolve/orgs",
+      "repos_url": "https://api.github.com/users/arthurianresolve/repos",
+      "events_url": "https://api.github.com/users/arthurianresolve/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/arthurianresolve/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "jobs_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569/jobs",
+    "logs_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569/logs",
+    "check_suite_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-suites/104171348230",
+    "artifacts_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569/artifacts",
+    "cancel_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569/cancel",
+    "rerun_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569/rerun",
+    "previous_attempt_url": null,
+    "workflow_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/workflows/377833272",
+    "head_commit": {
+      "id": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+      "tree_id": "2c0a342081b1d85be3fcbd8e2f85fab8d727e7ea",
+      "message": "Record current main reconciliation and both-base PR evidence",
+      "timestamp": "2026-10-13T18:12:21Z",
+      "author": {
+        "name": "arthurianresolve",
+        "email": "268402532+arthurianresolve@users.noreply.github.com"
+      },
+      "committer": {
+        "name": "arthurianresolve",
+        "email": "268402532+arthurianresolve@users.noreply.github.com"
+      }
+    },
+    "repository": {
+      "id": 1362432886,
+      "node_id": "R_kgDOUTUTdg",
+      "name": "gods-eye-view",
+      "full_name": "arthurianresolve/gods-eye-view",
+      "private": false,
+      "owner": {
+        "login": "arthurianresolve",
+        "id": 268402532,
+        "node_id": "U_kgDOD_9_ZA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/268402532?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/arthurianresolve",
+        "html_url": "https://github.com/arthurianresolve",
+        "followers_url": "https://api.github.com/users/arthurianresolve/followers",
+        "following_url": "https://api.github.com/users/arthurianresolve/following{/other_user}",
+        "gists_url": "https://api.github.com/users/arthurianresolve/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/arthurianresolve/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/arthurianresolve/subscriptions",
+        "organizations_url": "https://api.github.com/users/arthurianresolve/orgs",
+        "repos_url": "https://api.github.com/users/arthurianresolve/repos",
+        "events_url": "https://api.github.com/users/arthurianresolve/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/arthurianresolve/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/arthurianresolve/gods-eye-view",
+      "description": "A spy satellite simulator in your browser, except the data is real. Live open source spatial intelligence on a photorealistic 3D globe.",
+      "fork": true,
+      "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view",
+      "forks_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/forks",
+      "keys_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/keys{/key_id}",
+      "collaborators_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/collaborators{/collaborator}",
+      "teams_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/teams",
+      "hooks_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/hooks",
+      "issue_events_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/issues/events{/number}",
+      "events_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/events",
+      "assignees_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/assignees{/user}",
+      "branches_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/branches{/branch}",
+      "tags_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/tags",
+      "blobs_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/blobs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/tags{/sha}",
+      "git_refs_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/refs{/sha}",
+      "trees_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/trees{/sha}",
+      "statuses_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/statuses/{sha}",
+      "languages_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/languages",
+      "stargazers_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/stargazers",
+      "contributors_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/contributors",
+      "subscribers_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/subscribers",
+      "subscription_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/subscription",
+      "commits_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/commits{/sha}",
+      "git_commits_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/commits{/sha}",
+      "comments_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/comments{/number}",
+      "issue_comment_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/issues/comments{/number}",
+      "contents_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/contents/{+path}",
+      "compare_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/compare/{base}...{head}",
+      "merges_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/merges",
+      "archive_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/{archive_format}{/ref}",
+      "downloads_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/downloads",
+      "issues_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/issues{/number}",
+      "pulls_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/pulls{/number}",
+      "milestones_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/milestones{/number}",
+      "notifications_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/notifications{?since,all,participating}",
+      "labels_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/labels{/name}",
+      "releases_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/releases{/id}",
+      "deployments_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/deployments"
+    },
+    "head_repository": {
+      "id": 1362432886,
+      "node_id": "R_kgDOUTUTdg",
+      "name": "gods-eye-view",
+      "full_name": "arthurianresolve/gods-eye-view",
+      "private": false,
+      "owner": {
+        "login": "arthurianresolve",
+        "id": 268402532,
+        "node_id": "U_kgDOD_9_ZA",
+        "avatar_url": "https://avatars.githubusercontent.com/u/268402532?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/arthurianresolve",
+        "html_url": "https://github.com/arthurianresolve",
+        "followers_url": "https://api.github.com/users/arthurianresolve/followers",
+        "following_url": "https://api.github.com/users/arthurianresolve/following{/other_user}",
+        "gists_url": "https://api.github.com/users/arthurianresolve/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/arthurianresolve/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/arthurianresolve/subscriptions",
+        "organizations_url": "https://api.github.com/users/arthurianresolve/orgs",
+        "repos_url": "https://api.github.com/users/arthurianresolve/repos",
+        "events_url": "https://api.github.com/users/arthurianresolve/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/arthurianresolve/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+      },
+      "html_url": "https://github.com/arthurianresolve/gods-eye-view",
+      "description": "A spy satellite simulator in your browser, except the data is real. Live open source spatial intelligence on a photorealistic 3D globe.",
+      "fork": true,
+      "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view",
+      "forks_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/forks",
+      "keys_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/keys{/key_id}",
+      "collaborators_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/collaborators{/collaborator}",
+      "teams_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/teams",
+      "hooks_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/hooks",
+      "issue_events_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/issues/events{/number}",
+      "events_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/events",
+      "assignees_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/assignees{/user}",
+      "branches_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/branches{/branch}",
+      "tags_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/tags",
+      "blobs_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/blobs{/sha}",
+      "git_tags_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/tags{/sha}",
+      "git_refs_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/refs{/sha}",
+      "trees_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/trees{/sha}",
+      "statuses_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/statuses/{sha}",
+      "languages_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/languages",
+      "stargazers_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/stargazers",
+      "contributors_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/contributors",
+      "subscribers_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/subscribers",
+      "subscription_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/subscription",
+      "commits_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/commits{/sha}",
+      "git_commits_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/git/commits{/sha}",
+      "comments_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/comments{/number}",
+      "issue_comment_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/issues/comments{/number}",
+      "contents_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/contents/{+path}",
+      "compare_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/compare/{base}...{head}",
+      "merges_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/merges",
+      "archive_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/{archive_format}{/ref}",
+      "downloads_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/downloads",
+      "issues_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/issues{/number}",
+      "pulls_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/pulls{/number}",
+      "milestones_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/milestones{/number}",
+      "notifications_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/notifications{?since,all,participating}",
+      "labels_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/labels{/name}",
+      "releases_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/releases{/id}",
+      "deployments_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/deployments"
+    }
+  },
+  "jobs": {
+    "total_count": 19,
+    "jobs": [
+      {
+        "id": 115460582215,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyrRw",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582215",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582215",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:48Z",
+        "completed_at": "2026-10-13T18:15:15Z",
+        "name": "Install and update recovery (macos-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:49Z",
+            "completed_at": "2026-10-13T18:12:50Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:50Z",
+            "completed_at": "2026-10-13T18:12:59Z"
+          },
+          {
+            "name": "Use supported Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:12:59Z",
+            "completed_at": "2026-10-13T18:13:05Z"
+          },
+          {
+            "name": "Validate optional profile recovery Chrome version selection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:05Z",
+            "completed_at": "2026-10-13T18:13:05Z"
+          },
+          {
+            "name": "Clean install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:05Z",
+            "completed_at": "2026-10-13T18:13:10Z"
+          },
+          {
+            "name": "Verify canonical map fixture assets and native parser compatibility",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:10Z",
+            "completed_at": "2026-10-13T18:13:20Z"
+          },
+          {
+            "name": "Exercise real Git update paths with disposable repositories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:13:20Z",
+            "completed_at": "2026-10-13T18:13:25Z"
+          },
+          {
+            "name": "Reject incomplete artifacts and reopen portable workspaces",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:13:25Z",
+            "completed_at": "2026-10-13T18:13:25Z"
+          },
+          {
+            "name": "Test Windows recovery and shutdown ownership before browser setup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-10-13T18:13:25Z",
+            "completed_at": "2026-10-13T18:13:25Z"
+          },
+          {
+            "name": "Install fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-13T18:13:25Z",
+            "completed_at": "2026-10-13T18:13:31Z"
+          },
+          {
+            "name": "Install selected Chrome for Testing version",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-10-13T18:13:31Z",
+            "completed_at": "2026-10-13T18:13:31Z"
+          },
+          {
+            "name": "Upgrade and recover a real installation and browser profile",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-13T18:13:31Z",
+            "completed_at": "2026-10-13T18:15:09Z"
+          },
+          {
+            "name": "Preserve recovery evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-10-13T18:15:09Z",
+            "completed_at": "2026-10-13T18:15:09Z"
+          },
+          {
+            "name": "Recovery evidence in job logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-13T18:15:09Z",
+            "completed_at": "2026-10-13T18:15:10Z"
+          },
+          {
+            "name": "Post Use supported Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-13T18:15:10Z",
+            "completed_at": "2026-10-13T18:15:10Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-13T18:15:10Z",
+            "completed_at": "2026-10-13T18:15:10Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-13T18:15:10Z",
+            "completed_at": "2026-10-13T18:15:12Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582215",
+        "labels": [
+          "macos-latest"
+        ],
+        "runner_id": 1000024318,
+        "runner_name": "GitHub Actions 1000024318",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460582509,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fysbQ",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582509",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582509",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:45Z",
+        "completed_at": "2026-10-13T18:19:09Z",
+        "name": "Node 24.14.0",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:46Z",
+            "completed_at": "2026-10-13T18:12:46Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:46Z",
+            "completed_at": "2026-10-13T18:12:54Z"
+          },
+          {
+            "name": "Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:12:54Z",
+            "completed_at": "2026-10-13T18:13:00Z"
+          },
+          {
+            "name": "Install locked dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:00Z",
+            "completed_at": "2026-10-13T18:13:07Z"
+          },
+          {
+            "name": "Run setup policy checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:07Z",
+            "completed_at": "2026-10-13T18:13:07Z"
+          },
+          {
+            "name": "Check adopted formatting",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:07Z",
+            "completed_at": "2026-10-13T18:13:30Z"
+          },
+          {
+            "name": "Check package boundaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:13:30Z",
+            "completed_at": "2026-10-13T18:13:49Z"
+          },
+          {
+            "name": "Check capture harness undefined identifiers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:13:49Z",
+            "completed_at": "2026-10-13T18:13:51Z"
+          },
+          {
+            "name": "Check published layer-token allocations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-13T18:13:51Z",
+            "completed_at": "2026-10-13T18:13:51Z"
+          },
+          {
+            "name": "Run unit tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-13T18:13:51Z",
+            "completed_at": "2026-10-13T18:18:55Z"
+          },
+          {
+            "name": "Build production bundle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-13T18:18:55Z",
+            "completed_at": "2026-10-13T18:19:07Z"
+          },
+          {
+            "name": "Post Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-13T18:19:07Z",
+            "completed_at": "2026-10-13T18:19:07Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-13T18:19:07Z",
+            "completed_at": "2026-10-13T18:19:07Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-13T18:19:07Z",
+            "completed_at": "2026-10-13T18:19:07Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582509",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000024319,
+        "runner_name": "GitHub Actions 1000024319",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460582560,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fysoA",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582560",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582560",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:45Z",
+        "completed_at": "2026-10-13T18:14:28Z",
+        "name": "Install and update recovery (ubuntu-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:46Z",
+            "completed_at": "2026-10-13T18:12:47Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:47Z",
+            "completed_at": "2026-10-13T18:12:56Z"
+          },
+          {
+            "name": "Use supported Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:12:56Z",
+            "completed_at": "2026-10-13T18:13:03Z"
+          },
+          {
+            "name": "Validate optional profile recovery Chrome version selection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:03Z",
+            "completed_at": "2026-10-13T18:13:03Z"
+          },
+          {
+            "name": "Clean install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:03Z",
+            "completed_at": "2026-10-13T18:13:06Z"
+          },
+          {
+            "name": "Verify canonical map fixture assets and native parser compatibility",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:06Z",
+            "completed_at": "2026-10-13T18:13:13Z"
+          },
+          {
+            "name": "Exercise real Git update paths with disposable repositories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:13:13Z",
+            "completed_at": "2026-10-13T18:13:15Z"
+          },
+          {
+            "name": "Reject incomplete artifacts and reopen portable workspaces",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:13:15Z",
+            "completed_at": "2026-10-13T18:13:15Z"
+          },
+          {
+            "name": "Test Windows recovery and shutdown ownership before browser setup",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 9,
+            "started_at": "2026-10-13T18:13:15Z",
+            "completed_at": "2026-10-13T18:13:15Z"
+          },
+          {
+            "name": "Install fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-13T18:13:15Z",
+            "completed_at": "2026-10-13T18:13:19Z"
+          },
+          {
+            "name": "Install selected Chrome for Testing version",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-10-13T18:13:19Z",
+            "completed_at": "2026-10-13T18:13:19Z"
+          },
+          {
+            "name": "Upgrade and recover a real installation and browser profile",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-13T18:13:19Z",
+            "completed_at": "2026-10-13T18:14:25Z"
+          },
+          {
+            "name": "Preserve recovery evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-10-13T18:14:25Z",
+            "completed_at": "2026-10-13T18:14:25Z"
+          },
+          {
+            "name": "Recovery evidence in job logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-13T18:14:25Z",
+            "completed_at": "2026-10-13T18:14:25Z"
+          },
+          {
+            "name": "Post Use supported Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-13T18:14:25Z",
+            "completed_at": "2026-10-13T18:14:25Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-13T18:14:25Z",
+            "completed_at": "2026-10-13T18:14:26Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-13T18:14:26Z",
+            "completed_at": "2026-10-13T18:14:26Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582560",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000024322,
+        "runner_name": "GitHub Actions 1000024322",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460582580,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fystA",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582580",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582580",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:45Z",
+        "completed_at": "2026-10-13T18:25:04Z",
+        "name": "Install and update recovery (windows-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:46Z",
+            "completed_at": "2026-10-13T18:12:47Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:47Z",
+            "completed_at": "2026-10-13T18:13:04Z"
+          },
+          {
+            "name": "Use supported Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:13:04Z",
+            "completed_at": "2026-10-13T18:13:23Z"
+          },
+          {
+            "name": "Validate optional profile recovery Chrome version selection",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:23Z",
+            "completed_at": "2026-10-13T18:13:24Z"
+          },
+          {
+            "name": "Clean install",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:24Z",
+            "completed_at": "2026-10-13T18:13:38Z"
+          },
+          {
+            "name": "Verify canonical map fixture assets and native parser compatibility",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:38Z",
+            "completed_at": "2026-10-13T18:13:53Z"
+          },
+          {
+            "name": "Exercise real Git update paths with disposable repositories",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:13:53Z",
+            "completed_at": "2026-10-13T18:14:19Z"
+          },
+          {
+            "name": "Reject incomplete artifacts and reopen portable workspaces",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:14:19Z",
+            "completed_at": "2026-10-13T18:14:20Z"
+          },
+          {
+            "name": "Test Windows recovery and shutdown ownership before browser setup",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-13T18:14:20Z",
+            "completed_at": "2026-10-13T18:14:25Z"
+          },
+          {
+            "name": "Install fixture browser",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-13T18:14:25Z",
+            "completed_at": "2026-10-13T18:14:30Z"
+          },
+          {
+            "name": "Install selected Chrome for Testing version",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-10-13T18:14:30Z",
+            "completed_at": "2026-10-13T18:14:30Z"
+          },
+          {
+            "name": "Upgrade and recover a real installation and browser profile",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-13T18:14:30Z",
+            "completed_at": "2026-10-13T18:24:59Z"
+          },
+          {
+            "name": "Preserve recovery evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-10-13T18:24:59Z",
+            "completed_at": "2026-10-13T18:24:59Z"
+          },
+          {
+            "name": "Recovery evidence in job logs",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-13T18:24:59Z",
+            "completed_at": "2026-10-13T18:25:00Z"
+          },
+          {
+            "name": "Post Use supported Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-13T18:25:00Z",
+            "completed_at": "2026-10-13T18:25:00Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 28,
+            "started_at": "2026-10-13T18:25:00Z",
+            "completed_at": "2026-10-13T18:25:02Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 29,
+            "started_at": "2026-10-13T18:25:02Z",
+            "completed_at": "2026-10-13T18:25:02Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582580",
+        "labels": [
+          "windows-latest"
+        ],
+        "runner_id": 1000024320,
+        "runner_name": "GitHub Actions 1000024320",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460582751,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fytXw",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582751",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582751",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:45Z",
+        "completed_at": "2026-10-13T18:17:30Z",
+        "name": "Node 26.x",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:46Z",
+            "completed_at": "2026-10-13T18:12:47Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:47Z",
+            "completed_at": "2026-10-13T18:12:58Z"
+          },
+          {
+            "name": "Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:12:58Z",
+            "completed_at": "2026-10-13T18:13:06Z"
+          },
+          {
+            "name": "Install locked dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:06Z",
+            "completed_at": "2026-10-13T18:13:12Z"
+          },
+          {
+            "name": "Run setup policy checks",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:12Z",
+            "completed_at": "2026-10-13T18:13:13Z"
+          },
+          {
+            "name": "Check adopted formatting",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:13Z",
+            "completed_at": "2026-10-13T18:13:32Z"
+          },
+          {
+            "name": "Check package boundaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:13:32Z",
+            "completed_at": "2026-10-13T18:13:49Z"
+          },
+          {
+            "name": "Check capture harness undefined identifiers",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:13:49Z",
+            "completed_at": "2026-10-13T18:13:50Z"
+          },
+          {
+            "name": "Check published layer-token allocations",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-13T18:13:50Z",
+            "completed_at": "2026-10-13T18:13:51Z"
+          },
+          {
+            "name": "Run unit tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-13T18:13:51Z",
+            "completed_at": "2026-10-13T18:17:15Z"
+          },
+          {
+            "name": "Build production bundle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-13T18:17:15Z",
+            "completed_at": "2026-10-13T18:17:26Z"
+          },
+          {
+            "name": "Post Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 21,
+            "started_at": "2026-10-13T18:17:26Z",
+            "completed_at": "2026-10-13T18:17:26Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 22,
+            "started_at": "2026-10-13T18:17:26Z",
+            "completed_at": "2026-10-13T18:17:27Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 23,
+            "started_at": "2026-10-13T18:17:27Z",
+            "completed_at": "2026-10-13T18:17:27Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582751",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000024323,
+        "runner_name": "GitHub Actions 1000024323",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460582954,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyuKg",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460582954",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460582954",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:46Z",
+        "completed_at": "2026-10-13T18:28:59Z",
+        "name": "Street Level browser gate",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:47Z",
+            "completed_at": "2026-10-13T18:12:48Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:48Z",
+            "completed_at": "2026-10-13T18:12:54Z"
+          },
+          {
+            "name": "Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:12:54Z",
+            "completed_at": "2026-10-13T18:13:01Z"
+          },
+          {
+            "name": "Install locked dependencies and headless Chrome",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:01Z",
+            "completed_at": "2026-10-13T18:13:12Z"
+          },
+          {
+            "name": "Build production bundle with a dummy Mapillary token",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:12Z",
+            "completed_at": "2026-10-13T18:13:24Z"
+          },
+          {
+            "name": "Start the preview server",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:24Z",
+            "completed_at": "2026-10-13T18:13:26Z"
+          },
+          {
+            "name": "Street Level gate with Mapillary fixtures",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:13:26Z",
+            "completed_at": "2026-10-13T18:17:09Z"
+          },
+          {
+            "name": "Start the application lifecycle fixture server",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:17:09Z",
+            "completed_at": "2026-10-13T18:17:11Z"
+          },
+          {
+            "name": "First-use application lifecycle gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-13T18:17:11Z",
+            "completed_at": "2026-10-13T18:17:30Z"
+          },
+          {
+            "name": "Evidence references and browser-profile transfer",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-13T18:17:30Z",
+            "completed_at": "2026-10-13T18:19:04Z"
+          },
+          {
+            "name": "Keyboard, accessible names and reflow",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-13T18:19:04Z",
+            "completed_at": "2026-10-13T18:19:49Z"
+          },
+          {
+            "name": "Effective visual settings across share and workspace restores",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-13T18:19:49Z",
+            "completed_at": "2026-10-13T18:20:01Z"
+          },
+          {
+            "name": "Durable workspace library and cross-page conflict journey",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-13T18:20:01Z",
+            "completed_at": "2026-10-13T18:20:39Z"
+          },
+          {
+            "name": "Rendered application mixed-use smoke",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 14,
+            "started_at": "2026-10-13T18:20:39Z",
+            "completed_at": "2026-10-13T18:22:21Z"
+          },
+          {
+            "name": "Scene import and sharing gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-10-13T18:22:21Z",
+            "completed_at": "2026-10-13T18:24:01Z"
+          },
+          {
+            "name": "Aircraft evidence panel gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-10-13T18:24:01Z",
+            "completed_at": "2026-10-13T18:25:15Z"
+          },
+          {
+            "name": "Portable panel gate",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-13T18:25:15Z",
+            "completed_at": "2026-10-13T18:28:55Z"
+          },
+          {
+            "name": "Preview server log",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-10-13T18:28:55Z",
+            "completed_at": "2026-10-13T18:28:55Z"
+          },
+          {
+            "name": "Upload gate evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 19,
+            "started_at": "2026-10-13T18:28:55Z",
+            "completed_at": "2026-10-13T18:28:55Z"
+          },
+          {
+            "name": "Post Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 37,
+            "started_at": "2026-10-13T18:28:55Z",
+            "completed_at": "2026-10-13T18:28:56Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 38,
+            "started_at": "2026-10-13T18:28:56Z",
+            "completed_at": "2026-10-13T18:28:56Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 39,
+            "started_at": "2026-10-13T18:28:56Z",
+            "completed_at": "2026-10-13T18:28:56Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460582954",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": 1000024324,
+        "runner_name": "GitHub Actions 1000024324",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460583064,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyumA",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460583064",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460583064",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:46Z",
+        "completed_at": "2026-10-13T18:14:36Z",
+        "name": "Windows onboarding",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-13T18:12:47Z",
+            "completed_at": "2026-10-13T18:12:47Z"
+          },
+          {
+            "name": "Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-13T18:12:47Z",
+            "completed_at": "2026-10-13T18:13:01Z"
+          },
+          {
+            "name": "Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-13T18:13:01Z",
+            "completed_at": "2026-10-13T18:13:20Z"
+          },
+          {
+            "name": "Run the Pinokio install path",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-13T18:13:20Z",
+            "completed_at": "2026-10-13T18:13:31Z"
+          },
+          {
+            "name": "Check adopted formatting",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-13T18:13:31Z",
+            "completed_at": "2026-10-13T18:13:54Z"
+          },
+          {
+            "name": "Check package boundaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-13T18:13:54Z",
+            "completed_at": "2026-10-13T18:14:15Z"
+          },
+          {
+            "name": "Run focused onboarding tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-13T18:14:15Z",
+            "completed_at": "2026-10-13T18:14:18Z"
+          },
+          {
+            "name": "Build production bundle",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-13T18:14:18Z",
+            "completed_at": "2026-10-13T18:14:32Z"
+          },
+          {
+            "name": "Post Use Node.js",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-10-13T18:14:32Z",
+            "completed_at": "2026-10-13T18:14:32Z"
+          },
+          {
+            "name": "Post Check out source",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-10-13T18:14:32Z",
+            "completed_at": "2026-10-13T18:14:34Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-10-13T18:14:34Z",
+            "completed_at": "2026-10-13T18:14:34Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460583064",
+        "labels": [
+          "windows-latest"
+        ],
+        "runner_id": 1000024321,
+        "runner_name": "GitHub Actions 1000024321",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 115460583926,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyx9g",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460583926",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460583926",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Native WebGL probe (${{ matrix.os }})",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460583926",
+        "labels": [],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460584183,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyy9w",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460584183",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460584183",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Isolated import and workspace lifecycle",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460584183",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460584189,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyy_Q",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460584189",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460584189",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Isolated mission render-demand correctness",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460584189",
+        "labels": [
+          "macos-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460584304,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fyzcA",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460584304",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460584304",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Isolated rendered mixed-use smoke",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460584304",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460584598,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fy0lg",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460584598",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460584598",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Free hosted Mac accelerated retention diagnostic",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460584598",
+        "labels": [
+          "macos-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460584765,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fy1PQ",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460584765",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460584765",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Isolated terrain and picking lifecycle",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460584765",
+        "labels": [
+          "macos-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460585204,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4fy29A",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460585204",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460585204",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:42Z",
+        "started_at": "2026-10-13T18:12:42Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Free hosted Mac rendering diagnostic",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460585204",
+        "labels": [
+          "macos-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460629995,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4f1l6w",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460629995",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460629995",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:48Z",
+        "started_at": "2026-10-13T18:12:48Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Browser shutdown controls (${{ (inputs.shutdown_runner || 'windows-latest') }})",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460629995",
+        "labels": [
+          "windows-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460631630,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4f1sTg",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460631630",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460631630",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:48Z",
+        "started_at": "2026-10-13T18:12:48Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Baseline-compatible performance build smoke",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460631630",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460636759,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4f2AVw",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460636759",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460636759",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:49Z",
+        "started_at": "2026-10-13T18:12:49Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "60-minute rendered application soak",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460636759",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460638161,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4f2F0Q",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460638161",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460638161",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:49Z",
+        "started_at": "2026-10-13T18:12:49Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Aircraft tracking regression",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460638161",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      },
+      {
+        "id": 115460660446,
+        "run_id": 38444888569,
+        "workflow_name": "CI",
+        "head_branch": "qa/s47-austin-receipt-only",
+        "run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/runs/38444888569",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOUTUTds8AAAAa4f3c3g",
+        "head_sha": "d6a97e46e80ebb3bd5fe20f7f43ed9f5825a84c1",
+        "url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/actions/jobs/115460660446",
+        "html_url": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38444888569/job/115460660446",
+        "status": "completed",
+        "conclusion": "skipped",
+        "created_at": "2026-10-13T18:12:52Z",
+        "started_at": "2026-10-13T18:12:52Z",
+        "completed_at": "2026-10-13T18:12:41Z",
+        "name": "Isolated CCTV lifecycle",
+        "steps": [],
+        "check_run_url": "https://api.github.com/repos/arthurianresolve/gods-eye-view/check-runs/115460660446",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "runner_id": null,
+        "runner_name": null,
+        "runner_group_id": null,
+        "runner_group_name": null
+      }
+    ]
+  }
+}

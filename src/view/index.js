@@ -11,6 +11,31 @@ import {
   decodeLayerStateParams,
   encodeLayerStateParams,
 } from '../data/layerState.js';
+import {
+  DENSITY_STOPS,
+  migrateDetectionState,
+} from '../data/detectionPolicy.js';
+import {
+  encodeViewVisual,
+  normalizeViewVisual,
+  visualFromParams,
+} from './visual.js';
+
+const DETECTION_MODES = Object.freeze(['OFF', 'SPARSE', 'BALANCED', 'DENSE']);
+
+function detectionOf(value) {
+  if (value == null) return null;
+  if (
+    !DETECTION_MODES.includes(value.mode) ||
+    !DENSITY_STOPS.includes(value.densityPct)
+  )
+    throw new TypeError('Invalid view detection mode or density');
+  const restored = migrateDetectionState(value.mode, value.densityPct);
+  return Object.freeze({
+    mode: restored.enabled ? restored.profile : 'OFF',
+    densityPct: restored.densityPct,
+  });
+}
 
 /** Visual styles by internal name, with the name share links use. */
 export const STYLE_URL_NAMES = Object.freeze({
@@ -64,6 +89,11 @@ const FOLLOWABLE = Object.freeze({
 });
 
 export const VIEW_FOLLOW_KINDS = Object.freeze(Object.keys(FOLLOWABLE));
+export const VIEW_TEMPORAL_SOURCES = Object.freeze([
+  'live',
+  'provider-history',
+  'recording',
+]);
 
 /** Annotation kinds the app draws, as in its annotate_map action. */
 export const VIEW_ANNOTATION_TYPES = Object.freeze([
@@ -90,6 +120,16 @@ const MAX_ALTITUDE_M = 20_000_000;
 
 /** JSON Schema for the parts of a view a caller chooses directly. */
 export const VIEW_PROPERTIES = Object.freeze({
+  detection: Object.freeze({
+    type: 'object',
+    description: 'Saved detection display mode and label density percentage.',
+    properties: {
+      mode: { type: 'string', enum: [...DETECTION_MODES] },
+      densityPct: { type: 'number', enum: [...DENSITY_STOPS] },
+    },
+    required: ['mode', 'densityPct'],
+    additionalProperties: false,
+  }),
   camera: Object.freeze({
     type: 'object',
     description:
@@ -181,6 +221,27 @@ export const VIEW_PROPERTIES = Object.freeze({
     required: ['kind', 'id'],
     additionalProperties: false,
   }),
+  temporal: Object.freeze({
+    type: 'object',
+    description:
+      'An investigation time. Historical links preserve the requested time and source mode; recording links also refer to a local recording bundle.',
+    properties: {
+      source: { type: 'string', enum: [...VIEW_TEMPORAL_SOURCES] },
+      targetMs: {
+        type: 'integer',
+        minimum: 0,
+        description:
+          'UTC epoch milliseconds for provider history or a recording.',
+      },
+      recordingId: {
+        type: 'string',
+        maxLength: 128,
+        description: 'Local recording ID; required only for recording source.',
+      },
+    },
+    required: ['source'],
+    additionalProperties: false,
+  }),
 });
 
 const round = (value, digits) => Number(value.toFixed(digits));
@@ -239,6 +300,62 @@ function annotationOf(input) {
 }
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+function temporalOf(input) {
+  if (input == null) return null;
+  if (!VIEW_TEMPORAL_SOURCES.includes(input.source))
+    throw new TypeError('Unknown temporal source');
+  if (input.source === 'live') {
+    if (input.targetMs != null || input.recordingId != null)
+      throw new TypeError('A live view cannot carry a historical target');
+    return Object.freeze({
+      source: 'live',
+      targetMs: null,
+      recordingId: null,
+    });
+  }
+  if (
+    !Number.isSafeInteger(input.targetMs) ||
+    input.targetMs < 0 ||
+    input.targetMs > Date.now()
+  )
+    throw new RangeError('A historical view needs a finite past target');
+  const recordingId = input.recordingId ?? null;
+  if (
+    input.source === 'recording'
+      ? typeof recordingId !== 'string' ||
+        !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(recordingId)
+      : recordingId !== null
+  )
+    throw new TypeError('Recording reference does not match temporal source');
+  return Object.freeze({
+    source: input.source,
+    targetMs: input.targetMs,
+    recordingId,
+  });
+}
+
+function temporalFromParams(params) {
+  const hasTemporal = ['it', 'is', 'ir'].some((key) => params.has(key));
+  if (!hasTemporal) return { temporal: null, invalid: false };
+  try {
+    const source = params.get('is');
+    const rawTarget = params.get('it');
+    const targetMs = rawTarget === null ? null : Number(rawTarget);
+    const temporal = temporalOf({
+      source,
+      targetMs,
+      recordingId: params.get('ir'),
+    });
+    if (source === 'live' && hasTemporal && params.has('it'))
+      return { temporal: null, invalid: true };
+    if (source !== 'recording' && params.has('ir'))
+      return { temporal: null, invalid: true };
+    return { temporal, invalid: false };
+  } catch {
+    return { temporal: null, invalid: true };
+  }
+}
+
 /**
  * A complete view from its parts. `camera` needs lat and lon; the rest has
  * defaults: 800 km up, looking straight down, no layers, the recipient's own
@@ -251,6 +368,9 @@ export function createView({
   map = null,
   follow = null,
   annotations = [],
+  temporal = null,
+  detection = null,
+  visual = null,
 } = {}) {
   if (!Number.isFinite(camera?.lat) || !Number.isFinite(camera?.lon))
     throw new TypeError('A view needs a camera lat and lon');
@@ -295,6 +415,9 @@ export function createView({
         .map(annotationOf)
         .filter(Boolean),
     ),
+    temporal: temporalOf(temporal),
+    ...(detection == null ? {} : { detection: detectionOf(detection) }),
+    ...(visual == null ? {} : { visual: normalizeViewVisual(visual, style) }),
   });
 }
 
@@ -311,6 +434,12 @@ export function viewToParams(view) {
   });
   if (view.style) params.set('style', STYLE_URL_NAMES[view.style]);
   if (view.map) params.set('map', view.map);
+  encodeViewVisual(params, view.visual, view.style);
+  const detection = detectionOf(view.detection);
+  if (detection) {
+    params.set('dm', detection.mode);
+    params.set('dd', String(detection.densityPct));
+  }
   if (view.layers.length) {
     const state = createDefaultLayerState();
     state.enabledLayerIds = [...view.layers];
@@ -326,6 +455,12 @@ export function viewToParams(view) {
     const encoded = JSON.stringify(view.annotations);
     if (encoded.length <= MAX_ANNOTATION_PARAM_CHARS)
       params.set(ANNOTATION_PARAM, encoded);
+  }
+  if (view.temporal) {
+    params.set('is', view.temporal.source);
+    if (view.temporal.targetMs !== null)
+      params.set('it', String(view.temporal.targetMs));
+    if (view.temporal.recordingId) params.set('ir', view.temporal.recordingId);
   }
   return params;
 }
@@ -361,6 +496,16 @@ export function viewFromParams(params) {
       follow = { kind, id: String(id) };
   }
   const map = params.get('map');
+  const decodedTemporal = temporalFromParams(params);
+  if (decodedTemporal.invalid) return null;
+  const restoredDetection =
+    params.has('dm') || params.has('dd')
+      ? migrateDetectionState(params.get('dm') || 'OFF', number('dd'), 50)
+      : null;
+  const styleName = params.get('style');
+  const restoredStyle = Object.hasOwn(STYLES_BY_URL_NAME, styleName)
+    ? STYLES_BY_URL_NAME[styleName]
+    : null;
   return createView({
     camera: {
       lat,
@@ -370,13 +515,24 @@ export function viewFromParams(params) {
       pitch_deg: number('pitch'),
     },
     layers: state?.enabledLayerIds ?? [],
-    style: Object.hasOwn(STYLES_BY_URL_NAME, params.get('style'))
-      ? STYLES_BY_URL_NAME[params.get('style')]
-      : null,
+    style: restoredStyle,
+    visual: visualFromParams(params, restoredStyle),
     map: VIEW_MAPS.includes(map) ? map : null,
     follow,
     annotations: annotationsFromParams(params),
+    temporal: decodedTemporal.temporal,
+    detection: restoredDetection
+      ? {
+          mode: restoredDetection.enabled ? restoredDetection.profile : 'OFF',
+          densityPct: restoredDetection.densityPct,
+        }
+      : null,
   });
+}
+
+/** Decode the optional temporal contract carried by a view or share link. */
+export function temporalFromViewParams(params) {
+  return temporalFromParams(params);
 }
 
 /** The address that opens the app at a view. */

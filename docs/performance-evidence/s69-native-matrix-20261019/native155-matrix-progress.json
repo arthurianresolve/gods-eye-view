@@ -1,0 +1,269 @@
+{
+  "schema": "gev-current-matrix-progress/v1",
+  "recordedAt": "2026-10-19T07:25:41.753Z",
+  "baseline": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "candidate": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "producer": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+  "builder": "55639cc7fde03daacf25e643f16f803e001113f9",
+  "planSha256": "3b9873ed4aee491667b42f6881b51fa4a9bfcc39c8e76a07ea67f579d4a217d3",
+  "browser": "Chrome/155.0.8059.84",
+  "rows": [
+    {
+      "id": "operating-view",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "dense-investigation",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "infrastructure-datacenters",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "infrastructure-dams",
+      "status": "no-regressions-over-ten-percent",
+      "reports": {
+        "baseline": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-dams-baseline.json",
+          "sha256": "8b0bc3dfbd0578a9bbe56265a1b4bd3a58ec60e00057eed77f31c1faa7044c32",
+          "bytes": 370488,
+          "failed": false,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-dams-candidate.json",
+          "sha256": "8cda4aca803de42c9c61040dc93bc6dd45196e0d51df6d68efa04b556f93e4ee",
+          "bytes": 371457,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "integrity": "passed"
+        }
+      },
+      "scenarios": {
+        "idle": {
+          "status": "unavailable",
+          "baselineMedianP95Ms": null,
+          "candidateMedianP95Ms": null,
+          "changePct": null,
+          "regressionOver10Pct": false
+        },
+        "scripted-motion": {
+          "status": "measured",
+          "baselineMedianP95Ms": 299.7000000011176,
+          "candidateMedianP95Ms": 305.8999999985099,
+          "changePct": 2.0687354011909167,
+          "regressionOver10Pct": false
+        }
+      },
+      "regressionsOver10Pct": []
+    },
+    {
+      "id": "infrastructure-cables",
+      "status": "no-regressions-over-ten-percent",
+      "reports": {
+        "baseline": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-cables-baseline.json",
+          "sha256": "f61e8fbae614bd6d83870aca89847c1c981898c9ec8ea831f9f43204c0c06a0d",
+          "bytes": 374875,
+          "failed": false,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "matrix-55639cc7-native-a783-chrome155/infrastructure-cables-candidate.json",
+          "sha256": "7ac1d8ceefc89195f10f91f4decc772f39a7b23ee6b45c0e5a8c6252f105c6c8",
+          "bytes": 375776,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "integrity": "passed"
+        }
+      },
+      "scenarios": {
+        "idle": {
+          "status": "unavailable",
+          "baselineMedianP95Ms": null,
+          "candidateMedianP95Ms": null,
+          "changePct": null,
+          "regressionOver10Pct": false
+        },
+        "scripted-motion": {
+          "status": "measured",
+          "baselineMedianP95Ms": 332.80000000074506,
+          "candidateMedianP95Ms": 336.1000000014901,
+          "changePct": 0.9915865386831941,
+          "regressionOver10Pct": false
+        }
+      },
+      "regressionsOver10Pct": []
+    },
+    {
+      "id": "infrastructure",
+      "status": "pending",
+      "reports": {}
+    },
+    {
+      "id": "weather-effects",
+      "status": "regression-over-ten-percent-unresolved",
+      "reports": {
+        "baseline": {
+          "path": "weather-confirmation-1792390961304/control.json",
+          "sha256": "8e8afa58851cca3a6c729fa42894efe070e7ddff4294959c47690f8bfb64f687",
+          "bytes": 654612,
+          "failed": false,
+          "appCommit": "d6bb7a297cfadc863c3b453a3d7c1fc737aab046",
+          "producerCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "weather-confirmation-1792390961304/candidate.json",
+          "sha256": "1c17f5a571086955f1facd13d5c210b8228198d72db55624c0c075b0a923de07",
+          "bytes": 656196,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "producerCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+          "integrity": "passed"
+        }
+      },
+      "historicalAttempts": [
+        {
+          "status": "failed-original-pair",
+          "reports": {
+            "baseline": {
+              "path": "matrix-55639cc7-native-a783-chrome155/weather-effects-baseline.json",
+              "sha256": "461503ed917e8a41e9be497cbcbc889def1ac49c61337d5a10e98a66ce8030ac",
+              "bytes": 235409,
+              "failed": true,
+              "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+              "integrity": null
+            },
+            "candidate": {
+              "path": "matrix-55639cc7-native-a783-chrome155/weather-effects-candidate.json",
+              "sha256": "ac54ddd788b23ae35667c1b1cc8d5f2d956431b5115260f01812ca353ad25701",
+              "bytes": 655975,
+              "failed": false,
+              "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+              "integrity": "passed"
+            }
+          },
+          "retainedFromIndexAt": "2026-10-19T05:05:55.758Z"
+        }
+      ],
+      "producerCommit": "a7837467e4c8b079701fc8e4bb6c8ae89abed11a",
+      "consumerCommit": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+      "scenarios": {
+        "idle": {
+          "status": "measured",
+          "baselineMedianP95Ms": 6894.699999999255,
+          "candidateMedianP95Ms": 1313.4000000022352,
+          "changePct": -80.95058523210035,
+          "regressionOver10Pct": false
+        },
+        "scripted-motion": {
+          "status": "measured",
+          "baselineMedianP95Ms": 274.19999999925494,
+          "candidateMedianP95Ms": 308,
+          "changePct": 12.326768782216229,
+          "regressionOver10Pct": true
+        }
+      },
+      "regressionsOver10Pct": ["scripted-motion"],
+      "review": "weather-confirmation-review.json",
+      "priorTimingReview": "weather-control-timing-review.json",
+      "baselineScope": "Correctness-only control d6bb7a29 contains the same weather ownership fix as the candidate. Original e7a878e failure is retained. No speed benefit is credited to the shared fix."
+    },
+    {
+      "id": "map-streaming",
+      "status": "no-regressions-over-ten-percent",
+      "reports": {
+        "baseline": {
+          "path": "map-frames-55639cc7-native-aa1e653f-chrome155/map-streaming-baseline.json",
+          "sha256": "2b76fb5b4e2b8e503ec070aa030eeeffd5e589f6adad164c571c68c8071b82df",
+          "bytes": 1119763,
+          "failed": false,
+          "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+          "producerCommit": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+          "integrity": "passed"
+        },
+        "candidate": {
+          "path": "map-frames-55639cc7-native-aa1e653f-chrome155/map-streaming-candidate.json",
+          "sha256": "d88727f2d1ea8f3774077a2cbe61f92a7830e11f8e909c12ceb1c5313deedf71",
+          "bytes": 1131029,
+          "failed": false,
+          "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+          "producerCommit": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+          "integrity": "passed"
+        }
+      },
+      "scenarios": {
+        "map-streaming-route": {
+          "status": "measured",
+          "baselineMedianP95Ms": 14413.900000002235,
+          "candidateMedianP95Ms": 11645,
+          "changePct": -19.20992930436458,
+          "regressionOver10Pct": false
+        },
+        "idle": {
+          "status": "measured",
+          "baselineMedianP95Ms": 13911.599999997765,
+          "candidateMedianP95Ms": 13991.5,
+          "changePct": 0.5743408378780874,
+          "regressionOver10Pct": false
+        },
+        "scripted-motion": {
+          "status": "measured",
+          "baselineMedianP95Ms": 392.29999999701977,
+          "candidateMedianP95Ms": 398.9000000022352,
+          "changePct": 1.6823859304780895,
+          "regressionOver10Pct": false
+        }
+      },
+      "regressionsOver10Pct": [],
+      "historicalAttempts": [
+        {
+          "status": "rejected-unmatched-frame-routes",
+          "reports": {
+            "baseline": {
+              "path": "matrix-55639cc7-native-a783-chrome155/map-streaming-baseline.json",
+              "sha256": "437c3a0b44a7183258f39f28fe6d439114a8dfcb0e35262f6b881f228964db25",
+              "bytes": 1123875,
+              "failed": false,
+              "appCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+              "integrity": "passed"
+            },
+            "candidate": {
+              "path": "matrix-55639cc7-native-a783-chrome155/map-streaming-candidate.json",
+              "sha256": "268abc72a547917388d3fc4b20ed5bd8db64c9093ccc3f245c9d8bb5ca6a324f",
+              "bytes": 1124204,
+              "failed": false,
+              "appCommit": "55639cc7fde03daacf25e643f16f803e001113f9",
+              "integrity": "passed"
+            }
+          },
+          "scenarios": {
+            "map-streaming-route": {
+              "status": "measured",
+              "baselineMedianP95Ms": 14238.799999998882,
+              "candidateMedianP95Ms": 14201.599999999627,
+              "changePct": -0.26125797117213434,
+              "regressionOver10Pct": false
+            }
+          },
+          "regressionsOver10Pct": [],
+          "retainedFromIndexAt": "2026-10-19T05:05:55.758Z"
+        }
+      ],
+      "producerCommit": "aa1e653f7989c9da4cef109d3baef79003af6ff9",
+      "consumerCommit": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+      "review": "native-map-consumer-integration.json",
+      "scope": "Pinned fixture and complete native delivery independently validated before comparing the fixed corpus; original route and inventory failures retained."
+    }
+  ],
+  "acceptance": "blocked by repeated weather timing regression; remaining exact-candidate rows pending; no deployment approval",
+  "productionChanged": false,
+  "producerScope": "Default producer; per-row producerCommit and raw report identities take precedence for the corrected map row."
+}

@@ -304,6 +304,7 @@ export function createAnimation({
     }
 
     layerState._animFrame++;
+    parts.lifecycle?.syncRenderDemand?.();
   }
 
   /**
@@ -329,6 +330,12 @@ export function createAnimation({
   /** Remove all point primitives and reset dot/road arrays and counters. */
 
   function clearDots() {
+    const hadVisibleWork = Boolean(
+      layerState._dots.length ||
+      layerState._heatLineCount ||
+      layerState._heatJamPrim ||
+      layerState._heatSlowPrim,
+    );
     services.credits?.hideOsmCredit?.(layerState._viewer, 'traffic');
     parts.retention.clear();
     if (layerState._dots.length) layerState._motion.rebuilds++;
@@ -339,6 +346,9 @@ export function createAnimation({
     layerState._count = 0;
     layerState._bucketCounts = { free: 0, slow: 0, jam: 0, sim: 0 };
     layerState._closedRoads = 0;
+    parts.lifecycle?.syncRenderDemand?.('traffic-cleared');
+    if (hadVisibleWork)
+      services.render?.governorRequestRender?.('traffic-cleared');
   }
   return { spawnDotsForRoad, animate, maybeStopLight, clearDots };
 }

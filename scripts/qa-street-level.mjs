@@ -12,6 +12,7 @@
  */
 import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
+import { LAYER_STATE_REGISTRY } from '../src/data/layerState.js';
 import { tileBounds } from '../src/layers/streetLevel/tileMath.js';
 import { encodeCoverageTile } from '../src/layers/streetLevel/providers/mapillary/coverageFixture.mjs';
 import {
@@ -43,9 +44,79 @@ import {
   resetPanoramaxFixture,
 } from './fixtures/street-level/panoramax.mjs';
 
-const VIEWPORT = { width: 1440, height: 900 };
-/** Over downtown Sacramento, above the fixture photo line, looking down. */
-const PARK = { lon: PHOTO_LINE.lon, lat: 38.5816, height: 900, pitch: -1.3 };
+const PANEL_ID = 'street-level-panel';
+
+/** Where a failed run leaves its screenshots and logs. */
+export const ARTIFACT_DIR = 'qa-artifacts/street-level';
+
+export const VIEWPORTS = Object.freeze([
+  { width: 1440, height: 900 },
+  { width: 1280, height: 800 },
+]);
+
+/** Provider chips the panel must show, in order. */
+export const EXPECTED_PROVIDERS = Object.freeze([
+  'mapillary',
+  'google',
+  'kartaview',
+  'panoramax',
+]);
+
+/**
+ * Skips no setup can avoid: CI forks have no Google key (so neither Google 3D
+ * nor Street View), and live runs cannot stage fixture-only cases. `no
+ * Mapillary key` is not accepted: CI's dummy token runs the keyed flow, so a
+ * keyless strict run means that wiring broke. Nor is `Google key refused`: a
+ * key that is set must work.
+ */
+export const STRICT_ALLOWED_SKIPS = Object.freeze([
+  'no Google 3D',
+  'no Google key',
+  'fixtures only',
+]);
+
+/** A Sacramento street with Google Street View (10th St, by the Capitol). */
+export const STREET_VIEW_STREET = Object.freeze({
+  lon: -121.49372,
+  lat: 38.57986,
+});
+
+export function strictViolations(skips) {
+  return skips.filter((skip) => !STRICT_ALLOWED_SKIPS.includes(skip.reason));
+}
+
+const STREET_LEVEL_TOKEN = LAYER_STATE_REGISTRY.find(
+  (entry) => entry.id === 'street-level',
+).token;
+
+/** The Street Level panel's token in the share link's `ui` panel state. */
+export const PANEL_UI_TOKEN = 't';
+
+/** Right-rail order once the layout controller has run. */
+export const RAIL_ORDER = Object.freeze([
+  'pp-toggles',
+  'evidence-panel',
+  'cctv-panel',
+  'weather-panel',
+  'recent-imagery-panel',
+  'street-level-panel',
+  'global-context-panel',
+]);
+
+/** Over downtown Sacramento, looking north and down. */
+export const PARK = Object.freeze({
+  lon: -121.4944,
+  lat: 38.5816,
+  height: 900,
+  pitch: -1.3,
+});
+
+export function isCollapsed(classList) {
+  return [...classList].includes('collapsed');
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const DAY_MS = 86_400_000;
 
 /**
@@ -403,7 +474,7 @@ async function main() {
     executablePath:
       process.env.PUPPETEER_EXECUTABLE_PATH ||
       (await puppeteer.executablePath()),
-    defaultViewport: VIEWPORT,
+    defaultViewport: VIEWPORTS[0],
     protocolTimeout: 300_000,
     args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader'],
   });

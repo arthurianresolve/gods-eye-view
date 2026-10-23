@@ -1,0 +1,24 @@
+{
+  "schema": "gev-ground-sample-cache-disposition/v1",
+  "status": "rejected-before-runtime-adoption",
+  "observedAt": "2026-10-20T06:26:19.229Z",
+  "runtimeCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+  "reason": "The proposed cache eligibility test relied on nonexistent DataSourceCollection.collectionChanged and could not distinguish public DataSourceDisplay-owned primitive containers from other visible surface owners. It would never qualify in the actual viewer; unsafe private-field assumptions were rejected.",
+  "files": [
+    {
+      "name": "prototype.patch",
+      "bytes": 78884,
+      "sha256": "411fc6cf82f8300f0f154126ea422d0d63c12bc041d428ccccc43be9ea95dca7"
+    },
+    {
+      "name": "README.md",
+      "bytes": 1370,
+      "sha256": "06dd28f300fd38c1ba138fc08fe50401befa696b0a4f8e4f3844df64ea2e0278"
+    }
+  ],
+  "testsExecuted": false,
+  "hardwareMeasurementsExecuted": false,
+  "runtimeFilesRestored": true,
+  "performanceAcceptanceUnchanged": true,
+  "followup": "Any future retained-source optimization must preserve surface invalidation and the existing disabled-layer teardown/retention contract, then demonstrate benefit on the actual viewer."
+}

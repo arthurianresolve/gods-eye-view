@@ -1,0 +1,57 @@
+✔ exact RGBA diagnostics locate mismatches without visual tolerance (3.5039ms)
+✔ RGBA diagnostics reject malformed and oversized evidence (0.4357ms)
+✔ accepts five alternating, fully evidenced native calibration pairs (10.3221ms)
+✔ rejects shortened idle observation, missing frames, and capture-contaminated interval (3.2857ms)
+✔ rejects missing or changing post-setup canvas layout evidence (2.1966ms)
+✔ rejects pick evidence from a mismatched canvas coordinate mapping (0.8529ms)
+✔ rejects instruction-induced canvas changes even with a stable window viewport (3.8696ms)
+✔ rejects missing pointer, pixel, foreground, or cleanup evidence (11.2382ms)
+✔ rejects settings, source, camera selection, phase order, and pixel identity drift (9.3221ms)
+✔ recomputes changed calibration fields and requires visible drag pixels (1.969ms)
+✔ rejects failed reports, unbound commits, duplicate instructions, and incomplete cleanup (2.5738ms)
+✔ accepts the bounded retained-versus-rebuild rendered control (3.8001ms)
+✔ pinned fixture descriptor digest is derived from its authoritative bytes (0.7669ms)
+✔ rejects malformed, stale, black, or mismatched retained output (11.1689ms)
+✔ unchanged CCTV coverage refreshes do not invalidate Cesium polyline geometry (5.9776ms)
+✔ coverage refresh still updates estimated, active, viewshed, and projection styles (2.7073ms)
+✔ coverage refresh replaces dynamic colors and custom estimated dash parameters (1.803ms)
+✔ viewshed toggles reuse the bounded current cohort and evict before admitting another (2.2739ms)
+✔ production geometry owns retained viewshed primitives through mode changes, cohort replacement, and teardown (4.7289ms)
+[Data:CCTV] Initialized with 1 cameras
+[Data:CCTV] Initialized with 0 cameras
+[Data:CCTV] Initialized with 0 cameras
+[Data:CCTV] Initialized with 0 cameras
+✔ camera catalog and health use fixed source routes and caller cancellation (26.8314ms)
+✔ camera sources reject malformed snapshots and failures (1.6406ms)
+✔ cancellation while reading a camera response body prevents publication (0.4015ms)
+✔ frame and media URLs preserve registered camera identity and encoded metadata (0.7217ms)
+✔ camera construction is inert and destruction cancels a pending catalog and its visibility listener (5.969ms)
+✔ direct destroy releases the focus-appearance subscription idempotently (1.5061ms)
+✔ destroy preserves camera input state owned outside the CCTV layer (8.9448ms)
+✔ calibration mode uses one-shot invalidations without a continuous hold (1.1496ms)
+✔ disable then destroy and independent CCTV instances own separate focus listeners (0.927ms)
+✔ map-stack source listener survives re-init once and detaches/rebinds across destroy (3.2509ms)
+[Data:CCTV] Initialized with 1 cameras
+✔ CCTV init aborts catalog terrain-prior work on destroy and re-init (19.519ms)
+[Data:CCTV] Initialized with 1 cameras
+[Data:CCTV] Initialized with 1 cameras
+✔ destroy aborts the terrain consumer and releases its abort listener (4.5567ms)
+[Data:CCTV] Initialized with 0 cameras
+[Data:CCTV] Initialized with 0 cameras
+[Data:CCTV] Initialized with 1 cameras
+[Data:CCTV] Initialized with 0 cameras
+✔ camera activation pick owns footprint terrain work through re-init (16.3096ms)
+✔ ground-prior fallback timeout is cleared on resolve and source abort (0.4678ms)
+✔ an aborted health request cannot notify the successor camera (0.269ms)
+✔ reinitializing a CCTV layer releases the previous viewer-owned collections and camera listeners (3.8805ms)
+✔ a stale health completion after re-init cannot notify or overwrite the successor state (2.1673ms)
+✔ a superseded init cannot publish into or release the successor viewer (0.7079ms)
+✔ frames are read through the registered frame endpoint (1.1977ms)
+ℹ tests 38
+ℹ suites 0
+ℹ pass 38
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2974.2946

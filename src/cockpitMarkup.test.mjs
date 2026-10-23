@@ -4,6 +4,7 @@ import {
 } from './testSupport/readShellSource.mjs';
 import { expandApplicationHtml } from '../build/application-html.js';
 import { readLayerSource } from './testSupport/readLayerSource.mjs';
+import { LayerLifecycle } from './data/lifecycle.js';
 import { PanelLayoutController } from './ui/panelLayoutController.js';
 import { readShellElements } from './ui/shellElements.js';
 import { readStylesheet } from './testSupport/readStylesheet.mjs';
@@ -561,14 +562,98 @@ test('Display orders 3D above Celestial, Clean UI below it, and Parameters below
   assert.doesNotMatch(ui, /\['presets',/);
 });
 
-test('Clear Selected Layers uses one adopted batch and discards Context restoration state', () => {
+test('Clear Selected Layers uses one immediate adopted batch and discards Context restoration state', async (t) => {
   assert.match(
     manager,
     /async clearSelectedLayers\([\s\S]*?\.filter\(\(\[, entry\]\) => this\._effectiveEnabled\(entry\)\)[\s\S]*?\.reverse\(\)/,
   );
-  assert.match(
-    manager,
-    /for \(const \{ layerId, intentEpoch \} of targets\)[\s\S]*?visibilityIntentEpoch !== intentEpoch[\s\S]*?await this\.setEnabled\(layerId, false/,
+  const documentRef = new EventTarget();
+  let presentationFrames = 0;
+  documentRef.hidden = false;
+  documentRef.defaultView = {
+    requestAnimationFrame() {
+      presentationFrames++;
+      throw new Error('Bulk clear must not wait for per-layer presentation');
+    },
+    cancelAnimationFrame() {},
+    setTimeout() {},
+    clearTimeout() {},
+  };
+  const lifecycle = new LayerLifecycle({
+    container: { ownerDocument: documentRef },
+  });
+  const disabled = [];
+  let finishChildDisable;
+  let gateChildTeardown = false;
+  let clearing;
+  t.after(async () => {
+    gateChildTeardown = false;
+    finishChildDisable?.();
+    await clearing;
+    await lifecycle.destroyAll();
+  });
+  for (const id of ['parent', 'child']) {
+    lifecycle.register({
+      id,
+      updateInterval: -1,
+      init() {},
+      enable() {},
+      update() {},
+      disable() {
+        disabled.push(id);
+        if (id === 'child' && gateChildTeardown)
+          return new Promise((resolve) => {
+            finishChildDisable = resolve;
+          });
+      },
+    });
+    assert.equal(await lifecycle.setEnabled(id, true), true);
+  }
+  const requests = [];
+  lifecycle.subscribeVisibilityRequests((change) => requests.push(change));
+  const notificationToken = Symbol('clear-selected-layers-test');
+  gateChildTeardown = true;
+  clearing = lifecycle.clearSelectedLayers({
+    origin: 'user',
+    notificationToken,
+  });
+  for (let turn = 0; turn < 40 && !finishChildDisable; turn++)
+    await Promise.resolve();
+  assert.equal(typeof finishChildDisable, 'function');
+  assert.deepEqual(
+    disabled,
+    ['child'],
+    'The parent waits for dependent teardown',
+  );
+  assert.equal(
+    lifecycle.isEnabled('child'),
+    true,
+    'Pending teardown stays truthfully ON',
+  );
+  finishChildDisable();
+  const result = await clearing;
+  assert.deepEqual(disabled, ['child', 'parent']);
+  assert.deepEqual(result.targetIds, ['child', 'parent']);
+  assert.deepEqual(result.clearedIds, result.targetIds);
+  assert.deepEqual(result.notClearedIds, []);
+  assert.equal(
+    presentationFrames,
+    0,
+    'Clear retains immediate teardown despite its user origin',
+  );
+  assert.deepEqual(
+    requests.map(({ layerId, enabled, origin, notificationToken: token }) => ({
+      layerId,
+      enabled,
+      origin,
+      notificationToken: token,
+    })),
+    ['child', 'parent'].map((layerId) => ({
+      layerId,
+      enabled: false,
+      origin: 'user',
+      notificationToken,
+    })),
   );
   assert.match(
     clearSelectedLayers.toString(),

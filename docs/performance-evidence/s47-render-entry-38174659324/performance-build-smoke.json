@@ -1,0 +1,10 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "failure": {
+    "phase": "setup",
+    "message": "Missing value for --candidate-sha"
+  },
+  "finishedAt": "2026-10-11T21:02:23.032Z"
+}

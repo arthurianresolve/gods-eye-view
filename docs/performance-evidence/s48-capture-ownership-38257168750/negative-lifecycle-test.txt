@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: capture CLI closes the browser after page creation fails inside its lifecycle
+not ok 1 - capture CLI closes the browser after page creation fails inside its lifecycle
+  ---
+  duration_ms: 2522.7907
+  type: 'test'
+  location: 'C:\\Users\\Privat\\Documents\\Codex\\2026-10-08\\i\\work\\gev-s48-smoke-cli-startup\\qa-artifacts\\s48-cli-startup\\root-cli-lifecycle.test.mjs:2:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /page is not defined|ReferenceError/. Input:
+    
+    'Wrote bounded failed-capture evidence.\n' +
+      'Capture failed during startup-navigation: sentinel-new-page-failure\n' +
+      'file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s48-depth-pick-attribution/scripts/capture-scene-performance.mjs:3581\r\n' +
+      '  if (page && activeDepthPickAttribution) {\r\n' +
+      '  ^\r\n' +
+      '\r\n' +
+      'ReferenceError: page is not defined\r\n' +
+      '    at file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s48-depth-pick-attribution/scripts/capture-scene-performance.mjs:3581:3\r\n' +
+      '\r\n' +
+      'Node.js v24.16.0\r\n'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    Wrote bounded failed-capture evidence.
+    Capture failed during startup-navigation: sentinel-new-page-failure
+    file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s48-depth-pick-attribution/scripts/capture-scene-performance.mjs:3581
+      if (page && activeDepthPickAttribution) {
+      ^
+    
+    ReferenceError: page is not defined
+        at file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s48-depth-pick-attribution/scripts/capture-scene-performance.mjs:3581:3
+    
+    Node.js v24.16.0
+    
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s48-smoke-cli-startup/qa-artifacts/s48-cli-startup/root-cli-lifecycle.test.mjs:71:10)
+    async Test.run (node:internal/test_runner/test:1313:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2616.5625

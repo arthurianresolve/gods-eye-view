@@ -1,0 +1,114 @@
+{
+  "schema": "gev-soak-camera-preflight-qa-validation/v1",
+  "startedAt": "2026-10-19T19:03:10.854Z",
+  "baseCommit": "347bf41ebd50b91397c2b9e7a69a32fcf111eaa3",
+  "applicationCandidate": "b3c49b19fea88ca82d801f7a86c62a9f827da874",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "a2559d0f8574b83e1343120c17ce88a9a726f7f83e6987f8abfccd1785dc8cca"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "sha256": "0d3ee8c0e92f6b9449c978926e361f82fa191033aac637705d3413e7dbe07556"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.test.mjs",
+      "sha256": "ac1be8e14c77962a6be2d9820aca8cc518f07cd1ab321c85804efb32a8187b48"
+    },
+    {
+      "name": "scripts/performance/captureProducerCli.test.mjs",
+      "sha256": "716ad94176adaba3711b8831a8a36c5d8040da09d063f6087d83cf301951fa59"
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.mjs",
+      "sha256": "c7ccefffe1e76f8f7ac30f4ff4b6426da456c5cb504d7eac07cebb9a6f51e985"
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.test.mjs",
+      "sha256": "1e7ebf5e015ba185468499fea138b1ad8d5dd2b2970e88bcc9c9729419b28eb3"
+    },
+    {
+      "name": "scripts/qa-rendered-soak-driver.mjs",
+      "sha256": "b37886c3979af575fa136be6e70745c8e45d487047fac4f0fd629e2f0d96e814"
+    },
+    {
+      "name": "scripts/qa-mixed-use-soak.test.mjs",
+      "sha256": "3d723e3932735e45fa288e70dd4339ffdf8977e3a889e21d865ee55ab022d1f3"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "sha256": "39fbf45b1f2c67813ab84db9403be0c78706ba32518395397faf67ce9175ee1b"
+    },
+    {
+      "name": "scripts/performance/balancedStartupConfirmation.test.mjs",
+      "sha256": "7a01dc9ea8bbbd876c1c13062f06acf10a62ea3aa50ebbae9d0a135633e5c5ed"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.test.mjs",
+      "sha256": "3d1d5729ef7ca4c7d7ff4ccae557a8360a79a41e8e2a428b3deab2a827d677ee"
+    },
+    {
+      "name": "scripts/performance/pairedReport.test.mjs",
+      "sha256": "5172411bc9ff5ab71521247fc4c9420af77bd0c61eb4d3e933dbf91f1c03a006"
+    },
+    {
+      "name": "scripts/performance/performanceMatrix.test.mjs",
+      "sha256": "d84237fa2de69d881815992d238321cc9e29233b312366b1fdbf47dd9ff8d68a"
+    }
+  ],
+  "tests": [
+    "scripts/performance/captureComparisonContract.test.mjs",
+    "scripts/performance/captureProducerCli.test.mjs",
+    "scripts/performance/idleCadenceDisposition.test.mjs",
+    "scripts/qa-mixed-use-soak.test.mjs",
+    "scripts/performance/qualificationMetrics.test.mjs",
+    "scripts/performance/balancedStartupConfirmation.test.mjs",
+    "scripts/performance/candidatePerformanceEvidence.test.mjs",
+    "scripts/performance/pairedReport.test.mjs",
+    "scripts/performance/performanceMatrix.test.mjs"
+  ],
+  "checks": [
+    {
+      "label": "node24",
+      "nodeVersion": "v24.16.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "990e4a18af196e9c01b2a7d4294fc2c37e90cfdd491cb64585a9535e1d2bd542",
+      "summary": [
+        "ℹ tests 217",
+        "ℹ pass 217",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 10335.801404"
+      ]
+    },
+    {
+      "label": "node26",
+      "nodeVersion": "v26.11.0",
+      "code": 0,
+      "signal": null,
+      "logSha256": "5ed2e3c86947ce75c380935b0de1a6c8f5dcd5e6c60356bc4cc2f14376bb93b6",
+      "summary": [
+        "ℹ tests 217",
+        "ℹ pass 217",
+        "ℹ fail 0",
+        "ℹ skipped 0",
+        "ℹ duration_ms 9700.000905"
+      ]
+    },
+    {
+      "label": "capture-no-undef",
+      "code": 0,
+      "signal": null,
+      "logSha256": "8337c54806c3ad3716b29371df8f521d3de8b4202c9f56f194fceb248219a635",
+      "summary": "Capture harness no-undef: 71 files passed."
+    }
+  ],
+  "status": "passed",
+  "root": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-soak-camera-preflight-review-20261019",
+  "checkout": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-readiness-import-review-20261019/checkout",
+  "priorValidationPreservedAt": "/opt/gods-eye-view-validation/s61-s70-20261018/qa-operating-startup-idle-review-20261019",
+  "scope": "QA-only fixture camera setup and bounded postRender witness, plus operating-view startup identity and exact-candidate idle evidence. No runtime, renderer, visual-setting or threshold change. Original CI failure is preserved; fresh rendered smoke and hardware evidence remain required.",
+  "completedAt": "2026-10-19T19:03:34.609Z"
+}

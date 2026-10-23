@@ -1,0 +1,43 @@
+{
+  "schema": "gev-timing-repair-validation/v1",
+  "failedHostedCommit": "73018ec58d578401789de49ecb29cfec41a8bf72",
+  "failedHostedRun": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38270548092",
+  "hostedNodeResults": {
+    "tests": 7409,
+    "passed": 7405,
+    "failed": 1,
+    "skipped": 3
+  },
+  "repair": "Compare stage elapsed time at timeout with late receipt from the same origin; no production code or deadline change.",
+  "repairedTestSha256": "47f7cc206d34aad013280ee0697a8b66819cd0a0b6f6d95904aaf0abd87259f8",
+  "localFocused": {
+    "node": "v24.16.0",
+    "tests": 36,
+    "passed": 36,
+    "failed": 0,
+    "skipped": 0
+  },
+  "artifacts": [
+    {
+      "file": "node26-hosted-failed.txt.gz",
+      "bytes": 304786,
+      "sha256": "957c89797d7526e50e5036c3433185695aa37730ef4eb51eb1daa6c4b4da4b36",
+      "originalBytes": 1047836,
+      "originalSha256": "750f03e783f5a1b5ae98e88d1c849759fdceb31ed9b0ae5a8a3a09ffbd94cb5b"
+    },
+    {
+      "file": "node24-hosted-failed.txt.gz",
+      "bytes": 303735,
+      "sha256": "4457d845752cf14a6d714d036888cb65a36a646a7806b98871eaaa41fe6e0634",
+      "originalBytes": 1043778,
+      "originalSha256": "528a56a3dd05595301232e1e4586e1647fa7c0140c6a2891e8e446a1f1634c46"
+    },
+    {
+      "file": "timing-focused-passed.txt.gz",
+      "bytes": 1506,
+      "sha256": "fc7503c367fd60ca70904f33f27b52d201b493ff498eee843b734adc9dd89086",
+      "originalBytes": 3448,
+      "originalSha256": "544e2f6c40f00b8f470cfe08bc7e4c4f1505d58f468dccf93cf944a9fc850a61"
+    }
+  ]
+}

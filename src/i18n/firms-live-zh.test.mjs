@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getLocale, setLocale } from './index.js';
+import { getLocale, prepareLocale, setLocale } from './index.js';
 import { createModel } from '../layers/firms/model.js';
 import { createQueries } from '../layers/firms/queries.js';
 
@@ -11,7 +11,7 @@ const cases = [
 ];
 
 for (const [age, zh, en] of cases) {
-  test(`FIRMS live age ${age} ms has one relative-time suffix`, (context) => {
+  test(`FIRMS live age ${age} ms has one relative-time suffix`, async (context) => {
     const now = 1800000000000;
     context.mock.method(Date, 'now', () => now);
     const previousLocale = getLocale();
@@ -24,6 +24,8 @@ for (const [age, zh, en] of cases) {
       _count: 1,
       _cellCount: 0,
       _fires: [],
+      _firesByFrp: [],
+      _missingSources: [],
     };
     const model = createModel({ services: { anchors: {} } });
     const { methods } = createQueries({
@@ -32,6 +34,7 @@ for (const [age, zh, en] of cases) {
       config: {},
     });
     try {
+      await prepareLocale('zh-CN');
       setLocale('en');
       assert.equal(methods.getStats().loadingLabel, `LIVE · updated ${en}`);
       setLocale('zh-CN');

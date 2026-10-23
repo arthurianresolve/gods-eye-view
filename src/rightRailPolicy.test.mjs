@@ -44,7 +44,10 @@ test('desktop Display participates in Tactical exclusivity without changing mobi
     ui,
     /panel\.id !== 'pp-toggles' && !panel\.classList\.contains\('collapsed'\)/,
   );
-  assert.match(ui, /if \(exclusive && panel\.classList\.contains\('collapsed'\)\)\s*panel\.setAttribute\('aria-hidden', 'true'\)/);
+  assert.match(
+    ui,
+    /if \(exclusive && panel\.classList\.contains\('collapsed'\)\) \{[\s\S]*panel\.setAttribute\('aria-hidden', 'true'\)/,
+  );
   assert.match(css, /#right-context-rail\.layout-exclusive > \[data-panel-id\]\.collapsed \{/);
 });
 

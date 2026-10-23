@@ -1,0 +1,3640 @@
+{
+  "schema": "gev-hosted-native-renderer/v1",
+  "commit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+  "platform": "darwin",
+  "timestamp": "2026-10-10T17:10:16.313Z",
+  "status": "passed",
+  "hardwareRenderingAvailable": true,
+  "captureMatrix": {
+    "schema": "gev-capture-matrix/v1",
+    "fixture": "synthetic-colour-depth-points/v1",
+    "applicationCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+    "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+    "capturedAt": "2026-10-10T17:10:26.837Z",
+    "scope": "isolated application viewer; no performance claim",
+    "checks": [
+      {
+        "preserveDrawingBuffer": true,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": true,
+        "label": "destroy-pending",
+        "status": "passed"
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "idle",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "moving",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "portrait",
+        "status": "passed",
+        "width": 360,
+        "height": 640,
+        "pixel": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "resized",
+        "status": "passed",
+        "width": 720,
+        "height": 400,
+        "pixel": [
+          255,
+          0,
+          0,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "restored",
+        "status": "passed",
+        "width": 640,
+        "height": 360,
+        "pixel": [
+          0,
+          0,
+          255,
+          255
+        ],
+        "listeners": 2
+      },
+      {
+        "preserveDrawingBuffer": false,
+        "label": "destroy-pending",
+        "status": "passed"
+      }
+    ],
+    "environments": [
+      {
+        "appCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+        "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": true,
+        "msaaSamples": 4
+      },
+      {
+        "appCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+        "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+        "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "vendor": "Google Inc. (Apple)",
+        "viewport": {
+          "width": 800,
+          "height": 600,
+          "dpr": 1
+        },
+        "drawingBuffer": {
+          "width": 640,
+          "height": 360
+        },
+        "layers": [],
+        "preserveDrawingBuffer": false,
+        "msaaSamples": 4
+      }
+    ],
+    "status": "passed"
+  },
+  "environment": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.6.0",
+    "cpu": "Apple M1 (Virtual)",
+    "logicalCpus": 3,
+    "memoryBytes": 7516192768,
+    "hosted": true,
+    "runnerImage": "macos26",
+    "runnerImageVersion": "20260907.0351.1"
+  },
+  "webglAvailable": true,
+  "graphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "renderingEvidence": [
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    },
+    {
+      "kind": "apple-paravirtual-metal",
+      "accelerationVerified": true,
+      "physicalDesktopCoverage": false
+    }
+  ],
+  "reason": "Chrome confirms acceleration; hosted and paravirtual results do not establish physical desktop coverage.",
+  "importBatches": {
+    "schema": "gev-import-batches/v1",
+    "applicationCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+    "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+    "capturedAt": "2026-10-10T17:10:30.106Z",
+    "documentVisibleAtStart": true,
+    "documentFocusedAtStart": true,
+    "desktopForegroundVerification": "unavailable",
+    "foregroundUninterruptedScope": "document visibility only; does not verify desktop foreground or occlusion",
+    "fixture": "synthetic-5000-import-points/v1",
+    "workload": "paired",
+    "viewerConstruction": "application-wrapper",
+    "diagnosticsEnabled": false,
+    "preserveDrawingBuffer": true,
+    "captureMode": "pixels",
+    "renderDemand": true,
+    "observeCommands": false,
+    "commandObservationScope": "Optional flushed WebGL fence: prior submitted commands only, not GPU timing or a normal latency comparison",
+    "scope": "isolated import correctness and event-loop responsiveness; no full-application or GPU speedup claim",
+    "checks": [
+      {
+        "id": "same-population-evidence-and-pixels",
+        "status": "passed"
+      },
+      {
+        "id": "twelve-cancelled-imports-release-ownership",
+        "status": "passed"
+      }
+    ],
+    "samples": [
+      {
+        "pair": 0,
+        "mode": "synchronous",
+        "elapsedMs": 68.09999999997672,
+        "maxHeartbeatGapMs": 176,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 234687813,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 75.70000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 75.70000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 0,
+        "mode": "cooperative",
+        "elapsedMs": 200.5,
+        "maxHeartbeatGapMs": 28.5,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 361896276,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 56.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 56.40000000002328,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "cooperative",
+        "elapsedMs": 195.29999999998836,
+        "maxHeartbeatGapMs": 45.699999999953434,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 475246128,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 64.09999999997672,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 25.599999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 1,
+        "mode": "synchronous",
+        "elapsedMs": 54.600000000034925,
+        "maxHeartbeatGapMs": 128.40000000002328,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 235025040,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 9.700000000011642,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 9.700000000011642,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "synchronous",
+        "elapsedMs": 84.5,
+        "maxHeartbeatGapMs": 174.70000000001164,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 360422276,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 102.39999999996508,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 30.79999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 2,
+        "mode": "cooperative",
+        "elapsedMs": 434.6000000000349,
+        "maxHeartbeatGapMs": 81.29999999998836,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 105019316,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 75.70000000001164,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 49.5,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "cooperative",
+        "elapsedMs": 172.70000000001164,
+        "maxHeartbeatGapMs": 21.900000000023283,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 102247888,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 12.900000000023283,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 12.900000000023283,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 3,
+        "mode": "synchronous",
+        "elapsedMs": 89.90000000002328,
+        "maxHeartbeatGapMs": 159.39999999996508,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 223797232,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 16.099999999976717,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 16.099999999976717,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "synchronous",
+        "elapsedMs": 108.39999999996508,
+        "maxHeartbeatGapMs": 185.29999999998836,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 232617308,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 56.40000000002328,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 39.70000000001164,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      },
+      {
+        "pair": 4,
+        "mode": "cooperative",
+        "elapsedMs": 352,
+        "maxHeartbeatGapMs": 39,
+        "features": 5000,
+        "resources": {
+          "heapBytes": 350415616,
+          "heapScope": "Unforced heap sample; not retained-memory acceptance",
+          "entities": 5000,
+          "collections": [
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "PrimitiveCollection",
+              "count": 1
+            },
+            {
+              "type": "EntityCluster",
+              "count": null
+            }
+          ]
+        },
+        "capture": {
+          "elapsedMs": 37.79999999998836,
+          "renderedFrames": 1,
+          "updates": 1,
+          "animationFrames": 0,
+          "maximumHeartbeatGapMs": 37.79999999998836,
+          "defaultRenderLoop": true,
+          "targetFrameRate": 60,
+          "requestRenderMode": true,
+          "width": 640,
+          "height": 360,
+          "contextLost": false,
+          "visible": "visible",
+          "completed": true
+        },
+        "pixelSha256": "4d634316ec8e49ab475ecacf6ef53b7ed1d55d71750756b45280bbff35c8a279"
+      }
+    ],
+    "renderErrors": [],
+    "status": "passed",
+    "environment": {
+      "appCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+      "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 800,
+        "height": 600,
+        "dpr": 1
+      },
+      "drawingBuffer": {
+        "width": 640,
+        "height": 360
+      },
+      "layers": []
+    },
+    "coldActivationMs": 620.7000000000116,
+    "warmedResources": {
+      "heapBytes": 110795118,
+      "heapScope": "Unforced heap sample; not retained-memory acceptance",
+      "entities": 5000,
+      "collections": [
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "PrimitiveCollection",
+          "count": 1
+        },
+        {
+          "type": "EntityCluster",
+          "count": null
+        }
+      ]
+    },
+    "documentVisibleThroughout": true,
+    "documentFocusedAtEnd": true,
+    "foregroundUninterrupted": true
+  },
+  "infrastructureCollections": {
+    "schema": "gev-infrastructure-collections-diagnostic/v1",
+    "fixture": "bundled-local-dams-entity-vs-primitive-surfaces/v1",
+    "applicationCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+    "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+    "candidateRepresentation": {
+      "id": "point-polyline-collections/entity-color-attribute-byte/v1",
+      "stemColorEncoding": "entity-color-attribute-byte",
+      "styleHash": "Raw RGBA source/style hashes remain exact; effective stem encoding is reported separately; full-frame pixels remain exact."
+    },
+    "capturedAt": "2026-10-10T17:10:39.844Z",
+    "status": "passed",
+    "scope": {
+      "type": "fixture-only representation comparison",
+      "retained": [
+        "production DataSource and polygon graphics",
+        "Entity objects and point/polyline graphics hidden only while collections render",
+        "production local-infrastructure preRender update loop"
+      ],
+      "limitations": [
+        "Does not measure total Entity or metadata memory removed.",
+        "Does not change or validate the production layer representation.",
+        "CPU counters measure observed JavaScript calls; WebGL byte counters are submitted API data, not GPU time or physical bus traffic.",
+        "Fixture-level pick identity is checked; application click-handler integration is not claimed."
+      ]
+    },
+    "caseCount": 2,
+    "pairsPerCase": 5,
+    "source": {
+      "id": "local-dams",
+      "payloadSha256": "f2b6f3166bee6dba4f0b569553a14c84faeb0048eb522bacd4d9c78e93d30d30",
+      "payloadBytes": 730280,
+      "bundledFeatureCount": 704,
+      "geometryKinds": {
+        "Polygon": 688,
+        "MultiPolygon": 4,
+        "Point": 5,
+        "LineString": 6,
+        "MultiLineString": 1
+      },
+      "sourceFeatureCount": 704,
+      "renderEntityCount": 716,
+      "canonicalAnalystRecordCount": 697,
+      "surfaceCount": 704,
+      "pointCount": 704,
+      "stemCount": 704,
+      "sourceGeometryKinds": {
+        "Polygon": 688,
+        "MultiPolygon": 4,
+        "Point": 5,
+        "LineString": 6,
+        "MultiLineString": 1
+      },
+      "renderEntityKinds": {
+        "point": 5,
+        "polyline": 12,
+        "polygon": 699,
+        "other": 0
+      },
+      "visiblePointCount": 126,
+      "visibleStemCount": 126,
+      "lineOnlyEntityCount": 12,
+      "polygonEntityCount": 699,
+      "cameraAnchorEntityId": "-19953989",
+      "terrain": "Cesium default Ellipsoid terrain provider; no live terrain or imagery requests enabled."
+    },
+    "environment": {
+      "appCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+      "harnessCommit": "fdc2ab9da861f9b33c0ad01aa3275ffaf086f284",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+      "vendor": "Google Inc. (Apple)",
+      "viewport": {
+        "width": 960,
+        "height": 640
+      },
+      "drawingBuffer": {
+        "width": 960,
+        "height": 640
+      },
+      "layers": [],
+      "rendererScope": "observed viewer renderer; no hardware/performance eligibility claim",
+      "materializedEntityFrames": 20,
+      "stableReadinessFrames": 3,
+      "sceneGlobeVisible": true,
+      "sceneRequestRenderMode": true,
+      "framebufferScope": "observed drawing-buffer dimensions; CSS viewport may differ."
+    },
+    "cameraUpdate": {
+      "observed": true,
+      "requestedCameraHeightM": 170000,
+      "sourcePositionSha256": "3a7c9947a41df666b5a94b98db79a782d38442a9ac6137c1cf6d3a57d006a48a",
+      "changedEntityStemPositions": true,
+      "semantics": "native camera setView; production layer preRender path updated source Entity positions; collection re-seeded from those public values at the checkpoint."
+    },
+    "checks": [
+      {
+        "name": "production-layer-loaded",
+        "passed": true,
+        "sourceFeatureCount": 704,
+        "canonicalAnalystRecordCount": 697,
+        "pointStemSurfaceCount": 704
+      },
+      {
+        "name": "entity-visualizers-materialized",
+        "passed": true
+      },
+      {
+        "name": "entity-point-and-stem-picking",
+        "passed": true,
+        "sourceRecordId": "-3726795",
+        "entityId": "-3726795"
+      },
+      {
+        "name": "entity-repeat-frame-control",
+        "passed": true,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "frames": 2
+      },
+      {
+        "name": "both-representations-warmed",
+        "passed": true,
+        "entityFrames": 2,
+        "collectionFrames": 2,
+        "collectionWarmupPixelHashes": [
+          "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff"
+        ],
+        "collectionConstructionMs": 12.600000000034925,
+        "scope": "cold construction and activation are reported separately; sample update timers exclude these warmups."
+      },
+      {
+        "name": "default-style-pair-1-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "default-style-pair-2-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "default-style-pair-3-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "default-style-pair-4-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "default-style-pair-5-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "production-camera-update-materialized",
+        "passed": true
+      },
+      {
+        "name": "focused-style-warmup-stable",
+        "passed": true,
+        "entityPixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "collectionPixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d"
+      },
+      {
+        "name": "focused-alpha-style-pair-1-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "focused-alpha-style-pair-2-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "focused-alpha-style-pair-3-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "focused-alpha-style-pair-4-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      },
+      {
+        "name": "focused-alpha-style-pair-5-exact-match",
+        "passed": true,
+        "pixelDifferenceCount": 0
+      }
+    ],
+    "samples": [
+      {
+        "caseId": "default-style",
+        "pair": 0,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 5.2999999999883585
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.3999999999650754,
+            "maxMs": 0.3999999999650754
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 0,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 39,
+          "elapsedMs": 140.10000000003492
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 0,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 37.899999999965075
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.19999999995343387,
+            "maxMs": 0.19999999995343387
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1,
+              "maxMs": 1
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 0,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 43,
+          "elapsedMs": 178.60000000003492
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 1,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 10
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.40000000002328306,
+            "maxMs": 0.40000000002328306
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.2000000000116415,
+              "maxMs": 1.2000000000116415
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 1,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 47,
+          "elapsedMs": 142.20000000001164
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 1,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 2.099999999976717
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.3999999999650754,
+            "maxMs": 0.3999999999650754
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 1,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 54,
+          "elapsedMs": 394.5999999999767
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 2,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 28.20000000001164
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.5,
+            "maxMs": 0.5
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 2,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 58,
+          "elapsedMs": 139.70000000001164
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 2,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 20.900000000023283
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.30000000004656613,
+            "maxMs": 0.30000000004656613
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.2000000000116415,
+              "maxMs": 1.2000000000116415
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 2,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 62,
+          "elapsedMs": 206.29999999998836
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 3,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 5.900000000023283
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.20000000001164153,
+            "maxMs": 0.20000000001164153
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 2.2000000000116415,
+              "maxMs": 2.2000000000116415
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 3,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 66,
+          "elapsedMs": 227.5
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 3,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 17.5
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.29999999998835847,
+            "maxMs": 0.29999999998835847
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 3,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 73,
+          "elapsedMs": 384.70000000001164
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 4,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 62
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.7000000000116415,
+            "maxMs": 0.7000000000116415
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 4,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 77,
+          "elapsedMs": 170.09999999997672
+        }
+      },
+      {
+        "caseId": "default-style",
+        "pair": 4,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 126,
+        "visibleStemCount": 126,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "75c9cc7abd1bb50223b416375eb320131f63f38650ba44719f106db3fc5aea34",
+        "styleSha256": "66e7131f158c9655990e31daa9e0f6861f32ad91ca3dc2adf85f546842669bd7",
+        "sourceStyleSha256": "61ece89017d168fc2bb5bfa0a777f0a7f6a5b3ba0b50eebdd9cff0f57ce0f05a",
+        "pointStyleSha256": "4e22473cc38c7a3c087576946a31cffad6c8ea299f15034ff04c43b53d6c5526",
+        "stemNonColorStyleSha256": "17df3827e1175962460630357d82654a5cb7fa191c9ce59ab9845cacc5d40c19",
+        "effectiveStemColorSha256": "b636deb7547320f30586d2c47aa0c2b1d8bd3a249cf8aaf04a143c040c2d61e3",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            905.6380173257842,
+            445.4276843367529
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            879.5943680763553,
+            467.11969468005316
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 20311,
+          "elapsedMs": 40.79999999998836
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.20000000001164153,
+            "maxMs": 0.20000000001164153
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.2000000000116415,
+              "maxMs": 1.2000000000116415
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "default-style",
+          "pair": 4,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 81,
+          "elapsedMs": 225.40000000002328
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 0,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "145b0041b42b5a36a264774c221781a8f15125abe6a0681597b31000a2ac79f6",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 24.900000000023283
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.09999999997671694,
+            "maxMs": 0.09999999997671694
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.2000000000116415,
+              "maxMs": 1.2000000000116415
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 0,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 109,
+          "elapsedMs": 129.29999999998836
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 0,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "51c8e6a2a6283aac424b6458b7ba52e3169310b7be867483a35c433faf32a556",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 15.200000000011642
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.3999999999650754,
+            "maxMs": 0.3999999999650754
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 0,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 116,
+          "elapsedMs": 259
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 1,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "51c8e6a2a6283aac424b6458b7ba52e3169310b7be867483a35c433faf32a556",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 32.09999999997672
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.29999999998835847,
+            "maxMs": 0.29999999998835847
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 1,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 123,
+          "elapsedMs": 359.3999999999651
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 1,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "145b0041b42b5a36a264774c221781a8f15125abe6a0681597b31000a2ac79f6",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 19.599999999976717
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.20000000001164153,
+            "maxMs": 0.20000000001164153
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1,
+              "maxMs": 1
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 1,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 127,
+          "elapsedMs": 86.20000000001164
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 2,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "145b0041b42b5a36a264774c221781a8f15125abe6a0681597b31000a2ac79f6",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 19.099999999976717
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.20000000001164153,
+            "maxMs": 0.20000000001164153
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.2000000000116415,
+              "maxMs": 1.2000000000116415
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 2,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 131,
+          "elapsedMs": 111.70000000001164
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 2,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "51c8e6a2a6283aac424b6458b7ba52e3169310b7be867483a35c433faf32a556",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 16.100000000034925
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.40000000002328306,
+            "maxMs": 0.40000000002328306
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 2,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 138,
+          "elapsedMs": 243.59999999997672
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 3,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "51c8e6a2a6283aac424b6458b7ba52e3169310b7be867483a35c433faf32a556",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 92.29999999998836
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.19999999995343387,
+            "maxMs": 0.19999999995343387
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 3,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 145,
+          "elapsedMs": 240.40000000002328
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 3,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "145b0041b42b5a36a264774c221781a8f15125abe6a0681597b31000a2ac79f6",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 89.79999999998836
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.29999999998835847,
+            "maxMs": 0.29999999998835847
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.900000000023283,
+              "maxMs": 1.900000000023283
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 3,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 149,
+          "elapsedMs": 140.60000000003492
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 4,
+        "mode": "collection",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "145b0041b42b5a36a264774c221781a8f15125abe6a0681597b31000a2ac79f6",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "rgba8-normalized-material-uniform",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 3.8999999999650754
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.20000000001164153,
+            "maxMs": 0.20000000001164153
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 1,
+              "totalMs": 0.09999999997671694,
+              "maxMs": 0.09999999997671694
+            },
+            "stem": {
+              "calls": 1,
+              "totalMs": 1.2999999999883585,
+              "maxMs": 1.2999999999883585
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 4,
+          "mode": "collection",
+          "status": "settled",
+          "completedFrames": 3,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 153,
+          "elapsedMs": 141
+        }
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 4,
+        "mode": "entity",
+        "sourceFeatureCount": 704,
+        "renderEntityCount": 716,
+        "canonicalAnalystRecordCount": 697,
+        "surfaceCount": 704,
+        "pointCount": 704,
+        "stemCount": 704,
+        "sourceGeometryKinds": {
+          "Polygon": 688,
+          "MultiPolygon": 4,
+          "Point": 5,
+          "LineString": 6,
+          "MultiLineString": 1
+        },
+        "renderEntityKinds": {
+          "point": 5,
+          "polyline": 12,
+          "polygon": 699,
+          "other": 0
+        },
+        "visiblePointCount": 129,
+        "visibleStemCount": 129,
+        "lineOnlyEntityCount": 12,
+        "polygonEntityCount": 699,
+        "identitySha256": "4362ef0506191d2d3d7b83d30078394a005c7774b6f9c07cc8ba8c849b03e203",
+        "positionSha256": "512b632e162d75f40e610e3404bc7f8867b8ab53aefdde869b295c7076e0f9e2",
+        "styleSha256": "51c8e6a2a6283aac424b6458b7ba52e3169310b7be867483a35c433faf32a556",
+        "sourceStyleSha256": "eba462d8ed40b2b7542c88d6f4f6ca0e2020bbbd9cf8f1b0635d80b2a6cf7249",
+        "pointStyleSha256": "3cdc8097f659ec95c443710587e456a2f48f1d72f3549069b9426aa5ab8a8d20",
+        "stemNonColorStyleSha256": "e15adc35cd517a7a7c2513ec8988075553db09b74c39a4b0ad20340e02452be8",
+        "effectiveStemColorSha256": "218528bf3fd2d3fe79aa09c0ddaf99af8a5efe07063dd5cd6669743b45269b8b",
+        "effectiveStemColorEncoding": "cesium-static-rgba8-attribute",
+        "sourceGeometryKindsSha256": "8e898f2fe57df89913b93abe551eee5693f2f0671ac235d44bfaa52381dc2c90",
+        "renderEntityKindsSha256": "65c58595c08e399ef9d24721d62d7037ee5136ac1fd2143b6b6a82a13fa9ad3b",
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "pixelDifferenceCount": 0,
+        "pointPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "point",
+          "screen": [
+            840.7221236498876,
+            499.47828441546244
+          ]
+        },
+        "stemPick": {
+          "sourceRecordId": "-3726795",
+          "entityId": "-3726795",
+          "kind": "stem",
+          "screen": [
+            818.8566915669223,
+            517.6903177008347
+          ]
+        },
+        "frame": {
+          "width": 960,
+          "height": 640,
+          "pixelsDifferentFromCorner": 2666,
+          "elapsedMs": 5.800000000046566
+        },
+        "updateCpu": {
+          "scope": "JavaScript call duration for instrumented update methods during the completed frame only.",
+          "dataSourceDisplay": {
+            "calls": 1,
+            "totalMs": 0.29999999998835847,
+            "maxMs": 0.29999999998835847
+          },
+          "collectionPrimitive": {
+            "point": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            },
+            "stem": {
+              "calls": 0,
+              "totalMs": 0,
+              "maxMs": 0
+            }
+          }
+        },
+        "webglSubmissionApi": {
+          "bufferDataCalls": 0,
+          "bufferSubDataCalls": 1,
+          "submittedBytes": 48
+        },
+        "cleanup": null,
+        "modeTransition": {
+          "caseId": "focused-alpha-style",
+          "pair": 4,
+          "mode": "entity",
+          "status": "settled",
+          "completedFrames": 6,
+          "stableFrames": 3,
+          "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+          "stabilityIncludesPixels": true,
+          "dataSourceReady": true,
+          "dataSourceLoading": false,
+          "expectedSurfaceCount": 704,
+          "observedSurfaceCount": 704,
+          "pointPickResolved": true,
+          "stemPickResolved": true,
+          "frameNumber": 160,
+          "elapsedMs": 246.79999999998836
+        }
+      }
+    ],
+    "modeTransitions": [
+      {
+        "caseId": "default-style",
+        "pair": 0,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 39,
+        "elapsedMs": 140.10000000003492
+      },
+      {
+        "caseId": "default-style",
+        "pair": 0,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 43,
+        "elapsedMs": 178.60000000003492
+      },
+      {
+        "caseId": "default-style",
+        "pair": 1,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 47,
+        "elapsedMs": 142.20000000001164
+      },
+      {
+        "caseId": "default-style",
+        "pair": 1,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 54,
+        "elapsedMs": 394.5999999999767
+      },
+      {
+        "caseId": "default-style",
+        "pair": 2,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 58,
+        "elapsedMs": 139.70000000001164
+      },
+      {
+        "caseId": "default-style",
+        "pair": 2,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 62,
+        "elapsedMs": 206.29999999998836
+      },
+      {
+        "caseId": "default-style",
+        "pair": 3,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 66,
+        "elapsedMs": 227.5
+      },
+      {
+        "caseId": "default-style",
+        "pair": 3,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 73,
+        "elapsedMs": 384.70000000001164
+      },
+      {
+        "caseId": "default-style",
+        "pair": 4,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 77,
+        "elapsedMs": 170.09999999997672
+      },
+      {
+        "caseId": "default-style",
+        "pair": 4,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 81,
+        "elapsedMs": 225.40000000002328
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 0,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 109,
+        "elapsedMs": 129.29999999998836
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 0,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 116,
+        "elapsedMs": 259
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 1,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 123,
+        "elapsedMs": 359.3999999999651
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 1,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 127,
+        "elapsedMs": 86.20000000001164
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 2,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 131,
+        "elapsedMs": 111.70000000001164
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 2,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 138,
+        "elapsedMs": 243.59999999997672
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 3,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 145,
+        "elapsedMs": 240.40000000002328
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 3,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 149,
+        "elapsedMs": 140.60000000003492
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 4,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 153,
+        "elapsedMs": 141
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": 4,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 160,
+        "elapsedMs": 246.79999999998836
+      }
+    ],
+    "warmupTransitions": [
+      {
+        "caseId": "default-style",
+        "pair": -1,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 28,
+        "elapsedMs": 525
+      },
+      {
+        "caseId": "default-style",
+        "pair": -1,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 36,
+        "elapsedMs": 377
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": -1,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "4ae5f4ae62e8c2644bc0bdb945e3b7598d55d52c8f16d13b2aa399ee03452fe1",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 93,
+        "elapsedMs": 176
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": -1,
+        "mode": "collection",
+        "status": "settled",
+        "completedFrames": 3,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 98,
+        "elapsedMs": 368.30000000004657
+      },
+      {
+        "caseId": "focused-alpha-style",
+        "pair": -1,
+        "mode": "entity",
+        "status": "settled",
+        "completedFrames": 6,
+        "stableFrames": 3,
+        "pixelSha256": "a26cd2621fd4510ef2d755ed6301c36d98f438e793d34fdd3c8686fbaf4b605d",
+        "stabilityIncludesPixels": true,
+        "dataSourceReady": true,
+        "dataSourceLoading": false,
+        "expectedSurfaceCount": 704,
+        "observedSurfaceCount": 704,
+        "pointPickResolved": true,
+        "stemPickResolved": true,
+        "frameNumber": 106,
+        "elapsedMs": 339
+      }
+    ],
+    "visualMismatch": null,
+    "cleanup": {
+      "viewerDestroyed": true,
+      "layersDestroyed": true,
+      "pointCollectionDestroyed": true,
+      "polylineCollectionDestroyed": true,
+      "collectionParentDestroyed": true,
+      "glInstrumentationRestored": true,
+      "instrumentationRestored": true,
+      "entityVisibilityRestored": true
+    },
+    "failedPhase": null,
+    "error": null,
+    "initialMaterialization": {
+      "completedFrames": 20,
+      "stableReadinessFrames": 3,
+      "readyWithoutPickTarget": 5,
+      "pixelSha256": "23bb472d02d50b0d061742408ebcf9c9d448c88937f8cb220b3264bde6dfedff",
+      "stabilityIncludesPixels": true,
+      "pointAndStemPickTargetResolved": true,
+      "dataSourceReady": true,
+      "timeoutMs": 8000
+    },
+    "collectionConstructionMs": 12.600000000034925
+  },
+  "infrastructureGraphics": {
+    "featureStatus": {
+      "webgl": "enabled",
+      "webgl2": null,
+      "gpu_compositing": "enabled",
+      "opengl": "enabled_on"
+    },
+    "devices": [
+      {
+        "vendor": "Google Inc. (Apple)",
+        "device": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Version 26.6.2 (Build 25G83))",
+        "driver": "26.6.2"
+      }
+    ]
+  },
+  "infrastructureRenderingEvidence": {
+    "kind": "apple-paravirtual-metal",
+    "accelerationVerified": true,
+    "physicalDesktopCoverage": false
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "diagnosticOnly": true,
+  "performanceEvidence": false,
+  "baseHarnessCommit": "9721b20206eed438bdc7299a2ce067e5cebfb1de",
+  "applicationCommit": "e7a878e168bc97ffedddc27e13bf3e69b7ee6256",
+  "traceHook": "qa-artifacts/foreground-phase-trace-hook.mjs",
+  "reason": "Locate Windows helper timeout phase without altering activation behavior"
+}

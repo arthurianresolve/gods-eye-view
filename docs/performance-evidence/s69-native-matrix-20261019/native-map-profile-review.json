@@ -1,0 +1,46 @@
+{
+  "schema": "gev-native-map-profile-correction/v1",
+  "failure": {
+    "appCommit": "19065997a3f6360d68cb9ed5b389c4754856b596",
+    "harnessCommit": "52ca6010f1f3ef83a5dcb3077c7fc7e049bdf76e",
+    "sha256": "80a0ac3f3c1a37a2efb1c1b10e64bf381ba6a6dd63677b89ac186798fbb30adf",
+    "startupSamples": 5,
+    "completedSamples": 0,
+    "message": "Native map journey failed during initial-readiness: Map workload viewport or drawing buffer changed."
+  },
+  "cause": "Serialized map journey dropped its explicit comparison profile and required the legacy 1440x900 buffer even when native DPR=2 correctly produced 2880x1800.",
+  "correction": "Preserve profile through asynchronous start/run; validate native CSS x initial DPR and unchanged native quality on each observed frame. Keep legacy checks unchanged.",
+  "files": [
+    {
+      "name": "scripts/capture-scene-performance.mjs",
+      "sha256": "cd98b295f9c90bf91da0ffebdfa072f2ef7ead9f525a1a1893e47ae96d50d9e0"
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.mjs",
+      "sha256": "0c6439b598ff0080281c8d9cdac5fd74b4481e03efd812422585f423211a0f61"
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.test.mjs",
+      "sha256": "be4c7eef09a75f7abb5b7e2f95d4c5a67eec5c9664412e27fd53619cc99cc11a"
+    }
+  ],
+  "tests": [
+    {
+      "version": "v24.16.0",
+      "exitCode": 0,
+      "tests": 61,
+      "pass": 61,
+      "skipped": 0
+    },
+    {
+      "version": "v26.11.0",
+      "exitCode": 0,
+      "tests": 61,
+      "pass": 61,
+      "skipped": 0
+    }
+  ],
+  "testArchive": "weather-transition-check-1792373383007",
+  "hardwareQualification": "pending corrected full pair",
+  "applicationChanged": false
+}

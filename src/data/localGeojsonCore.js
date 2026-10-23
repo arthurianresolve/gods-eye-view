@@ -28,6 +28,10 @@ const LOCAL_OVERLAY_CELL_SURPLUS = 2;
 const GROUND_SAMPLE_MAX_DISTANCE_M = 75000;
 const GROUND_SAMPLE_RETRY_MS = 2000;
 const GROUND_SAMPLE_MAX_ABS_HEIGHT_M = 9000;
+// A depth sample synchronously renders and reads back the scene. Keep one
+// expensive query per natural frame so the first visible frame need not wait
+// for the whole active cohort. Flat-globe lookups do not consume this budget.
+const GROUND_SAMPLE_MAX_PER_FRAME = 1;
 /**
  * Bounded give-up for the self-armed retry. Sampling can be SUPPORTED and still
  * never succeed (no sampleable surface under the feature), in which case each
@@ -38,6 +42,11 @@ const GROUND_SAMPLE_MAX_ABS_HEIGHT_M = 9000;
  * 30 × 2 s ≈ 60 s, far longer than a tile stream-in.
  */
 export const GROUND_SAMPLE_MAX_ARMED_RETRIES = 30;
+export const LOCAL_INFRASTRUCTURE_SURFACE_RENDERERS = Object.freeze([
+  'entities',
+  'primitive-collections',
+  'stem-collection',
+]);
 /** Ignore sub-metre camera-derived stem-tip noise at camera settle. */
 export const LOCAL_STEM_TIP_EPSILON_M = 0.5;
 const LOCAL_STEM_TIP_EPSILON_SQ = LOCAL_STEM_TIP_EPSILON_M ** 2;
@@ -242,14 +251,19 @@ export function createLocalInfrastructureOverlayPublisher({ sourceId, host }) {
         })
       )
         return;
-      host.setEntries(sourceId, entries, sourceOptions);
-      lastPublication = entries.map((entry) => ({
+      // Commit ownership before the host callback: a reentrant hide or a
+      // partially successful host write must still clear this exact cohort.
+      const publication = entries.map((entry) => ({
         entry,
         x: entry.position?.x,
         y: entry.position?.y,
         z: entry.position?.z,
       }));
-      published = entries.length > 0;
+      lastPublication = publication;
+      published ||= entries.length > 0;
+      host.setEntries(sourceId, entries, sourceOptions);
+      if (!destroyed && visible && lastPublication === publication)
+        published = entries.length > 0;
     },
     hide() {
       if (destroyed) return;
@@ -288,6 +302,71 @@ export function localDatasetError(error) {
   return message ? `dataset unavailable (${message})` : 'dataset unavailable';
 }
 
+function createLocalSurfaceCollections(
+  records,
+  baseColor,
+  layerId,
+  { includePoints = true } = {},
+) {
+  const owner = new Cesium.PrimitiveCollection({ destroyPrimitives: true });
+  Object.defineProperty(owner, '__gevLocalInfrastructureLayerId', {
+    value: layerId,
+    configurable: false,
+    enumerable: false,
+  });
+  owner.show = false;
+  const points = includePoints ? new Cesium.PointPrimitiveCollection() : null;
+  const stems = new Cesium.PolylineCollection();
+  const encodedStemBytes =
+    Cesium.ColorGeometryInstanceAttribute.toValue(baseColor);
+  const stemColor = Cesium.Color.fromBytes(
+    encodedStemBytes[0],
+    encodedStemBytes[1],
+    encodedStemBytes[2],
+    encodedStemBytes[3],
+  );
+
+  try {
+    if (points) owner.add(points);
+    owner.add(stems);
+    for (const record of records) {
+      const entity = record.entity;
+      if (points) {
+        record.pointPrimitive = points.add({
+          id: entity,
+          position: record.tip,
+          pixelSize: 10,
+          color: baseColor,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 2,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+          show: true,
+        });
+      }
+      record.stemPrimitive = stems.add({
+        id: entity,
+        positions: record.stemPositionBuffers[record.stemPositionBufferIndex],
+        width: 3.5,
+        material: Cesium.Material.fromType('Color', { color: stemColor }),
+        show: true,
+      });
+    }
+  } catch (error) {
+    if (!owner.isDestroyed()) owner.destroy();
+    throw error;
+  }
+
+  // Metadata, billboards and polygon graphics stay on each Entity. The stem-only
+  // option also retains Entity points. Collection picks carry the same Entity
+  // so the existing context and selection path stays intact.
+  for (const record of records) {
+    if (includePoints) record.entity.point = undefined;
+    record.entity.polyline = undefined;
+  }
+
+  return { owner, points, stems, attached: false, viewer: null };
+}
+
 /**
  * A minimal, rock-solid native implementation for loading local GeoJSON Data.
  * Draws 3D stems (polylines) attached to Point entities and ensures
@@ -310,6 +389,7 @@ export function createLocalGeoJsonLayer(
     labels = true,
     labelMax = DEFAULT_LABEL_MAX,
     labelGridPx = DEFAULT_LABEL_GRID_PX,
+    surfaceRenderer = 'entities',
     screenSpaceEventHandlerFactory = (canvas) =>
       new Cesium.ScreenSpaceEventHandler(canvas),
     projectToWindow = (scene, position) =>
@@ -326,6 +406,10 @@ export function createLocalGeoJsonLayer(
     hideOsmCredit,
   },
 ) {
+  if (!LOCAL_INFRASTRUCTURE_SURFACE_RENDERERS.includes(surfaceRenderer))
+    throw new TypeError(
+      `Unsupported local infrastructure surface renderer: ${surfaceRenderer}`,
+    );
   let _dataSource = null;
   let _enabled = false;
   let _clickHandler = null;
@@ -337,11 +421,15 @@ export function createLocalGeoJsonLayer(
   let _preRenderRemover = null;
   let _cameraMoveEndRemover = null;
   let _stemRecords = [];
+  let _pickFeatureByEntity = new WeakMap();
+  let _stemRecordByEntity = new WeakMap();
+  let _surfaceCollections = null;
   let _stemGeometryDirty = true;
   let _lastVisibilityUpdate = 0;
   let _destroyed = false;
   let _loadPromise = null;
   let _loadController = null;
+  let _activationEpoch = 0;
   /**
    * The parsed bundled dataset, kept across disable/enable so a re-enable
    * rebuilds entities without refetching. The Cesium entities themselves are
@@ -389,6 +477,10 @@ export function createLocalGeoJsonLayer(
   let _groundRetryArms = 0;
   /** Last observed scene.sampleHeightSupported; null until the first walk. */
   let _lastGroundSampleCapability = null;
+  /** Unsampled records ready for the next natural frame, without a retry wait. */
+  let _groundContinuationPending = false;
+  /** Freeze retry eligibility until untouched records in this cohort drain. */
+  let _groundCohortStartedMs = 0;
 
   /**
    * Coalesced one-shot: ask the governor for a frame once the retry window
@@ -422,6 +514,8 @@ export function createLocalGeoJsonLayer(
   function clearGroundRetryRender() {
     _groundRetryArms = 0;
     _lastGroundSampleCapability = null;
+    _groundContinuationPending = false;
+    _groundCohortStartedMs = 0;
     if (!_groundRetryTimer) return;
     clearTimeout(_groundRetryTimer);
     _groundRetryTimer = null;
@@ -437,11 +531,43 @@ export function createLocalGeoJsonLayer(
    * survive a disable is the per-frame visualizer walk and the entity memory.
    * @param {object} viewer
    */
+  const CURRENT_SURFACE_COLLECTIONS = Symbol('current surface collections');
+  const releaseSurfaceCollections = (
+    viewer,
+    expectedCollections = CURRENT_SURFACE_COLLECTIONS,
+  ) => {
+    // No argument is the intentional current-owner release used by disable.
+    // An explicit null is a failed/incomplete build and must not acquire a
+    // different owner from this layer's later lifetime.
+    const collections =
+      expectedCollections === CURRENT_SURFACE_COLLECTIONS
+        ? _surfaceCollections
+        : expectedCollections;
+    if (!collections) return;
+    if (_surfaceCollections === collections) _surfaceCollections = null;
+    try {
+      if (collections.attached)
+        (collections.viewer ?? viewer)?.scene?.primitives?.remove(
+          collections.owner,
+        );
+    } catch {
+      // A stale viewer can race teardown; the owner still needs disposal.
+    }
+    try {
+      if (!collections.owner.isDestroyed()) collections.owner.destroy();
+    } catch {
+      // The scene may already have destroyed the primitive owner.
+    }
+  };
+
   const releaseDataSource = (viewer) => {
+    releaseSurfaceCollections(viewer);
     if (!_dataSource) return;
     const source = _dataSource;
     _dataSource = null;
     _stemRecords = [];
+    _pickFeatureByEntity = new WeakMap();
+    _stemRecordByEntity = new WeakMap();
     _stemGeometryDirty = true;
     _lastVisibilityUpdate = Number.NEGATIVE_INFINITY;
     removeEntityContextsForLayer(id);
@@ -453,6 +579,7 @@ export function createLocalGeoJsonLayer(
   };
 
   const disableLayer = (viewer) => {
+    _activationEpoch += 1;
     hideOsmCredit?.(viewer, id);
     _enabled = false;
     clearGroundRetryRender();
@@ -475,6 +602,16 @@ export function createLocalGeoJsonLayer(
       _cameraMoveEndRemover();
       _cameraMoveEndRemover = null;
     }
+  };
+
+  const failActivation = (viewer, error, expectedEpoch) => {
+    if (expectedEpoch === _activationEpoch) {
+      _error = localDatasetError(error);
+      _count = 0;
+      _lastUpdate = null;
+      disableLayer(viewer);
+    }
+    throw error;
   };
 
   return {
@@ -503,6 +640,30 @@ export function createLocalGeoJsonLayer(
       return { count: _count, lastUpdate: _lastUpdate, error: _error };
     },
 
+    /** Bounded ownership counts consumed only by local performance snapshots. */
+    getPerformanceDiagnostics: () => ({
+      listeners:
+        Number(Boolean(_clickHandler)) +
+        Number(Boolean(_preRenderRemover)) +
+        Number(Boolean(_cameraMoveEndRemover)),
+      timers: Number(Boolean(_groundRetryTimer)),
+      pendingJobs: Number(Boolean(_loadPromise)),
+      dataSources: Number(Boolean(_dataSource)),
+      cacheEntries: Number(Boolean(_cachedFeatures)),
+      surfaceCollectionOwners: Number(Boolean(_surfaceCollections)),
+      surfacePoints: _surfaceCollections?.points?.length ?? 0,
+      surfaceStems: _surfaceCollections?.stems.length ?? 0,
+    }),
+
+    /** Actual owned point/stem collections for opt-in representation checks. */
+    getSurfaceRendererDiagnostics: () => ({
+      mode: surfaceRenderer,
+      owners: Number(Boolean(_surfaceCollections)),
+      points: _surfaceCollections?.points?.length ?? 0,
+      stems: _surfaceCollections?.stems.length ?? 0,
+      attached: _surfaceCollections?.attached ?? false,
+    }),
+
     /**
      * Globe-LOD state for QA harnesses (scripts/qa-infra-lod.mjs) and tests.
      * `active` is how many records currently carry a live stem; `total` is the
@@ -516,6 +677,10 @@ export function createLocalGeoJsonLayer(
       active: _activeLodIds.size,
       budgetLimit: _lastLodBudgetLimit,
       computed: _lodComputed,
+      geometryDirty: _stemGeometryDirty,
+      cameraPosition: _lodComputed
+        ? [_lastLodCameraPos.x, _lastLodCameraPos.y, _lastLodCameraPos.z]
+        : null,
     }),
 
     /**
@@ -536,35 +701,31 @@ export function createLocalGeoJsonLayer(
       for (let i = 0; i < _stemRecords.length; i++) {
         if (result.length >= limit) break;
         const record = _stemRecords[i];
-        const carto = record.carto;
-        result.push(
-          mapAnalystRecord(
-            {
-              id: record.id,
-              lat: carto ? Cesium.Math.toDegrees(carto.latitude) : null,
-              lon: carto ? Cesium.Math.toDegrees(carto.longitude) : null,
-              properties: propertyObject(record.entity),
-            },
-            id,
-          ),
-        );
+        result.push(mapAnalystRecord(record.featureRecord, id));
       }
       return result;
     },
 
     enable: async (viewer) => {
       if (_destroyed) return;
+      const activationEpoch = ++_activationEpoch;
       _enabled = true;
       _stemGeometryDirty = true;
       _lastVisibilityUpdate = Number.NEGATIVE_INFINITY;
       _groundRetryArms = 0; // fresh give-up budget per enable-cycle
       _lastGroundSampleCapability = null;
+      _groundContinuationPending = false;
+      _groundCohortStartedMs = 0;
       _activeLodIds = new Set(); // fresh globe-LOD selection per enable-cycle
       _lodGraceState = new Map();
       _lastLodBudgetLimit = 0;
       _lodComputed = false;
       _lastLodProbeMs = Number.NEGATIVE_INFINITY;
-      _overlayPublisher.show();
+      try {
+        _overlayPublisher.show();
+      } catch (error) {
+        failActivation(viewer, error, activationEpoch);
+      }
 
       // 1. Initialize data source
       if (!_dataSource) {
@@ -580,9 +741,29 @@ export function createLocalGeoJsonLayer(
             // clear its error or retry.
             _error = null;
             let loaded = null;
-            // Whether the scene has actually accepted `loaded` — the two rollback
-            // windows (before vs after the add settles) need different cleanup.
-            let addedToScene = false;
+            let buildingSurfaceCollections = null;
+            // An add can attach before one of its listeners throws. Once the
+            // attempt starts, rollback must try removal even if it rejects.
+            let addAttempted = false;
+            const disposeLoaded = () => {
+              if (!loaded) return;
+              const sourceToDispose = loaded;
+              loaded = null;
+              let removed = false;
+              try {
+                if (addAttempted)
+                  removed =
+                    viewer?.dataSources?.remove(sourceToDispose, true) === true;
+              } catch {
+                // A stale load can race viewer teardown; cleanup is best effort.
+              }
+              try {
+                if (!removed && !sourceToDispose.isDestroyed?.())
+                  sourceToDispose.destroy?.();
+              } catch {
+                // The collection may already have destroyed the same owner.
+              }
+            };
             try {
               let features = _cachedFeatures;
               if (!features) {
@@ -616,27 +797,20 @@ export function createLocalGeoJsonLayer(
                 markerColor: baseColor,
               });
 
-              if (_destroyed) return;
-              loaded.name = name;
-              loaded.show = false;
-              // Cesium's DataSourceCollection.add() returns a promise and only
-              // inserts on a later microtask. Without this await, a throw during
-              // post-processing would roll back a source the scene had not
-              // accepted yet — and Cesium would then insert the "removed" source
-              // anyway, leaving an orphan the retry would double up on. Awaiting
-              // also routes an add() rejection into the error path below instead
-              // of leaving it uncaught with healthy-looking stats.
-              await viewer.dataSources.add(loaded);
-              addedToScene = true;
               if (_destroyed) {
-                viewer.dataSources.remove(loaded, true);
+                disposeLoaded();
                 return;
               }
+              loaded.name = name;
+              loaded.show = false;
 
-              // Convert parsed points into 3D stems or style polygons
+              // Finish conversion before attachment. DataSourceDisplay creates
+              // visualizers on add; they need only the completed graphics, not
+              // every intermediate entity/property change during setup.
               const entities = loaded.entities.values;
               _count = entities.length;
               _stemRecords = [];
+              _pickFeatureByEntity = new WeakMap();
               _stemGeometryDirty = true;
 
               for (let i = 0; i < entities.length; i++) {
@@ -685,6 +859,18 @@ export function createLocalGeoJsonLayer(
                 );
                 const properties = propertyObject(feature);
                 const recordId = String(feature.id ?? i);
+                // Keep one source-facing feature record independent of the
+                // Cesium entity. Entity properties are render state and may
+                // be released/rebuilt; analyst identity and OSM evidence must
+                // remain stable across that lifecycle.
+                const featureRecord = {
+                  id: recordId,
+                  lat: Cesium.Math.toDegrees(carto.latitude),
+                  lon: Cesium.Math.toDegrees(carto.longitude),
+                  properties,
+                };
+                _pickFeatureByEntity.set(feature, featureRecord);
+                const analystRecord = mapAnalystRecord(featureRecord, id);
 
                 // Store references for bounded stem scaling and native picking.
                 feature.__localBaseCarto = carto;
@@ -694,9 +880,10 @@ export function createLocalGeoJsonLayer(
                   layerId: id,
                   layerName: name,
                   source,
+                  evidence: analystRecord.evidence,
                   dataSource: loaded,
                   label: featureLabelFromProperties(properties, id),
-                  properties,
+                  properties: featureRecord.properties,
                   latitude: Number(
                     Cesium.Math.toDegrees(carto.latitude).toFixed(6),
                   ),
@@ -704,33 +891,49 @@ export function createLocalGeoJsonLayer(
                     Cesium.Math.toDegrees(carto.longitude).toFixed(6),
                   ),
                 });
+                if (_destroyed) {
+                  disposeLoaded();
+                  return;
+                }
 
-                // Constant properties are refreshed on the existing 450 ms source
-                // cadence. Cesium no longer evaluates 2-3 callbacks per entity on
-                // every frame, while the point/stem pick surface stays native.
+                // Constant properties and opt-in collection positions share the
+                // existing 450 ms source cadence. Neither representation adds
+                // per-frame geometry callbacks; both keep native Entity picks.
                 feature.position = tip;
                 const stemPositionBuffers = [
                   [base, tip],
                   [base, tip],
                 ];
-                feature.polyline = new Cesium.PolylineGraphics({
-                  positions: stemPositionBuffers[0],
-                  width: 3.5,
-                  material: new Cesium.ColorMaterialProperty(baseColor),
-                });
-                feature.point = new Cesium.PointGraphics({
-                  pixelSize: 10,
-                  color: baseColor,
-                  outlineColor: Cesium.Color.BLACK,
-                  outlineWidth: 2,
-                  // Never depth-cull the anchor against the photoreal mesh —
-                  // globe-horizon culling is handled by the pre-render occluder.
-                  disableDepthTestDistance: Number.POSITIVE_INFINITY,
-                });
+                if (surfaceRenderer !== 'primitive-collections') {
+                  feature.polyline =
+                    surfaceRenderer === 'entities'
+                      ? new Cesium.PolylineGraphics({
+                          positions: stemPositionBuffers[0],
+                          width: 3.5,
+                          material: new Cesium.ColorMaterialProperty(baseColor),
+                        })
+                      : undefined;
+                  feature.point = new Cesium.PointGraphics({
+                    pixelSize: 10,
+                    color: baseColor,
+                    outlineColor: Cesium.Color.BLACK,
+                    outlineWidth: 2,
+                    // Never depth-cull the anchor against the photoreal mesh —
+                    // globe-horizon culling is handled by the pre-render occluder.
+                    disableDepthTestDistance: Number.POSITIVE_INFINITY,
+                  });
+                } else {
+                  // GeoJsonDataSource may have supplied marker Graphics for
+                  // point features. Keep the candidate surface on the owned
+                  // collections without allocating replacement Graphics.
+                  feature.point = undefined;
+                  feature.polyline = undefined;
+                }
 
                 const priority = labelPriorityFromProperties(properties, id);
-                _stemRecords.push({
+                const stemRecord = {
                   id: recordId,
+                  featureRecord,
                   entity: feature,
                   carto,
                   base,
@@ -752,7 +955,40 @@ export function createLocalGeoJsonLayer(
                         accent: color,
                       })
                     : null,
-                });
+                };
+                _stemRecords.push(stemRecord);
+                _stemRecordByEntity.set(feature, stemRecord);
+              }
+              if (_destroyed) {
+                disposeLoaded();
+                return;
+              }
+              // Keep the asynchronous insertion boundary owned: await its exact
+              // result before publishing, and remove an owner that arrives after
+              // teardown. Grounding still runs only in the first natural visible
+              // preRender after the normal DataSourceDisplay update.
+              addAttempted = true;
+              await viewer.dataSources.add(loaded);
+              if (_destroyed) {
+                disposeLoaded();
+                return;
+              }
+              if (surfaceRenderer !== 'entities') {
+                buildingSurfaceCollections = createLocalSurfaceCollections(
+                  _stemRecords,
+                  baseColor,
+                  id,
+                  {
+                    includePoints: surfaceRenderer === 'primitive-collections',
+                  },
+                );
+                _surfaceCollections = buildingSurfaceCollections;
+                // Mark ownership before add(): if the scene implementation
+                // partially attaches and then throws, the rollback still
+                // attempts removal and always destroys this exact owner.
+                buildingSurfaceCollections.attached = true;
+                buildingSurfaceCollections.viewer = viewer;
+                viewer.scene.primitives.add(buildingSurfaceCollections.owner);
               }
               // Setup finished — publish it.
               _dataSource = loaded;
@@ -761,22 +997,18 @@ export function createLocalGeoJsonLayer(
               // The dataset ships with the build, so this is a broken install,
               // not a blip — it has to reach the chip, not just the console.
               if (!_destroyed) _error = localDatasetError(e);
-              // Roll the partial build back so a later enable() retries from
-              // scratch instead of inheriting a half-populated source. Only the
-              // post-add window has something in the scene to remove: a failure
-              // before (or inside) add() never reached the collection, and
-              // removing then would race Cesium's pending insert.
-              if (addedToScene) {
-                try {
-                  viewer?.dataSources?.remove(loaded, true);
-                } catch {
-                  /* already gone */
-                }
-              }
+              // Conversion failure has no scene attachment. An attempted add
+              // has settled here and may have partially succeeded before its
+              // rejection, so rollback also checks that exact owner.
+              disposeLoaded();
+              if (buildingSurfaceCollections)
+                releaseSurfaceCollections(viewer, buildingSurfaceCollections);
               if (_destroyed) return;
               removeEntityContextsForLayer(id);
               _count = 0;
               _stemRecords = [];
+              _pickFeatureByEntity = new WeakMap();
+              _stemRecordByEntity = new WeakMap();
               console.error(`Failed to load ${id}:`, e);
             }
 
@@ -792,7 +1024,11 @@ export function createLocalGeoJsonLayer(
                 if (!_enabled) return;
                 const picked = viewer.scene.pick(click.position);
 
-                if (picked && picked.id && picked.id.__localLayerId === id) {
+                if (
+                  picked?.id &&
+                  _pickFeatureByEntity.has(picked.id) &&
+                  picked.id.__localLayerId === id
+                ) {
                   const entity = picked.id;
                   viewer.selectedEntity = entity;
                   selectEntityContext(entity);
@@ -808,6 +1044,11 @@ export function createLocalGeoJsonLayer(
                     if (positions && positions.length > 0) {
                       targetPos = positions[0];
                     }
+                  } else if (
+                    _surfaceCollections &&
+                    _stemRecordByEntity.has(entity)
+                  ) {
+                    targetPos = _stemRecordByEntity.get(entity).base;
                   } else if (entity.polygon && entity.polygon.hierarchy) {
                     // If it's a polygon, just fly to its center
                     const hierarchy = entity.polygon.hierarchy.getValue(
@@ -853,14 +1094,32 @@ export function createLocalGeoJsonLayer(
         }
       }
 
-      if (_destroyed) return;
-      if (_enabled && _count > 0 && osmDerived) showOsmCredit?.(viewer, id);
+      if (_destroyed || !_enabled) {
+        releaseDataSource(viewer);
+        return;
+      }
+      // A later enable may share the still-pending load. Only that activation
+      // may prepare and publish its source; the older continuation is inert.
+      if (activationEpoch !== _activationEpoch) return;
+      try {
+        if (_enabled && _count > 0 && osmDerived) showOsmCredit?.(viewer, id);
+      } catch (error) {
+        failActivation(viewer, error, activationEpoch);
+      }
       // 3. Add an incredibly fast pre-render occluder to hide points behind the globe
       if (_enabled && !_preRenderRemover) {
-        _preRenderRemover = viewer.scene.preRender.addEventListener(() => {
+        const updateLocalVisibility = () => {
           if (!_enabled || !_dataSource) return;
+          const passEpoch = _activationEpoch;
+          const ownsPass = () => _enabled && passEpoch === _activationEpoch;
           const now = performance.now();
-          if (now - _lastVisibilityUpdate < VISIBILITY_UPDATE_MS) return;
+          if (
+            !_groundContinuationPending &&
+            now - _lastVisibilityUpdate < VISIBILITY_UPDATE_MS
+          )
+            return;
+          if (!_groundContinuationPending) _groundCohortStartedMs = now;
+          _groundContinuationPending = false;
           _lastVisibilityUpdate = now;
 
           const cameraPos = viewer.camera.positionWC;
@@ -903,6 +1162,12 @@ export function createLocalGeoJsonLayer(
           // frame, forever) and must not spend ANY per-record work trying.
           // Read once per walk, not per record.
           const canSampleGround = viewer.scene.sampleHeightSupported === true;
+          // A flat ellipsoid has no terrain mesh or other height-bearing owner
+          // in this exact scene shape. Avoid eight synchronous depth picks on
+          // every fresh enable; a loaded globe height is the same ground. The
+          // conservative ownership check falls back as soon as another scene
+          // primitive or populated data source appears.
+          const flatGlobeOnly = canUseFlatGlobeGround(viewer, _dataSource);
           // Capability can arrive late (WebGL context restore, a tileset that
           // finally supports sampling). A parked camera has no moveEnd to
           // re-open a spent budget, so the false→true edge does it.
@@ -910,7 +1175,12 @@ export function createLocalGeoJsonLayer(
             _groundRetryArms = 0;
           _lastGroundSampleCapability = canSampleGround;
           let groundRetryPending = false;
-          let groundSampleProgress = false;
+          const groundSampleBudget = {
+            remaining: GROUND_SAMPLE_MAX_PER_FRAME,
+            deferred: false,
+            progress: false,
+            retryBeforeMs: _groundCohortStartedMs,
+          };
 
           // --- Globe-LOD: recompute the active-stem set on camera moves. ---
           // `_stemGeometryDirty` is set by moveEnd, the first enable, and the
@@ -956,11 +1226,20 @@ export function createLocalGeoJsonLayer(
           }
 
           for (let i = 0; i < _stemRecords.length; i++) {
+            if (!_enabled || passEpoch !== _activationEpoch) return;
             const record = _stemRecords[i];
             const isActive = !_lodComputed || _activeLodIds.has(record.id);
             const isVisible = isActive && occluder.isPointVisible(record.base);
             if (record.entity.show !== isVisible)
               record.entity.show = isVisible;
+            if (!ownsPass()) return;
+            if (
+              record.pointPrimitive &&
+              record.pointPrimitive.show !== isVisible
+            )
+              record.pointPrimitive.show = isVisible;
+            if (record.stemPrimitive && record.stemPrimitive.show !== isVisible)
+              record.stemPrimitive.show = isVisible;
 
             // Records outside the globe-LOD active set carry no visible stem,
             // so skip every per-frame cost for them — geometry trig, the
@@ -968,13 +1247,49 @@ export function createLocalGeoJsonLayer(
             // on the next camera move if the budget has room.
             if (!isActive) continue;
 
-            const wasGroundSampled = record.groundSampled;
+            let returnedToFlatGlobe = false;
+            if (!flatGlobeOnly && record.groundSampleSource === 'flat-globe') {
+              record.groundSampled = false;
+              record.groundSampleSource = null;
+              record.lastGroundSampleMs = Number.NEGATIVE_INFINITY;
+            } else if (
+              flatGlobeOnly &&
+              record.groundSampled &&
+              record.groundSampleSource !== 'flat-globe'
+            ) {
+              // A departed height owner cannot leave its sampled roof or tile
+              // elevation on an otherwise flat globe. Rebase this active stem
+              // immediately; the loaded-globe path does no depth readback.
+              record.groundSampled = false;
+              record.lastGroundSampleMs = Number.NEGATIVE_INFINITY;
+              returnedToFlatGlobe = sampleLocalGroundHeight(
+                viewer,
+                record,
+                now,
+                ownsPass,
+                true,
+                groundSampleBudget,
+              );
+            }
             const terrainFloorChanged = refreshLocalTerrainFloor(
               viewer,
               record,
+              ownsPass,
             );
-            if (refreshStemGeometry || terrainFloorChanged) {
-              updateLocalStemGeometry(viewer, record, now);
+            if (
+              refreshStemGeometry ||
+              terrainFloorChanged ||
+              returnedToFlatGlobe
+            ) {
+              updateLocalStemGeometry(
+                viewer,
+                record,
+                now,
+                null,
+                ownsPass,
+                flatGlobeOnly,
+                groundSampleBudget,
+              );
             } else if (
               canSampleGround &&
               !record.groundSampled &&
@@ -988,13 +1303,27 @@ export function createLocalGeoJsonLayer(
               );
               if (
                 distance < GROUND_SAMPLE_MAX_DISTANCE_M &&
-                sampleLocalGroundHeight(viewer, record, now)
+                sampleLocalGroundHeight(
+                  viewer,
+                  record,
+                  now,
+                  ownsPass,
+                  flatGlobeOnly,
+                  groundSampleBudget,
+                )
               ) {
-                updateLocalStemGeometry(viewer, record, now, distance);
+                updateLocalStemGeometry(
+                  viewer,
+                  record,
+                  now,
+                  distance,
+                  ownsPass,
+                  flatGlobeOnly,
+                  groundSampleBudget,
+                );
               }
             }
-            if (!wasGroundSampled && record.groundSampled)
-              groundSampleProgress = true;
+            if (!ownsPass()) return;
             // Still unsampled AND close enough for a retry to succeed: this
             // layer has no hold and no periodic update, so under the idle
             // governor the retry's preRender never arrives on a parked camera
@@ -1016,11 +1345,20 @@ export function createLocalGeoJsonLayer(
             }
             if (isVisible && record.entry) visibleOverlayRecords.push(record);
           }
+          if (!_enabled || passEpoch !== _activationEpoch) return;
           _stemGeometryDirty = false;
           // Tiles ARE streaming in: real progress re-opens the give-up budget
           // so the records still waiting get their own bounded run of retries.
-          if (groundSampleProgress) _groundRetryArms = 0;
-          if (groundRetryPending) scheduleGroundRetryRender(viewer);
+          if (groundSampleBudget.progress) _groundRetryArms = 0;
+          _groundContinuationPending = groundSampleBudget.deferred;
+          // Untouched records are ready now, rather than failed samples. Drain
+          // them on consecutive frames before spending the delayed retry budget.
+          if (!_groundContinuationPending && groundRetryPending)
+            scheduleGroundRetryRender(viewer);
+          else if (!groundRetryPending && _groundRetryTimer) {
+            clearTimeout(_groundRetryTimer);
+            _groundRetryTimer = null;
+          }
 
           const canvas = viewer.scene.canvas;
           const cohort = selectLocalInfrastructureOverlayCohort(
@@ -1034,9 +1372,40 @@ export function createLocalGeoJsonLayer(
               project: (record) => projectToWindow(viewer.scene, record.tip),
             },
           );
+          if (!ownsPass() || !_dataSource) return;
           _overlayPublisher.publish(cohort);
-        });
+          if (
+            ownsPass() &&
+            (_groundContinuationPending || groundSampleBudget.progress)
+          )
+            // Entity visualizers update before preRender. The last successful
+            // query needs one more frame even if its tip is outside the overlay
+            // cohort, so that its final constants reach the visible primitives.
+            governorRequestRender(
+              _groundContinuationPending
+                ? `local-ground-continuation:${id}`
+                : `local-ground-settle:${id}`,
+            );
+        };
+        try {
+          // Keep grounding in the first natural preRender, after the normal
+          // visible DataSourceDisplay update. Hiding this whole source during
+          // sampleHeight changes its offscreen pick command/frustum set even
+          // when the public per-entity exclusion remains identical.
+          if (_enabled && activationEpoch === _activationEpoch)
+            _preRenderRemover = viewer.scene.preRender.addEventListener(() => {
+              const passEpoch = _activationEpoch;
+              try {
+                updateLocalVisibility();
+              } catch (error) {
+                failActivation(viewer, error, passEpoch);
+              }
+            });
+        } catch (error) {
+          failActivation(viewer, error, activationEpoch);
+        }
       }
+      if (activationEpoch !== _activationEpoch) return;
       if (_enabled && !_cameraMoveEndRemover) {
         _cameraMoveEndRemover = viewer.camera.moveEnd.addEventListener(() => {
           if (!_enabled) return;
@@ -1058,8 +1427,28 @@ export function createLocalGeoJsonLayer(
         releaseDataSource(viewer);
         return;
       }
-      if (_dataSource) _dataSource.show = true;
-      viewer.scene.requestRender?.();
+      try {
+        const sourceToPublish = _dataSource;
+        const collectionsToPublish = _surfaceCollections;
+        if (sourceToPublish) sourceToPublish.show = true;
+        if (
+          !_enabled ||
+          activationEpoch !== _activationEpoch ||
+          _dataSource !== sourceToPublish
+        )
+          return;
+        if (collectionsToPublish) collectionsToPublish.owner.show = true;
+        if (
+          !_enabled ||
+          activationEpoch !== _activationEpoch ||
+          _surfaceCollections !== collectionsToPublish
+        )
+          return;
+        if (!_enabled || activationEpoch !== _activationEpoch) return;
+        viewer.scene.requestRender?.();
+      } catch (error) {
+        failActivation(viewer, error, activationEpoch);
+      }
     },
 
     disable: disableLayer,
@@ -1083,6 +1472,8 @@ export function createLocalGeoJsonLayer(
       _dataSource = null;
       _cachedFeatures = null;
       _stemRecords = [];
+      _pickFeatureByEntity = new WeakMap();
+      _stemRecordByEntity = new WeakMap();
       _count = 0;
       _lastUpdate = null;
       _error = null;
@@ -1107,7 +1498,8 @@ function insertLocalCellContender(contenders, record) {
     contenders.length = LOCAL_OVERLAY_CELL_SURPLUS;
 }
 
-function refreshLocalTerrainFloor(viewer, record) {
+function refreshLocalTerrainFloor(viewer, record, ownsPass = null) {
+  if (ownsPass && !ownsPass()) return false;
   const globe = viewer.scene.globe;
   if (!record.groundSampled || !globe?.show || globe.tilesLoaded === false)
     return false;
@@ -1120,6 +1512,7 @@ function refreshLocalTerrainFloor(viewer, record) {
   // Reuse the loaded mesh on existing bounded walks; never arm a timer or do
   // another GPU readback just to maintain this floor. Keep roof elevations.
   const height = globe.getHeight?.(record.carto);
+  if (ownsPass && !ownsPass()) return false;
   if (
     !Number.isFinite(height) ||
     Math.abs(height) > GROUND_SAMPLE_MAX_ABS_HEIGHT_M ||
@@ -1130,18 +1523,91 @@ function refreshLocalTerrainFloor(viewer, record) {
   return true;
 }
 
-function sampleLocalGroundHeight(viewer, record, now) {
-  if (record.groundSampled || !viewer.scene.sampleHeightSupported) return false;
-  if (now - record.lastGroundSampleMs < GROUND_SAMPLE_RETRY_MS) return false;
-  record.lastGroundSampleMs = now;
+function canUseFlatGlobeGround(viewer, source) {
+  const scene = viewer?.scene;
+  const display = viewer?.dataSourceDisplay;
+  const dataSources = viewer?.dataSources;
+  if (
+    !(viewer?.terrainProvider instanceof Cesium.EllipsoidTerrainProvider) ||
+    !scene?.globe?.show ||
+    scene.globe.tilesLoaded !== true ||
+    !display ||
+    scene.primitives?.length !== 1 ||
+    scene.primitives.get(0) !== display._primitives ||
+    scene.groundPrimitives?.length !== 1 ||
+    scene.groundPrimitives.get(0) !== display._groundPrimitives ||
+    !Array.isArray(viewer.entities?.values) ||
+    viewer.entities.values.length !== 0 ||
+    !Number.isInteger(dataSources?.length) ||
+    !source
+  )
+    return false;
+  let ownsSource = false;
+  for (let index = 0; index < dataSources.length; index++) {
+    const candidate = dataSources.get(index);
+    if (candidate === source) ownsSource = true;
+    else if (!Array.isArray(candidate?.entities?.values)) return false;
+    else if (
+      candidate.show !== false &&
+      candidate.entities.values.some((entity) => entity.show !== false)
+    )
+      return false;
+  }
+  return ownsSource;
+}
+
+function sampleLocalGroundHeight(
+  viewer,
+  record,
+  now,
+  ownsPass = null,
+  flatGlobeOnly = false,
+  sampleBudget = null,
+) {
+  if (ownsPass && !ownsPass()) return false;
+  if (
+    record.groundSampled ||
+    (!flatGlobeOnly && !viewer.scene.sampleHeightSupported)
+  )
+    return false;
+  // A slow cohort can outlast the retry window. Do not retry its earlier
+  // misses before untouched records finish, or failures could keep requesting
+  // immediate continuations forever without reaching the bounded timer budget.
+  const retryBeforeMs = sampleBudget?.retryBeforeMs ?? now;
+  if (retryBeforeMs - record.lastGroundSampleMs < GROUND_SAMPLE_RETRY_MS)
+    return false;
   const globe = viewer.scene.globe;
-  if (globe?.show && globe.tilesLoaded === false) return false;
+  if (globe?.show && globe.tilesLoaded === false) {
+    record.lastGroundSampleMs = now;
+    return false;
+  }
+  if (!flatGlobeOnly && sampleBudget?.remaining === 0) {
+    sampleBudget.deferred = true;
+    return false;
+  }
+  record.lastGroundSampleMs = now;
+  if (flatGlobeOnly) {
+    // Ellipsoid terrain is exactly height zero. getHeight may differ by tiny
+    // loaded-tile quantization, so retain it when finite for visual parity.
+    const loadedHeight = globe.getHeight?.(record.carto);
+    if (ownsPass && !ownsPass()) return false;
+    record.groundSampled = true;
+    record.groundSampleSource = 'flat-globe';
+    setLocalGroundHeight(
+      record,
+      Number.isFinite(loadedHeight) ? loadedHeight : 0,
+    );
+    if (sampleBudget) sampleBudget.progress = true;
+    return true;
+  }
   let sampled;
+  if (sampleBudget) sampleBudget.remaining -= 1;
   try {
     sampled = viewer.scene.sampleHeight(record.carto, [record.entity]);
   } catch {
     return false; // tiles not ready; retry on a later bounded update
   }
+  if (ownsPass && !ownsPass()) return false;
   if (
     !Number.isFinite(sampled) ||
     Math.abs(sampled) > GROUND_SAMPLE_MAX_ABS_HEIGHT_M
@@ -1154,6 +1620,7 @@ function sampleLocalGroundHeight(viewer, record, now) {
   const terrainHeight = globe?.show
     ? globe.getHeight?.(record.carto)
     : undefined;
+  if (ownsPass && !ownsPass()) return false;
   if (
     Number.isFinite(terrainHeight) &&
     Math.abs(terrainHeight) <= GROUND_SAMPLE_MAX_ABS_HEIGHT_M
@@ -1161,7 +1628,9 @@ function sampleLocalGroundHeight(viewer, record, now) {
     sampled = Math.max(sampled, terrainHeight);
   }
   record.groundSampled = true;
+  record.groundSampleSource = null;
   setLocalGroundHeight(record, sampled);
+  if (sampleBudget) sampleBudget.progress = true;
   return true;
 }
 
@@ -1177,12 +1646,29 @@ function setLocalGroundHeight(record, height) {
   record.entity.__localBaseCartesian = record.base;
 }
 
-function updateLocalStemGeometry(viewer, record, now, knownDistance = null) {
+function updateLocalStemGeometry(
+  viewer,
+  record,
+  now,
+  knownDistance = null,
+  ownsPass = null,
+  flatGlobeOnly = false,
+  sampleBudget = null,
+) {
+  if (ownsPass && !ownsPass()) return false;
   const distance = Number.isFinite(knownDistance)
     ? knownDistance
     : Cesium.Cartesian3.distance(viewer.camera.positionWC, record.base);
   if (distance < GROUND_SAMPLE_MAX_DISTANCE_M)
-    sampleLocalGroundHeight(viewer, record, now);
+    sampleLocalGroundHeight(
+      viewer,
+      record,
+      now,
+      ownsPass,
+      flatGlobeOnly,
+      sampleBudget,
+    );
+  if (ownsPass && !ownsPass()) return false;
   // Keep the intended screen-size scaling in close-up views too. A 5 km
   // minimum made a marker hundreds of metres tall beside a nearby building.
   const effectiveDistance = Math.max(distance, 1);
@@ -1211,7 +1697,12 @@ function updateLocalStemGeometry(viewer, record, now, knownDistance = null) {
   stemPositions[0] = record.base;
   stemPositions[1] = record.tip;
   record.entity.position.setValue(record.tip);
-  record.entity.polyline.positions.setValue(stemPositions);
+  // Cesium ConstantPositionProperty raises definitionChanged synchronously.
+  // Its listeners may tear down this exact primitive owner before we return.
+  if (ownsPass && !ownsPass()) return false;
+  if (record.pointPrimitive) record.pointPrimitive.position = record.tip;
+  if (record.stemPrimitive) record.stemPrimitive.positions = stemPositions;
+  else record.entity.polyline.positions.setValue(stemPositions);
   return true;
 }
 

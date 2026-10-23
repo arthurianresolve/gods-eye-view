@@ -1,0 +1,3112 @@
+{
+  "schema": "gev-performance-build-smoke/v1",
+  "scope": "hosted-browser integration smoke only; no hardware performance result or paired acceptance",
+  "status": "failed",
+  "baselineSha": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+  "candidateSha": "6721940d14fbfab444cda2c889698383ea36a5d7",
+  "harnessSha": "6721940d14fbfab444cda2c889698383ea36a5d7",
+  "captureWorkerAuditMode": "prewarm",
+  "startedAt": "2026-10-11T19:43:58.118Z",
+  "variants": [
+    {
+      "revision": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+      "label": "baseline",
+      "status": "passed",
+      "receiptSha256": "f26df7dac6eb7278fcc4c20fdfc47cf06a39d2ef5559bdd69ed10cfc61e1db3c",
+      "assetCount": 434,
+      "totalAssetBytes": 43912979,
+      "servedBefore": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "f26df7dac6eb7278fcc4c20fdfc47cf06a39d2ef5559bdd69ed10cfc61e1db3c",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "servedAfter": {
+        "schema": "gev-served-assets-verification/v1",
+        "status": "served-assets-match",
+        "receiptSha256": "f26df7dac6eb7278fcc4c20fdfc47cf06a39d2ef5559bdd69ed10cfc61e1db3c",
+        "assetCount": 434,
+        "totalAssetBytes": 43912979
+      },
+      "loadedCodePathAudit": {
+        "status": "receipt-backed-paths-observed",
+        "paths": [
+          "assets/egm96-universal.esm-D6y_VLZc.js",
+          "assets/index-DFXg4IQ_.js",
+          "cesium/Cesium.js"
+        ],
+        "externalCodeRequestsObserved": 0,
+        "validatedWorkerBlobCount": 20,
+        "cesiumWorkerBlobs": {
+          "schema": "gev-cesium-worker-blob-audit/v1",
+          "status": "receipt-derived-worker-blobs-validated",
+          "auditMode": "diagnostic",
+          "instrumentation": "URL.createObjectURL creation observer; smoke-only diagnostic",
+          "createdScriptBlobCount": 14,
+          "validatedWorkerCount": 7,
+          "validatedCreatedWrapperCount": 7,
+          "unobservedCreatedWrapperCount": 0,
+          "validatedEmbeddedSourceCount": 7,
+          "validatedModuleIds": [
+            "combineGeometry",
+            "createGeometry",
+            "createVerticesFromHeightmap",
+            "incrementallyBuildTerrainPicker",
+            "transferTypedArrayTest"
+          ],
+          "embeddedWorkerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+          "scriptBlobSha256": [
+            "04a91c6833ca13a318d4ee812899769d4cc11c6e40599eea63f9b26c3ebbb686",
+            "1f433285149e32a42c12189257ccca04b3e9866f7167aa5e2c75d87ea6111e9b",
+            "2a0963ef6ea020f4916e2b830e1de6b672b0af97bc70be307129dce0c1074e6b",
+            "890f90934a1a78ac47d64051f123b4df7fe34c0d624ca5a22d915a4e7c445272",
+            "c126dc74d2924ae63abb7223f701020d0b4bd611d4957bb2187bbf6d64fda7e1",
+            "c7c3eb6caee2f11caeeb80d60ad550fd5ee31dda2635ea5dcbaef5ee1941a028",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+            "ebdf6b596a60cd32926f14427f94dd84df67841a95f639179678a96be8244ec8"
+          ],
+          "validatedWrapperSha256": [
+            "04a91c6833ca13a318d4ee812899769d4cc11c6e40599eea63f9b26c3ebbb686",
+            "1f433285149e32a42c12189257ccca04b3e9866f7167aa5e2c75d87ea6111e9b",
+            "2a0963ef6ea020f4916e2b830e1de6b672b0af97bc70be307129dce0c1074e6b",
+            "890f90934a1a78ac47d64051f123b4df7fe34c0d624ca5a22d915a4e7c445272",
+            "c126dc74d2924ae63abb7223f701020d0b4bd611d4957bb2187bbf6d64fda7e1",
+            "c7c3eb6caee2f11caeeb80d60ad550fd5ee31dda2635ea5dcbaef5ee1941a028",
+            "ebdf6b596a60cd32926f14427f94dd84df67841a95f639179678a96be8244ec8"
+          ],
+          "readBytes": 6428769,
+          "retentionByteCapBytes": 33554432
+        },
+        "requestCount": 79,
+        "coverage": "receipt-backed request-path audit with smoke-only Cesium worker blob instrumentation; browser response bytes are not independently attested and the smoke is not performance evidence"
+      },
+      "providerInterception": {
+        "status": "worker-aware-external-blocking-probe-passed",
+        "preflight": {
+          "status": "passed",
+          "scope": "harness-generated same-origin inert document; excluded from app code audit",
+          "workerNetworkProbe": {
+            "status": "passed",
+            "interceptedWorkerRequests": 3
+          },
+          "discardedAudit": {
+            "requestCount": 0,
+            "codeRequestCount": 0
+          },
+          "targetDisposal": {
+            "closed": true,
+            "remainingCount": 0,
+            "waitMs": 100.84579300000041
+          }
+        },
+        "sameOriginOnlyStaticServer": true
+      },
+      "denseProviderFixture": {
+        "scope": "real production /api/flights source plus bundled infrastructure layers; static-count integration smoke only, not paired timing evidence",
+        "expectedLayerCounts": {
+          "flights": 2500,
+          "local-datacenters": 4362,
+          "local-dams": 716
+        },
+        "observedLayerPopulation": {
+          "flights": {
+            "enabled": true,
+            "count": 2500
+          },
+          "local-datacenters": {
+            "enabled": true,
+            "count": 4362
+          },
+          "local-dams": {
+            "enabled": true,
+            "count": 716
+          }
+        },
+        "flightFixture": {
+          "schema": "gev-fixture-delivery-observation/v1",
+          "status": "observed",
+          "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+          "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+          "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "fulfilledResponseCount": 1,
+          "observedFlightsCount": 2500
+        },
+        "captureClock": {
+          "schema": "gev-provider-fixture-capture-clock/v1",
+          "scope": "hosted integration smoke only; one short route check, not a performance measurement",
+          "fixedTime": "2026-10-08T12:00:00.000Z",
+          "start": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460800000,
+            "elapsedMs": 0
+          },
+          "end": {
+            "schema": "gev-held-monotonic-wall-clock/v1",
+            "started": true,
+            "startCount": 1,
+            "epochMs": 1791460808565,
+            "elapsedMs": 8565.200000000012
+          },
+          "ageAtEndMs": 8565,
+          "freshnessWindowMs": 120000,
+          "sourceFreshness": "current"
+        },
+        "comparisonEligible": false,
+        "comparisonIneligibilityReason": "This smoke verifies delivered fixture bytes and populations but does not establish the paired fixed-time measurement contract."
+      },
+      "serviceWorker": {
+        "controlled": false
+      },
+      "browser": {
+        "softwareRenderingRequested": true,
+        "flags": [
+          "--use-gl=angle",
+          "--use-angle=swiftshader",
+          "--enable-unsafe-swiftshader"
+        ],
+        "observedRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+        "observedVendor": "Google Inc. (Google)"
+      },
+      "route": {
+        "id": "integration-smoke-idle",
+        "start": {
+          "position": {
+            "x": -745096.3581177826,
+            "y": -5479803.236505516,
+            "z": 3205818.9350419086
+          },
+          "direction": {
+            "x": 0.1426697980203379,
+            "y": 0.9468316456182728,
+            "z": -0.2883663704190027
+          },
+          "up": {
+            "x": 0.09552507108026972,
+            "y": 0.27681463112538185,
+            "z": 0.9561634906175974
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        "elapsedDurationMs": 3459.5,
+        "motionDistanceM": 0
+      },
+      "observerBefore": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -745096.3581177826,
+            "y": -5479803.236505516,
+            "z": 3205818.9350419086
+          },
+          "direction": {
+            "x": 0.1426697980203379,
+            "y": 0.9468316456182728,
+            "z": -0.2883663704190027
+          },
+          "up": {
+            "x": 0.09552507108026972,
+            "y": 0.27681463112538185,
+            "z": 0.9561634906175974
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "observerAfter": {
+        "environment": {
+          "appCommit": "eb8c6828d0d03e1c04bda94c8c4fb99915a577b7",
+          "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+          "vendor": "Google Inc. (Google)",
+          "viewport": {
+            "width": 1280,
+            "height": 900,
+            "dpr": 1
+          },
+          "drawingBuffer": {
+            "width": 1280,
+            "height": 900
+          },
+          "layers": [
+            {
+              "id": "bhote-koshi-2026",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bhote-koshi-locator",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "flights",
+              "enabled": true,
+              "count": 2500
+            },
+            {
+              "id": "military",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-adsb",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "earthquakes",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "fire-perimeters",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "alpr-cameras",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "street-level",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "satellites",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "rocket-launches",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "traffic",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "cctv",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "radio",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "transit",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "bikeshare",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "directions",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "recent-imagery",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "ais-live-vessels",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-installations",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "military-awareness",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "wind",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-radar",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-satellite",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-lightning",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "weather-cyclones",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-datacenters",
+              "enabled": true,
+              "count": 4362
+            },
+            {
+              "id": "local-dams",
+              "enabled": true,
+              "count": 716
+            },
+            {
+              "id": "telegeography-submarine-cables",
+              "enabled": false,
+              "count": 0
+            },
+            {
+              "id": "local-firms",
+              "enabled": false,
+              "count": 0
+            }
+          ],
+          "totalObjects": 7578,
+          "focused": true,
+          "visible": true
+        },
+        "settings": {
+          "qualityMode": "manual",
+          "densityPct": 75,
+          "detectionMode": "DENSE",
+          "resolutionScale": 1,
+          "antialias": true,
+          "msaaSamples": 4,
+          "fxaa": false,
+          "bloom": false,
+          "sharpen": true
+        },
+        "camera": {
+          "position": {
+            "x": -742897.2382877241,
+            "y": -5463629.833118254,
+            "z": 3196293.52591379
+          },
+          "direction": {
+            "x": 0.3370901126365865,
+            "y": 0.8154931692376242,
+            "z": 0.4704690711294732
+          },
+          "up": {
+            "x": 0.0602517138324918,
+            "y": -0.5173780701589545,
+            "z": 0.8536332136807022
+          },
+          "transform": [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "durationMs": 56265
+    },
+    {
+      "revision": "6721940d14fbfab444cda2c889698383ea36a5d7",
+      "label": "candidate",
+      "status": "failed",
+      "failure": "Child process exited 1; Wrote bounded failed-capture evidence. Capture failed during prewarm-worker-audit-after-warmup: Warmup boundary: host did not observe a completed render within 5000ms.; cleanup confirmed (1).",
+      "failureDetails": {
+        "phase": "candidate-capture-cli-integration",
+        "pageErrors": [],
+        "interceptionErrors": [],
+        "workerBlobDiagnostics": {
+          "schema": "gev-cesium-worker-blob-diagnostics/v1",
+          "urlValuesOmitted": true,
+          "retentionByteCapBytes": 33554432,
+          "blobRequestCount": 20,
+          "observedBlobCount": 14,
+          "entryCount": 14,
+          "omittedEntryCount": 0,
+          "entries": [
+            {
+              "index": 0,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 148,
+              "bodySha256": "5b61f7064a8aaea26d0c17a12423a09e4c43b6280589d44dc1768e080b57c0e9",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 1,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 143,
+              "bodySha256": "e2c7b5410eea5babd1ed40643587b0e57069e3a0e8afaf12678506b847d3349d",
+              "requestCount": 2,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 2,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "ff24bf3b2f90c91d996073e4702ba8b612abbfc976deb9f4028f6bb581d9622d",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 3,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "532129a0ad734036b6329f85c054bb58261a3bed09f8a4086adc4160d2116d54",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 4,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 135,
+              "bodySha256": "f30f5e792939bf563c902de8712bdfd371631ce229fd5e30c09f260422718cdf",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 5,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 152,
+              "bodySha256": "0cd35a8a4314668b9f5b45a113a422dc2ad529cb32b3d5410d6de1ae9661204e",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 6,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 136,
+              "bodySha256": "f89be7d75829d21da9ce8a2c3c382aa953473239e0029932faf39199069de678",
+              "requestCount": 3,
+              "requestResourceTypes": [
+                "script",
+                "worker"
+              ],
+              "workerTargetHistoryMember": true
+            },
+            {
+              "index": 7,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 8,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 9,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 10,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 11,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 12,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            },
+            {
+              "index": 13,
+              "creationRecordPresent": true,
+              "type": "application/javascript",
+              "byteLength": 918255,
+              "bodySha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+              "requestCount": 0,
+              "requestResourceTypes": [],
+              "workerTargetHistoryMember": false
+            }
+          ]
+        },
+        "captureCliFailure": {
+          "schema": "gev-smoke-capture-cli-failure/v1",
+          "summary": {
+            "reportSchema": "gev-performance-capture-failure/v1",
+            "status": "failed",
+            "failure": {
+              "message": "Warmup boundary: host did not observe a completed render within 5000ms.",
+              "phase": "prewarm-worker-audit-after-warmup",
+              "scenario": "scripted-motion",
+              "run": 1,
+              "operator": null,
+              "actual": null,
+              "expected": null
+            },
+            "source": {
+              "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7",
+              "harnessCommit": "6721940d14fbfab444cda2c889698383ea36a5d7",
+              "provenanceStatus": "pre-capture-served-assets-verified"
+            },
+            "fixtureDelivery": {
+              "status": "observed",
+              "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+              "observedFlightsCount": 2500,
+              "fulfilledResponseCount": 1
+            },
+            "completedSampleCount": 2,
+            "completedSamplesRetained": 2,
+            "evidenceTruncated": true
+          },
+          "rawReport": {
+            "schema": "gev-performance-capture-failure/v1",
+            "captureSchema": "gev-performance-capture/v1",
+            "status": "failed",
+            "capturedAt": "2026-10-11T19:47:38.998Z",
+            "comparisonEligible": false,
+            "comparisonReadiness": {
+              "status": "not-ready",
+              "reason": "Failed or incomplete captures are never comparison evidence."
+            },
+            "source": {
+              "harnessCommit": "6721940d14fbfab444cda2c889698383ea36a5d7",
+              "harnessDirtyWorktree": false,
+              "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7",
+              "appWorktreeState": "clean",
+              "provenanceStatus": "pre-capture-served-assets-verified",
+              "reason": null,
+              "buildProvenance": {
+                "schema": "gev-capture-build-provenance/v1",
+                "status": "pre-capture-served-assets-verified",
+                "scope": "unsigned local build and served-byte checks; browser response bytes are not independently attested",
+                "receiptSha256": "7cdba4e1aeb5604fec9fb3ee08b587247d0d1b8d17308354b681ddce1a2adf66",
+                "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7",
+                "harnessCommit": "6721940d14fbfab444cda2c889698383ea36a5d7",
+                "before": {
+                  "schema": "gev-served-assets-verification/v1",
+                  "status": "served-assets-match",
+                  "receiptSha256": "7cdba4e1aeb5604fec9fb3ee08b587247d0d1b8d17308354b681ddce1a2adf66",
+                  "assetCount": 434,
+                  "totalAssetBytes": 43971602
+                },
+                "after": null
+              }
+            },
+            "fixture": {
+              "id": "opensky-dense-investigation-v1",
+              "count": 2500,
+              "fixedTime": "2026-10-08T12:00:00.000Z",
+              "sha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+              "byteLength": 348905
+            },
+            "workload": {
+              "readCostDiagnostics": true,
+              "warmupMs": 1000,
+              "durationPerSampleMs": 1000,
+              "runsPerScenario": 2,
+              "startupRuns": 1,
+              "qualityMode": "manual",
+              "expectedDensityPct": 75,
+              "detectionMode": "DENSE",
+              "mixedLayers": true,
+              "scenarios": [
+                "idle",
+                "scripted-motion",
+                "selected-aircraft-tracking"
+              ]
+            },
+            "failure": {
+              "phase": "prewarm-worker-audit-after-warmup",
+              "scenario": "scripted-motion",
+              "run": 1,
+              "message": "Warmup boundary: host did not observe a completed render within 5000ms.",
+              "operator": null
+            },
+            "fixtureDelivery": {
+              "schema": "gev-fixture-delivery-observation/v1",
+              "status": "observed",
+              "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+              "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+              "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+              "fixedTime": "2026-10-08T12:00:00.000Z",
+              "fulfilledResponseCount": 1,
+              "observedFlightsCount": 2500
+            },
+            "progress": {
+              "startupSampleCount": 1,
+              "startupSamples": [
+                {
+                  "run": 1,
+                  "cacheDisabled": true,
+                  "appReadyMs": 4246,
+                  "initialSettleMs": 5198,
+                  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+                  "platform": "Linux x86_64",
+                  "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+                  "viewport": {
+                    "width": 1440,
+                    "height": 900,
+                    "dpr": 1
+                  },
+                  "drawingBuffer": {
+                    "width": 1440,
+                    "height": 900
+                  },
+                  "focused": true,
+                  "visible": true,
+                  "navigationMs": 2518.4000000000233,
+                  "memory": {
+                    "usedJsHeapBytes": 40880544,
+                    "reason": null
+                  }
+                }
+              ],
+              "completedSampleCount": 2,
+              "completedSamples": [
+                {
+                  "scenario": "idle",
+                  "run": 1,
+                  "durationMs": 5072.600000000006,
+                  "renderedFrameCount": 2,
+                  "frameCount": 1,
+                  "frameIntervalMs": {
+                    "p50": 4591.5,
+                    "p95": 4591.5,
+                    "max": 4591.5,
+                    "samples": 1,
+                    "reason": null
+                  },
+                  "longTasks": {
+                    "count": 1,
+                    "maxMs": 79
+                  },
+                  "memory": {
+                    "usedJsHeapBytes": 364837699
+                  },
+                  "layers": [
+                    {
+                      "id": "bhote-koshi-2026",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "bhote-koshi-locator",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "flights",
+                      "enabled": true,
+                      "count": 2500
+                    },
+                    {
+                      "id": "military",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "local-adsb",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "earthquakes",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "fire-perimeters",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "alpr-cameras",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "street-level",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "satellites",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "rocket-launches",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "traffic",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "cctv",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "radio",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "transit",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "bikeshare",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "directions",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "recent-imagery",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "ais-live-vessels",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "military-installations",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "military-awareness",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "wind",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-radar",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-satellite",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-lightning",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-cyclones",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "local-datacenters",
+                      "enabled": true,
+                      "count": 4362
+                    },
+                    {
+                      "id": "local-dams",
+                      "enabled": true,
+                      "count": 716
+                    },
+                    {
+                      "id": "telegeography-submarine-cables",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "local-firms",
+                      "enabled": false,
+                      "count": 0
+                    }
+                  ],
+                  "totalObjects": 7578,
+                  "focused": true,
+                  "visible": true,
+                  "trackedAircraftId": null,
+                  "injectedDelayMs": 0,
+                  "quality": {
+                    "mode": "manual",
+                    "densityPct": 75,
+                    "p95FrameMs": null
+                  },
+                  "detection": {
+                    "mode": null,
+                    "reason": "Candidate-only detection diagnostics are disabled for comparable capture."
+                  },
+                  "performanceSnapshot": null,
+                  "performanceSnapshotReason": "Candidate-only runtime snapshots are disabled for comparable capture.",
+                  "foregroundThroughout": true,
+                  "cameraPath": {
+                    "id": "parked-v1",
+                    "start": {
+                      "position": {
+                        "x": -757954.9417831191,
+                        "y": -5574371.553231931,
+                        "z": 3261515.4316794802
+                      },
+                      "direction": {
+                        "x": 0.11636158373587388,
+                        "y": 0.8557800292723379,
+                        "z": -0.5040838455347639
+                      },
+                      "up": {
+                        "x": 0.06791602383794143,
+                        "y": 0.49948767455780124,
+                        "z": 0.8636547207483348
+                      },
+                      "transform": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                      ]
+                    },
+                    "elapsedDurationMs": 1000,
+                    "motionDistanceM": 0
+                  },
+                  "phasedClockEnd": {
+                    "schema": "gev-phased-monotonic-wall-clock/v1",
+                    "phase": "complete",
+                    "epochMs": 1791460802000,
+                    "elapsedMs": 2000,
+                    "warmupMs": 1000,
+                    "measurementMs": 1000,
+                    "warmupNativeElapsedMs": 2002.2999999999884,
+                    "measurementNativeElapsedMs": 1000.2999999999884,
+                    "startCount": 1,
+                    "measurementStartCount": 1
+                  },
+                  "fixtureClock": {
+                    "schema": "gev-provider-fixture-capture-clock/v1",
+                    "fixedTime": "2026-10-08T12:00:00.000Z",
+                    "start": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "warmup",
+                      "epochMs": 1791460800000,
+                      "elapsedMs": 0,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 0,
+                      "measurementNativeElapsedMs": null,
+                      "startCount": 1,
+                      "measurementStartCount": 0
+                    },
+                    "measurementStart": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "warmup-held",
+                      "epochMs": 1791460801000,
+                      "elapsedMs": 1000,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 2002.2999999999884,
+                      "measurementNativeElapsedMs": null,
+                      "startCount": 1,
+                      "measurementStartCount": 0
+                    },
+                    "warmupBoundary": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "warmup-held",
+                      "epochMs": 1791460801000,
+                      "elapsedMs": 1000,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 2002.2999999999884,
+                      "measurementNativeElapsedMs": null,
+                      "startCount": 1,
+                      "measurementStartCount": 0
+                    },
+                    "actualWarmupElapsedMs": 2002.2999999999884,
+                    "warmupBoundarySettleNativeMs": 2643,
+                    "ageAtMeasurementStartMs": 1000,
+                    "end": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "complete",
+                      "epochMs": 1791460802000,
+                      "elapsedMs": 2000,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 2002.2999999999884,
+                      "measurementNativeElapsedMs": 1000.2999999999884,
+                      "startCount": 1,
+                      "measurementStartCount": 1
+                    },
+                    "configuredMeasurementMs": 1000,
+                    "measurementPhaseNativeElapsedMs": 1000.2999999999884,
+                    "measuredWindowElapsedMs": 1000.2999999999884,
+                    "measurementClockElapsedMs": 1000,
+                    "measurementBoundarySettleNativeMs": 577.2999999999884,
+                    "ageAtEndMs": 2000,
+                    "sourceFreshness": "current",
+                    "freshnessWindowMs": 120000,
+                    "appDocumentReinitialized": true,
+                    "freshBrowserContext": true
+                  },
+                  "fixtureDelivery": {
+                    "schema": "gev-fixture-delivery-observation/v1",
+                    "status": "observed",
+                    "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+                    "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+                    "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+                    "fixedTime": "2026-10-08T12:00:00.000Z",
+                    "fulfilledResponseCount": 2,
+                    "observedFlightsCount": 2500
+                  },
+                  "workerAudit": {
+                    "schema": "gev-prewarmed-worker-use/v1",
+                    "status": "observed-late-code-paths-within-prewarm-inventory",
+                    "observedWorkerTargetCount": 7,
+                    "observedBlobRequestCount": 7,
+                    "receiptSha256": "7cdba4e1aeb5604fec9fb3ee08b587247d0d1b8d17308354b681ddce1a2adf66",
+                    "workerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                    "workerTargetOverflowCount": 0,
+                    "blobRequestOverflowCount": 0,
+                    "unusedLateBlobCreationObservable": false
+                  },
+                  "observerReadDiagnostics": {
+                    "before": {
+                      "schema": "gev-common-scene-read-cost/v1",
+                      "metric": "wall-time-ms",
+                      "clockAvailable": true,
+                      "totalMs": 2108,
+                      "reads": {
+                        "context": 0,
+                        "contextAttributes": 0,
+                        "rendererExtension": 0,
+                        "renderer": 2106,
+                        "vendor": 0.1999999999825377,
+                        "layers": 0.3000000000174623,
+                        "visualState": 0.1999999999825377,
+                        "density": 0.10000000000582077,
+                        "detectionMode": 0,
+                        "view": 0.8999999999941792
+                      },
+                      "performanceAcceptanceEligible": false
+                    },
+                    "after": {
+                      "schema": "gev-common-scene-read-cost/v1",
+                      "metric": "wall-time-ms",
+                      "clockAvailable": true,
+                      "totalMs": 4064,
+                      "reads": {
+                        "context": 0,
+                        "contextAttributes": 0,
+                        "rendererExtension": 0,
+                        "renderer": 2029.7000000000116,
+                        "vendor": 2033.5,
+                        "layers": 0.1999999999825377,
+                        "visualState": 0.20000000001164153,
+                        "density": 0,
+                        "detectionMode": 0,
+                        "view": 0.29999999998835847
+                      },
+                      "performanceAcceptanceEligible": false
+                    }
+                  },
+                  "settings": {
+                    "before": {
+                      "qualityMode": "manual",
+                      "densityPct": 75,
+                      "detectionMode": "DENSE",
+                      "resolutionScale": 1,
+                      "antialias": true,
+                      "msaaSamples": 4,
+                      "fxaa": false,
+                      "bloom": false,
+                      "sharpen": true,
+                      "style": "normal",
+                      "map": "osm",
+                      "visualState": {
+                        "style": "normal",
+                        "bloom": {
+                          "enabled": false,
+                          "intensity": 0,
+                          "version": 2
+                        },
+                        "sharpen": {
+                          "enabled": true,
+                          "intensity": 49
+                        },
+                        "hud": {
+                          "visible": true,
+                          "variant": "tactical"
+                        },
+                        "detection": {
+                          "mode": "DENSE",
+                          "density": 75,
+                          "allocation": "ELASTIC",
+                          "fadePct": 7,
+                          "outsideOpacityPct": 1
+                        },
+                        "scope": {
+                          "enabled": true,
+                          "featherPct": 11
+                        },
+                        "mapStack": "osm",
+                        "styleParams": {
+                          "retro": {
+                            "pixelation": 5,
+                            "distortion": 0,
+                            "instability": 0.4
+                          },
+                          "surveillance": {
+                            "gain": 0.55,
+                            "bloom": 0.3,
+                            "scanlineStr": 1,
+                            "pixelation": 2.5
+                          },
+                          "thermal": {
+                            "sensitivity": 0.75,
+                            "bloom": 0.65,
+                            "mode": 0,
+                            "pixelation": 1.5,
+                            "palette": 0
+                          },
+                          "anime": {
+                            "saturation": 1,
+                            "edgeThick": 0.5
+                          },
+                          "noir": {
+                            "contrastAmt": 1.2,
+                            "grainAmt": 0.5,
+                            "vignetteAmt": 0.5
+                          },
+                          "snow": {
+                            "density": 0.6,
+                            "wind": 0.5
+                          }
+                        }
+                      }
+                    },
+                    "after": {
+                      "qualityMode": "manual",
+                      "densityPct": 75,
+                      "detectionMode": "DENSE",
+                      "resolutionScale": 1,
+                      "antialias": true,
+                      "msaaSamples": 4,
+                      "fxaa": false,
+                      "bloom": false,
+                      "sharpen": true,
+                      "style": "normal",
+                      "map": "osm",
+                      "visualState": {
+                        "style": "normal",
+                        "bloom": {
+                          "enabled": false,
+                          "intensity": 0,
+                          "version": 2
+                        },
+                        "sharpen": {
+                          "enabled": true,
+                          "intensity": 49
+                        },
+                        "hud": {
+                          "visible": true,
+                          "variant": "tactical"
+                        },
+                        "detection": {
+                          "mode": "DENSE",
+                          "density": 75,
+                          "allocation": "ELASTIC",
+                          "fadePct": 7,
+                          "outsideOpacityPct": 1
+                        },
+                        "scope": {
+                          "enabled": true,
+                          "featherPct": 11
+                        },
+                        "mapStack": "osm",
+                        "styleParams": {
+                          "retro": {
+                            "pixelation": 5,
+                            "distortion": 0,
+                            "instability": 0.4
+                          },
+                          "surveillance": {
+                            "gain": 0.55,
+                            "bloom": 0.3,
+                            "scanlineStr": 1,
+                            "pixelation": 2.5
+                          },
+                          "thermal": {
+                            "sensitivity": 0.75,
+                            "bloom": 0.65,
+                            "mode": 0,
+                            "pixelation": 1.5,
+                            "palette": 0
+                          },
+                          "anime": {
+                            "saturation": 1,
+                            "edgeThick": 0.5
+                          },
+                          "noir": {
+                            "contrastAmt": 1.2,
+                            "grainAmt": 0.5,
+                            "vignetteAmt": 0.5
+                          },
+                          "snow": {
+                            "density": 0.6,
+                            "wind": 0.5
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "conditions": {
+                    "before": {
+                      "environment": {
+                        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+                        "platform": "Linux x86_64",
+                        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+                        "vendor": "Google Inc. (Google)",
+                        "viewport": {
+                          "width": 1440,
+                          "height": 900,
+                          "dpr": 1
+                        },
+                        "drawingBuffer": {
+                          "width": 1440,
+                          "height": 900
+                        },
+                        "focused": true,
+                        "visible": true,
+                        "layers": [
+                          {
+                            "id": "bhote-koshi-2026",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "bhote-koshi-locator",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "flights",
+                            "enabled": true,
+                            "count": 2500
+                          },
+                          {
+                            "id": "military",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "local-adsb",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "earthquakes",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "fire-perimeters",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "alpr-cameras",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "street-level",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "satellites",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "rocket-launches",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "traffic",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "cctv",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "radio",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "transit",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "bikeshare",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "directions",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "recent-imagery",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "ais-live-vessels",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "military-installations",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "military-awareness",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "wind",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-radar",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-satellite",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-lightning",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-cyclones",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "local-datacenters",
+                            "enabled": true,
+                            "count": 4362
+                          },
+                          {
+                            "id": "local-dams",
+                            "enabled": true,
+                            "count": 716
+                          },
+                          {
+                            "id": "telegeography-submarine-cables",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "local-firms",
+                            "enabled": false,
+                            "count": 0
+                          }
+                        ],
+                        "totalObjects": 7578,
+                        "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7"
+                      },
+                      "settings": "[circular]",
+                      "focused": true,
+                      "visible": true
+                    },
+                    "after": {
+                      "environment": {
+                        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+                        "platform": "Linux x86_64",
+                        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+                        "vendor": "Google Inc. (Google)",
+                        "viewport": {
+                          "width": 1440,
+                          "height": 900,
+                          "dpr": 1
+                        },
+                        "drawingBuffer": {
+                          "width": 1440,
+                          "height": 900
+                        },
+                        "focused": true,
+                        "visible": true,
+                        "layers": "[circular]",
+                        "totalObjects": 7578,
+                        "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7"
+                      },
+                      "settings": "[circular]",
+                      "focused": true,
+                      "visible": true
+                    }
+                  },
+                  "setupStageDiagnostics": [
+                    {
+                      "sequence": 6,
+                      "stage": "fresh-provider-document-setup",
+                      "status": "completed",
+                      "startedAtMs": 30801.547973,
+                      "elapsedMs": 14130.037967999997,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 7,
+                      "stage": "provider-previous-document-worker-audit",
+                      "status": "completed",
+                      "startedAtMs": 30801.867917,
+                      "elapsedMs": 674.3045970000021,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 8,
+                      "stage": "worker-metadata-read",
+                      "status": "completed",
+                      "startedAtMs": 30801.960234,
+                      "elapsedMs": 11.032951000001049,
+                      "timeoutMs": 10000,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 9,
+                      "stage": "worker-blob-read",
+                      "status": "completed",
+                      "startedAtMs": 30813.013195,
+                      "elapsedMs": 648.2926750000006,
+                      "timeoutMs": 90000,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 10,
+                      "stage": "worker-blob-validation",
+                      "status": "completed",
+                      "startedAtMs": 31461.335093,
+                      "elapsedMs": 8.981762999999773,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 11,
+                      "stage": "worker-observer-restoration-check",
+                      "status": "completed",
+                      "startedAtMs": 31470.457654,
+                      "elapsedMs": 5.638426999998046,
+                      "timeoutMs": 10000,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 12,
+                      "stage": "provider-context-and-fixture-attach",
+                      "status": "completed",
+                      "startedAtMs": 31476.1838,
+                      "elapsedMs": 158.57466100000238,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 13,
+                      "stage": "provider-navigation",
+                      "status": "completed",
+                      "startedAtMs": 31634.771009,
+                      "elapsedMs": 3367.9122339999994,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 14,
+                      "stage": "provider-viewer-readiness",
+                      "status": "completed",
+                      "startedAtMs": 35002.69453,
+                      "elapsedMs": 2400.3056940000024,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 15,
+                      "stage": "provider-loading-readiness-and-clock-check",
+                      "status": "completed",
+                      "startedAtMs": 37403.014294,
+                      "elapsedMs": 17.30979600000137,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 16,
+                      "stage": "provider-layer-and-camera-setup",
+                      "status": "completed",
+                      "startedAtMs": 37420.336618,
+                      "elapsedMs": 7481.041912000001,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 17,
+                      "stage": "provider-population-readiness",
+                      "status": "completed",
+                      "startedAtMs": 44901.402226,
+                      "elapsedMs": 19.26459900000191,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 18,
+                      "stage": "provider-fixture-delivery-and-home-pose",
+                      "status": "completed",
+                      "startedAtMs": 44920.686264,
+                      "elapsedMs": 10.886867999994138,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 19,
+                      "stage": "tracking-and-camera-setup",
+                      "status": "completed",
+                      "startedAtMs": 44931.59867,
+                      "elapsedMs": 5.659715000001597,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 20,
+                      "stage": "configured-wall-clock-warmup",
+                      "status": "completed",
+                      "startedAtMs": 44937.281269,
+                      "elapsedMs": 1000.6504120000027,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 21,
+                      "stage": "fixture-warmup-clock-boundary",
+                      "status": "completed",
+                      "startedAtMs": 45938.249321,
+                      "elapsedMs": 1018.9692609999984,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 22,
+                      "stage": "warmup-completed-render-settle",
+                      "status": "completed",
+                      "startedAtMs": 46957.382675,
+                      "elapsedMs": 5661.236220999999,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 23,
+                      "stage": "worker-blob-read-and-observer-restore",
+                      "status": "completed",
+                      "startedAtMs": 52618.820314,
+                      "elapsedMs": 728.6570410000058,
+                      "timeoutMs": 90000,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 24,
+                      "stage": "worker-blob-validation",
+                      "status": "completed",
+                      "startedAtMs": 53347.685824,
+                      "elapsedMs": 9.925655999999435,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 25,
+                      "stage": "before-sample-scene-observer",
+                      "status": "completed",
+                      "startedAtMs": 55981.409703,
+                      "elapsedMs": 4636.966593000005,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 26,
+                      "stage": "after-sample-scene-observer",
+                      "status": "completed",
+                      "startedAtMs": 69869.100718,
+                      "elapsedMs": 4065.7638029999944,
+                      "timeoutMs": null,
+                      "errorName": null
+                    }
+                  ]
+                },
+                {
+                  "scenario": "idle",
+                  "run": 2,
+                  "durationMs": 4760.200000000012,
+                  "renderedFrameCount": 3,
+                  "frameCount": 2,
+                  "frameIntervalMs": {
+                    "p50": 44.19999999998254,
+                    "p95": 1917.5,
+                    "max": 1917.5,
+                    "samples": 2,
+                    "reason": null
+                  },
+                  "longTasks": {
+                    "count": 1,
+                    "maxMs": 2799
+                  },
+                  "memory": {
+                    "usedJsHeapBytes": 269655242
+                  },
+                  "layers": [
+                    {
+                      "id": "bhote-koshi-2026",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "bhote-koshi-locator",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "flights",
+                      "enabled": true,
+                      "count": 2500
+                    },
+                    {
+                      "id": "military",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "local-adsb",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "earthquakes",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "fire-perimeters",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "alpr-cameras",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "street-level",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "satellites",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "rocket-launches",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "traffic",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "cctv",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "radio",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "transit",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "bikeshare",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "directions",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "recent-imagery",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "ais-live-vessels",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "military-installations",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "military-awareness",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "wind",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-radar",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-satellite",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-lightning",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "weather-cyclones",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "local-datacenters",
+                      "enabled": true,
+                      "count": 4362
+                    },
+                    {
+                      "id": "local-dams",
+                      "enabled": true,
+                      "count": 716
+                    },
+                    {
+                      "id": "telegeography-submarine-cables",
+                      "enabled": false,
+                      "count": 0
+                    },
+                    {
+                      "id": "local-firms",
+                      "enabled": false,
+                      "count": 0
+                    }
+                  ],
+                  "totalObjects": 7578,
+                  "focused": true,
+                  "visible": true,
+                  "trackedAircraftId": null,
+                  "injectedDelayMs": 0,
+                  "quality": {
+                    "mode": "manual",
+                    "densityPct": 75,
+                    "p95FrameMs": null
+                  },
+                  "detection": {
+                    "mode": null,
+                    "reason": "Candidate-only detection diagnostics are disabled for comparable capture."
+                  },
+                  "performanceSnapshot": null,
+                  "performanceSnapshotReason": "Candidate-only runtime snapshots are disabled for comparable capture.",
+                  "foregroundThroughout": true,
+                  "cameraPath": {
+                    "id": "parked-v1",
+                    "start": {
+                      "position": {
+                        "x": -757954.9417831191,
+                        "y": -5574371.553231931,
+                        "z": 3261515.4316794802
+                      },
+                      "direction": {
+                        "x": 0.11636158373587388,
+                        "y": 0.8557800292723379,
+                        "z": -0.5040838455347639
+                      },
+                      "up": {
+                        "x": 0.06791602383794143,
+                        "y": 0.49948767455780124,
+                        "z": 0.8636547207483348
+                      },
+                      "transform": [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                      ]
+                    },
+                    "elapsedDurationMs": 1000,
+                    "motionDistanceM": 0
+                  },
+                  "phasedClockEnd": {
+                    "schema": "gev-phased-monotonic-wall-clock/v1",
+                    "phase": "complete",
+                    "epochMs": 1791460802000,
+                    "elapsedMs": 2000,
+                    "warmupMs": 1000,
+                    "measurementMs": 1000,
+                    "warmupNativeElapsedMs": 1322.7999999999884,
+                    "measurementNativeElapsedMs": 2850.9000000000233,
+                    "startCount": 1,
+                    "measurementStartCount": 1
+                  },
+                  "fixtureClock": {
+                    "schema": "gev-provider-fixture-capture-clock/v1",
+                    "fixedTime": "2026-10-08T12:00:00.000Z",
+                    "start": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "warmup",
+                      "epochMs": 1791460800000,
+                      "elapsedMs": 0,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 0,
+                      "measurementNativeElapsedMs": null,
+                      "startCount": 1,
+                      "measurementStartCount": 0
+                    },
+                    "measurementStart": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "warmup-held",
+                      "epochMs": 1791460801000,
+                      "elapsedMs": 1000,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 1322.7999999999884,
+                      "measurementNativeElapsedMs": null,
+                      "startCount": 1,
+                      "measurementStartCount": 0
+                    },
+                    "warmupBoundary": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "warmup-held",
+                      "epochMs": 1791460801000,
+                      "elapsedMs": 1000,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 1322.7999999999884,
+                      "measurementNativeElapsedMs": null,
+                      "startCount": 1,
+                      "measurementStartCount": 0
+                    },
+                    "actualWarmupElapsedMs": 1322.7999999999884,
+                    "warmupBoundarySettleNativeMs": 2763.2000000000116,
+                    "ageAtMeasurementStartMs": 1000,
+                    "end": {
+                      "schema": "gev-phased-monotonic-wall-clock/v1",
+                      "phase": "complete",
+                      "epochMs": 1791460802000,
+                      "elapsedMs": 2000,
+                      "warmupMs": 1000,
+                      "measurementMs": 1000,
+                      "warmupNativeElapsedMs": 1322.7999999999884,
+                      "measurementNativeElapsedMs": 2850.9000000000233,
+                      "startCount": 1,
+                      "measurementStartCount": 1
+                    },
+                    "configuredMeasurementMs": 1000,
+                    "measurementPhaseNativeElapsedMs": 2850.9000000000233,
+                    "measuredWindowElapsedMs": 2850.9000000000233,
+                    "measurementClockElapsedMs": 1000,
+                    "measurementBoundarySettleNativeMs": 3918.5,
+                    "ageAtEndMs": 2000,
+                    "sourceFreshness": "current",
+                    "freshnessWindowMs": 120000,
+                    "appDocumentReinitialized": true,
+                    "freshBrowserContext": true
+                  },
+                  "fixtureDelivery": {
+                    "schema": "gev-fixture-delivery-observation/v1",
+                    "status": "observed",
+                    "scope": "static-count integration smoke only; not a paired timing fixture or performance acceptance",
+                    "method": "same-origin /api/flights response acknowledged by CDP Fetch.fulfillRequest",
+                    "fixtureSha256": "953f5cf6958732dad75004605e845545e59345d8d259615cbda7a4bf2e863fc8",
+                    "fixedTime": "2026-10-08T12:00:00.000Z",
+                    "fulfilledResponseCount": 1,
+                    "observedFlightsCount": 2500
+                  },
+                  "workerAudit": {
+                    "schema": "gev-prewarmed-worker-use/v1",
+                    "status": "observed-late-code-paths-within-prewarm-inventory",
+                    "observedWorkerTargetCount": 7,
+                    "observedBlobRequestCount": 7,
+                    "receiptSha256": "7cdba4e1aeb5604fec9fb3ee08b587247d0d1b8d17308354b681ddce1a2adf66",
+                    "workerSourceSha256": "d9caf1655a5fb641e6dd5f99c069ad5b4cce4a08b5968b871de232471a936322",
+                    "workerTargetOverflowCount": 0,
+                    "blobRequestOverflowCount": 0,
+                    "unusedLateBlobCreationObservable": false
+                  },
+                  "observerReadDiagnostics": {
+                    "before": {
+                      "schema": "gev-common-scene-read-cost/v1",
+                      "metric": "wall-time-ms",
+                      "clockAvailable": true,
+                      "totalMs": 3315.2000000000116,
+                      "reads": {
+                        "context": 0,
+                        "contextAttributes": 0,
+                        "rendererExtension": 0.10000000000582077,
+                        "renderer": 1320.1000000000058,
+                        "vendor": 1993.5,
+                        "layers": 0.29999999998835847,
+                        "visualState": 0.3000000000174623,
+                        "density": 0.09999999997671694,
+                        "detectionMode": 0,
+                        "view": 0.40000000002328306
+                      },
+                      "performanceAcceptanceEligible": false
+                    },
+                    "after": {
+                      "schema": "gev-common-scene-read-cost/v1",
+                      "metric": "wall-time-ms",
+                      "clockAvailable": true,
+                      "totalMs": 2440.899999999994,
+                      "reads": {
+                        "context": 0,
+                        "contextAttributes": 0,
+                        "rendererExtension": 0,
+                        "renderer": 398.20000000001164,
+                        "vendor": 2041.7999999999884,
+                        "layers": 0.10000000000582077,
+                        "visualState": 0.09999999997671694,
+                        "density": 0,
+                        "detectionMode": 0,
+                        "view": 0.5
+                      },
+                      "performanceAcceptanceEligible": false
+                    }
+                  },
+                  "settings": {
+                    "before": {
+                      "qualityMode": "manual",
+                      "densityPct": 75,
+                      "detectionMode": "DENSE",
+                      "resolutionScale": 1,
+                      "antialias": true,
+                      "msaaSamples": 4,
+                      "fxaa": false,
+                      "bloom": false,
+                      "sharpen": true,
+                      "style": "normal",
+                      "map": "osm",
+                      "visualState": {
+                        "style": "normal",
+                        "bloom": {
+                          "enabled": false,
+                          "intensity": 0,
+                          "version": 2
+                        },
+                        "sharpen": {
+                          "enabled": true,
+                          "intensity": 49
+                        },
+                        "hud": {
+                          "visible": true,
+                          "variant": "tactical"
+                        },
+                        "detection": {
+                          "mode": "DENSE",
+                          "density": 75,
+                          "allocation": "ELASTIC",
+                          "fadePct": 7,
+                          "outsideOpacityPct": 1
+                        },
+                        "scope": {
+                          "enabled": true,
+                          "featherPct": 11
+                        },
+                        "mapStack": "osm",
+                        "styleParams": {
+                          "retro": {
+                            "pixelation": 5,
+                            "distortion": 0,
+                            "instability": 0.4
+                          },
+                          "surveillance": {
+                            "gain": 0.55,
+                            "bloom": 0.3,
+                            "scanlineStr": 1,
+                            "pixelation": 2.5
+                          },
+                          "thermal": {
+                            "sensitivity": 0.75,
+                            "bloom": 0.65,
+                            "mode": 0,
+                            "pixelation": 1.5,
+                            "palette": 0
+                          },
+                          "anime": {
+                            "saturation": 1,
+                            "edgeThick": 0.5
+                          },
+                          "noir": {
+                            "contrastAmt": 1.2,
+                            "grainAmt": 0.5,
+                            "vignetteAmt": 0.5
+                          },
+                          "snow": {
+                            "density": 0.6,
+                            "wind": 0.5
+                          }
+                        }
+                      }
+                    },
+                    "after": {
+                      "qualityMode": "manual",
+                      "densityPct": 75,
+                      "detectionMode": "DENSE",
+                      "resolutionScale": 1,
+                      "antialias": true,
+                      "msaaSamples": 4,
+                      "fxaa": false,
+                      "bloom": false,
+                      "sharpen": true,
+                      "style": "normal",
+                      "map": "osm",
+                      "visualState": {
+                        "style": "normal",
+                        "bloom": {
+                          "enabled": false,
+                          "intensity": 0,
+                          "version": 2
+                        },
+                        "sharpen": {
+                          "enabled": true,
+                          "intensity": 49
+                        },
+                        "hud": {
+                          "visible": true,
+                          "variant": "tactical"
+                        },
+                        "detection": {
+                          "mode": "DENSE",
+                          "density": 75,
+                          "allocation": "ELASTIC",
+                          "fadePct": 7,
+                          "outsideOpacityPct": 1
+                        },
+                        "scope": {
+                          "enabled": true,
+                          "featherPct": 11
+                        },
+                        "mapStack": "osm",
+                        "styleParams": {
+                          "retro": {
+                            "pixelation": 5,
+                            "distortion": 0,
+                            "instability": 0.4
+                          },
+                          "surveillance": {
+                            "gain": 0.55,
+                            "bloom": 0.3,
+                            "scanlineStr": 1,
+                            "pixelation": 2.5
+                          },
+                          "thermal": {
+                            "sensitivity": 0.75,
+                            "bloom": 0.65,
+                            "mode": 0,
+                            "pixelation": 1.5,
+                            "palette": 0
+                          },
+                          "anime": {
+                            "saturation": 1,
+                            "edgeThick": 0.5
+                          },
+                          "noir": {
+                            "contrastAmt": 1.2,
+                            "grainAmt": 0.5,
+                            "vignetteAmt": 0.5
+                          },
+                          "snow": {
+                            "density": 0.6,
+                            "wind": 0.5
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "conditions": {
+                    "before": {
+                      "environment": {
+                        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+                        "platform": "Linux x86_64",
+                        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+                        "vendor": "Google Inc. (Google)",
+                        "viewport": {
+                          "width": 1440,
+                          "height": 900,
+                          "dpr": 1
+                        },
+                        "drawingBuffer": {
+                          "width": 1440,
+                          "height": 900
+                        },
+                        "focused": true,
+                        "visible": true,
+                        "layers": [
+                          {
+                            "id": "bhote-koshi-2026",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "bhote-koshi-locator",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "flights",
+                            "enabled": true,
+                            "count": 2500
+                          },
+                          {
+                            "id": "military",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "local-adsb",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "earthquakes",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "fire-perimeters",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "alpr-cameras",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "street-level",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "satellites",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "rocket-launches",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "traffic",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "cctv",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "radio",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "transit",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "bikeshare",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "directions",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "recent-imagery",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "ais-live-vessels",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "military-installations",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "military-awareness",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "wind",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-radar",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-satellite",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-lightning",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "weather-cyclones",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "local-datacenters",
+                            "enabled": true,
+                            "count": 4362
+                          },
+                          {
+                            "id": "local-dams",
+                            "enabled": true,
+                            "count": 716
+                          },
+                          {
+                            "id": "telegeography-submarine-cables",
+                            "enabled": false,
+                            "count": 0
+                          },
+                          {
+                            "id": "local-firms",
+                            "enabled": false,
+                            "count": 0
+                          }
+                        ],
+                        "totalObjects": 7578,
+                        "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7"
+                      },
+                      "settings": "[circular]",
+                      "focused": true,
+                      "visible": true
+                    },
+                    "after": {
+                      "environment": {
+                        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36",
+                        "platform": "Linux x86_64",
+                        "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+                        "vendor": "Google Inc. (Google)",
+                        "viewport": {
+                          "width": 1440,
+                          "height": 900,
+                          "dpr": 1
+                        },
+                        "drawingBuffer": {
+                          "width": 1440,
+                          "height": 900
+                        },
+                        "focused": true,
+                        "visible": true,
+                        "layers": "[circular]",
+                        "totalObjects": 7578,
+                        "appCommit": "6721940d14fbfab444cda2c889698383ea36a5d7"
+                      },
+                      "settings": "[circular]",
+                      "focused": true,
+                      "visible": true
+                    }
+                  },
+                  "setupStageDiagnostics": [
+                    {
+                      "sequence": 27,
+                      "stage": "fresh-provider-document-setup",
+                      "status": "completed",
+                      "startedAtMs": 73935.191926,
+                      "elapsedMs": 12668.408964999995,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 28,
+                      "stage": "provider-context-and-fixture-attach",
+                      "status": "completed",
+                      "startedAtMs": 73935.209262,
+                      "elapsedMs": 2215.245776999989,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 29,
+                      "stage": "provider-navigation",
+                      "status": "completed",
+                      "startedAtMs": 76150.474187,
+                      "elapsedMs": 642.6655940000055,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 30,
+                      "stage": "provider-viewer-readiness",
+                      "status": "completed",
+                      "startedAtMs": 76793.164218,
+                      "elapsedMs": 1901.5414149999997,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 31,
+                      "stage": "provider-loading-readiness-and-clock-check",
+                      "status": "completed",
+                      "startedAtMs": 78694.725753,
+                      "elapsedMs": 1197.4153609999921,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 32,
+                      "stage": "provider-layer-and-camera-setup",
+                      "status": "completed",
+                      "startedAtMs": 79892.161955,
+                      "elapsedMs": 6682.7412919999915,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 33,
+                      "stage": "provider-population-readiness",
+                      "status": "completed",
+                      "startedAtMs": 86574.949065,
+                      "elapsedMs": 22.171808000013698,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 34,
+                      "stage": "provider-fixture-delivery-and-home-pose",
+                      "status": "completed",
+                      "startedAtMs": 86597.144828,
+                      "elapsedMs": 6.44706999999471,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 35,
+                      "stage": "tracking-and-camera-setup",
+                      "status": "completed",
+                      "startedAtMs": 86603.611347,
+                      "elapsedMs": 4.204387999998289,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 36,
+                      "stage": "configured-wall-clock-warmup",
+                      "status": "completed",
+                      "startedAtMs": 86607.834873,
+                      "elapsedMs": 1000.1780299999955,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 37,
+                      "stage": "fixture-warmup-clock-boundary",
+                      "status": "completed",
+                      "startedAtMs": 87608.091489,
+                      "elapsedMs": 322.56536599999527,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 38,
+                      "stage": "warmup-completed-render-settle",
+                      "status": "completed",
+                      "startedAtMs": 87930.698296,
+                      "elapsedMs": 5361.417239000002,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 39,
+                      "stage": "worker-blob-read-and-observer-restore",
+                      "status": "completed",
+                      "startedAtMs": 93292.201262,
+                      "elapsedMs": 3891.665412999995,
+                      "timeoutMs": 90000,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 40,
+                      "stage": "worker-blob-validation",
+                      "status": "completed",
+                      "startedAtMs": 97183.930199,
+                      "elapsedMs": 7.358059999998659,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 41,
+                      "stage": "before-sample-scene-observer",
+                      "status": "completed",
+                      "startedAtMs": 97195.798405,
+                      "elapsedMs": 3317.089705000006,
+                      "timeoutMs": null,
+                      "errorName": null
+                    },
+                    {
+                      "sequence": 42,
+                      "stage": "after-sample-scene-observer",
+                      "status": "completed",
+                      "startedAtMs": 109732.05357,
+                      "elapsedMs": 2444.116796999995,
+                      "timeoutMs": null,
+                      "errorName": null
+                    }
+                  ]
+                }
+              ],
+              "current": {
+                "phase": "prewarm-worker-audit-after-warmup",
+                "scenario": "scripted-motion",
+                "run": 1,
+                "captureStageDiagnostics": [
+                  {
+                    "sequence": 31,
+                    "stage": "provider-loading-readiness-and-clock-check",
+                    "status": "completed",
+                    "startedAtMs": 78694.725753,
+                    "elapsedMs": 1197.4153609999921,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 32,
+                    "stage": "provider-layer-and-camera-setup",
+                    "status": "completed",
+                    "startedAtMs": 79892.161955,
+                    "elapsedMs": 6682.7412919999915,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 33,
+                    "stage": "provider-population-readiness",
+                    "status": "completed",
+                    "startedAtMs": 86574.949065,
+                    "elapsedMs": 22.171808000013698,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 34,
+                    "stage": "provider-fixture-delivery-and-home-pose",
+                    "status": "completed",
+                    "startedAtMs": 86597.144828,
+                    "elapsedMs": 6.44706999999471,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 35,
+                    "stage": "tracking-and-camera-setup",
+                    "status": "completed",
+                    "startedAtMs": 86603.611347,
+                    "elapsedMs": 4.204387999998289,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 36,
+                    "stage": "configured-wall-clock-warmup",
+                    "status": "completed",
+                    "startedAtMs": 86607.834873,
+                    "elapsedMs": 1000.1780299999955,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 37,
+                    "stage": "fixture-warmup-clock-boundary",
+                    "status": "completed",
+                    "startedAtMs": 87608.091489,
+                    "elapsedMs": 322.56536599999527,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 38,
+                    "stage": "warmup-completed-render-settle",
+                    "status": "completed",
+                    "startedAtMs": 87930.698296,
+                    "elapsedMs": 5361.417239000002,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 39,
+                    "stage": "worker-blob-read-and-observer-restore",
+                    "status": "completed",
+                    "startedAtMs": 93292.201262,
+                    "elapsedMs": 3891.665412999995,
+                    "timeoutMs": 90000,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 40,
+                    "stage": "worker-blob-validation",
+                    "status": "completed",
+                    "startedAtMs": 97183.930199,
+                    "elapsedMs": 7.358059999998659,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 41,
+                    "stage": "before-sample-scene-observer",
+                    "status": "completed",
+                    "startedAtMs": 97195.798405,
+                    "elapsedMs": 3317.089705000006,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 42,
+                    "stage": "after-sample-scene-observer",
+                    "status": "completed",
+                    "startedAtMs": 109732.05357,
+                    "elapsedMs": 2444.116796999995,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 43,
+                    "stage": "fresh-provider-document-setup",
+                    "status": "completed",
+                    "startedAtMs": 112176.470132,
+                    "elapsedMs": 12221.757782999994,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 44,
+                    "stage": "provider-context-and-fixture-attach",
+                    "status": "completed",
+                    "startedAtMs": 112176.491423,
+                    "elapsedMs": 580.6087939999998,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 45,
+                    "stage": "provider-navigation",
+                    "status": "completed",
+                    "startedAtMs": 112757.119135,
+                    "elapsedMs": 634.0035420000058,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 46,
+                    "stage": "provider-viewer-readiness",
+                    "status": "completed",
+                    "startedAtMs": 113391.141625,
+                    "elapsedMs": 2361.112979999991,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 47,
+                    "stage": "provider-loading-readiness-and-clock-check",
+                    "status": "completed",
+                    "startedAtMs": 115752.282877,
+                    "elapsedMs": 24.753272000001743,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 48,
+                    "stage": "provider-layer-and-camera-setup",
+                    "status": "completed",
+                    "startedAtMs": 115777.055568,
+                    "elapsedMs": 8595.40333300001,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 49,
+                    "stage": "provider-population-readiness",
+                    "status": "completed",
+                    "startedAtMs": 124372.489837,
+                    "elapsedMs": 18.870685000001686,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 50,
+                    "stage": "provider-fixture-delivery-and-home-pose",
+                    "status": "completed",
+                    "startedAtMs": 124391.382555,
+                    "elapsedMs": 6.834875000000466,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 51,
+                    "stage": "tracking-and-camera-setup",
+                    "status": "completed",
+                    "startedAtMs": 124398.238972,
+                    "elapsedMs": 3.017710000000079,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 52,
+                    "stage": "configured-wall-clock-warmup",
+                    "status": "completed",
+                    "startedAtMs": 124401.26885,
+                    "elapsedMs": 1000.7674020000122,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 53,
+                    "stage": "fixture-warmup-clock-boundary",
+                    "status": "completed",
+                    "startedAtMs": 125402.121178,
+                    "elapsedMs": 356.05609600000025,
+                    "timeoutMs": null,
+                    "errorName": null
+                  },
+                  {
+                    "sequence": 54,
+                    "stage": "warmup-completed-render-settle",
+                    "status": "failed",
+                    "startedAtMs": 125758.210914,
+                    "elapsedMs": 6001.970144999999,
+                    "timeoutMs": null,
+                    "errorName": "Error"
+                  }
+                ],
+                "trackingSetup": null,
+                "clockStart": {
+                  "schema": "gev-phased-monotonic-wall-clock/v1",
+                  "phase": "warmup",
+                  "epochMs": 1791460800000,
+                  "elapsedMs": 0,
+                  "warmupMs": 1000,
+                  "measurementMs": 1000,
+                  "warmupNativeElapsedMs": 0.10000000000582077,
+                  "measurementNativeElapsedMs": null,
+                  "startCount": 1,
+                  "measurementStartCount": 0
+                },
+                "prewarmWorkerAudit": {
+                  "status": "pending",
+                  "timingBoundary": "after-warmup-and-completed-render-before-measurement",
+                  "warmupMs": 1000
+                },
+                "warmupBoundary": {
+                  "schema": "gev-phased-monotonic-wall-clock/v1",
+                  "phase": "warmup-held",
+                  "epochMs": 1791460801000,
+                  "elapsedMs": 1000,
+                  "warmupMs": 1000,
+                  "measurementMs": 1000,
+                  "warmupNativeElapsedMs": 1356.5,
+                  "measurementNativeElapsedMs": null,
+                  "startCount": 1,
+                  "measurementStartCount": 0
+                },
+                "startupObserverReadDiagnostics": {
+                  "schema": "gev-common-scene-read-cost/v1",
+                  "metric": "wall-time-ms",
+                  "clockAvailable": true,
+                  "totalMs": 2128.9000000000233,
+                  "reads": {
+                    "context": 0,
+                    "contextAttributes": 0.10000000000582077,
+                    "rendererExtension": 0,
+                    "renderer": 603.3000000000175,
+                    "vendor": 1524.5,
+                    "layers": 0.1999999999825377,
+                    "visualState": 0.3000000000174623,
+                    "density": 0,
+                    "detectionMode": 0,
+                    "view": 0.39999999999417923
+                  },
+                  "performanceAcceptanceEligible": false
+                },
+                "performanceDiagnosticsDocuments": [
+                  {
+                    "documentRole": "startup-1",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  },
+                  {
+                    "documentRole": "main-setup",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  },
+                  {
+                    "documentRole": "provider-sample-1",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  },
+                  {
+                    "documentRole": "provider-sample-2",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  },
+                  {
+                    "documentRole": "provider-sample-3",
+                    "requested": true,
+                    "hookAvailable": true,
+                    "disabled": true
+                  }
+                ]
+              },
+              "completedSamplesRetained": 2,
+              "startupSamplesRetained": 1
+            },
+            "evidenceTruncated": true
+          }
+        },
+        "densePopulationObservations": [
+          {
+            "checkpoint": "initial",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          },
+          {
+            "checkpoint": "final-before-code-validation",
+            "layers": {
+              "flights": {
+                "enabled": true,
+                "count": 2500
+              },
+              "local-datacenters": {
+                "enabled": true,
+                "count": 4362
+              },
+              "local-dams": {
+                "enabled": true,
+                "count": 716
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "limitations": [
+    "Local build receipts are unsigned and do not attest hardware or release provenance.",
+    "The browser request audit records code paths; it does not independently attest response bytes.",
+    "The production fixture is verified only for acknowledged delivery and static population counts; this smoke is not paired timing evidence.",
+    "Software rendering is explicit SwiftShader and cannot support hardware performance claims."
+  ],
+  "failure": {
+    "message": "Child process exited 1; Wrote bounded failed-capture evidence. Capture failed during prewarm-worker-audit-after-warmup: Warmup boundary: host did not observe a completed render within 5000ms.; cleanup confirmed (1).",
+    "phase": "candidate"
+  },
+  "finishedAt": "2026-10-11T19:47:43.770Z",
+  "durationMs": 225652
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "gev-private-optimization-disposition/v1",
+  "recordedAt": "2026-10-20T20:51:58.4154289Z",
+  "status": "diagnostic-completed-without-sufficient-benefit",
+  "adopted": false,
+  "acceptanceEligible": false,
+  "application": {
+    "baseline": "ec0f1b2b1d0972c5d731e8694952a21b6a7b2267",
+    "candidate": "143eae3082b2603375be38ac94dbe3040647dc0d"
+  },
+  "harness": "6de653580b2348cb43023ef6d2ca0ec5682bf6fc",
+  "browser": "Chrome/155.0.8059.85",
+  "renderer": "Intel UHD Graphics 620 / ANGLE D3D11",
+  "nativeViewport": {
+    "width": 1280,
+    "height": 537,
+    "dpr": 2
+  },
+  "nativeMs": {
+    "baseline": [304, 160, 40, 112, 40, 96],
+    "candidate": [384, 304, 40, 112, 40, 88]
+  },
+  "onReadinessMs": {
+    "baseline": [428, 106.3, 110.7],
+    "candidate": [560.8, 123, 119.8]
+  },
+  "validation": {
+    "node24Passed": 208,
+    "node26Passed": 291,
+    "mountedHudOffCasesPassed": 10,
+    "productionBuild": "passed",
+    "importAndPackageBoundaries": "passed"
+  },
+  "observations": {
+    "retainedLeftMeasurementBatches": {
+      "baseline": 26,
+      "candidate": 0
+    },
+    "lastCandidateHeightKind": "lower-bound",
+    "lastCandidateLowerBoundPct": "119.34",
+    "lastMetadataScope": "Latest completed layout only; not per-action proof",
+    "allActionsRetained": true,
+    "normalCleanup": true,
+    "productionChanged": false
+  },
+  "rawSha256": "fff0d076754c768789a3221ce8522ea7e7eaebc1efe3fabb8a06f0c696319607",
+  "reviewSha256": "f66897940b82ddf2f20809c9fa26a9de17cec965f9ae8699d6184f867a7f32bf",
+  "mountedRawSha256": "8c66e22d3908a0b8e6c66c6a3acccede9bbc57fecd405b2426b450a614b12d1f",
+  "archive": {
+    "directory": "context-bound-143eae30-short-functional-complete-20261020",
+    "files": 194,
+    "bytes": 8510224,
+    "sourceReferences": 39,
+    "receiptSha256": "b9b75bea51d2d087dc6a0270b724e7f81a7189fc4884ed2468bd286c0439ddcc",
+    "manifestSha256": "84343ec64a90a3d014b8d83430baf16ae005c81fc5bcf27ca26ddbadc5ee0bc4",
+    "independentReadbacks": 2
+  },
+  "disposition": "Keep this runtime experiment private. Native latency and ON readiness remain unresolved. No formal twenty-sample qualification or final Ampfing soak is credited."
+}

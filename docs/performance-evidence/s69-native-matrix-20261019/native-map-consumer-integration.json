@@ -1,0 +1,186 @@
+{
+  "schema": "gev-native-map-consumer-integration/v1",
+  "verifiedAt": "2026-10-19T06:29:49.259Z",
+  "commit": "b20a5c611db037aa31e703a0d7c1eab5014d815b",
+  "byteEquivalent": true,
+  "tests": [
+    {
+      "version": "24",
+      "code": 0,
+      "signal": null,
+      "sha256": "b8f73a124877b44ecda3acbd3f39a5bb3aefd88318f262f2201b407d669c0678",
+      "count": 179
+    },
+    {
+      "version": "26",
+      "code": 0,
+      "signal": null,
+      "sha256": "e4da3c91db0914df53d6753f19adb3306b4c0a5f0091026e922cedad896046a0",
+      "count": 179
+    }
+  ],
+  "raw": {
+    "baseline": {
+      "path": "map-streaming-baseline.json",
+      "sha256": "2b76fb5b4e2b8e503ec070aa030eeeffd5e589f6adad164c571c68c8071b82df"
+    },
+    "candidate": {
+      "path": "map-streaming-candidate.json",
+      "sha256": "d88727f2d1ea8f3774077a2cbe61f92a7830e11f8e909c12ceb1c5313deedf71"
+    }
+  },
+  "matrix": {
+    "status": "comparable",
+    "evidenceScope": "report-integrity-only; hardware provenance requires independent verification",
+    "workloadObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "denseTrackingObjective": {
+      "status": "not-assessed",
+      "achieved": null,
+      "targetImprovementPct": 20,
+      "scenarios": {}
+    },
+    "scenarios": {
+      "map-streaming-route": {
+        "status": "measured",
+        "baselineMedianP95Ms": 14413.900000002235,
+        "candidateMedianP95Ms": 11645,
+        "changePct": -19.20992930436458,
+        "regressionOver10Pct": false
+      },
+      "idle": {
+        "status": "measured",
+        "baselineMedianP95Ms": 13911.599999997765,
+        "candidateMedianP95Ms": 13991.5,
+        "changePct": 0.5743408378780874,
+        "regressionOver10Pct": false
+      },
+      "scripted-motion": {
+        "status": "measured",
+        "baselineMedianP95Ms": 392.29999999701977,
+        "candidateMedianP95Ms": 398.9000000022352,
+        "changePct": 1.6823859304780895,
+        "regressionOver10Pct": false
+      }
+    },
+    "mapStreaming": {
+      "metric": "transition-readiness-p95-ms",
+      "baselineRuns": [
+        {
+          "run": 1,
+          "transitionReadinessMs": [19641.5, 6855.900000002235, 515],
+          "p95Ms": 19641.5
+        },
+        {
+          "run": 2,
+          "transitionReadinessMs": [17970.39999999851, 6150, 608.6000000014901],
+          "p95Ms": 17970.39999999851
+        },
+        {
+          "run": 3,
+          "transitionReadinessMs": [
+            12419.10000000149, 5177.39999999851, 704.5999999977648
+          ],
+          "p95Ms": 12419.10000000149
+        },
+        {
+          "run": 4,
+          "transitionReadinessMs": [
+            12495.599999997765, 4737.60000000149, 562.5999999977648
+          ],
+          "p95Ms": 12495.599999997765
+        },
+        {
+          "run": 5,
+          "transitionReadinessMs": [
+            14413.900000002235, 7536.79999999702, 682.9000000022352
+          ],
+          "p95Ms": 14413.900000002235
+        }
+      ],
+      "candidateRuns": [
+        {
+          "run": 1,
+          "transitionReadinessMs": [
+            18795.799999998882, 8311.599999999627, 482.5
+          ],
+          "p95Ms": 18795.799999998882
+        },
+        {
+          "run": 2,
+          "transitionReadinessMs": [
+            18177.700000001118, 6662, 563.8999999985099
+          ],
+          "p95Ms": 18177.700000001118
+        },
+        {
+          "run": 3,
+          "transitionReadinessMs": [
+            11645, 5598.299999998882, 510.30000000074506
+          ],
+          "p95Ms": 11645
+        },
+        {
+          "run": 4,
+          "transitionReadinessMs": [
+            11572.39999999851, 5757.4000000003725, 440.40000000037253
+          ],
+          "p95Ms": 11572.39999999851
+        },
+        {
+          "run": 5,
+          "transitionReadinessMs": [
+            10619.799999998882, 7518, 565.5999999996275
+          ],
+          "p95Ms": 10619.799999998882
+        }
+      ],
+      "frameCaptureCoverage": "validated"
+    },
+    "fixtureDeliveryDiagnostics": {
+      "assetInventoryComparison": "independently-validated-pinned-manifest",
+      "baseline": {
+        "requestedAssetCount": 272,
+        "assetsOnlyInThisCapture": [],
+        "fulfilledResponseCount": 1991,
+        "perSample": null
+      },
+      "candidate": {
+        "requestedAssetCount": 280,
+        "assetsOnlyInThisCapture": [
+          "imagery/16/14978/26979.png",
+          "imagery/16/14978/26980.png",
+          "imagery/16/14978/26981.png",
+          "imagery/16/14978/26982.png",
+          "imagery/16/14978/26983.png",
+          "imagery/16/14979/26983.png",
+          "imagery/16/14979/26984.png",
+          "imagery/16/14980/26985.png"
+        ],
+        "fulfilledResponseCount": 2004,
+        "perSample": null
+      }
+    },
+    "regressionsOver10Pct": [],
+    "comparisonProfileEvidence": {
+      "baseline": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      },
+      "candidate": {
+        "status": "derived-from-all-capture-boundaries",
+        "boundaryCount": 20
+      }
+    }
+  },
+  "manifestSha256": "f0f7ba99ccf01b54d1e65edf1614e926999f6a46beeff8f5a9abde6f46a3c1ec",
+  "overallCandidateComparison": "pending",
+  "retention": "pending",
+  "scope": "Only the map pair is supplied. Missing workloads and retention remain pending.",
+  "productionChanged": false,
+  "fullReceiptSha256": "09e011e118e31f1a2406d82d7128c14bb63e0aa97bd4257695e0b2716979dd2f"
+}

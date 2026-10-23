@@ -1,0 +1,310 @@
+{
+  "schema": "gev-native-austin-failure-review/v1",
+  "reviewedAt": "2026-10-13T00:48:56.004Z",
+  "runUrl": "https://github.com/arthurianresolve/gods-eye-view/actions/runs/38328456260",
+  "testedCommit": "25d5d60ef8fdb937a5585238b1e0ea83116cc324",
+  "status": "failed",
+  "comparisonEligible": false,
+  "outerFailure": {
+    "message": "The expression evaluated to a falsy value:   assert.ok( ",
+    "phase": "candidate"
+  },
+  "captureIntegrity": {
+    "status": "passed",
+    "sampleCount": 4
+  },
+  "sourceProvenance": "verified-local-build-and-served-assets-before-and-after",
+  "checks": [
+    {
+      "name": "canonical fixture bytes and descriptor",
+      "status": "passed"
+    },
+    {
+      "name": "complete sample contract recomputed",
+      "status": "passed"
+    },
+    {
+      "name": "satellite sampled epochs recomputed",
+      "status": "passed",
+      "result": true
+    },
+    {
+      "name": "renderer identity revalidated",
+      "status": "passed",
+      "result": {
+        "schema": "gev-hosted-renderer-diagnostic/v1",
+        "requestedBackend": "macos-native-diagnostic",
+        "observedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple Paravirtual device, Unspecified Version)",
+        "observedWebglVendor": "Google Inc. (Apple)",
+        "kind": "apple-paravirtual-metal",
+        "accelerationVerified": true,
+        "status": "verified",
+        "featureStatus": {
+          "webgl": "enabled",
+          "webgl2": null,
+          "gpu_compositing": "enabled",
+          "opengl": "enabled_on"
+        },
+        "physicalDesktopCoverage": false,
+        "hostedEnvironment": "github-actions-macos",
+        "comparisonEligible": false,
+        "performanceAcceptanceEligible": false
+      }
+    },
+    {
+      "name": "all Austin document releases recomputed",
+      "status": "passed"
+    },
+    {
+      "name": "original readiness history validator",
+      "status": "failed",
+      "message": "The expression evaluated to a falsy value:\n\n  assert.ok(\n",
+      "stack": [
+        "AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:",
+        "",
+        "  assert.ok(",
+        "",
+        "    at validateAustinOperatingReadinessHistoryEnvelope (file:///C:/Users/Privat/Documents/Codex/2026-10-08/i/work/gev-s47-austin-receipt-only/scripts/qa-performance-build-smoke.mjs:1409:10)",
+        "    at [stdin]:19:51",
+        "    at check ([stdin]:12:42)",
+        "    at [stdin]:19:2"
+      ],
+      "actual": false,
+      "expected": true
+    }
+  ],
+  "cleanup": [
+    {
+      "documentRole": "startup-1",
+      "confirmed": true
+    },
+    {
+      "documentRole": "main-setup",
+      "confirmed": true
+    },
+    {
+      "documentRole": "provider-sample-1",
+      "confirmed": true
+    },
+    {
+      "documentRole": "provider-sample-2",
+      "confirmed": true
+    },
+    {
+      "documentRole": "provider-sample-3",
+      "confirmed": true
+    },
+    {
+      "documentRole": "provider-sample-4",
+      "confirmed": true
+    }
+  ],
+  "captures": [
+    {
+      "scenario": "idle",
+      "run": 1,
+      "renderedFrameCount": 36,
+      "measurementBoundarySettleNativeMs": 49.59999999997672,
+      "installationBefore": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ],
+      "installationAfter": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "scenario": "idle",
+      "run": 2,
+      "renderedFrameCount": 33,
+      "measurementBoundarySettleNativeMs": 41.09999999997672,
+      "installationBefore": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ],
+      "installationAfter": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 1,
+      "renderedFrameCount": 35,
+      "measurementBoundarySettleNativeMs": 52.699999999953434,
+      "installationBefore": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ],
+      "installationAfter": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ]
+    },
+    {
+      "scenario": "scripted-motion",
+      "run": 2,
+      "renderedFrameCount": 33,
+      "measurementBoundarySettleNativeMs": 52,
+      "installationBefore": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ],
+      "installationAfter": [
+        {
+          "count": 357,
+          "loading": false,
+          "error": null
+        }
+      ]
+    }
+  ],
+  "history": {
+    "missingTopLevelFields": ["attachTimeoutMs", "commandTimeoutMs"],
+    "retainedSamples": 16,
+    "omittedSamples": 37,
+    "documentCount": 5,
+    "sampleSequence": [
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 5,
+        "hostStartedAtMs": 75692.521292,
+        "hostCompletedAtMs": 75735.186875
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 6,
+        "hostStartedAtMs": 76692.87725,
+        "hostCompletedAtMs": 76703.611542
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 7,
+        "hostStartedAtMs": 77694.867667,
+        "hostCompletedAtMs": 77703.706667
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 8,
+        "hostStartedAtMs": 78696.43975,
+        "hostCompletedAtMs": 78698.318375
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 9,
+        "hostStartedAtMs": 79698.940292,
+        "hostCompletedAtMs": 79701.890958
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 10,
+        "hostStartedAtMs": 80701.633667,
+        "hostCompletedAtMs": 80720.204083
+      },
+      {
+        "documentRole": "provider-sample-3",
+        "sequence": 11,
+        "hostStartedAtMs": 81702.205917,
+        "hostCompletedAtMs": 81739.633833
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 1,
+        "hostStartedAtMs": 90298.5005,
+        "hostCompletedAtMs": 90586.092042
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 2,
+        "hostStartedAtMs": 91299.510167,
+        "hostCompletedAtMs": 91341.816333
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 3,
+        "hostStartedAtMs": 92301.856958,
+        "hostCompletedAtMs": 92357.956625
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 4,
+        "hostStartedAtMs": 93304.100083,
+        "hostCompletedAtMs": 93323.344
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 5,
+        "hostStartedAtMs": 94306.186042,
+        "hostCompletedAtMs": 94329.339875
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 6,
+        "hostStartedAtMs": 95306.428792,
+        "hostCompletedAtMs": 95308.595125
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 7,
+        "hostStartedAtMs": 96308.533583,
+        "hostCompletedAtMs": 96310.651875
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 8,
+        "hostStartedAtMs": 97310.736667,
+        "hostCompletedAtMs": 97320.563667
+      },
+      {
+        "documentRole": "provider-sample-4",
+        "sequence": 9,
+        "hostStartedAtMs": 98312.809708,
+        "hostCompletedAtMs": 98315.524208
+      }
+    ]
+  },
+  "limitations": [
+    "The outer capture validator failed. Replayed components do not convert the workflow into a pass.",
+    "One-second hosted Apple paravirtual Metal samples are supplemental integration evidence, not physical desktop or paired performance acceptance.",
+    "Observed installation readiness does not establish global asynchronous quiescence."
+  ],
+  "artifacts": [
+    {
+      "file": "hosted-native-38328456260-smoke-failed.json",
+      "bytes": 36016,
+      "sha256": "69607c43372e04f2e07c2ec137b39ef0c2577c1d6a8239f639d954616251d369"
+    },
+    {
+      "file": "hosted-native-38328456260-cli-completed.json",
+      "bytes": 3676129,
+      "sha256": "4b4e4e058e8013a0dc0355ab17b4f587594ef5d7623b13df5808c33b6f76c2b2"
+    },
+    {
+      "file": "native-38328456260-run.json",
+      "bytes": 6927,
+      "sha256": "1adab32ac1030f921dab2c1d34b5c7059be55e03b728af8f68b6720387d7a143"
+    }
+  ]
+}

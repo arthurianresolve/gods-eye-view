@@ -21,6 +21,8 @@ export function createIngestion({
   settleFirstConnect,
   now,
   setSourceLabel,
+  onAcceptedSnapshot,
+  onSourceUnavailable,
 }) {
   async function loadLivePositions(viewer) {
     if (!viewer || feed.loading) return;
@@ -50,7 +52,7 @@ export function createIngestion({
       if (!ownsAisRequest(requestController, requestSessionId)) return;
       setSourceLabel(snapshot.source);
       // Map observations into the existing display store; source fields stop here.
-      applyAisFeedSnapshot(viewer, {
+      const applied = applyAisFeedSnapshot(viewer, {
         rows: snapshot.records.map(vesselDisplayRow),
         observedAtMs: snapshot.observedAtMs,
         freshness: snapshot.freshness,
@@ -68,6 +70,30 @@ export function createIngestion({
         silentForMs: snapshot.silentForMs,
         reconnectAttempt: snapshot.reconnectAttempt,
       });
+      if (applied.reconciled) {
+        try {
+          await onAcceptedSnapshot?.(snapshot);
+        } catch (recordingError) {
+          console.warn(
+            '[Recording:Vessels] Snapshot was not recorded:',
+            recordingError,
+          );
+        }
+      } else if (
+        snapshot.transportStatus &&
+        !['live', 'open', 'connected', 'active'].includes(
+          snapshot.transportStatus.toLowerCase(),
+        )
+      ) {
+        try {
+          await onSourceUnavailable?.(snapshot.transportStatus);
+        } catch (recordingError) {
+          console.warn(
+            '[Recording:Vessels] Gap could not be recorded:',
+            recordingError,
+          );
+        }
+      }
     } catch (error) {
       if (
         ownsAisRequest(requestController, requestSessionId) &&
@@ -75,6 +101,14 @@ export function createIngestion({
       ) {
         markUnavailable(error?.message || msg('AIS live load failed'));
         console.warn('[Data:ais-live-vessels]', feed.error, error);
+        try {
+          await onSourceUnavailable?.('provider-unavailable');
+        } catch (recordingError) {
+          console.warn(
+            '[Recording:Vessels] Gap could not be recorded:',
+            recordingError,
+          );
+        }
       }
     } finally {
       if (

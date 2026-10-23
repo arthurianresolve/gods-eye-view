@@ -1,0 +1,28 @@
+{
+  "schema": "gev-test-inventory-validation/v1",
+  "startedAt": "2026-10-19T22:55:22.542Z",
+  "baseQaCommit": "207f9a482ac598d7373b150675847ccfd2b5ccb7",
+  "runtimeChanged": false,
+  "file": {
+    "name": "scripts/run-unit-tests.mjs",
+    "sha256": "007ab076d418439faf8b08189f4ca39f3648201849d03bb21db866539bdfe720"
+  },
+  "checks": [
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "620b13abe5b14e45397d0d20f3191fece700a988c2a45d1f2f141762ebbaee0d",
+      "summary": "✔ unit discovery includes each existing server test exactly once (31.900654ms)\n✔ unit discovery recursively includes future nested server test files (1.97136ms)\n✔ unit runner serializes only GC-bracketed allocation microbenchmarks (1.439915ms)\n✔ the runner discovers every test file in the repository (29.111588ms)\n✔ allocation runtime calibration is explicit and pinned to Node 24 (0.242408ms)\n✔ npm test stays green on every supported engine, not only the calibrated one (0.542926ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 154.884086\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "f5b919d1f25d67157f52bba3933dcf21e019ee4c910c573115d40a5fa713d9a6",
+      "summary": "✔ unit discovery includes each existing server test exactly once (21.757166ms)\n✔ unit discovery recursively includes future nested server test files (5.428482ms)\n✔ unit runner serializes only GC-bracketed allocation microbenchmarks (5.879079ms)\n✔ the runner discovers every test file in the repository (34.407384ms)\n✔ allocation runtime calibration is explicit and pinned to Node 24 (0.25962ms)\n✔ npm test stays green on every supported engine, not only the calibrated one (0.980269ms)\nℹ tests 6\nℹ suites 0\nℹ pass 6\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 159.446128\n"
+    }
+  ],
+  "status": "passed",
+  "completedAt": "2026-10-19T22:55:22.912Z"
+}

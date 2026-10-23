@@ -1,0 +1,619 @@
+{
+  "schema": "gev-weather-identity-reader-validation/v1",
+  "status": "passed",
+  "startedAt": "2026-10-20T01:28:22.285Z",
+  "baseCommit": "7ff9736a7a690a4ce240cdc6185d502782c8fd28",
+  "files": [
+    {
+      "name": "scripts/performance/weatherBalancedQualification.test.mjs",
+      "bytes": 27956,
+      "sha256": "b53a976edab6919079ecd3ada32d928863a34fd23e97b3d8cda71835ac2d0188",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/performance/candidatePerformanceEvidence.mjs",
+      "bytes": 37571,
+      "sha256": "221de01b51245e4f221fa7414cc4dd4eb653bfa42a2c215b84e0db82dd80d976",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/pairedReport.mjs",
+      "bytes": 77427,
+      "sha256": "6ddb447d0fcaebdb4bbe16b122bafdcce80f67853b7500a88a358fbc77e135ad",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/captureIntegrity.mjs",
+      "bytes": 8162,
+      "sha256": "a304c27753a11d7567c2f41fcd655e9603d88d0d98d2dcd78dc3c2557944e91c",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/routeEquivalence.mjs",
+      "bytes": 6034,
+      "sha256": "6fe7b8364d94711d594ef8c80642ed9a8eb63b913ae2111089d7c7c5231329d6",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/productionFlightFixture.mjs",
+      "bytes": 61932,
+      "sha256": "c03f903f8a1b45fcea4923335edeb184f100dc86434a756728898c4f4793fd42",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/captureComparisonContract.mjs",
+      "bytes": 79727,
+      "sha256": "350ccb99b9a0735f4ecedc8e1734e5053b36ad04d660cb22b61f795286be0c48",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/infrastructureWorkloadContract.mjs",
+      "bytes": 3131,
+      "sha256": "b185142277e8f5ee0431a1e9bc7b05a801c581023c0a358dc1c5e6c33b88ce42",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/austinOperatingWorkloadContract.mjs",
+      "bytes": 2331,
+      "sha256": "a616d780352daa2f6d1dc3805a09eadac112a9aed5819ab9369a76dbbcaa8300",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/austinOperatingPopulationEvidence.mjs",
+      "bytes": 10538,
+      "sha256": "501d0750bdf5924496696c142e6e11288b44e1cf92fe363697d65bc2e2793f4d",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/receiptOnlyWorkerAudit.mjs",
+      "bytes": 16828,
+      "sha256": "a879a13aba6df7c17e7609ac5ab0c6e365b76d7c8c1a71e6b24d6de178e52aee",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/nativeSharpnessProfile.mjs",
+      "bytes": 3091,
+      "sha256": "6dd903af050352370d9a7f62b39bac9ccdaf6c1b7f41ab779d29f2d677a40fb1",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/mapStreamingWorkloadContract.mjs",
+      "bytes": 144,
+      "sha256": "f0fbc474cde873484e58ec3d2528ca42e0d3b87a15ed7132c78ac1fca306903f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/austinSatelliteSampledEpoch.mjs",
+      "bytes": 14369,
+      "sha256": "f2a03f41c8f8109d4dcac19b3d21c41197bb0855869a9d97dc2d4bf5e8b482d2",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/sources/tle.js",
+      "bytes": 2374,
+      "sha256": "5fb055fb50d8740dba9e6509dd67412ad4cd603510dcb97d36afdeb3f79b0361",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/layers/satellites/policy.js",
+      "bytes": 6336,
+      "sha256": "0d2cafeee341ead1c4054bdfee087fe140c35fb377597b8e7b0e3e50ab6cc39d",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/satelliteClass.js",
+      "bytes": 8685,
+      "sha256": "c6c512a32a6d447d45352f51a3391c244c340435ba66d8ee3dc0b378d71b8810",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/i18n/index.js",
+      "bytes": 13509,
+      "sha256": "695e596e29d2c79050432c28841909044a8c56259c7b8ef2e65dcb317fa32a79",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/i18n/locale.js",
+      "bytes": 2740,
+      "sha256": "bafaeb98296093ac8676dc07eeeaa83fb416673c5d0782a80101b91b5ebc11c3",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/i18n/locales/es.json",
+      "bytes": 200211,
+      "sha256": "030dfb2b08898b386cbc317f73e6d1e717c3b9a415a373d88d621bc3d2238aec",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/i18n/locales/ru.json",
+      "bytes": 259074,
+      "sha256": "bcac1af4ab59e920bc9ed8ab9e2927f1d40053ae8e5f97b5cde5ab65612e9a9f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/layers/satellites/orbits.js",
+      "bytes": 13470,
+      "sha256": "4b8a46697e21a86ea6ea3209079ae009fa0ad288654490706d13b76bc8c44b01",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/satellitePass.js",
+      "bytes": 14711,
+      "sha256": "d23c5820941c07884e448742675200ec383febd9eba4eb01fe0ea0819cab1720",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/austinOperatingDocumentEvidence.mjs",
+      "bytes": 2552,
+      "sha256": "7c7b9624acd818b7f81ca4ef90b93540596a2d798d1af76d95262a83abcd0545",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/weatherInterleavedDiagnosticContract.mjs",
+      "bytes": 3459,
+      "sha256": "c2bbb9dcc61692945ce5f0db7bcc74c12119946db3e2fc9fe518af33290bf2d4",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixture.mjs",
+      "bytes": 61852,
+      "sha256": "a3b5c0ba81dbff848aa42acb6b9bf771a45ac1273b0d653341a2a467dd73434a",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/mapStreamingCapture.mjs",
+      "bytes": 180109,
+      "sha256": "85278085a4cdbc466bd81c9843251e95baed53e7d3c806f9fcdf2394d61a8476",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/mapStreamingFixtureDelivery.mjs",
+      "bytes": 34327,
+      "sha256": "16efcca87ea47bccfc4df0254cca1d549fb1511645f0204d5549346d8b4b59ae",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/buildProvenance.mjs",
+      "bytes": 31403,
+      "sha256": "8cf0f6e23b8f0942ebc5d5a22b7f7a9d59ca218da022fed2eeab2f5dc37dc7ce",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/soakStability.mjs",
+      "bytes": 5521,
+      "sha256": "996efb1f0bb20654bfcd41f7107524afe7b7a089237459f06f221ef979c1d634",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/idleCadenceDisposition.mjs",
+      "bytes": 16274,
+      "sha256": "c7ccefffe1e76f8f7ac30f4ff4b6426da456c5cb504d7eac07cebb9a6f51e985",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/weatherBalancedQualification.mjs",
+      "bytes": 20663,
+      "sha256": "30a42e5f530be8a2ff6ffebfed94da0f716a2ddc5ffbbbac1ba508f179079116",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/weatherEffectsWorkloadFixture.mjs",
+      "bytes": 57798,
+      "sha256": "c03a095f6c4bb5bf7614625ba50073ef1070452726f323647cfa7ba33cc695dd",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/layers/weather/source.js",
+      "bytes": 5753,
+      "sha256": "1362d3e90adbf1c3da2bf414aaf57151d0581a7b89a6334b7df76a512d173656",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/sources/httpBody.js",
+      "bytes": 4234,
+      "sha256": "5113e8ef647b54431913b3521fc45014db9669668af447e1270c96243f171996",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/i18n/marker.js",
+      "bytes": 399,
+      "sha256": "8b9c5d7a233d59205e7e74428bf5c8a6bd8e916a45737e44b199c02593199c41",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/weatherIdleCadenceDisposition.mjs",
+      "bytes": 31152,
+      "sha256": "54bafe71e8e8ba36585aa7b531e36fad1d8c146885b9412a7c108a6bd3b82c9f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/weatherVisibleWindProbe.mjs",
+      "bytes": 31437,
+      "sha256": "da655b52accde85fd9064208fa9a0650b5ae7cdd0b514c3eb182e264afd07c31",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.mjs",
+      "bytes": 50428,
+      "sha256": "5d5cd30add3fc65c194bcaac01d5dfb1f6e4689acce9cd7a2be3a1061b3dfd3b",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/performance/pairedReportTestFixtures.mjs",
+      "bytes": 22934,
+      "sha256": "800524eaabaf2b0295feb1fa14cc4e08b6c9797625abf49957050ef0189799e6",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/infrastructureWorkloadFixture.mjs",
+      "bytes": 11515,
+      "sha256": "fc2f925c7a1ae25a6c8624774de42ceacce30988931a5c7fed9d95267a190dad",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/qualificationMetrics.test.mjs",
+      "bytes": 80100,
+      "sha256": "776010f4884fd2a5616991ef68479d93406a349896d200678c09f406a880f67b",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/storage/index.js",
+      "bytes": 193,
+      "sha256": "367ee69d9cc5d97a88ec3b7a7ade537e150de516e5abe4264fe7f7ccab73dbab",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/storage/codec.js",
+      "bytes": 4065,
+      "sha256": "10825ceeae7cc6fec0e884bdb6a791fa3f0773b2dfcbbf9f7175db0e8c915c40",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/storage/indexedDb.js",
+      "bytes": 29024,
+      "sha256": "f251f4167a3556764be9dc522179cfb224569857f314eb88932b5b2d7169cf10",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/index.js",
+      "bytes": 1113,
+      "sha256": "10b513cfc8fe3017384c7a0f461eaa3aa2d82dd00b0260ad21b5ef51fbcc6b0e",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/aircraft.js",
+      "bytes": 18597,
+      "sha256": "e66a2b0bd8c3935dc27a18c9d17b309d83d1a75f5696e0e7e57eb26e30a4798d",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/regions.js",
+      "bytes": 1882,
+      "sha256": "142ca18c9304aef15505f7ce2e2d7e62433fa0aa3390ff9179024064aeebfece",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/syntheticFixture.js",
+      "bytes": 1227,
+      "sha256": "f436c640456e319b2055d17ecc5deb82fedd0145170eeb7a45242a4f6c382433",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/replaySource.js",
+      "bytes": 8814,
+      "sha256": "95939ba44f2e96d2e812ef49b973c2bb170f4ca850c8c05c7e79dcb15b2b4c86",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/sourceRouter.js",
+      "bytes": 4331,
+      "sha256": "a04ab294d6bd19687124ea1097bb10ae3bd688314468a13a2325eacc2f05b657",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/vessels.js",
+      "bytes": 16819,
+      "sha256": "de0a0a2e9c87f3f3d124c8a0d237dbaab401dfb42e85f40045becc98ac136dba",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/vesselReplaySource.js",
+      "bytes": 10403,
+      "sha256": "6c7bde4bdaf06d33c3a595311dad9c7bfe22b705e855e1834c440a4b0f04fa81",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/vesselSourceRouter.js",
+      "bytes": 4857,
+      "sha256": "4924d9972c31a3ca8419fef0ad074b5856af566e9b5f9af0ad62ac7818a91314",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/capture.js",
+      "bytes": 2580,
+      "sha256": "0de490f653c88a8661bd8f0a324b0d623efb1df31a8cd1c0062c5d1f8cc6d555",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/recording/bundle.js",
+      "bytes": 10990,
+      "sha256": "c62fd997eca99f372d742bceb8c14cea311288dced036ebaa79ca6090a425639",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/qa-qualification-metrics-capture.mjs",
+      "bytes": 67974,
+      "sha256": "b0b727257d7b06ab1d83c9fbb6ddb291de8d97b302852f980b2c71ea1a70e87f",
+      "source": "reviewed-patch"
+    },
+    {
+      "name": "scripts/qa-rendered-soak-driver.mjs",
+      "bytes": 67983,
+      "sha256": "a46584e8ad7157c9208661028678807665b62717bafb5607bc4d373f816409a8",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/rendererEvidence.mjs",
+      "bytes": 3209,
+      "sha256": "beb229cba51f732e92fab7a9a805789821d774bf740fc47a6550060f57984f64",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/workerDiagnostics.mjs",
+      "bytes": 2915,
+      "sha256": "e06dcbd2a951ea35b36e56a8d5e6140abf2ce98f25cbaa9d82c1a4fde12cae81",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/hostedSoakSession.mjs",
+      "bytes": 2590,
+      "sha256": "1ee8172bd9b7626c92ea3e670d415722a9cf7e01a9b0707e23edb3bbf5cb7d47",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryPageOwnership.mjs",
+      "bytes": 34736,
+      "sha256": "6179c78cf5ee652f169786bec32652b9a1fa044e74f90856452ba7af348afaa2",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/startupDiagnostics.mjs",
+      "bytes": 8814,
+      "sha256": "9aad3887b5dc32355d7f191fdf64a597e42f1e98bfa4ddc9c77e8c868c2f9efe",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/qa-application-fixtures.mjs",
+      "bytes": 27769,
+      "sha256": "c66f315a7b6316d108040023c3781ac247d2c1b238610af902699c47021c1d37",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/fixtureInterception.mjs",
+      "bytes": 13174,
+      "sha256": "b7a095598c501154e2cca8e2d8d442a2a5f3983c6cff7401bb94bb6615f1c946",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/fixtureNetworkProbe.mjs",
+      "bytes": 2308,
+      "sha256": "05ecd4a985b465bb8388370356eac3338af560d55f0d664a6dad23661e97837a",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/profileRecoveryFixtureContract.mjs",
+      "bytes": 292,
+      "sha256": "87a1e78394f0f63dd4f91937be152a7c5df9e49c09a624032d5e295b94706aa2",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/workspaceOpenProbe.mjs",
+      "bytes": 2606,
+      "sha256": "62b2bef8b007274b7f4828ad7ced8e4d56e567464d64d7ce56c425fddbcca32f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/consoleMessageOwnership.mjs",
+      "bytes": 3224,
+      "sha256": "30377088596290eb87562de03eafe42dfda65e4422c01dd8fe97e09d26a2041f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/cesiumWorkerProbeInPage.mjs",
+      "bytes": 3717,
+      "sha256": "453cb05945d1fba93232499d6297420d5248b0b2a615506672563f9f5aff9737",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "scripts/performance/windowsForegroundWindow.mjs",
+      "bytes": 21986,
+      "sha256": "7ad97316378b0d219fea4cf65ea7633d79f6ad87a589533e34f908af28fc6031",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "package.json",
+      "bytes": 14760,
+      "sha256": "6423b13ca290d46b11162fd472741a7cee41c60f9a9beb1159eba883dd754a3f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "package-lock.json",
+      "bytes": 147463,
+      "sha256": "754121d66ec0dcccafa193a2f6bf11ff13ba8ab919f1397bd86de465d5e7022f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": ".prettierrc.json",
+      "bytes": 80,
+      "sha256": "d77193f01dffa58f3e766b73873a6d3d5b2291ee59916ddcc53c2e04a88a232d",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/clouds-regional-0.tile.png",
+      "bytes": 85934,
+      "sha256": "1829581e3f75db298905492a656b9c0a014627a251561ce8eaaaded82cc11109",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/clouds-regional-1.tile.png",
+      "bytes": 90656,
+      "sha256": "1b1f2c9d688303230254e343a54b0fcd85a37e0d65a2fe944867bbdc6efff3d8",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/clouds-regional-2.tile.png",
+      "bytes": 90938,
+      "sha256": "c68b5c3bbb546325a787d89c5b648fb3411646ac7f18763b280f7da8bc8177e5",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/clouds-regional.manifest.json",
+      "bytes": 286,
+      "sha256": "c2e4a5d77a54d7c4f93ef6d15d014d8adce5afd39e88cd052109d9fa3ddb4c2a",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/gfs-weather-grid.bin",
+      "bytes": 521280,
+      "sha256": "ab5108331d44d555d002c7f637682d1105762c291186b192e7cde78b9f51a9e3",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/lightning-0.tile.png",
+      "bytes": 93276,
+      "sha256": "8da506489e8da77480da3ea57e7ebdbe46afbeb1821f13bf4c0e2c8e2afd73d1",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/lightning-1.tile.png",
+      "bytes": 97435,
+      "sha256": "cd3a6095d51907c544b447f711d95131d4c30a962aff3075a6262e374124a629",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/lightning-2.tile.png",
+      "bytes": 97969,
+      "sha256": "a484d8e4f850638ac193d91f757e284272cbba1227fce73cd0a7609c281c10fd",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/lightning.manifest.json",
+      "bytes": 282,
+      "sha256": "b1043b299f56caba1d1308f4eab770ccc2eb58ca4f6815c86f282eb5cb8a62a8",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/radar-0.tile.png",
+      "bytes": 96080,
+      "sha256": "9de68abd15af96fd6a1b46f887dc67a2546ea683511ad66f2fdc01d17c1f048c",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/radar-1.tile.png",
+      "bytes": 82173,
+      "sha256": "7d11316ca1dc0b1e83bc45cde2bbb7991fecbd4d895e267937d8f060656f4c31",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/radar-2.tile.png",
+      "bytes": 78229,
+      "sha256": "479daa7cb5f8fd5ea49f387eca20ad0fd4acde76d3bd5eaea7646e81e4f5cd5f",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    },
+    {
+      "name": "src/data/fixtures/weather-effects-v1/radar.manifest.json",
+      "bytes": 277,
+      "sha256": "8947f95a5af16eb36326f9f915f843abc6718277f5a31cc9c90052d9a59f7846",
+      "source": "7ff9736a7a690a4ce240cdc6185d502782c8fd28"
+    }
+  ],
+  "checks": [
+    {
+      "label": "format",
+      "code": 0,
+      "signal": null,
+      "sha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "summary": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "label": "node24",
+      "code": 0,
+      "signal": null,
+      "sha256": "4606d68d22c8566fa36fd4286ee0ce64fe5b6801348f006e6a55b163b5088ff7",
+      "summary": " but permit unequal realized durations (0.796826ms)\n✔ sampled-heap source durations may differ, but both declared series must cover the six measured cycles (0.723927ms)\n✔ sampled peak regression fails independently of the preserved retention soak result (0.459856ms)\n✔ cold startup keeps app-ready and loading-hidden checks separate and fails either over-ten-percent regression (0.33162ms)\n✔ qualification replay fixture contract matches persisted correction rows and coverage (30.672425ms)\n✔ balanced weather plan fixes a fresh full sharpness workload and exact order (22.029329ms)\n✔ balanced weather envelope validates five complete alternating pairs and aggregates the unchanged threshold (220.666238ms)\n✔ balanced weather envelope requires portable plan-bound build receipts (1151.791931ms)\n✔ balanced weather envelope rejects missing, duplicate, reordered and overlapping shards (1664.618881ms)\n✔ balanced weather envelope rejects wrong commits, settings, diagnostic shards and tampered child bytes (819.268048ms)\n✔ candidate evidence consumes only the hash-bound balanced envelope (187.425211ms)\n✔ weather envelope can supply only its exact hash-bound identity pair (230.262774ms)\n✔ weather shards derive an omitted profile label from consistent native observations (184.624209ms)\n✔ weather shards accept only the pinned full browser version or its reduced UA version (845.582439ms)\n✔ weather shards reject missing or inconsistent profile observations when the label is omitted (1662.515652ms)\n✔ balanced envelope remains portable when archived outside its capture output root (188.480265ms)\nℹ tests 38\nℹ suites 0\nℹ pass 38\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9035.662621\n"
+    },
+    {
+      "label": "node26",
+      "code": 0,
+      "signal": null,
+      "sha256": "397bcbb015cf7174594a6e73e2663f7693d1389f088d23600dc5a580fd378fdc",
+      "summary": "k but permit unequal realized durations (1.049082ms)\n✔ sampled-heap source durations may differ, but both declared series must cover the six measured cycles (0.976924ms)\n✔ sampled peak regression fails independently of the preserved retention soak result (0.565171ms)\n✔ cold startup keeps app-ready and loading-hidden checks separate and fails either over-ten-percent regression (0.374983ms)\n✔ qualification replay fixture contract matches persisted correction rows and coverage (37.607448ms)\n✔ balanced weather plan fixes a fresh full sharpness workload and exact order (25.939438ms)\n✔ balanced weather envelope validates five complete alternating pairs and aggregates the unchanged threshold (215.401296ms)\n✔ balanced weather envelope requires portable plan-bound build receipts (1204.812377ms)\n✔ balanced weather envelope rejects missing, duplicate, reordered and overlapping shards (1723.230608ms)\n✔ balanced weather envelope rejects wrong commits, settings, diagnostic shards and tampered child bytes (839.543794ms)\n✔ candidate evidence consumes only the hash-bound balanced envelope (204.24851ms)\n✔ weather envelope can supply only its exact hash-bound identity pair (248.902957ms)\n✔ weather shards derive an omitted profile label from consistent native observations (185.20065ms)\n✔ weather shards accept only the pinned full browser version or its reduced UA version (859.096226ms)\n✔ weather shards reject missing or inconsistent profile observations when the label is omitted (1678.541794ms)\n✔ balanced envelope remains portable when archived outside its capture output root (208.083054ms)\nℹ tests 38\nℹ suites 0\nℹ pass 38\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 9245.718472\n"
+    }
+  ],
+  "runtimeChanged": false,
+  "realEvidence": {
+    "envelope": {
+      "path": "/opt/gods-eye-view-validation/s61-s70-20261018/weather-balanced-190c5ab6-native155/qualification-envelope.json",
+      "sha256": "2afe87373bb090946e212dd209619db6b67c6c138f082bf8ce7289599a5036d8",
+      "planId": "0b2e6eb4-170b-49a9-ab75-31bd15cf780e",
+      "planPath": "/opt/gods-eye-view-validation/s61-s70-20261018/weather-balanced-190c5ab6-native155/qualification-plan.json",
+      "planSha256": "9d180c1804da2e9190ff9797af594f195377bf0db55929a78787e4327b43c9d4",
+      "evidenceScope": "balanced-five-pair-full-weather-qualification",
+      "pairCount": 5,
+      "status": "comparable"
+    },
+    "pairIndex": 1,
+    "baseline": {
+      "sha256": "9e8654cba43efb6cf3280e304f4e7613e22c3cd7d365675a0b8b0b8764c85470",
+      "identity": {
+        "applicationCommit": "76cc760b384da27e7cfc848a76f317112574826a",
+        "browserVersion": "Chrome/155.0.8059.84",
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "Win32",
+        "sourceProfile": {
+          "id": "native-sharpness-v1",
+          "useBrowserRecommendedResolution": false,
+          "resolutionScale": 1,
+          "maximumScreenSpaceError": 1,
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          }
+        }
+      }
+    },
+    "candidate": {
+      "sha256": "bf45cd6c605fa11dedfe5a38d5c7b0419cfeb1ce3a09792ebcfc7baadfa54db8",
+      "identity": {
+        "applicationCommit": "190c5ab64c8ffa26da5e0eede9d2e9eea3eb1841",
+        "browserVersion": "Chrome/155.0.8059.84",
+        "renderer": "ANGLE (Intel, Intel(R) UHD Graphics 620 (0x00003EA0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+        "platform": "Win32",
+        "sourceProfile": {
+          "id": "native-sharpness-v1",
+          "useBrowserRecommendedResolution": false,
+          "resolutionScale": 1,
+          "maximumScreenSpaceError": 1,
+          "viewport": {
+            "width": 1440,
+            "height": 900,
+            "dpr": 2
+          },
+          "drawingBuffer": {
+            "width": 2880,
+            "height": 1800
+          }
+        }
+      }
+    },
+    "coldStartupEligible": false
+  },
+  "completedAt": "2026-10-20T01:28:41.867Z"
+}
