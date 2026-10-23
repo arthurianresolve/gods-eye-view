@@ -28,6 +28,11 @@ import {
   assessHostedSourceStart,
   inspectTrackedWorktree,
 } from './performance/hostedSourceProvenance.mjs';
+import { createDeterministicMapStreamingFixture } from './performance/mapStreamingFixture.mjs';
+import {
+  assertMapStreamingDeliveryHealthy,
+  createMapStreamingFixtureDelivery,
+} from './performance/mapStreamingFixtureDelivery.mjs';
 
 const args = process.argv.slice(2);
 const urlIndex = args.indexOf('--url');
@@ -88,6 +93,12 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
   const fixedTimeMs = Date.parse(fixedTime);
   const flights = createProductionFlightFixture({ count: 0, fixedTime });
   const military = createProductionMilitaryFixture({ fixedTime });
+  const mapStreamingFixture = await createDeterministicMapStreamingFixture();
+  const mapStreamingDelivery = createMapStreamingFixtureDelivery(
+    mapStreamingFixture,
+    { appOrigin: new URL(url).origin },
+  );
+  let mapStreamingDeliverySummary = null;
   reportState.fixture = {
     profileId: RENDER_DEMAND_PROFILE.id,
     profileSha256: RENDER_DEMAND_PROFILE_SHA256,
@@ -98,6 +109,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     militaryId: military.id,
     militarySha256: military.sha256,
     militaryBytes: military.byteLength,
+    mapStreamingId: mapStreamingFixture.id,
+    mapStreamingManifestSha256: mapStreamingFixture.manifestSha256,
   };
   const delivered = { flights: 0, military: 0 };
   const routeAttempts = { flights: 0, military: 0 };
@@ -130,9 +143,10 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           method: request?.method?.(),
           resourceType: request?.resourceType?.(),
         });
-        if (classification === 'expected-blocked-map-provider')
+        if (classification === 'expected-blocked-map-provider') {
           expectedBlockedMapProviderCount += 1;
-        else if (classification === 'expected-blocked-static-font')
+          return mapStreamingDelivery.respond(requestUrl, request);
+        } else if (classification === 'expected-blocked-static-font')
           expectedBlockedStaticFontCount += 1;
         else if (
           classification === 'unexpected-external' &&
@@ -185,7 +199,9 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       }
       return response;
     },
-    onFulfilled({ url: requestUrl, method, status, bodyBase64 }) {
+    onFulfilled(event) {
+      mapStreamingDelivery.onFulfilled(event);
+      const { url: requestUrl, method, status, bodyBase64 } = event;
       const parsed = new URL(requestUrl);
       if (
         parsed.origin !== new URL(url).origin ||
@@ -1266,6 +1282,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       targetClosed: true,
     });
     await cleanupFixturePageDiagnostics(fixturePage);
+    mapStreamingDeliverySummary = mapStreamingDelivery.dispose();
+    assertMapStreamingDeliveryHealthy(mapStreamingDelivery);
     ownerCleanupCompleted = interceptionRelease.confirmed;
     terminal = {
       schema: 'gev-application-render-demand-diagnostic/v1',
@@ -1280,6 +1298,10 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         end.mapDemand.globeTilesLoaded === settled.sample?.globeTilesLoaded &&
         settled.tileQueueStableSamples >= 4 &&
         observedMapProviderRequestCount === expectedBlockedMapProviderCount &&
+        mapStreamingDeliverySummary.cleanupConfirmed &&
+        mapStreamingDeliverySummary.requestedCount > 0 &&
+        mapStreamingDeliverySummary.cancelledCount === 0 &&
+        mapStreamingDeliverySummary.pendingCount === 0 &&
         expectedBlockedStaticFontCount === 2 &&
         pendingMapProviderRequests.size === 0 &&
         !mapProviderRequestTrackingOverflow &&
@@ -1335,7 +1357,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
           ? 'passed'
           : 'failed',
       scope:
-        'full application with enabled-empty civil and military source layers and fixture-blocked OSM content; diagnostic, not content or hardware qualification',
+        'full application with enabled-empty civil and military source layers and deterministic Austin map fixtures; diagnostic, not content or hardware qualification',
       fixture: {
         profileId: RENDER_DEMAND_PROFILE.id,
         profileSha256: RENDER_DEMAND_PROFILE_SHA256,
@@ -1347,6 +1369,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         militaryId: military.id,
         militarySha256: military.sha256,
         militaryBytes: military.byteLength,
+        mapStreamingId: mapStreamingFixture.id,
+        mapStreamingManifestSha256: mapStreamingFixture.manifestSha256,
         populations: {
           flights: start.stats.flights.count,
           military: start.stats.military.count,
@@ -1367,7 +1391,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       foregroundFrameMaximum: 2,
       mapDemand: {
         settled: settled.settled,
-        contentReadiness: 'blocked-by-fixture',
+        contentReadiness: 'deterministic-fixture',
         meaning: settled.demandMeaning ?? null,
         globeTilesLoaded: end.mapDemand.globeTilesLoaded,
         settledGlobeTilesLoaded: settled.sample?.globeTilesLoaded ?? null,
@@ -1379,6 +1403,7 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
         interceptedProviderRequests: interceptedRequestsAfterForeground,
         pendingProviderRequests: pendingMapProviderRequests.size,
         requestTrackingOverflow: mapProviderRequestTrackingOverflow,
+        delivery: mapStreamingDeliverySummary,
       },
       statsStability,
       visibilityControl,
@@ -1420,6 +1445,8 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
     fixturePage.off('request', observeMapProviderRequest);
     fixturePage.off('requestfinished', finishMapProviderRequest);
     fixturePage.off('requestfailed', finishMapProviderRequest);
+    if (!mapStreamingDeliverySummary)
+      mapStreamingDeliverySummary = mapStreamingDelivery.dispose();
     if (!ownerCleanupCompleted) {
       const cleanupErrors = [];
       try {
