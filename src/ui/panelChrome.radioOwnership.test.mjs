@@ -109,6 +109,9 @@ test('adaptive rail restore hides compact Radio before revealing Context', (t) =
     _syncPanelCollapseButton(panel) {
       PanelChrome.prototype._syncRailPanelCollapseButton.call(chrome, panel);
     },
+    _tryPendingPanelPair() {
+      return false;
+    },
     _syncRightPanelAdaptiveLayout() {
       calls.push('layout');
     },
