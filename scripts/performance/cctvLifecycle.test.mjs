@@ -1645,8 +1645,15 @@ function createCctvRunnerDependencies({
       order.push('browser-launch');
       return browser;
     },
-    prepareFixturePage: async (_browser, _base, options) => {
+    prepareFixturePage: async (_browser, base, options) => {
       onFulfilled = options.onFulfilled;
+      const sourceResponse = options.respond(
+        new URL('/api/cctv/sources', base),
+      );
+      assert.equal(sourceResponse.status, 200);
+      assert.deepEqual(JSON.parse(sourceResponse.body), {
+        sources: createCctvLifecycleFixture().sources,
+      });
       return { page, errors: [], verifyNetwork: async () => true };
     },
     bootFixturePage: async (_page, _base, options) => {
