@@ -1450,3 +1450,38 @@ test('visual input listeners are revoked before asynchronous UI teardown', () =>
     /this\._visualEffects\.stop\(\)/,
   );
 });
+
+test('share restore rejects inherited styles while continuing later fields', () => {
+  for (const style of [
+    'constructor',
+    '__proto__',
+    'toString',
+    'hasOwnProperty',
+    'unknown',
+  ]) {
+    const restored = makeManager(
+      `#lat=10&lon=20&style=${style}&cr=1`,
+    ).parseInitialHash();
+    assert.equal(restored.style, 'normal');
+    assert.equal(restored.celestialRing, true);
+  }
+});
+
+test('programmatic invalid styles are ignored before changing visual state', () => {
+  const target = { activeStyle: 'normal' };
+  for (const value of [
+    'constructor',
+    '__proto__',
+    'toString',
+    'hasOwnProperty',
+    'unknown',
+    {},
+    null,
+    () => {},
+  ]) {
+    assert.doesNotThrow(() =>
+      VisualSettings.prototype.setStyle.call(target, value),
+    );
+    assert.equal(target.activeStyle, 'normal');
+  }
+});

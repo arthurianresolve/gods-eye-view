@@ -153,6 +153,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
           });
           layerState._points.set(noradId, point);
           layerState._denseIds.push(noradId);
+          layerState._denseStale ||= Boolean(res.stale);
           added++;
         }
         if (added > addedBeforeChunk)
@@ -242,6 +243,7 @@ export function createCatalog({ state: layerState, services, parts, source }) {
       layerState._catalog.delete(noradId);
     }
     layerState._denseIds = [];
+    layerState._denseStale = false;
     layerState._denseCursor = 0;
     layerState._count = layerState._points.size;
     layerState._catalogRevision++;

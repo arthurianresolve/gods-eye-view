@@ -18,7 +18,8 @@ test('explicit build inputs preserve browser-only defines, plugin order and loop
     googleApiKey: 'browser-fixture',
     cesiumToken: 'ion-fixture',
   });
-  // API response headers and the Host check run before provider middleware.
+  // API response headers, then the Host check, run before every other
+  // plugin's middleware.
   assert.equal(config.plugins[0].name, 'api-response-headers');
   assert.equal(config.plugins[0].enforce, 'pre');
   assert.equal(config.plugins[1].name, 'host-check');
@@ -116,8 +117,19 @@ test('root config retains existing named exports and standalone provider order',
     /^"[a-f0-9]{40}"$|^null$/,
     'standalone dev config must expose a real checkout commit when available',
   );
+  const standaloneProviders = config.plugins
+    .slice(5, -5)
+    .map((plugin) => plugin.name);
+  assert.equal(
+    standaloneProviders.filter((name) => name === 'gemini-live-proxy').length,
+    1,
+  );
+  assert.equal(
+    standaloneProviders.indexOf('gemini-live-proxy'),
+    standaloneProviders.indexOf('openai-realtime-proxy') + 1,
+  );
   assert.deepEqual(
-    config.plugins.slice(5, -5).map((plugin) => plugin.name),
+    standaloneProviders.filter((name) => name !== 'gemini-live-proxy'),
     providers.localProviderPlugins().map((plugin) => plugin.name),
   );
   assert.equal(config.plugins.at(-6).name, 'gev-key-setup');
@@ -281,7 +293,7 @@ function rawGet(port, target, headers = {}) {
   });
 }
 
-test('all API responses carry the data-only policy in dev and preview', async (t) => {
+test('every API response carries the API policy and nosniff on real dev and preview servers', async (t) => {
   const policy = "default-src 'none'; sandbox";
   const root = await makeFixtureRoot('gev-api-headers-');
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -350,6 +362,7 @@ test('all API responses carry the data-only policy in dev and preview', async (t
         ['/api/nope', 404],
         ['/api', 404],
         ['/api/fixture/ok?x=1', 200],
+        // Spellings the router mounts as the same routes.
         ['/API/fixture/ok', 200],
         ['/Api/fixture/error', 500],
         ['/aPi/nope', 404],
@@ -357,9 +370,11 @@ test('all API responses carry the data-only policy in dev and preview', async (t
         ['/api.x', 404],
         [`http://localhost:${port}/api/fixture/ok`, 200],
         [`http://localhost:${port}/API/nope`, 404],
+        // The router keeps dot segments in an absolute-form target's path.
         ['http://elsewhere.example/api/../x', 404],
         ['http://elsewhere.example/API/%2e%2e/x', 404],
         ['/api/fixture/ok', 403, policy, { host: 'elsewhere.example' }],
+        // A route's own policy is added to the API policy, never replaces it.
         ['/api/fixture/own-policy', 200, `${policy}, frame-ancestors 'none'`],
         ['/api/fixture/own-policy-head', 200, `${policy}, default-src *`],
       ]) {
@@ -369,6 +384,7 @@ test('all API responses carry the data-only policy in dev and preview', async (t
         assert.equal(res.headers['content-security-policy'], csp, label);
         assert.equal(res.headers['x-content-type-options'], 'nosniff', label);
       }
+      // The app document and other paths keep the server's own headers.
       for (const target of ['/', '/apiary', '/src/api/x.js'])
         assert.notEqual(
           (await rawGet(port, target)).headers['content-security-policy'],

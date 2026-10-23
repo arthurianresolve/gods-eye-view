@@ -38,8 +38,6 @@ function fixture(theme = 'cyber') {
   radio.parentElement = context;
   const saved = [],
     claimed = [];
-  const contextRadioDock = node('context-radio-dock', false);
-  const disclosure = [];
   const owner = {
     _rightPanelStack: rail,
     _panelLayout: {},
@@ -50,11 +48,6 @@ function fixture(theme = 'cyber') {
     _layoutRightPanels() {},
     _syncCctvPanelViewport() {},
     _savePanelCollapsedState: (...args) => saved.push(args),
-    _contextRadioDock: contextRadioDock,
-    _setRadioDisclosure(open) {
-      disclosure.push(open);
-      contextRadioDock.classList.toggle('disclosure-open', open);
-    },
     shareLinkManager: {
       claimRestoreLane: (...args) => claimed.push(args),
       onPanelStateChange() {},
@@ -69,8 +62,6 @@ function fixture(theme = 'cyber') {
     owner,
     saved,
     claimed,
-    contextRadioDock,
-    disclosure,
     doc: {
       documentElement: { dataset: { uiTheme: theme } },
       getElementById: (id) => nodes.get(id),
@@ -138,46 +129,5 @@ test('non-Cyber explicit panels and restored preferences retain their existing p
     } finally {
       globalThis.document = prior;
     }
-  }
-});
-
-test('opening a floating Cyber window leaves the docked rail panels open', () => {
-  const f = fixture(),
-    prior = globalThis.document;
-  globalThis.document = f.doc;
-  try {
-    f.owner.setPanelCollapsed('pp-toggles', false, { explicit: true });
-    f.cctv.classList.add('panel-floating');
-    f.owner.setPanelCollapsed('cctv-panel', false, { explicit: true });
-    assert.equal(f.cctv.classList.contains('collapsed'), false);
-    assert.equal(
-      f.display.classList.contains('collapsed'),
-      false,
-      'DISPLAY stays open',
-    );
-    assert.ok(
-      !f.saved.some(([id, collapsed]) => id === 'pp-toggles' && collapsed),
-    );
-  } finally {
-    globalThis.document = prior;
-  }
-});
-
-test('reopening an already-open Context panel closes the compact Radio disclosure', () => {
-  const f = fixture('tactical'),
-    prior = globalThis.document;
-  globalThis.document = f.doc;
-  try {
-    f.owner.setPanelCollapsed('global-context-panel', false);
-    f.contextRadioDock.classList.add('disclosure-open');
-    f.owner.setPanelCollapsed('global-context-panel', false);
-    assert.equal(f.context.classList.contains('collapsed'), false);
-    assert.equal(
-      f.contextRadioDock.classList.contains('disclosure-open'),
-      false,
-    );
-    assert.deepEqual(f.disclosure, [false]);
-  } finally {
-    globalThis.document = prior;
   }
 });

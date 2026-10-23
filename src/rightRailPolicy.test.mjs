@@ -1,5 +1,6 @@
 import { readStylesheet } from './testSupport/readStylesheet.mjs';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   shouldExpandGlobalContextPanel,
@@ -31,13 +32,23 @@ test('other HUD layouts keep collapsed right-rail launchers visible', () => {
   }), false);
 });
 
-test('floating right-rail panels remain exempt from Tactical exclusivity', () => {
+test('desktop Display participates in Tactical exclusivity without changing mobile Display behavior', () => {
+  const ui = readFileSync(new URL('./ui/rightPanelRail.js', import.meta.url), 'utf8');
   const css = readStylesheet(new URL('../style.css', import.meta.url));
-  // A panel floating out of the rail (portable mode) is exempt from exclusivity.
+  assert.match(ui, /const isMobile = windowRef\.matchMedia\('\(max-width: 720px\)'\)\.matches/);
   assert.match(
-    css,
-    /#right-context-rail\.layout-exclusive\s*> \[data-panel-id\]\.collapsed:not\(\.panel-floating\) \{/,
+    ui,
+    /!panel\.classList\.contains\('collapsed'\)\s*&&\s*\(!isMobile \|\| panel\.id !== 'pp-toggles'\)/,
   );
+  assert.doesNotMatch(
+    ui,
+    /panel\.id !== 'pp-toggles' && !panel\.classList\.contains\('collapsed'\)/,
+  );
+  assert.match(
+    ui,
+    /if \(exclusive && panel\.classList\.contains\('collapsed'\)\) \{[\s\S]*panel\.setAttribute\('aria-hidden', 'true'\)/,
+  );
+  assert.match(css, /#right-context-rail\.layout-exclusive > \[data-panel-id\]\.collapsed \{/);
 });
 
 test('explicit Contacts, Space Missions, and Cockpit actions expand Global Context after success', () => {

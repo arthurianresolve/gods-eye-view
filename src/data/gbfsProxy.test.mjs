@@ -305,7 +305,7 @@ test('GBFS rejects redirects and caps bodies through both server hooks', async (
   }
 });
 
-test('GBFS relays only JSON under a fixed type through both server hooks', async () => {
+test('GBFS relays only JSON, re-serialized under a fixed type, through both server hooks', async () => {
   const { gbfsProxy } = await import('../../server/providers/gbfs.js');
   const originalFetch = globalThis.fetch;
   try {

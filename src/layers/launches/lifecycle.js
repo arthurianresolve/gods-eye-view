@@ -21,6 +21,7 @@ export function createLifecycle({
       viewer.dataSources.add(layerState._dataSource);
       layerState._count = 0;
       layerState._lastUpdate = null;
+      layerState._stale = false;
       layerState._lastError = null;
       layerState._orbitMatches = 0;
       parts.overlays.clearMissionOverlaySources();
@@ -165,6 +166,7 @@ export function createLifecycle({
       layerState._count = 0;
       layerState._orbitMatches = 0;
       layerState._lastUpdate = null;
+      layerState._stale = false;
       layerState._activeTleText = null;
       layerState._activeTlePromise = null;
       layerState._activeTlePromiseToken = 0;

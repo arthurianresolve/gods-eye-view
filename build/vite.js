@@ -52,7 +52,14 @@ function isApiPath(url) {
   );
 }
 
-/** Install headers before providers so errors and Host refusals carry them. */
+/**
+ * Vite plugin that sets API_HEADERS on every API response before any other
+ * middleware runs, so success, error, partial, refused and unknown-route
+ * answers all carry them. Vite's `server.headers` and `preview.headers` only
+ * reach the documents and assets Vite serves itself. A route may still add
+ * headers; a route's own Content-Security-Policy is sent as an additional
+ * policy, which can only restrict further, never replace this one.
+ */
 export function apiResponseHeadersPlugin() {
   const install = (server) => {
     server.middlewares.use((req, res, next) => {
@@ -105,7 +112,7 @@ export function createBrowserViteConfig({
   }
   return {
     plugins: [
-      // First, so even refused API requests carry the API response policy.
+      // First, so every API response, including a Host refusal, carries them.
       apiResponseHeadersPlugin(),
       // Next, so no provider route answers a Host the server does not allow.
       hostCheckPlugin(),
