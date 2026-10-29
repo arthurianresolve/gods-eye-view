@@ -766,7 +766,7 @@ jobs:
 
   mixed-use-smoke:
     name: Isolated rendered mixed-use smoke
-    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mixed-use-smoke'
+    if: (github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'mixed-use-smoke') || (github.event_name == 'pull_request' && github.event.pull_request.number == 9)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -804,7 +804,7 @@ jobs:
       - name: Run durable workspace library and cross-page conflict journey
         run: npm run qa:workspaces -- --url http://localhost:4174
       - name: Run opt-in full-application empty-layer render-demand diagnostic
-        if: inputs.application_render_demand
+        if: inputs.application_render_demand || (github.event_name == 'pull_request' && github.event.pull_request.number == 9)
         run: |
           set -o pipefail
           npm run qa:application -- --url http://localhost:4174 --render-demand 2>&1 | tee qa-artifacts/mixed-use-render-demand.log
