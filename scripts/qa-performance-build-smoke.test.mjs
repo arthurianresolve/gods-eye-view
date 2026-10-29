@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 53400)
-Total output lines: 6387
-
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
@@ -3146,7 +3143,440 @@ function validInfrastructureCaptureCliReport(
     fxaa: true,
   };
   const assets = fixture.assets.map((asset) => ({
-…3400 tokens truncated…eDelivery = fixtureDelivery;
+    id: asset.id,
+    sha256: asset.sha256,
+    byteLength: asset.byteLength,
+    status: 200,
+    responseCount: 1,
+  }));
+  const fixtureDelivery = {
+    schema: 'gev-infrastructure-fixture-delivery-observation/v1',
+    status: 'observed',
+    method: 'actual same-origin bundled asset response bodies SHA-256 verified',
+    fixtureId: fixture.id,
+    fixtureSha256: fixture.sha256,
+    fixedTime,
+    assets,
+    populationsBefore: layers,
+    populationsAfter: layers,
+  };
+  const cesiumClock = {
+    currentTime: { ...fixture.clock },
+    shouldAnimate: false,
+    multiplier: 0,
+  };
+  const cameraRadius = 6_378_137 + fixture.camera.altitudeM;
+  const cameraStart = {
+    position: { x: cameraRadius, y: 0, z: 0 },
+    direction: { x: -1, y: 0, z: 0 },
+    up: { x: 0, y: 0, z: 1 },
+    transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  };
+  let sampleDocumentIndex = 0;
+  const captures = ['idle', 'scripted-motion'].flatMap((scenario) =>
+    [1, 2].map((run) => ({
+      scenario,
+      run,
+      layers,
+      settings: { before: settings, after: settings },
+      fixtureDelivery,
+      infrastructureFixtureClock: {
+        fixedTime,
+        wallClockBeforeMs: fixture.fixedTimeMs,
+        wallClockAfterMs: fixture.fixedTimeMs,
+        cesiumBefore: cesiumClock,
+        cesiumAfter: cesiumClock,
+      },
+      ...topology.samples[sampleDocumentIndex++],
+      conditions: {
+        before: { visible: true, focused: true, environment: { layers } },
+        after: { visible: true, focused: true, environment: { layers } },
+      },
+      foregroundThroughout: true,
+      cameraPath: {
+        id: scenario === 'idle' ? 'parked-v1' : 'elapsed-move-right-v1',
+        start: structuredClone(cameraStart),
+        elapsedDurationMs: 1000,
+        motionDistanceM: scenario === 'idle' ? 0 : 320,
+      },
+      frameCount: 60,
+      renderedFrameCount: 61,
+      frameIntervalMs: { p50: 16, p95: 18, max: 20, samples: 60 },
+    })),
+  );
+  const environment = {
+    userAgent: 'Mozilla/5.0 HeadlessChrome/154.0.0.0 Safari/537.36',
+    renderer: 'ANGLE (SwiftShader Device)',
+    hardwareEligible: false,
+    layers,
+    viewport: { width: 1280, height: 900, dpr: 1 },
+    drawingBuffer: { width: 1280, height: 900 },
+    startup: {
+      runCount: 1,
+      measurement:
+        'one measured app document; cache disabled before navigation',
+    },
+  };
+  const workload = {
+    providerFixture,
+    fixtureId: fixture.id,
+    fixture,
+    warmupMs: 1000,
+    durationPerSampleMs: 1000,
+    runsPerScenario: 2,
+    startupRuns: 1,
+    scenarios: ['idle', 'scripted-motion'],
+    injectedDelayMs: 0,
+    infrastructureFixtureLifecycle: {
+      freshBrowserContextPerSample: false,
+    },
+  };
+  const diagnostics = topology.diagnostics.map(
+    ({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+      requested: true,
+      hookAvailable: true,
+      disabled: true,
+    }),
+  );
+  const workerSourceSha256 = 'e'.repeat(64);
+  const workerAuditDocuments = topology.workerAudits.map(
+    ({ documentRole, documentId }) => {
+      const hasRequiredAudit = true;
+      const validation = hasRequiredAudit
+        ? {
+            schema: 'gev-cesium-worker-blob-audit/v1',
+            status: 'receipt-derived-worker-blobs-validated',
+            auditMode: 'diagnostic',
+            embeddedWorkerSourceSha256: workerSourceSha256,
+            validatedWorkerCount: documentRole === 'main-measured' ? 100 : 20,
+          }
+        : null;
+      return {
+        documentRole,
+        documentId,
+        mode: 'diagnostic',
+        validation,
+        restoration: {
+          nativeCreateObjectURLRestored: true,
+          registryEmpty: true,
+          overflowCountAtRestore: 0,
+          createdScriptBlobCountAtRestore: hasRequiredAudit ? 1 : 0,
+          auditedCreatedScriptBlobCount: hasRequiredAudit ? 1 : 0,
+        },
+        observedWorkerTargetCount: hasRequiredAudit ? 1 : 0,
+        observedBlobRequestCount: hasRequiredAudit ? 1 : 0,
+      };
+    },
+  );
+  const source = {
+    appCommit: 'b'.repeat(40),
+    harnessCommit: 'c'.repeat(40),
+    provenanceStatus: 'verified-local-build-and-served-assets-before-and-after',
+    buildProvenance: {
+      status: 'verified-local-build-and-served-assets-before-and-after',
+      receiptSha256: 'd'.repeat(64),
+      pageAssetAudit: {
+        workerAuditMode: 'diagnostic',
+        scriptRequestCount: 10,
+        loadedAssetPaths: ['assets/app.js'],
+        unexpectedAssetPaths: [],
+        cesiumWorkerBlobAudits: structuredClone(
+          workerAuditDocuments
+            .filter((entry) => entry.validation)
+            .map((entry) => entry.validation),
+        ),
+        workerAuditDocuments,
+      },
+    },
+  };
+  const comparisonContract = createObservedInfrastructureComparisonContract({
+    fixture,
+    fixtureDelivery,
+    environment,
+    captures,
+    scenarios: workload.scenarios,
+    workload,
+  });
+  const comparisonReadinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: comparisonContract,
+    fixture,
+    fixtureDelivery,
+    source,
+    environment,
+    workload,
+    captures,
+    diagnosticsDocuments: diagnostics,
+    workerBlobAuditInstrumented: true,
+    workerBlobAuditMode: 'diagnostic',
+    hardwareRequired: false,
+  });
+  return {
+    schema: 'gev-performance-capture/v1',
+    workerAuditMode: 'diagnostic',
+    comparisonEligible: false,
+    integrity: { status: 'passed', sampleCount: 4 },
+    source,
+    workload,
+    environment,
+    fixtureDelivery,
+    captures,
+    comparisonContract,
+    comparisonReadiness: {
+      status: 'not-ready',
+      reasons: comparisonReadinessReasons,
+    },
+    performanceDiagnostics: { documents: diagnostics },
+  };
+}
+
+async function validWeatherEffectsCaptureCliReport() {
+  const report = validInfrastructureCaptureCliReport();
+  report.captures = [report.captures[0], report.captures[2]];
+  const fixture = createWeatherEffectsWorkloadFixture();
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: 1,
+    captureCount: report.captures.length,
+  });
+  const layers = Object.entries(fixture.expectedLayerCounts)
+    .map(([id, count]) => ({ id, enabled: true, count }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const delivery = createWeatherEffectsFixtureDelivery(
+    fixture,
+    'http://127.0.0.1:4173/',
+  );
+  const fulfill = async (url) => {
+    const response = await delivery.respond(
+      new URL(url, 'http://127.0.0.1:4173/'),
+      { method: 'GET' },
+    );
+    assert.ok(response);
+    delivery.onFulfilled({
+      url: new URL(url, 'http://127.0.0.1:4173/').href,
+      method: 'GET',
+      status: response.status,
+      bodyBase64: Buffer.from(response.body).toString('base64'),
+    });
+  };
+  for (const product of ['radar', 'clouds-regional', 'lightning']) {
+    await fulfill(`/api/weather/manifest?product=${product}`);
+    for (const time of fixture.manifests[product].times)
+      await fulfill(
+        `/api/weather/tile?product=${product}&time=${encodeURIComponent(time)}&z=2&x=3&y=1`,
+      );
+  }
+  await fulfill('/api/wind/manifest?model=gfs');
+  await fulfill(fixture.windManifest.gridUrl);
+  const rawDelivery = delivery.summarize(layers, layers);
+  const timeline = [
+    fixture.timeline.at(-1),
+    ...fixture.timeline,
+    fixture.timeline.at(-1),
+  ].map((time) => [time, time, time]);
+  const visualState = {
+    satelliteProduct: 'clouds-regional',
+    satelliteInfrared: 'filtered',
+    radarOpacity: 'strong',
+    lightningOpacity: 'strong',
+    windModel: 'gfs',
+    windOverlay: 'speed',
+    windPaused: false,
+  };
+  const playback = {
+    mode: 'latest',
+    playing: false,
+    intervalMs: 2000,
+    displayedAtStart: [fixture.fixedTime, fixture.fixedTime, fixture.fixedTime],
+    visualState,
+  };
+  const timelinePreflight = {
+    selectedTimes: timeline,
+    sourceObservationTimes: [
+      fixture.fixedTime,
+      fixture.fixedTime,
+      fixture.fixedTime,
+    ],
+    playback,
+  };
+  const phaseObservationsBySample = report.captures.map(() => ({
+    schema: 'gev-weather-phase-observations/v1',
+    durationMs: 60_000,
+    fixtureSha256: fixture.sha256,
+    phases: fixture.phaseSchedule.phases.map((phase) => ({
+      id: phase.id,
+      expectedSourceTime: phase.sourceTime,
+      scheduledAtMs: phase.offsetMs,
+      observedAtElapsedMs: phase.offsetMs + 100,
+      sourceObservationTimes: Array(3).fill(phase.sourceTime),
+      clock: { mode: 'history', playing: false },
+      fixtureSha256: fixture.sha256,
+    })),
+  }));
+  const fixtureDelivery = {
+    ...rawDelivery,
+    assets: rawDelivery.assets.map((asset) => ({
+      ...asset,
+      responseCount: asset.responseCount + report.captures.length - 1,
+    })),
+    cameraObservation: {
+      longitudeDeg: fixture.camera.longitudeDeg,
+      latitudeDeg: fixture.camera.latitudeDeg,
+      altitudeM: fixture.camera.altitudeM,
+      headingDeg: fixture.camera.headingDeg,
+      pitchDeg: fixture.camera.pitchDeg,
+    },
+    timelinePreflight,
+  };
+  const cesiumClock = {
+    currentTime: { ...fixture.clock },
+    shouldAnimate: false,
+    multiplier: 0,
+  };
+  report.integrity.sampleCount = report.captures.length;
+  report.workload.providerFixture = WEATHER_EFFECTS_WORKLOAD_ID;
+  report.workload.fixture = fixture;
+  report.workload.fixtureId = fixture.id;
+  report.workload.weatherEffectsCaptureMode = 'phase-producer-diagnostic';
+  report.workload.warmupMs = 1000;
+  report.workload.durationPerSampleMs = 60_000;
+  report.workload.runsPerScenario = 1;
+  report.workload.performanceAcceptanceEligible = false;
+  delete report.workload.infrastructureFixtureLifecycle;
+  report.workload.weatherEffectsFixtureLifecycle =
+    createWeatherEffectsFixtureLifecycle({
+      fixture,
+      cameraObservation: fixtureDelivery.cameraObservation,
+      timelinePreflight: {
+        selectedTimes: timeline,
+        sourceObservationTimes: [
+          fixture.fixedTime,
+          fixture.fixedTime,
+          fixture.fixedTime,
+        ],
+        playback,
+      },
+      workload: {
+        warmupMs: 1000,
+        durationPerSampleMs: 60_000,
+        runsPerScenario: 1,
+      },
+      phaseObservationsBySample,
+    });
+  report.workload.rendererProbeCleanup = [
+    {
+      documentRole: 'startup-1',
+      documentId: topology.workerAudits[0].documentId,
+      confirmed: true,
+      document: {
+        status: 'confirmed',
+        statePresent: true,
+        hookRestoreAttempted: true,
+        hookRestored: true,
+        stateDeleted: true,
+        listenerCount: 2,
+        listenerRemovalAttemptedCount: 2,
+        listenerRemovalConfirmedCount: 2,
+        listenerRemovalFailedCount: 0,
+        renderLoopRetirement: {
+          requested: true,
+          confirmed: true,
+          after: false,
+        },
+      },
+      scriptRegistration: {
+        status: 'confirmed',
+        errorKind: null,
+        verification:
+          'puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable',
+      },
+    },
+    {
+      documentRole: 'main-measured',
+      documentId: topology.workerAudits[1].documentId,
+      confirmed: true,
+      document: {
+        status: 'confirmed',
+        statePresent: true,
+        hookRestoreAttempted: true,
+        hookRestored: true,
+        stateDeleted: true,
+        listenerCount: 2,
+        listenerRemovalAttemptedCount: 2,
+        listenerRemovalConfirmedCount: 2,
+        listenerRemovalFailedCount: 0,
+        renderLoopRetirement: {
+          requested: true,
+          confirmed: true,
+          after: false,
+        },
+      },
+      scriptRegistration: {
+        status: 'confirmed',
+        errorKind: null,
+        verification:
+          'puppeteer-registration-removal-acknowledged; per-frame-removal-not-observable',
+      },
+    },
+  ];
+  report.workload.rendererProbeCleanupOmittedCount = 0;
+  report.workload.rendererLoopRetirements = [
+    {
+      phase: 'startup-final-details',
+      documentRole: 'startup-1',
+      documentId: topology.workerAudits[0].documentId,
+      requested: true,
+      confirmed: true,
+      after: false,
+    },
+  ];
+  report.workload.rendererLoopRetirementsOmittedCount = 0;
+  report.workload.fixtureInterceptionReleases = [
+    {
+      documentRole: 'main-measured',
+      documentId: topology.workerAudits[1].documentId,
+      confirmed: true,
+      targetClosed: true,
+      stop: {
+        confirmed: true,
+        listenerRemovalConfirmed: true,
+        pendingAtStop: 0,
+        pendingPreparationAtStop: 0,
+        pendingAbortSubscriptionsAtStop: 0,
+        pendingCommandsAtStop: 0,
+        pendingCommandsAfterDrain: 0,
+        pendingPreparationsAfterDrain: 0,
+        pendingAbortSubscriptionsAfterDrain: 0,
+        rejectedDrainOperations: 0,
+        drainCommandFailures: 0,
+        unexpectedLateRequestCount: 0,
+      },
+      interception: {
+        confirmed: true,
+        fetchDisable: 'target-closed',
+        detach: 'target-closed',
+        interception: {
+          confirmed: true,
+          listenerRemovalConfirmed: true,
+          pendingAtStop: 0,
+          pendingPreparationAtStop: 0,
+          pendingAbortSubscriptionsAtStop: 0,
+          pendingCommandsAtStop: 0,
+          pendingCommandsAfterDrain: 0,
+          pendingPreparationsAfterDrain: 0,
+          pendingAbortSubscriptionsAfterDrain: 0,
+          rejectedDrainOperations: 0,
+          drainCommandFailures: 0,
+          unexpectedLateRequestCount: 0,
+        },
+      },
+      fetchDisable: 'target-closed',
+      detach: 'target-closed',
+    },
+  ];
+  report.environment.layers = layers;
+  report.fixtureDelivery = fixtureDelivery;
   report.comparisonContract = null;
   report.comparisonReadiness = {
     status: 'not-ready',

@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 66383)
-Total output lines: 7310
-
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -2849,7 +2846,1759 @@ export function validateCaptureCliReport(report, expected) {
           'scope',
           'eligibleForComparison',
           'observerOriginPerformanceNowMs',
-          'measurementWindowRelativeMs…16383 tokens truncated…for (const entry of workerDocuments) {
+          'measurementWindowRelativeMs',
+          'observation',
+          'cleanup',
+          'stopReason',
+          'error',
+        ].includes(key),
+      ),
+    );
+    assert.equal(evidence.schema, 'gev-scene-frame-attribution/v1');
+    assert.equal(evidence?.status, 'completed');
+    assert.equal(evidence?.cleanup, 'confirmed');
+    assert.equal(evidence?.eligibleForComparison, false);
+    assert.ok(Number.isFinite(evidence?.observerOriginPerformanceNowMs));
+    assert.ok(
+      Number.isFinite(evidence?.measurementWindowRelativeMs?.startMs) &&
+        Number.isFinite(evidence?.measurementWindowRelativeMs?.timerFiredMs) &&
+        evidence.measurementWindowRelativeMs.timerFiredMs >=
+          evidence.measurementWindowRelativeMs.startMs &&
+        evidence.measurementWindowRelativeMs.timerFiredMs <=
+          evidence.observation?.elapsedMs,
+    );
+    assert.deepEqual(Object.keys(evidence.measurementWindowRelativeMs).sort(), [
+      'startMs',
+      'timerFiredMs',
+    ]);
+    const observation = evidence.observation;
+    assert.ok(
+      observation &&
+        Number.isFinite(observation.elapsedMs) &&
+        observation.elapsedMs >= 0 &&
+        observation.elapsedMs <= 120_000,
+    );
+    assert.deepEqual(Object.keys(observation.spans || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation).sort(), [
+      'cleanupComplete',
+      'cleanupErrors',
+      'counts',
+      'elapsedMs',
+      'entries',
+      'observerErrors',
+      'originPerformanceNowMs',
+      'overflow',
+      'sceneEventAvailability',
+      'scope',
+      'spans',
+    ]);
+    assert.ok(
+      Number.isFinite(observation.originPerformanceNowMs) &&
+        observation.originPerformanceNowMs ===
+          evidence.observerOriginPerformanceNowMs,
+    );
+    assert.equal(observation.sceneEventAvailability?.update, true);
+    assert.equal(observation.sceneEventAvailability?.render, true);
+    assert.ok(
+      Array.isArray(observation.cleanupErrors) &&
+        observation.cleanupErrors.length === 0,
+    );
+    assert.equal(observation.cleanupComplete, true);
+    assert.deepEqual(Object.keys(observation.counts || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation.overflow || {}).sort(), [
+      'render',
+      'update',
+    ]);
+    assert.deepEqual(Object.keys(observation.entries || {}).sort(), [
+      'long-animation-frame',
+      'longtask',
+    ]);
+    for (const kind of ['update', 'render']) {
+      assert.ok(Array.isArray(observation.spans[kind]));
+      assert.ok(observation.spans[kind].length <= 32);
+      for (const span of observation.spans[kind]) {
+        assert.deepEqual(Object.keys(span).sort(), ['durationMs', 'startMs']);
+        assert.ok(Number.isFinite(span.startMs) && span.startMs >= 0);
+        assert.ok(
+          Number.isFinite(span.durationMs) &&
+            span.durationMs >= 0 &&
+            span.durationMs <= observation.elapsedMs,
+        );
+        assert.ok(span.startMs <= observation.elapsedMs);
+      }
+    }
+    for (const kind of ['update', 'render']) {
+      assert.ok(
+        Number.isInteger(observation.counts?.[kind]) &&
+          observation.counts[kind] >= observation.spans[kind].length &&
+          observation.counts[kind] <= 1_000_000,
+      );
+      assert.equal(typeof observation.overflow?.[kind], 'boolean');
+      if (observation.counts[kind] > 32)
+        assert.equal(observation.overflow[kind], true);
+    }
+    assert.ok(Array.isArray(observation.observerErrors));
+    assert.ok(observation.observerErrors.length <= 3);
+    assert.ok(
+      observation.observerErrors.every((type) =>
+        ['longtask', 'long-animation-frame'].includes(type),
+      ),
+    );
+    for (const key of ['longtask', 'long-animation-frame']) {
+      const entries = observation.entries?.[key];
+      assert.ok(
+        entries === null || (Array.isArray(entries) && entries.length <= 32),
+      );
+      if (entries === null) continue;
+      for (const entry of entries) {
+        assert.deepEqual(
+          Object.keys(entry).sort(),
+          key === 'longtask'
+            ? ['durationMs', 'startMs']
+            : [
+                'blockingDuration',
+                'durationMs',
+                'renderStart',
+                'scripts',
+                'startMs',
+                'styleAndLayoutStart',
+              ],
+        );
+        assert.ok(Number.isFinite(entry.startMs) && entry.startMs >= 0);
+        assert.ok(
+          Number.isFinite(entry.durationMs) &&
+            entry.durationMs >= 0 &&
+            entry.startMs + entry.durationMs <= observation.elapsedMs + 1,
+        );
+        if (key === 'long-animation-frame') {
+          for (const metric of [
+            'blockingDuration',
+            'renderStart',
+            'styleAndLayoutStart',
+          ])
+            assert.ok(
+              entry[metric] === null ||
+                (Number.isFinite(entry[metric]) && entry[metric] >= 0),
+            );
+          assert.ok(Array.isArray(entry.scripts) && entry.scripts.length <= 8);
+          for (const script of entry.scripts) {
+            assert.deepEqual(Object.keys(script).sort(), [
+              'durationMs',
+              'forcedStyleAndLayoutDurationMs',
+              'invokerType',
+            ]);
+            assert.ok(
+              script.durationMs === null ||
+                (Number.isFinite(script.durationMs) &&
+                  script.durationMs >= 0 &&
+                  script.durationMs <= entry.durationMs),
+            );
+            assert.ok(
+              [
+                'classic-script',
+                'module-script',
+                'event-listener',
+                'user-callback',
+                'resolve-promise',
+                'reject-promise',
+                'unknown',
+              ].includes(script.invokerType),
+            );
+            assert.ok(
+              script.forcedStyleAndLayoutDurationMs === null ||
+                (Number.isFinite(script.forcedStyleAndLayoutDurationMs) &&
+                  script.forcedStyleAndLayoutDurationMs >= 0 &&
+                  script.forcedStyleAndLayoutDurationMs <= entry.durationMs),
+            );
+          }
+        }
+      }
+    }
+    assert.equal(JSON.stringify(evidence).includes('sourceURL'), false);
+  } else {
+    assert.equal(report.sceneFrameDiagnostics, undefined);
+  }
+  const runsPerScenario = expected.trackingCpuProfile ? 1 : 2;
+  assert.deepEqual(report.integrity, {
+    status: 'passed',
+    sampleCount: 3 * runsPerScenario,
+  });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, workerAuditMode);
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  if (workerAuditMode === 'receipt-only') {
+    const topology = createCaptureDocumentTopology({
+      startupRuns: report.workload?.startupRuns,
+      captureCount: report.captures?.length,
+    });
+    assert.equal(
+      validateReceiptOnlyWorkerAuditEnvelope({
+        pageAssetAudit: pageAudit,
+        appCommit: expected.appSha,
+        harnessCommit: expected.harnessSha,
+        receiptSha256: expected.receiptSha256,
+        expectedDocuments: topology.workerAudits,
+        expectedAssetPaths: expected.receiptOnlyWorkerContract?.assetPaths,
+        bundleSha256: expected.receiptOnlyWorkerContract?.bundleSha256,
+        workerSourceSha256:
+          expected.receiptOnlyWorkerContract?.workerSourceSha256,
+        allowedModuleCount:
+          expected.receiptOnlyWorkerContract?.allowedModuleCount,
+      }),
+      true,
+      'receipt-only mode must validate the immutable receipt path for every document',
+    );
+    assert.equal(pageAudit.cesiumWorkerBlobAudits, undefined);
+  } else {
+    for (const workerAudit of pageAudit.cesiumWorkerBlobAudits || [])
+      assert.equal(
+        workerAudit.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+    assert.ok(pageAudit.cesiumWorkerBlobAudits?.length >= 3 * runsPerScenario);
+  }
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, runsPerScenario);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.equal(report.environment?.startup?.runCount, 1);
+  assert.equal(
+    report.environment?.startup?.measurement,
+    'cache-disabled fresh browser contexts',
+  );
+  assert.deepEqual(report.workload?.scenarios, [
+    'idle',
+    'scripted-motion',
+    'selected-aircraft-tracking',
+  ]);
+  const diagnosticDocuments = report.performanceDiagnostics?.documents;
+  const expectedDiagnosticCount =
+    report.workload.startupRuns + 1 + report.captures.length;
+  assert.ok(Array.isArray(diagnosticDocuments));
+  assert.equal(diagnosticDocuments.length, expectedDiagnosticCount);
+  const expectedRoles = [
+    ...Array.from(
+      { length: report.workload.startupRuns },
+      (_, index) => `startup-${index + 1}`,
+    ),
+    'main-setup',
+    ...Array.from(
+      { length: report.captures.length },
+      (_, index) => `provider-sample-${index + 1}`,
+    ),
+  ].sort();
+  assert.deepEqual(
+    diagnosticDocuments.map((entry) => entry.documentRole).sort(),
+    expectedRoles,
+  );
+  if (expected.shaderProgramAttribution) {
+    const envelope = report.workload.shaderProgramAttribution;
+    assert.equal(envelope.expectedDocumentCount, expectedDiagnosticCount);
+    assert.equal(envelope.documents.length, expectedDiagnosticCount);
+    const cleanupRows = report.workload.rendererProbeCleanup;
+    assert.ok(Array.isArray(cleanupRows));
+    assert.equal(cleanupRows.length, expectedDiagnosticCount);
+    assert.equal(report.workload.rendererProbeCleanupOmittedCount, 0);
+    const diagnosticIdentities = diagnosticDocuments.map((entry) => {
+      assert.equal(typeof entry.documentRole, 'string');
+      assert.equal(typeof entry.documentId, 'string');
+      assert.ok(entry.documentId.length > 0);
+      return `${entry.documentRole}\u0000${entry.documentId}`;
+    });
+    assert.equal(new Set(diagnosticIdentities).size, expectedDiagnosticCount);
+    const cleanupByIdentity = new Map();
+    for (const entry of cleanupRows) {
+      const identity = `${entry.documentRole}\u0000${entry.documentId}`;
+      assert.equal(cleanupByIdentity.has(identity), false);
+      cleanupByIdentity.set(identity, entry);
+      assert.equal(entry.confirmed, true);
+      const observer = entry.document?.shaderProgramAttribution;
+      assert.ok(
+        observer,
+        `Missing shader attribution for ${entry.documentRole}.`,
+      );
+      assert.deepEqual(
+        observer,
+        boundedShaderProgramAttribution(observer),
+        'shader attribution must match its allowlisted bounded schema',
+      );
+      assert.equal(observer.status, 'complete');
+      assert.equal(observer.cleanup.confirmed, true);
+      assert.equal(observer.cleanup.requestedMethodCount, 4);
+      assert.equal(observer.cleanup.installedMethodCount, 4);
+      assert.equal(observer.cleanup.restoredMethodCount, 4);
+      assert.equal(observer.cleanup.changedOwnerCount, 0);
+    }
+    const evidenceIdentities = new Set();
+    for (const entry of envelope.documents) {
+      const identity = `${entry.documentRole}\u0000${entry.documentId}`;
+      assert.equal(evidenceIdentities.has(identity), false);
+      evidenceIdentities.add(identity);
+      const cleanup = cleanupByIdentity.get(identity);
+      assert.ok(
+        cleanup,
+        `Shader evidence has unknown document ${entry.documentRole}.`,
+      );
+      assert.equal(entry.status, 'complete');
+      assert.equal(entry.cleanupConfirmed, true);
+      const raw = boundedShaderProgramAttribution(
+        cleanup.document.shaderProgramAttribution,
+      );
+      assert.deepEqual(entry.totals, raw.totals);
+      assert.equal(entry.trackedProgramCount, raw.programs.length);
+      assert.deepEqual(entry.limits, {
+        untrackedProgramOperationCount:
+          raw.limits.untrackedProgramOperationCount,
+        pnameRowsOverflow: raw.limits.pnameRowsOverflow,
+      });
+    }
+    assert.equal(evidenceIdentities.size, expectedDiagnosticCount);
+    assert.deepEqual(
+      [...evidenceIdentities].sort(),
+      [...cleanupByIdentity.keys()].sort(),
+    );
+    assert.deepEqual(
+      [...evidenceIdentities].sort(),
+      diagnosticIdentities.sort(),
+      'shader evidence must cover the exact documents in the diagnostic inventory',
+    );
+  }
+  if (workerAuditMode !== 'receipt-only') {
+    const workerAuditDocuments = pageAudit.workerAuditDocuments;
+    assert.ok(Array.isArray(workerAuditDocuments));
+    assert.deepEqual(
+      workerAuditDocuments.map((entry) => entry.documentRole).sort(),
+      expectedRoles,
+    );
+    for (const entry of workerAuditDocuments) {
+      const measuredProviderDocument =
+        entry.documentRole.startsWith('provider-sample-');
+      assert.equal(
+        entry.mode,
+        workerAuditMode === 'prewarm' && measuredProviderDocument
+          ? 'prewarm'
+          : 'diagnostic',
+      );
+      assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+      assert.equal(entry.restoration?.registryEmpty, true);
+      assert.equal(entry.restoration.overflowCountAtRestore, 0);
+      assert.equal(
+        entry.restoration.createdScriptBlobCountAtRestore,
+        entry.restoration.auditedCreatedScriptBlobCount,
+      );
+      if (entry.validation === null) {
+        assert.equal(entry.restoration.auditedCreatedScriptBlobCount, 0);
+        assert.equal(entry.observedWorkerTargetCount, 0);
+        assert.equal(entry.observedBlobRequestCount, 0);
+        assert.equal(entry.restoration.createdScriptBlobCountAtRestore, 0);
+      } else {
+        assert.equal(
+          entry.validation.status,
+          'receipt-derived-worker-blobs-validated',
+        );
+      }
+      if (workerAuditMode === 'prewarm' && measuredProviderDocument) {
+        assert.equal(entry.validation.auditMode, 'prewarm');
+        assert.equal(
+          entry.lateUseCheck?.status,
+          'observed-late-code-paths-within-prewarm-inventory',
+        );
+        assert.equal(
+          entry.lateUseCheck?.unusedLateBlobCreationObservable,
+          false,
+        );
+      } else if (entry.validation) {
+        assert.equal(entry.validation.auditMode, 'diagnostic');
+      }
+    }
+  }
+  for (const entry of diagnosticDocuments) {
+    assert.equal(entry.requested, true);
+    if (expected.appSha === BASELINE_SHA) {
+      assert.equal(entry.hookAvailable, false);
+      assert.equal(entry.disabled, false);
+    } else {
+      assert.equal(entry.hookAvailable, true);
+      assert.equal(entry.disabled, true);
+    }
+  }
+  const observedComparisonContract = createObservedDenseComparisonContract({
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+  });
+  assert.deepEqual(report.comparisonContract, observedComparisonContract);
+  const observedReadinessReasons = getCaptureComparisonIneligibilityReasons({
+    contract: observedComparisonContract,
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    source: report.source,
+    environment: report.environment,
+    workload: report.workload,
+    captures: report.captures,
+    diagnosticsDocuments: diagnosticDocuments,
+    workerBlobAuditInstrumented: workerAuditMode !== 'receipt-only',
+    workerBlobAuditMode: workerAuditMode,
+    receiptOnlyWorkerAuditEvidence:
+      workerAuditMode === 'receipt-only'
+        ? {
+            pageAssetAudit: pageAudit,
+            expectedDocuments: createCaptureDocumentTopology({
+              startupRuns: report.workload.startupRuns,
+              captureCount: report.captures.length,
+            }).workerAudits,
+            expectedAssetPaths: expected.receiptOnlyWorkerContract?.assetPaths,
+            bundleSha256: expected.receiptOnlyWorkerContract?.bundleSha256,
+            workerSourceSha256:
+              expected.receiptOnlyWorkerContract?.workerSourceSha256,
+            allowedModuleCount:
+              expected.receiptOnlyWorkerContract?.allowedModuleCount,
+          }
+        : null,
+    hardwareRequired: false,
+  });
+  if (expected.sceneFrameDiagnostics)
+    observedReadinessReasons.push(
+      'scene-frame-attribution-instrumentation-is-enabled',
+    );
+  if (expected.firstMotionCpuProfile || expected.trackingCpuProfile)
+    observedReadinessReasons.push(
+      'provider-sample-cpu-profile-instrumentation-is-enabled',
+    );
+  if (expected.depthPickAttribution)
+    observedReadinessReasons.push(
+      'depth-pick-attribution-instrumentation-is-enabled',
+    );
+  if (expected.shaderProgramAttribution)
+    observedReadinessReasons.push(
+      'shader-program-attribution-instrumentation-is-enabled',
+    );
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    observedReadinessReasons.push(
+      'hosted-native-renderer-diagnostic-is-ineligible-for-comparison',
+    );
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.deepEqual(
+    report.comparisonReadiness?.reasons,
+    observedReadinessReasons,
+  );
+  assert.equal(
+    observedReadinessReasons.includes(
+      'latency-comparison-remains-disabled-pending-uninstrumented-capture',
+    ),
+    workerAuditMode !== 'receipt-only',
+  );
+  if (expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    assert.ok(report.environment?.renderer);
+  else assert.match(report.environment?.renderer || '', /swiftshader/i);
+  assert.equal(report.environment?.hardwareEligible, false);
+  assert.equal(report.captures?.length, 3 * runsPerScenario);
+  assert.equal(report.fixtureDelivery?.status, 'observed');
+  assert.equal(report.fixtureDelivery?.fixtureSha256, expected.fixtureSha256);
+  assert.equal(report.fixtureDelivery?.observedFlightsCount, 2500);
+  assert.ok(report.fixtureDelivery.fulfilledResponseCount >= 1);
+  for (const scenario of report.workload.scenarios) {
+    const samples = report.captures.filter(
+      (sample) => sample.scenario === scenario,
+    );
+    assert.equal(samples.length, runsPerScenario);
+    assert.deepEqual(
+      samples.map((sample) => sample.run).sort(),
+      Array.from({ length: runsPerScenario }, (_, index) => index + 1),
+    );
+    for (const sample of samples) {
+      assertProviderFixtureCaptureClock(sample.fixtureClock, {
+        fixedTime: expected.fixedTime || report.fixtureDelivery.fixedTime,
+        warmupMs: report.workload.warmupMs,
+        measurementMs: report.workload.durationPerSampleMs,
+      });
+      assert.equal(sample.fixtureDelivery?.status, 'observed');
+      assert.equal(
+        sample.fixtureDelivery?.fixtureSha256,
+        expected.fixtureSha256,
+      );
+      assert.equal(sample.fixtureDelivery?.observedFlightsCount, 2500);
+      assert.ok(sample.fixtureDelivery?.fulfilledResponseCount >= 1);
+      const population = Object.fromEntries(
+        (sample.layers || [])
+          .filter((layer) =>
+            ['flights', 'local-datacenters', 'local-dams'].includes(layer.id),
+          )
+          .map((layer) => [
+            layer.id,
+            { enabled: layer.enabled, count: layer.count },
+          ]),
+      );
+      assert.deepEqual(population, {
+        flights: { enabled: true, count: 2500 },
+        'local-datacenters': { enabled: true, count: 4362 },
+        'local-dams': { enabled: true, count: 716 },
+      });
+      assert.equal(sample.conditions?.before?.visible, true);
+      assert.equal(sample.conditions?.before?.focused, true);
+      assert.equal(sample.conditions?.after?.visible, true);
+      assert.equal(sample.conditions?.after?.focused, true);
+      assert.equal(sample.foregroundThroughout, true);
+      assertCaptureFrameAndSettingsEvidence(sample, scenario);
+      if (scenario === 'selected-aircraft-tracking')
+        assert.equal(sample.trackedAircraftId, 'flights:000001');
+    }
+  }
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    renderer: report.environment.renderer,
+    fixtureSha256: report.fixtureDelivery.fixtureSha256,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    captures: report.captures.map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      fixtureDelivery: sample.fixtureDelivery,
+      fixtureClock: sample.fixtureClock,
+      layers: sample.layers,
+      conditions: sample.conditions,
+    })),
+    rawReport: report,
+    limitations: [
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted native-renderer CLI integration only; not physical desktop or paired performance evidence.'
+        : 'Hosted software-rendering CLI integration only; not hardware or paired performance evidence.',
+      'The static production flight fixture verifies source delivery and populations, not a complete moving trajectory contract.',
+    ],
+  };
+}
+
+export function validateRendererBackendEvidence(
+  report,
+  backend = DEFAULT_CAPTURE_RENDERER_BACKEND,
+) {
+  if (backend === NATIVE_MACOS_DIAGNOSTIC_BACKEND)
+    return assertVerifiedNativeRendererEvidence(
+      report?.nativeRendererDiagnostic,
+      report?.environment?.renderer,
+      report?.environment?.vendor,
+    );
+  assert.equal(backend, DEFAULT_CAPTURE_RENDERER_BACKEND);
+  assert.equal(report?.nativeRendererDiagnostic, undefined);
+  return true;
+}
+
+export function validateAustinOperatingReadinessHistoryEnvelope(
+  history,
+  fixture,
+  comparisonReadinessReasons,
+) {
+  assert.equal(history?.enabled, true);
+  assert.equal(history?.schema, 'gev-austin-operating-readiness-history/v1');
+  assert.equal(history?.intervalMs, 1000, 'sampler interval must remain 1 Hz');
+  assert.equal(history?.entryLimit, 16, 'history ring cap must remain 16');
+  assert.ok(
+    Number.isSafeInteger(history?.attachTimeoutMs) &&
+      history.attachTimeoutMs >= 1 &&
+      history.attachTimeoutMs <= 1000,
+    'session attach timeout must remain within the declared bound',
+  );
+  assert.ok(
+    Number.isSafeInteger(history?.commandTimeoutMs) &&
+      history.commandTimeoutMs >= 1 &&
+      history.commandTimeoutMs <= 2000,
+    'snapshot command timeout must remain within the declared bound',
+  );
+  assert.equal(history?.performanceAcceptanceEligible, false);
+  assert.equal(history?.scope.includes('not CPU/GPU time'), true);
+  assert.ok(Array.isArray(history?.documents));
+  assert.ok(history.documents.length > 0 && history.documents.length <= 40);
+  assert.ok(Array.isArray(history?.samples));
+  assert.ok(history.samples.length <= 16);
+  assert.ok(
+    Number.isSafeInteger(history.omittedCount) && history.omittedCount >= 0,
+  );
+  assert.ok(
+    Number.isSafeInteger(history.documentOmittedCount) &&
+      history.documentOmittedCount >= 0,
+  );
+  const documentKeys = new Set();
+  for (const document of history.documents) {
+    assert.match(document.documentRole, /^[a-z0-9-]{1,48}$/i);
+    assert.match(document.documentId, /^[a-z0-9._:-]{1,96}$/i);
+    assert.equal(document.phase, 'source-readiness-wait');
+    assert.equal(document.intervalMs, 1000);
+    assert.equal(
+      document.attachTimeoutMs,
+      history.attachTimeoutMs,
+      'document attach timeout must match the envelope configuration',
+    );
+    assert.equal(
+      document.commandTimeoutMs,
+      history.commandTimeoutMs,
+      'document command timeout must match the envelope configuration',
+    );
+    assert.ok(Number.isSafeInteger(document.omittedCount));
+    assert.ok(document.omittedCount >= 0);
+    assert.ok(document.session && typeof document.session === 'object');
+    const key = `${document.documentRole}\0${document.documentId}\0${document.phase}`;
+    assert.equal(
+      documentKeys.has(key),
+      false,
+      'readiness document identity must be unique',
+    );
+    documentKeys.add(key);
+  }
+  const previousSequenceByDocument = new Map();
+  let previousCompletion = null;
+  for (const sample of history.samples) {
+    const documentKey = `${sample.documentRole}\0${sample.documentId}\0${sample.phase}`;
+    const previousSequence = previousSequenceByDocument.get(documentKey) || 0;
+    assert.ok(
+      Number.isSafeInteger(sample.sequence) &&
+        sample.sequence > previousSequence,
+      'sample sequence must increase within its own document',
+    );
+    previousSequenceByDocument.set(documentKey, sample.sequence);
+    assert.ok(
+      history.documents.some(
+        (document) =>
+          document.documentRole === sample.documentRole &&
+          document.documentId === sample.documentId &&
+          document.phase === sample.phase,
+      ),
+      'sample identity must match a declared readiness document',
+    );
+    assert.ok(
+      sample.hostStartedAtMs === null ||
+        (Number.isFinite(sample.hostStartedAtMs) &&
+          sample.hostStartedAtMs >= 0),
+    );
+    assert.ok(Number.isFinite(sample.hostCompletedAtMs));
+    assert.ok(sample.hostCompletedAtMs >= 0);
+    if (sample.hostStartedAtMs !== null) {
+      assert.ok(sample.hostCompletedAtMs >= sample.hostStartedAtMs);
+      if (previousCompletion !== null)
+        assert.ok(sample.hostStartedAtMs >= previousCompletion);
+    }
+    if (previousCompletion !== null)
+      assert.ok(sample.hostCompletedAtMs >= previousCompletion);
+    previousCompletion = sample.hostCompletedAtMs;
+    assert.ok(
+      [
+        'observed',
+        'command-timeout',
+        'evaluation-failed',
+        'invalid-snapshot',
+        'session-timeout',
+        'session-create-failed',
+        'session-listener-failed',
+        'disconnected',
+      ].includes(sample.status),
+    );
+    if (sample.status === 'observed') {
+      assert.equal(sample.snapshotEncoding, 'austin-layer-tuples-v1');
+      assert.ok(typeof sample.snapshotJson === 'string');
+      assert.ok(Buffer.byteLength(sample.snapshotJson, 'utf8') <= 1024);
+      const snapshot = JSON.parse(sample.snapshotJson);
+      assert.equal(snapshot.schema, 'gev-austin-readiness-failure/v1');
+      assert.equal(
+        snapshot.selectedLayerCount,
+        fixture.selectedLayerIds.length,
+      );
+      assert.ok(Array.isArray(snapshot.layers));
+      assert.equal(snapshot.layers.length, fixture.selectedLayerIds.length);
+      assert.ok(
+        snapshot.layers.every(
+          (layer) => Array.isArray(layer) && layer.length === 12,
+        ),
+      );
+      assert.deepEqual(
+        snapshot.layers.map((layer) => layer[0]),
+        fixture.selectedLayerIds,
+      );
+      for (const layer of snapshot.layers) {
+        for (const count of layer.slice(8))
+          assert.ok(
+            count === null || (Number.isSafeInteger(count) && count >= 0),
+          );
+      }
+    } else {
+      assert.equal(sample.snapshotJson, null);
+      assert.equal(sample.snapshotEncoding, null);
+    }
+  }
+  assert.ok(
+    comparisonReadinessReasons.includes(
+      'austin-setup-readiness-history-instrumentation-is-enabled',
+    ),
+  );
+  return true;
+}
+
+function validateAustinOperatingCaptureCliReport(report, expected) {
+  const fixture = expected.austinOperatingFixture;
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(
+    report.workerAuditMode,
+    expected.workerAuditMode || 'diagnostic',
+  );
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 4 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  assert.equal(fixture?.schema, 'gev-austin-operating-fixture/v1');
+  assert.equal(fixture?.workloadId, AUSTIN_OPERATING_WORKLOAD_ID);
+  assert.equal(fixture?.fixedTime, expected.fixedTime);
+  assert.equal(report.workload?.providerFixture, AUSTIN_OPERATING_WORKLOAD_ID);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.deepEqual(report.workload?.fixture, fixture);
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 1000);
+  assert.equal(report.workload?.runsPerScenario, 2);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.ok(
+    report.comparisonReadiness?.status === 'not-ready' &&
+      report.comparisonReadiness.reasons.length > 0,
+    'short Austin hosted smoke must remain comparison-ineligible',
+  );
+  if (expected.sceneFrameDiagnostics) {
+    validateAustinOperatingReadinessHistoryEnvelope(
+      report.workload?.austinOperatingReadinessHistory,
+      fixture,
+      report.comparisonReadiness.reasons,
+    );
+    assert.equal(report.sceneFrameDiagnostics, undefined);
+  } else {
+    assert.equal(report.workload?.austinOperatingReadinessHistory, undefined);
+  }
+  if (expected.workerAuditMode === 'receipt-only') {
+    const topology = createCaptureDocumentTopology({
+      startupRuns: report.workload.startupRuns,
+      captureCount: report.captures.length,
+    });
+    const pageAssetAudit = report.source?.buildProvenance?.pageAssetAudit;
+    assert.equal(
+      validateReceiptOnlyWorkerAuditEnvelope({
+        pageAssetAudit,
+        appCommit: expected.appSha,
+        harnessCommit: expected.harnessSha,
+        receiptSha256: expected.receiptSha256,
+        expectedDocuments: topology.workerAudits,
+        expectedAssetPaths: expected.receiptOnlyWorkerContract?.assetPaths,
+        bundleSha256: expected.receiptOnlyWorkerContract?.bundleSha256,
+        workerSourceSha256:
+          expected.receiptOnlyWorkerContract?.workerSourceSha256,
+        allowedModuleCount:
+          expected.receiptOnlyWorkerContract?.allowedModuleCount,
+      }),
+      true,
+      'receipt-only mode must provide verified, non-instrumented path evidence',
+    );
+    assert.ok(
+      report.comparisonReadiness.reasons.includes(
+        'austin-satellite-boundary-sampling-remains-frame-cadence-dependent',
+      ),
+      'receipt-only mode does not clear the independent satellite cadence blocker',
+    );
+  } else {
+    assert.notEqual(
+      report.source?.buildProvenance?.pageAssetAudit?.workerAuditMode,
+      'receipt-only',
+    );
+  }
+  assert.equal(report.captures?.length, 4);
+  const observedComparisonContract =
+    createObservedAustinOperatingComparisonContract({
+      fixture,
+      fixtureDelivery: report.fixtureDelivery,
+      environment: report.environment,
+      captures: report.captures,
+      scenarios: report.workload.scenarios,
+      workload: {
+        warmupMs: report.workload.warmupMs,
+        durationPerSampleMs: report.workload.durationPerSampleMs,
+        runsPerScenario: report.workload.runsPerScenario,
+      },
+    });
+  const topology = createCaptureDocumentTopology({
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  assertCaptureCleanupEvidence(report.workload, topology, {
+    captures: report.captures,
+  });
+  assert.equal(
+    report.fixtureDelivery?.schema,
+    'gev-austin-operating-capture-delivery/v1',
+  );
+  assert.equal(report.fixtureDelivery?.fixtureId, fixture.id);
+  assert.equal(report.fixtureDelivery?.fixtureSha256, fixture.sha256);
+  assert.ok(
+    isDeepStrictEqual(report.comparisonContract, observedComparisonContract),
+    'Austin comparison contract must equal the canonical projection of observed producer data',
+  );
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    renderer: report.environment.renderer,
+    fixtureSha256: report.fixtureDelivery.fixtureSha256,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    captures: report.captures.map((sample) => ({
+      scenario: sample.scenario,
+      run: sample.run,
+      documentRole: sample.documentRole,
+      documentId: sample.documentId,
+      fixtureDelivery: sample.fixtureDelivery,
+      populations: sample.austinOperatingClock,
+    })),
+    rawReport: report,
+    limitations: [
+      'Four-sample Austin provider wiring smoke only; not the required five-run, 30-second warmup and 60-second comparison workload.',
+      'Synthetic radio and installation sources are benchmark fixtures and do not establish live Austin source coverage.',
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted native rendering is diagnostic only; it does not establish physical desktop coverage or paired performance evidence.'
+        : 'Software rendering cannot support hardware performance claims.',
+    ],
+  };
+}
+
+function validateWeatherEffectsCaptureCliReport(report, expected) {
+  const fixture = expected.weatherEffectsFixture;
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
+  assert.equal(report.workerAuditMode, 'diagnostic');
+  assert.equal(report.comparisonEligible, false);
+  assert.deepEqual(report.integrity, { status: 'passed', sampleCount: 2 });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  assert.equal(fixture?.schema, 'gev-weather-effects-fixture/v2');
+  assert.equal(fixture?.workloadId, WEATHER_EFFECTS_WORKLOAD_ID);
+  if (fixture?.mediaPreferences !== undefined)
+    assert.deepEqual(fixture.mediaPreferences, {
+      'prefers-reduced-motion': 'no-preference',
+    });
+  if (fixture?.mediaPreferences === undefined) {
+    assert.equal(fixture?.sha256, LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256);
+    assert.equal(
+      fixture?.manifestSha256,
+      LEGACY_WEATHER_EFFECTS_V2_FIXTURE_SHA256,
+    );
+  } else {
+    assert.equal(fixture?.manifestSha256, fixture?.sha256);
+  }
+  assert.equal(fixture?.fixedTime, expected.fixedTime);
+  assert.equal(report.workload?.providerFixture, WEATHER_EFFECTS_WORKLOAD_ID);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.deepEqual(report.workload?.fixture, fixture);
+  assert.equal(
+    report.workload?.weatherEffectsCaptureMode,
+    'phase-producer-diagnostic',
+  );
+  assert.equal(report.workload?.performanceAcceptanceEligible, false);
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(report.workload?.durationPerSampleMs, 60_000);
+  assert.equal(report.workload?.runsPerScenario, 1);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.equal(report.workload?.performanceAcceptanceEligible, false);
+  const captureTopology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures?.length,
+  });
+  assertCaptureCleanupEvidence(report.workload, captureTopology);
+  const lifecycle = report.workload?.weatherEffectsFixtureLifecycle;
+  assert.equal(lifecycle?.freshBrowserContextPerSample, false);
+  assert.equal(lifecycle?.playback?.mode, 'latest');
+  assert.equal(lifecycle?.playback?.playing, false);
+  assert.deepEqual(
+    lifecycle?.observedCamera,
+    report.fixtureDelivery?.cameraObservation,
+  );
+  for (const key of [
+    'longitudeDeg',
+    'latitudeDeg',
+    'altitudeM',
+    'headingDeg',
+    'pitchDeg',
+  ]) {
+    const observed = lifecycle?.observedCamera?.[key];
+    const expectedValue = fixture.camera[key];
+    assert.ok(Number.isFinite(observed), `Observed camera ${key} is required.`);
+    assert.ok(
+      Math.abs(observed - expectedValue) <= (key.endsWith('Deg') ? 1e-4 : 1),
+      `Observed camera ${key} differs from the pinned Austin route.`,
+    );
+  }
+  assert.equal(lifecycle?.playback?.visualState?.windPaused, false);
+  assert.deepEqual(lifecycle?.playback?.visualState, {
+    satelliteProduct: 'clouds-regional',
+    satelliteInfrared: 'filtered',
+    radarOpacity: 'strong',
+    lightningOpacity: 'strong',
+    windModel: 'gfs',
+    windOverlay: 'speed',
+    windPaused: false,
+  });
+  assert.equal(report.comparisonReadiness?.status, 'not-ready');
+  assert.equal(report.comparisonContract ?? null, null);
+  assert.ok(
+    report.comparisonReadiness?.reasons?.includes(
+      'weather-effects-fixture-is-a-short-diagnostic-not-performance-acceptance',
+    ),
+  );
+  const expectedTimes = [
+    fixture.timeline.at(-1),
+    ...fixture.timeline,
+    fixture.timeline.at(-1),
+  ];
+  assert.deepEqual(
+    report.fixtureDelivery?.timelinePreflight?.selectedTimes,
+    expectedTimes.map((time) => Array(3).fill(time)),
+    'Weather timeline preflight must observe startup latest, every history entry in order, then latest reset.',
+  );
+  assert.deepEqual(
+    lifecycle?.timeline?.map((row) => row[0]),
+    expectedTimes,
+  );
+  for (const row of lifecycle?.timeline || [])
+    assert.deepEqual(row, [row[0], row[0], row[0]]);
+  assert.deepEqual(lifecycle?.sourceObservationTimes, [
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-1),
+    fixture.timeline.at(-1),
+  ]);
+  assert.deepEqual(
+    report.fixtureDelivery?.cameraObservation,
+    lifecycle?.observedCamera,
+  );
+  assert.ok(
+    lifecycle?.timeline?.some((row) => row[0] !== fixture.fixedTime),
+    'Historical weather observations must differ from the held harness time.',
+  );
+  assert.deepEqual(report.fixtureDelivery, {
+    ...report.fixtureDelivery,
+    schema: 'gev-weather-effects-fixture-delivery/v2',
+    status: 'observed',
+    workloadId: fixture.workloadId,
+    fixtureSha256: fixture.sha256,
+    fixedTime: fixture.fixedTime,
+  });
+  assert.deepEqual(
+    report.fixtureDelivery.assets.map(
+      ({ id, sha256, byteLength, contentType, responseCount }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+        responseCount,
+      }),
+    ),
+    fixture.assets.map((asset) => ({
+      id: asset.id,
+      sha256: asset.sha256,
+      byteLength: asset.byteLength,
+      contentType: asset.contentType,
+      responseCount: assertPositiveCount(
+        report.fixtureDelivery.assets,
+        asset.id,
+      ),
+    })),
+  );
+  const finalAssetCounts = new Map(
+    report.fixtureDelivery.assets.map((asset) => [
+      asset.id,
+      asset.responseCount,
+    ]),
+  );
+  const previousSampleCounts = new Map();
+  assert.deepEqual(
+    report.fixtureDelivery.populationsBefore,
+    fixture.selectedLayerIds
+      .map((id) => ({
+        id,
+        enabled: true,
+        count: fixture.expectedLayerCounts[id],
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id)),
+  );
+  assert.deepEqual(
+    report.fixtureDelivery.populationsAfter,
+    report.fixtureDelivery.populationsBefore,
+  );
+  assert.equal(report.captures?.length, 2);
+  assert.deepEqual(
+    report.captures.map(({ scenario, run }) => [scenario, run]),
+    [
+      ['idle', 1],
+      ['scripted-motion', 1],
+    ],
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, 'diagnostic');
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  for (const audit of pageAudit.cesiumWorkerBlobAudits || [])
+    assert.equal(audit.status, 'receipt-derived-worker-blobs-validated');
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  const roles = report.performanceDiagnostics?.documents || [];
+  assert.deepEqual(
+    roles.map(({ documentRole, documentId }) => ({ documentRole, documentId })),
+    topology.diagnostics,
+  );
+  for (const entry of roles) {
+    assert.equal(entry.requested, true);
+    assert.equal(entry.disabled, true);
+  }
+  const workerDocuments = pageAudit.workerAuditDocuments;
+  assert.deepEqual(
+    workerDocuments.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.workerAudits,
+  );
+  for (const entry of workerDocuments) {
+    assert.equal(entry.mode, 'diagnostic');
+    assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
+    assert.equal(entry.restoration?.registryEmpty, true);
+    assert.equal(entry.restoration?.overflowCountAtRestore, 0);
+    assert.equal(
+      entry.restoration?.createdScriptBlobCountAtRestore,
+      entry.restoration?.auditedCreatedScriptBlobCount,
+    );
+    if (entry.validation === null) {
+      assert.equal(entry.observedWorkerTargetCount, 0);
+      assert.equal(entry.observedBlobRequestCount, 0);
+      assert.equal(entry.restoration?.createdScriptBlobCountAtRestore, 0);
+    } else {
+      assert.equal(entry.validation?.schema, 'gev-cesium-worker-blob-audit/v1');
+      assert.equal(
+        entry.validation?.status,
+        'receipt-derived-worker-blobs-validated',
+      );
+      assert.equal(entry.validation?.auditMode, 'diagnostic');
+      assert.match(
+        entry.validation?.embeddedWorkerSourceSha256 || '',
+        /^[a-f0-9]{64}$/,
+      );
+    }
+  }
+  const validatedWorkerDocuments = workerDocuments.filter(
+    (entry) =>
+      entry.validation?.status === 'receipt-derived-worker-blobs-validated',
+  );
+  assert.equal(
+    pageAudit.cesiumWorkerBlobAudits.length,
+    validatedWorkerDocuments.length,
+  );
+  assert.deepEqual(
+    pageAudit.cesiumWorkerBlobAudits,
+    validatedWorkerDocuments.map((entry) => entry.validation),
+  );
+  assert.equal(
+    workerDocuments.find((entry) => entry.documentRole === 'main-measured')
+      ?.validation?.status,
+    'receipt-derived-worker-blobs-validated',
+  );
+  const firstId = report.captures[0]?.documentId;
+  assert.ok(firstId);
+  for (const sample of report.captures) {
+    assert.equal(sample.documentRole, 'main-measured');
+    assert.equal(sample.documentId, firstId);
+    assert.ok(['idle', 'scripted-motion'].includes(sample.scenario));
+    assert.ok([1, 2].includes(sample.run));
+    assert.deepEqual(sample.settings?.before, sample.settings?.after);
+    assert.equal(sample.settings?.before?.qualityMode, 'manual');
+    assert.equal(sample.settings?.before?.densityPct, 75);
+    assert.equal(sample.settings?.before?.detectionMode, 'DENSE');
+    const weatherClockSchema = sample.weatherEffectsClock?.schema;
+    if (
+      weatherClockSchema !== undefined ||
+      fixture.mediaPreferences !== undefined
+    ) {
+      assert.equal(weatherClockSchema, 'gev-weather-effects-clock/v2');
+      for (const motionPreference of [
+        sample.weatherEffectsClock?.motionPreferencePreflight,
+        sample.weatherEffectsClock?.weatherStateBefore?.motionPreference,
+        sample.weatherEffectsClock?.weatherStateAfter?.motionPreference,
+      ]) {
+        assert.deepEqual(motionPreference, {
+          schema: 'gev-weather-motion-preference/v1',
+          reducedMotion: false,
+        });
+      }
+    }
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateBefore?.clock?.mode,
+      'latest',
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateBefore?.clock?.playing,
+      false,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateAfter?.clock?.mode,
+      'history',
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.weatherStateAfter?.clock?.playing,
+      false,
+    );
+    // The requested window is exact; measured elapsed time also includes the
+    // completed-frame boundary and must not be rounded into a nominal duration.
+    assert.ok(
+      Number.isFinite(sample.durationMs) && sample.durationMs >= 60_000,
+    );
+    const phaseObservations = sample.weatherEffectsClock?.phaseObservations;
+    assert.equal(
+      phaseObservations?.schema,
+      'gev-weather-phase-observations/v1',
+    );
+    assert.equal(phaseObservations?.durationMs, 60_000);
+    assert.equal(phaseObservations?.fixtureSha256, fixture.sha256);
+    assert.equal(
+      phaseObservations?.phases?.length,
+      fixture.phaseSchedule.phases.length,
+    );
+    assert.deepEqual(
+      phaseObservations.phases.map(
+        ({ id, expectedSourceTime, scheduledAtMs }) => ({
+          id,
+          expectedSourceTime,
+          scheduledAtMs,
+        }),
+      ),
+      fixture.phaseSchedule.phases.map(({ id, sourceTime, offsetMs }) => ({
+        id,
+        expectedSourceTime: sourceTime,
+        scheduledAtMs: offsetMs,
+      })),
+    );
+    for (const [phaseIndex, phase] of fixture.phaseSchedule.phases.entries()) {
+      const observation = phaseObservations.phases[phaseIndex];
+      assert.equal(observation.fixtureSha256, fixture.sha256);
+      assert.deepEqual(
+        observation.sourceObservationTimes,
+        Array(3).fill(phase.sourceTime),
+      );
+      assert.ok(
+        Number.isFinite(observation.observedAtElapsedMs) &&
+          observation.observedAtElapsedMs >= phase.offsetMs &&
+          observation.observedAtElapsedMs <=
+            phase.offsetMs + fixture.phaseSchedule.maximumLatenessMs,
+      );
+      assert.deepEqual(observation.clock, {
+        mode: 'history',
+        playing: false,
+      });
+    }
+    for (const clock of [
+      sample.weatherEffectsClock?.cesiumBefore,
+      sample.weatherEffectsClock?.cesiumAfter,
+    ]) {
+      assert.equal(clock?.currentTime?.dayNumber, fixture.clock.dayNumber);
+      assert.ok(
+        Math.abs(
+          (clock?.currentTime?.secondsOfDay ?? Number.NaN) -
+            fixture.clock.secondsOfDay,
+        ) < 1e-6,
+      );
+      assert.equal(clock?.shouldAnimate, false);
+      assert.equal(clock?.multiplier, 0);
+    }
+    assert.equal(
+      sample.weatherEffectsClock?.fixedHarnessTime,
+      fixture.fixedTime,
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.wallClockBeforeMs,
+      Date.parse(fixture.fixedTime),
+    );
+    assert.equal(
+      sample.weatherEffectsClock?.wallClockAfterMs,
+      Date.parse(fixture.fixedTime),
+    );
+    assert.deepEqual(
+      sample.weatherEffectsClock?.weatherPlayback,
+      lifecycle.playback,
+    );
+    assert.deepEqual(
+      sample.weatherEffectsClock?.weatherStateBefore?.visualState,
+      lifecycle.playback.visualState,
+    );
+    assert.deepEqual(
+      sample.weatherEffectsClock?.weatherStateAfter?.visualState,
+      lifecycle.playback.visualState,
+    );
+    for (const weatherState of [
+      sample.weatherEffectsClock?.weatherStateBefore,
+      sample.weatherEffectsClock?.weatherStateAfter,
+    ]) {
+      assert.equal(weatherState?.sourceObservationTimes?.length, 3);
+      assert.ok(
+        weatherState?.sourceObservationTimes?.every((time) =>
+          fixture.timeline.includes(time),
+        ),
+      );
+      assert.equal(weatherState?.clock?.playing, false);
+      assert.deepEqual(
+        weatherState?.visualState,
+        lifecycle.playback.visualState,
+      );
+      assert.equal(weatherState?.wind?.paused, false);
+      assert.equal(weatherState?.wind?.model, 'gfs');
+      assert.equal(weatherState?.wind?.overlay, 'speed');
+    }
+    const sampledAssets = sample.fixtureDelivery?.assets;
+    assert.equal(sample.fixtureDelivery?.schema, report.fixtureDelivery.schema);
+    assert.equal(sample.fixtureDelivery?.status, 'observed');
+    assert.equal(sample.fixtureDelivery?.workloadId, fixture.workloadId);
+    assert.equal(sample.fixtureDelivery?.fixtureSha256, fixture.sha256);
+    assert.equal(sample.fixtureDelivery?.fixedTime, fixture.fixedTime);
+    assert.deepEqual(
+      sample.fixtureDelivery?.cameraObservation,
+      report.fixtureDelivery.cameraObservation,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.timelinePreflight,
+      report.fixtureDelivery.timelinePreflight,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsBefore,
+      report.fixtureDelivery.populationsBefore,
+    );
+    assert.deepEqual(
+      sample.fixtureDelivery?.populationsAfter,
+      report.fixtureDelivery.populationsAfter,
+    );
+    assert.deepEqual(
+      sampledAssets?.map(({ id, sha256, byteLength, contentType }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+      })),
+      fixture.assets.map(({ id, sha256, byteLength, contentType }) => ({
+        id,
+        sha256,
+        byteLength,
+        contentType,
+      })),
+    );
+    for (const asset of sampledAssets || []) {
+      assert.ok(
+        Number.isSafeInteger(asset.responseCount) && asset.responseCount > 0,
+        `Sample ${sample.scenario}/${sample.run} did not observe ${asset.id}.`,
+      );
+      assert.ok(
+        asset.responseCount <= finalAssetCounts.get(asset.id),
+        `Sample response count for ${asset.id} exceeds the final aggregate.`,
+      );
+      assert.ok(
+        asset.responseCount >= (previousSampleCounts.get(asset.id) || 0),
+        `Sample response count for ${asset.id} decreased in capture order.`,
+      );
+      previousSampleCounts.set(asset.id, asset.responseCount);
+    }
+    assert.deepEqual(
+      sample.weatherEffectsClock?.phaseObservations?.phases?.map(
+        ({ id }) => id,
+      ),
+      ['early-history', 'middle-history', 'latest-history'],
+    );
+    assertCaptureFrameAndSettingsEvidence(sample, sample.scenario);
+  }
+  return {
+    schema: report.schema,
+    status: 'passed',
+    comparisonEligible: false,
+    providerFixture: expected.providerFixture,
+    fixtureSha256: fixture.sha256,
+    renderer: report.environment?.renderer,
+    captureCount: report.captures.length,
+    scenarios: report.workload.scenarios,
+    rawReport: report,
+    limitations: [
+      expected.captureRendererBackend === NATIVE_MACOS_DIAGNOSTIC_BACKEND
+        ? 'Hosted short native-renderer weather/effects fixture diagnostic only; not physical desktop or paired performance evidence.'
+        : 'Hosted short software-rendering weather/effects fixture diagnostic only; not hardware or paired performance evidence.',
+      'The producer diagnostic selects all three pinned history phases during one 60-second sample per scenario; it does not complete the five-run paired comparison workload.',
+    ],
+  };
+}
+
+export function assertCaptureCleanupEvidence(
+  workload,
+  topology,
+  { captures = null, captureRetirements = captures !== null } = {},
+) {
+  const cleanup = workload?.rendererProbeCleanup;
+  assert.ok(
+    Array.isArray(cleanup),
+    'Renderer probe cleanup evidence is required.',
+  );
+  assert.equal(workload.rendererProbeCleanupOmittedCount, 0);
+  const expectedDocuments = topology.workerAudits;
+  assert.deepEqual(
+    cleanup
+      .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+      .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+    [...expectedDocuments].sort((a, b) =>
+      a.documentRole.localeCompare(b.documentRole),
+    ),
+    'Every owned capture document must have exactly one cleanup record.',
+  );
+  for (const expectedDocument of expectedDocuments) {
+    const evidence = cleanup.find(
+      (entry) =>
+        entry.documentRole === expectedDocument.documentRole &&
+        entry.documentId === expectedDocument.documentId,
+    );
+    assert.equal(
+      evidence?.confirmed,
+      true,
+      `Renderer probe cleanup ${expectedDocument.documentId} must be confirmed.`,
+    );
+    assert.equal(
+      evidence?.document?.status,
+      'confirmed',
+      `Renderer probe document ${expectedDocument.documentId} must report confirmed state.`,
+    );
+    assert.equal(evidence?.document?.statePresent, true);
+    assert.equal(evidence?.document?.hookRestoreAttempted, true);
+    assert.equal(evidence?.document?.hookRestored, true);
+    assert.equal(evidence?.document?.stateDeleted, true);
+    assert.ok(
+      Number.isSafeInteger(evidence?.document?.listenerCount) &&
+        evidence.document.listenerCount >= 0,
+    );
+    assert.equal(evidence?.document?.listenerRemovalFailedCount, 0);
+    assert.equal(
+      evidence?.document?.listenerRemovalConfirmedCount,
+      evidence?.document?.listenerRemovalAttemptedCount,
+    );
+    assert.equal(
+      evidence?.document?.listenerRemovalAttemptedCount,
+      evidence?.document?.listenerCount,
+    );
+    assert.ok(
+      ['confirmed', 'already-confirmed'].includes(
+        evidence?.scriptRegistration?.status,
+      ),
+    );
+    assert.equal(evidence?.scriptRegistration?.errorKind, null);
+    assert.match(
+      evidence?.scriptRegistration?.verification || '',
+      /^puppeteer-registration-removal-acknowledged;/,
+    );
+    assert.equal(evidence?.document?.renderLoopRetirement?.requested, true);
+    assert.equal(evidence?.document?.renderLoopRetirement?.confirmed, true);
+    assert.equal(evidence?.document?.renderLoopRetirement?.after, false);
+  }
+
+  assertRendererLoopRetirementEvidence({
+    workload,
+    topology,
+    captures: captureRetirements ? captures : null,
+  });
+
+  const measuredDocuments = [
+    ...new Map(
+      topology.samples.map((entry) => [entry.documentId, entry]),
+    ).values(),
+  ];
+  const expectedReleaseDocuments =
+    captures === null ? measuredDocuments : topology.workerAudits;
+  const releases = workload.fixtureInterceptionReleases;
+  assert.ok(
+    Array.isArray(releases),
+    'Fixture session release evidence is required.',
+  );
+  assert.deepEqual(
+    releases
+      .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+      .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+    expectedReleaseDocuments
+      .map(({ documentRole, documentId }) => ({ documentRole, documentId }))
+      .sort((a, b) => a.documentRole.localeCompare(b.documentRole)),
+    'Fixture interception releases must exactly cover the owned documents for this workload.',
+  );
+  for (const expectedDocument of expectedReleaseDocuments) {
+    const release = releases.find(
+      (entry) =>
+        entry.documentRole === expectedDocument.documentRole &&
+        entry.documentId === expectedDocument.documentId,
+    );
+    assert.equal(
+      release?.confirmed,
+      true,
+      `Fixture release ${expectedDocument.documentId} must be confirmed.`,
+    );
+    assert.equal(
+      release?.targetClosed,
+      true,
+      `Fixture target ${expectedDocument.documentId} must be closed.`,
+    );
+    assert.equal(release?.stop?.confirmed, true);
+    assert.equal(release?.stop?.listenerRemovalConfirmed, true);
+    for (const field of [
+      'pendingAtStop',
+      'pendingPreparationAtStop',
+      'pendingAbortSubscriptionsAtStop',
+      'pendingCommandsAtStop',
+    ])
+      assert.ok(
+        Number.isSafeInteger(release?.stop?.[field]) &&
+          release.stop[field] >= 0,
+        `Fixture release ${field} must be a nonnegative observed count.`,
+      );
+    assert.equal(
+      release?.stop?.pendingCommandsAfterDrain,
+      0,
+      `Fixture release ${expectedDocument.documentId} must drain pending commands.`,
+    );
+    assert.equal(release?.stop?.pendingPreparationsAfterDrain, 0);
+    assert.equal(release?.stop?.pendingAbortSubscriptionsAfterDrain, 0);
+    assert.equal(release?.stop?.rejectedDrainOperations, 0);
+    assert.equal(release?.stop?.drainCommandFailures, 0);
+    assert.equal(release?.stop?.unexpectedLateRequestCount, 0);
+    assert.equal(release?.interception?.confirmed, true);
+    assert.equal(release?.interception?.interception?.confirmed, true);
+    for (const field of [
+      'pendingAtStop',
+      'pendingPreparationAtStop',
+      'pendingAbortSubscriptionsAtStop',
+      'pendingCommandsAtStop',
+    ])
+      assert.ok(
+        Number.isSafeInteger(release?.interception?.interception?.[field]) &&
+          release.interception.interception[field] >= 0,
+        `Interception drain ${field} must be a nonnegative observed count.`,
+      );
+    assert.equal(
+      release?.interception?.interception?.listenerRemovalConfirmed,
+      true,
+    );
+    assert.equal(
+      release?.interception?.interception?.pendingCommandsAfterDrain,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.pendingPreparationsAfterDrain,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.pendingAbortSubscriptionsAfterDrain,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.unexpectedLateRequestCount,
+      0,
+    );
+    assert.equal(
+      release?.interception?.interception?.rejectedDrainOperations,
+      0,
+    );
+    assert.equal(release?.interception?.interception?.drainCommandFailures, 0);
+    assert.equal(release?.interception?.fetchDisable, 'target-closed');
+    assert.equal(release?.interception?.detach, 'target-closed');
+    assert.equal(release?.fetchDisable, 'target-closed');
+    assert.equal(release?.detach, 'target-closed');
+  }
+}
+
+export function assertRendererLoopRetirementEvidence({
+  workload,
+  topology,
+  captures = null,
+} = {}) {
+  const retirements = workload?.rendererLoopRetirements;
+  assert.ok(
+    Array.isArray(retirements),
+    'Renderer-loop retirement rows are required.',
+  );
+  assert.equal(workload.rendererLoopRetirementsOmittedCount, 0);
+
+  const expected = topology.workerAudits
+    .filter((document) => document.documentRole.startsWith('startup-'))
+    .map((document) => ({
+      ...document,
+      phase: 'startup-final-details',
+      scenario: undefined,
+      run: undefined,
+      retirement: null,
+    }));
+
+  if (captures !== null) {
+    assert.ok(Array.isArray(captures), 'Austin captures must be an array.');
+    assert.equal(
+      captures.length,
+      topology.samples.length,
+      'Every Austin sample document must have one capture record.',
+    );
+    for (const document of topology.samples) {
+      const matchingCaptures = captures.filter(
+        (capture) =>
+          capture.documentRole === document.documentRole &&
+          capture.documentId === document.documentId,
+      );
+      assert.equal(
+        matchingCaptures.length,
+        1,
+        `Austin sample ${document.documentRole} must map to exactly one capture.`,
+      );
+      const capture = matchingCaptures[0];
+      assert.ok(
+        capture.renderLoopRetirement &&
+          typeof capture.renderLoopRetirement === 'object' &&
+          !Array.isArray(capture.renderLoopRetirement),
+        `Austin sample ${document.documentRole} must include its observed render-loop retirement.`,
+      );
+      assert.ok(
+        ['idle', 'scripted-motion'].includes(capture.scenario),
+        `Austin sample ${document.documentRole} has an unknown scenario.`,
+      );
+      assert.ok(
+        Number.isSafeInteger(capture.run) && capture.run > 0,
+        `Austin sample ${document.documentRole} has an invalid run ordinal.`,
+      );
+      expected.push({
+        ...document,
+        phase: 'provider-sample-measurement-post-render',
+        scenario: capture.scenario,
+        run: capture.run,
+        retirement: capture.renderLoopRetirement,
+      });
+    }
+  }
+
+  assert.equal(
+    retirements.length,
+    expected.length,
+    'Renderer-loop retirement rows must exactly cover the expected boundaries.',
+  );
+  const identity = (entry) =>
+    [
+      entry.phase,
+      entry.documentRole,
+      entry.documentId,
+      entry.scenario ?? '',
+      entry.run ?? '',
+    ].join('\u0000');
+  const expectedByIdentity = new Map();
+  for (const entry of expected) {
+    const key = identity(entry);
+    assert.equal(
+      expectedByIdentity.has(key),
+      false,
+      `Expected renderer-loop retirement ${entry.documentRole} is duplicated.`,
+    );
+    expectedByIdentity.set(key, entry);
+  }
+  const actualByIdentity = new Map();
+  for (const entry of retirements) {
+    const key = identity(entry);
+    assert.equal(
+      actualByIdentity.has(key),
+      false,
+      `Renderer-loop retirement ${entry.documentRole} is duplicated.`,
+    );
+    actualByIdentity.set(key, entry);
+  }
+  assert.deepEqual(
+    [...actualByIdentity.keys()].sort(),
+    [...expectedByIdentity.keys()].sort(),
+    'Renderer-loop retirement identities, phases, and sample ordinals must match the capture topology.',
+  );
+
+  for (const [key, expectedEntry] of expectedByIdentity) {
+    const retirement = actualByIdentity.get(key);
+    assert.equal(retirement.requested, true);
+    if (captures !== null) {
+      assert.ok(
+        Number.isFinite(retirement.elapsedMs) && retirement.elapsedMs >= 0,
+        `Retirement ${expectedEntry.documentRole} elapsed time must be finite and nonnegative.`,
+      );
+      assert.equal(
+        retirement.status,
+        expectedEntry.phase === 'startup-final-details'
+          ? 'retired-with-final-observation'
+          : 'retired-at-final-post-render',
+      );
+      assert.equal(retirement.before, true);
+    }
+    assert.equal(retirement.confirmed, true);
+    assert.equal(retirement.after, false);
+    if (expectedEntry.retirement) {
+      for (const field of [
+        'requested',
+        'status',
+        'before',
+        'after',
+        'confirmed',
+        'elapsedMs',
+      ])
+        assert.equal(
+          retirement[field],
+          expectedEntry.retirement[field],
+          `Retirement ${expectedEntry.documentRole} ${field} must match its capture boundary.`,
+        );
+    }
+  }
+}
+
+function assertPositiveCount(assets, id) {
+  const row = assets.find((asset) => asset.id === id);
+  assert.ok(Number.isInteger(row?.responseCount) && row.responseCount > 0);
+  return row.responseCount;
+}
+
+function validateInfrastructureCaptureCliReport(report, expected) {
+  assert.equal(report?.schema, 'gev-performance-capture/v1');
+  assert.equal(expected.workerAuditMode || 'diagnostic', 'diagnostic');
+  assert.equal(report.workerAuditMode, 'diagnostic');
+  assert.equal(report.comparisonEligible, false);
+  const runsPerScenario = expected.runsPerScenario || 2;
+  const expectedSampleCount = 2 * runsPerScenario;
+  assert.deepEqual(report.integrity, {
+    status: 'passed',
+    sampleCount: expectedSampleCount,
+  });
+  assert.equal(report.source?.appCommit, expected.appSha);
+  assert.equal(report.source?.harnessCommit, expected.harnessSha);
+  assert.equal(
+    report.source?.provenanceStatus,
+    'verified-local-build-and-served-assets-before-and-after',
+  );
+  assert.equal(
+    report.source?.buildProvenance?.receiptSha256,
+    expected.receiptSha256,
+  );
+  const pageAudit = report.source?.buildProvenance?.pageAssetAudit;
+  assert.equal(pageAudit?.workerAuditMode, 'diagnostic');
+  assert.ok(
+    Number.isInteger(pageAudit?.scriptRequestCount) &&
+      pageAudit.scriptRequestCount > 0,
+  );
+  assert.ok(pageAudit.loadedAssetPaths?.length > 0);
+  assert.deepEqual(pageAudit.unexpectedAssetPaths, []);
+  const blobAudits = pageAudit.cesiumWorkerBlobAudits;
+  assert.ok(Array.isArray(blobAudits));
+  for (const audit of blobAudits)
+    assert.equal(audit.status, 'receipt-derived-worker-blobs-validated');
+
+  const fixture = expected.infrastructureFixture;
+  assert.equal(fixture?.schema, 'gev-infrastructure-fixture-manifest/v1');
+  assert.equal(fixture?.workloadId, expected.providerFixture);
+  assert.equal(fixture?.fixedTime, expected.fixedTime);
+  assert.equal(report.workload?.providerFixture, expected.providerFixture);
+  assert.equal(report.workload?.fixtureId, fixture.id);
+  assert.equal(
+    report.workload?.infrastructureFixtureLifecycle
+      ?.freshBrowserContextPerSample,
+    false,
+  );
+  assert.equal(report.workload?.warmupMs, 1000);
+  assert.equal(
+    report.workload?.durationPerSampleMs,
+    expected.durationPerSampleMs || 1000,
+  );
+  assert.equal(report.workload?.runsPerScenario, runsPerScenario);
+  assert.equal(report.workload?.startupRuns, 1);
+  assert.deepEqual(report.workload?.scenarios, ['idle', 'scripted-motion']);
+  assert.equal(report.environment?.startup?.runCount, 1);
+  assert.equal(
+    report.environment?.startup?.measurement,
+    'one measured app document; cache disabled before navigation',
+  );
+  const observedContract = createObservedInfrastructureComparisonContract({
+    fixture: report.workload.fixture,
+    fixtureDelivery: report.fixtureDelivery,
+    environment: report.environment,
+    captures: report.captures,
+    scenarios: report.workload.scenarios,
+    workload: {
+      warmupMs: report.workload.warmupMs,
+      durationPerSampleMs: report.workload.durationPerSampleMs,
+      runsPerScenario: report.workload.runsPerScenario,
+    },
+  });
+  assert.deepEqual(report.workload.fixture, fixture);
+  assert.deepEqual(report.comparisonContract, observedContract);
+  const diagnostics = report.performanceDiagnostics?.documents;
+  assert.ok(Array.isArray(diagnostics));
+  const topology = createCaptureDocumentTopology({
+    infrastructure: true,
+    startupRuns: report.workload.startupRuns,
+    captureCount: report.captures.length,
+  });
+  assert.equal(diagnostics.length, topology.diagnostics.length);
+  assert.deepEqual(
+    diagnostics.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.diagnostics,
+  );
+  for (const entry of diagnostics) {
+    assert.equal(entry.requested, true);
+    assert.equal(entry.disabled, true);
+  }
+  const workerDocuments = pageAudit.workerAuditDocuments;
+  assert.ok(Array.isArray(workerDocuments));
+  assert.deepEqual(
+    workerDocuments.map(({ documentRole, documentId }) => ({
+      documentRole,
+      documentId,
+    })),
+    topology.workerAudits,
+  );
+  for (const entry of workerDocuments) {
     assert.equal(entry.mode, 'diagnostic');
     assert.equal(entry.restoration?.nativeCreateObjectURLRestored, true);
     assert.equal(entry.restoration?.registryEmpty, true);
