@@ -260,13 +260,13 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifestSha256, second.manifestSha256);
   assert.equal(
     first.manifestSha256,
-    '534ef799bf279668a284f00254161c6c32d4ea92c0c72a0145cb9b211d91685c',
+    '8c057eaedc92102f97a652737faf9a7bd299c8e897f92485fde64a06c4b4a2a6',
   );
   assert.deepEqual(first.manifestBytes, second.manifestBytes);
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
-  assert.equal(first.manifest.totalBytes, 13_053_961);
+  assert.equal(first.manifest.totalBytes, 41_167_823);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 7_334);
+  assert.equal(first.manifest.assetCount, 28_278);
   assert.ok(first.manifest.assetCount <= MAP_STREAMING_MAX_ASSETS);
   const legacyImageryRows = first.manifest.assets
     .filter(
@@ -299,9 +299,9 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
       level,
       tiles.length,
     ]),
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368, 1395, 5340].map(
-      (count, level) => [level, count],
-    ),
+    [
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368, 1395, 5340, 20944,
+    ].map((count, level) => [level, count]),
   );
   assert.deepEqual(
     first.manifest.coverage.terrain.map(({ level, tiles }) => [
@@ -566,7 +566,7 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   );
   assert.equal(
     fixture.manifestSha256,
-    '534ef799bf279668a284f00254161c6c32d4ea92c0c72a0145cb9b211d91685c',
+    '8c057eaedc92102f97a652737faf9a7bd299c8e897f92485fde64a06c4b4a2a6',
   );
   assert.equal(validatePinnedMapTileRows(rows), true);
 
@@ -702,7 +702,7 @@ test('native DPR route requests have level-16 imagery without changing existing 
       `Existing pattern ${row.patternId} remains byte-identical`,
     );
   assert.equal(
-    fixture.assets.has('imagery/18/59940/107924.png'),
+    fixture.assets.has('imagery/19/119880/215848.png'),
     false,
     'Undeclared levels still fail closed',
   );
@@ -744,12 +744,12 @@ test('pinned high-LOD PNG templates preserve every route pixel and identity', as
     (row) => row.kind === 'webmercator-imagery-png' && row.identity.level >= 13,
   );
   assert.deepEqual(
-    [13, 14, 15, 16, 17].map(
+    [13, 14, 15, 16, 17, 18].map(
       (level) => highRows.filter((row) => row.identity.level === level).length,
     ),
-    [30, 108, 368, 1395, 5340],
+    [30, 108, 368, 1395, 5340, 20944],
   );
-  assert.equal(highRows.length, 7_241);
+  assert.equal(highRows.length, 28_185);
   for (const row of highRows) {
     const seed =
       seedFromId(
@@ -1010,14 +1010,14 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
   await withFixtureServer(fixture, {}, async (baseUrl, server) => {
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: `${baseUrl}imagery/{z}/{x}/{y}.png`,
-      maximumLevel: 17,
+      maximumLevel: 18,
       tileWidth: 256,
       tileHeight: 256,
     });
     assert.equal(imageryProvider.tileWidth, 256);
     assert.equal(imageryProvider.tileHeight, 256);
     assert.equal(imageryProvider.minimumLevel, 0);
-    assert.equal(imageryProvider.maximumLevel, 17);
+    assert.equal(imageryProvider.maximumLevel, 18);
     const arcgisMetadataRow = fixture.manifest.assets.find(
       (row) => row.kind === 'arcgis-mapserver-metadata-json',
     );
@@ -1045,7 +1045,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       assert.equal(arcgisProvider.usingPrecachedTiles, true);
       assert.equal(arcgisProvider.tileWidth, 256);
       assert.equal(arcgisProvider.tileHeight, 256);
-      assert.equal(arcgisProvider.maximumLevel, 17);
+      assert.equal(arcgisProvider.maximumLevel, 18);
       assert.ok(
         arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
       );
@@ -1839,6 +1839,27 @@ test('render-demand missing level-17 requests are pinned decodable manifest asse
     [29952, 53961],
   ]) {
     const path = `imagery/17/${x}/${y}.png`;
+    const row = fixture.manifest.assets.find((entry) => entry.path === path);
+    assert.ok(row, path);
+    assert.equal(digest(fixture.assets.get(path)), row.sha256);
+    const metadata = await sharp(fixture.assets.get(path)).metadata();
+    assert.deepEqual([metadata.width, metadata.height], [256, 256]);
+  }
+});
+
+test('render-demand level-18 camera requests have checksum-bound decodable imagery', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const [x, y] of [
+    [59899, 107923],
+    [59899, 107924],
+    [59899, 107922],
+    [59898, 107923],
+    [59898, 107924],
+    [59898, 107922],
+    [59899, 107920],
+    [59899, 107921],
+  ]) {
+    const path = `imagery/18/${x}/${y}.png`;
     const row = fixture.manifest.assets.find((entry) => entry.path === path);
     assert.ok(row, path);
     assert.equal(digest(fixture.assets.get(path)), row.sha256);

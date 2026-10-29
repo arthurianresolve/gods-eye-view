@@ -7,8 +7,8 @@ import * as Cesium from 'cesium';
 export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v6';
 export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v5';
 export const MAP_STREAMING_GENERATOR_VERSION = '6.0.0';
-export const MAP_STREAMING_MAX_BYTES = 16 * 1024 * 1024;
-export const MAP_STREAMING_MAX_ASSETS = 9_000;
+export const MAP_STREAMING_MAX_BYTES = 64 * 1024 * 1024;
+export const MAP_STREAMING_MAX_ASSETS = 32_000;
 
 const IMAGERY_TEMPLATE_INDEX_BYTE_LENGTH = 30_064;
 const IMAGERY_TEMPLATE_INDEX_SHA256 =
@@ -280,7 +280,7 @@ const ROUTE = Object.freeze({
   north: 30.34,
 });
 const IMAGERY_LEVELS = Object.freeze(
-  Array.from({ length: 18 }, (_, level) => level),
+  Array.from({ length: 19 }, (_, level) => level),
 );
 const TERRAIN_LEVELS = Object.freeze(
   Array.from({ length: 11 }, (_, level) => level),

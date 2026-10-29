@@ -41,14 +41,14 @@ test('map delivery rejects missing native tiles before cleanup and preserves pen
     await assert.rejects(
       () =>
         request(
-          'undeclared-level18',
-          'https://tile.openstreetmap.org/18/59940/107924.png',
+          'undeclared-level19',
+          'https://tile.openstreetmap.org/19/119880/215848.png',
         ),
       /native-asset-not-in-manifest/,
     );
     assert.throws(
       () => assertMapStreamingDeliveryHealthy(delivery),
-      /Map fixture delivery failed: native-asset-not-in-manifest.*Missing assets: imagery\/18\/59940\/107924\.png\./,
+      /Map fixture delivery failed: native-asset-not-in-manifest.*Missing assets: imagery\/19\/119880\/215848\.png\./,
     );
     assert.equal(delivery.summary().status, 'active');
   } finally {
