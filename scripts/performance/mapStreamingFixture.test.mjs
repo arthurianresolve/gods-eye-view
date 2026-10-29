@@ -260,13 +260,13 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifestSha256, second.manifestSha256);
   assert.equal(
     first.manifestSha256,
-    '8c057eaedc92102f97a652737faf9a7bd299c8e897f92485fde64a06c4b4a2a6',
+    '995f07f490493cad0a444afbdbf67884006d07467e9c1c30e87252c4204df4ab',
   );
   assert.deepEqual(first.manifestBytes, second.manifestBytes);
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
-  assert.equal(first.manifest.totalBytes, 41_167_823);
+  assert.equal(first.manifest.totalBytes, 21_921_481);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 28_278);
+  assert.equal(first.manifest.assetCount, 13_940);
   assert.ok(first.manifest.assetCount <= MAP_STREAMING_MAX_ASSETS);
   const legacyImageryRows = first.manifest.assets
     .filter(
@@ -300,7 +300,8 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
       tiles.length,
     ]),
     [
-      1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368, 1395, 5340, 20944,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368, 1395, 594, 2288,
+      9064,
     ].map((count, level) => [level, count]),
   );
   assert.deepEqual(
@@ -312,7 +313,7 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   );
   assert.equal(
     first.manifest.geometry.imageryRouteCoverageKind,
-    'route-bbox tiles only',
+    'route-bbox levels 0-16; fixed-camera bbox levels 17-19',
   );
   assert.equal(
     first.manifest.geometry.imageryDependencyCoverage.provider,
@@ -566,7 +567,7 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   );
   assert.equal(
     fixture.manifestSha256,
-    '8c057eaedc92102f97a652737faf9a7bd299c8e897f92485fde64a06c4b4a2a6',
+    '995f07f490493cad0a444afbdbf67884006d07467e9c1c30e87252c4204df4ab',
   );
   assert.equal(validatePinnedMapTileRows(rows), true);
 
@@ -702,7 +703,7 @@ test('native DPR route requests have level-16 imagery without changing existing 
       `Existing pattern ${row.patternId} remains byte-identical`,
     );
   assert.equal(
-    fixture.assets.has('imagery/19/119880/215848.png'),
+    fixture.assets.has('imagery/20/239760/431696.png'),
     false,
     'Undeclared levels still fail closed',
   );
@@ -744,12 +745,12 @@ test('pinned high-LOD PNG templates preserve every route pixel and identity', as
     (row) => row.kind === 'webmercator-imagery-png' && row.identity.level >= 13,
   );
   assert.deepEqual(
-    [13, 14, 15, 16, 17, 18].map(
+    [13, 14, 15, 16, 17, 18, 19].map(
       (level) => highRows.filter((row) => row.identity.level === level).length,
     ),
-    [30, 108, 368, 1395, 5340, 20944],
+    [30, 108, 368, 1395, 594, 2288, 9064],
   );
-  assert.equal(highRows.length, 28_185);
+  assert.equal(highRows.length, 13_847);
   for (const row of highRows) {
     const seed =
       seedFromId(
@@ -1010,14 +1011,14 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
   await withFixtureServer(fixture, {}, async (baseUrl, server) => {
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: `${baseUrl}imagery/{z}/{x}/{y}.png`,
-      maximumLevel: 18,
+      maximumLevel: 19,
       tileWidth: 256,
       tileHeight: 256,
     });
     assert.equal(imageryProvider.tileWidth, 256);
     assert.equal(imageryProvider.tileHeight, 256);
     assert.equal(imageryProvider.minimumLevel, 0);
-    assert.equal(imageryProvider.maximumLevel, 18);
+    assert.equal(imageryProvider.maximumLevel, 19);
     const arcgisMetadataRow = fixture.manifest.assets.find(
       (row) => row.kind === 'arcgis-mapserver-metadata-json',
     );
@@ -1045,7 +1046,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       assert.equal(arcgisProvider.usingPrecachedTiles, true);
       assert.equal(arcgisProvider.tileWidth, 256);
       assert.equal(arcgisProvider.tileHeight, 256);
-      assert.equal(arcgisProvider.maximumLevel, 18);
+      assert.equal(arcgisProvider.maximumLevel, 19);
       assert.ok(
         arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
       );
@@ -1866,4 +1867,27 @@ test('render-demand level-18 camera requests have checksum-bound decodable image
     const metadata = await sharp(fixture.assets.get(path)).metadata();
     assert.deepEqual([metadata.width, metadata.height], [256, 256]);
   }
+});
+
+test('render-demand level-19 requests are covered only within the declared camera window', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const [x, y] of [
+    [119797, 215848],
+    [119797, 215849],
+    [119798, 215848],
+    [119798, 215849],
+    [119796, 215848],
+    [119796, 215849],
+    [119797, 215850],
+    [119797, 215851],
+  ]) {
+    const path = `imagery/19/${x}/${y}.png`;
+    const row = fixture.manifest.assets.find((entry) => entry.path === path);
+    assert.ok(row, path);
+    assert.equal(digest(fixture.assets.get(path)), row.sha256);
+    const metadata = await sharp(fixture.assets.get(path)).metadata();
+    assert.deepEqual([metadata.width, metadata.height], [256, 256]);
+  }
+  assert.equal(fixture.assets.has('imagery/19/0/0.png'), false);
+  assert.equal(fixture.assets.has('imagery/20/239760/431696.png'), false);
 });
