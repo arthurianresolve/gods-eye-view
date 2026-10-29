@@ -2814,6 +2814,10 @@ async function main() {
         evidenceNow = advanceFocusEvidenceNowMs(80);
       });
       try {
+        // Establish a shared baseline so neither negative control is close to
+        // a pre-existing periodic refresh deadline.
+        v.camera.moveEnd.raiseEvent();
+        await nextFrames(1);
         const controls = {
           flights: await probe('aaa002', flightCourse, false),
           military: await probe('bbb101', militaryCourse, false),

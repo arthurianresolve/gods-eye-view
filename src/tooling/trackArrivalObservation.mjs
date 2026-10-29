@@ -6,6 +6,8 @@ export const ARRIVAL_OBSERVATION_MS = 500;
  * The deadline starts when moveEnd is forced, before its rotation baseline, so
  * waiting for either frame cannot let the one-second idle refresh mask a bug.
  * `read` snapshots visibility and rotation error against the current position.
+ * Callers owning a deterministic evidence clock may supply a separate wall
+ * watchdog; this never changes the 500 ms evidence-time correctness limit.
  */
 export function observeArrivalRotation({
   scene,
@@ -77,12 +79,17 @@ export function observeArrivalRotation({
         reject(error);
       }
     });
-    timer = setTimer(() => finish({
-      ...expired(),
-      error: watchdogMs === ARRIVAL_OBSERVATION_MS
-        ? expired().error
-        : `arrival render watchdog exceeded ${watchdogMs} ms`,
-    }), watchdogMs);
+    timer = setTimer(
+      () =>
+        finish({
+          ...expired(),
+          error:
+            watchdogMs === ARRIVAL_OBSERVATION_MS
+              ? expired().error
+              : `arrival render watchdog exceeded ${watchdogMs} ms`,
+        }),
+      watchdogMs,
+    );
     try {
       startMoveEnd();
       scene.requestRender();
