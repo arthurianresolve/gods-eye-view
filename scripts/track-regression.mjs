@@ -2704,17 +2704,18 @@ async function main() {
     //       reappear wearing its stale/creation-north nose for up to 1 s).
     // Staged deterministically: park the camera nadir over the synthetic
     // cluster, let rotations settle, TAMPER a billboard's rotation, then
-    // trigger each path with the camera idle. The fleet runs every 80 ms,
-    // independently of rendered FPS. Observe the first completed settle and
-    // reveal frames within 500 ms of forcing moveEnd, before the 1 s idle
-    // rotation refresh can repair an incorrect first reveal.
+    // trigger each path with the camera idle. Fleet work runs in preRender,
+    // throttled to 80 ms. Advance the existing DEV evidence clock by 80 ms
+    // per frame, keeping the observation below the one-second idle fallback.
+    // A separate 10 s wall watchdog detects stalled software rendering.
     // ============================================================
-    console.log('\nChange 4 — arrival rotation: moveEnd settle pass + horizon-reveal pass');
+    console.log('\nChange 4 — arrival rotation: deterministic 80 ms fleet clock; 10 s render watchdog');
     const arrival = await evalPage(async () => {
       const v = window.__godsEyeView.viewer;
       const dm = window.__godsEyeView.dataManager;
       const { screenProjectedRotation } = await import(`${window.__gevQaSourceBase || '/src'}/data/iconOrientation.js`);
       const { observeArrivalRotation } = await import(`${window.__gevQaSourceBase || '/src'}/tooling/trackArrivalObservation.mjs`);
+      const { setFocusEvidenceNowMs, advanceFocusEvidenceNowMs } = await import(`${window.__gevQaSourceBase || '/src'}/data/focusDeemphasis.js`);
       // 3D models OFF for this phase: a model-handed-off billboard is hidden
       // and skips rotation updates entirely — the probes need live billboards
       // (this is also the app's default state the field report came from).
@@ -2772,16 +2773,18 @@ async function main() {
       });
       await nextFrames(3);
       const angDiff = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
-      const probe = async (id, course) => {
+      const probe = async (id, course, forceMoveEnd = true) => {
         const bb = findBB(id);
         if (!bb || !bb.show) return { error: `${id} missing/hidden` };
         const r0 = bb.rotation; // settled tamper origin; correctness uses a fresh projection below
         const observed = await observeArrivalRotation({
           scene: v.scene,
+          now: () => evidenceNow,
+          watchdogMs: 10_000,
           startMoveEnd() {
             // Only moveEnd can repair the tampered angle at the idle pose.
             bb.rotation = r0 + 1.5;
-            v.camera.moveEnd.raiseEvent();
+            if (forceMoveEnd) v.camera.moveEnd.raiseEvent();
           },
           startReveal() {
             // Hide immediately after the confirmed settle frame. The next
@@ -2802,13 +2805,40 @@ async function main() {
       };
       const flightCourse = window.__SYNTH.flights.find((f) => f.icao === 'aaa002')?.track ?? 0;
       const militaryCourse = window.__SYNTH.military.find((m) => m.hex === 'bbb101')?.track ?? 0;
-      return {
-        flights: await probe('aaa002', flightCourse),
-        military: await probe('bbb101', militaryCourse),
-      };
+      // Software rendering must not advance the one-second rotation fallback.
+      // Use the existing DEV clock, advancing one fleet interval per rendered
+      // frame. Keep a separate wall-clock watchdog for stalled rendering.
+      let evidenceNow = Date.now();
+      setFocusEvidenceNowMs(evidenceNow);
+      const removeClock = v.scene.preRender.addEventListener(() => {
+        evidenceNow = advanceFocusEvidenceNowMs(80);
+      });
+      try {
+        // Establish a shared baseline so neither negative control is close to
+        // a pre-existing periodic refresh deadline.
+        v.camera.moveEnd.raiseEvent();
+        await nextFrames(1);
+        const controls = {
+          flights: await probe('aaa002', flightCourse, false),
+          military: await probe('bbb101', militaryCourse, false),
+        };
+        return {
+          controls,
+          flights: await probe('aaa002', flightCourse),
+          military: await probe('bbb101', militaryCourse),
+        };
+      } finally {
+        removeClock();
+        setFocusEvidenceNowMs(null);
+      }
     });
     const fmtArr = (a) => (!a ? `no result (${arrival?.error || 'phase error'})` : a.error ? `${a.error}; elapsed=${Number(a.elapsedMs).toFixed(1)} ms`
       : `settle-err=${(a.dMoveEnd * 180 / Math.PI).toFixed(1)}° reveal-err=${(a.dReveal * 180 / Math.PI).toFixed(1)}° shown=${a.shown} flipFrame=${a.flipFrame} settle=${a.moveEndMs.toFixed(1)} ms reveal=${a.revealMs.toFixed(1)} ms total=${a.elapsedMs.toFixed(1)} ms hasModel=${a.hasModel}`);
+    for (const layer of ['flights', 'military']) {
+      const control = arrival.controls?.[layer];
+      record(`arrival: ${layer} omitted moveEnd control retains wrong first angle`,
+        !!control && !control.error && control.dMoveEnd > 1 && !arrivalRotationPassed(control), fmtArr(control));
+    }
     const TAMPER_DEG = 1.5 * 180 / Math.PI; // ≈ 86° — an uncorrected nose stays this far off
     record(`arrival: moveEnd + first reveal both re-aim before idle refresh, flights (tamper was ${TAMPER_DEG.toFixed(0)}°)`,
       arrivalRotationPassed(arrival.flights), fmtArr(arrival.flights));

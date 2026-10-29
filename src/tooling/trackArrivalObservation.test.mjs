@@ -6,7 +6,7 @@ import {
   observeArrivalRotation,
 } from './trackArrivalObservation.mjs';
 
-function fixture() {
+function fixture(options = {}) {
   let time = 0;
   let state = { shown: true, rotationError: 0 };
   const listeners = new Set();
@@ -14,6 +14,7 @@ function fixture() {
   let renders = 0;
   let moveEnds = 0;
   const observation = observeArrivalRotation({
+    ...options,
     scene: {
       postRender: {
         addEventListener(listener) {
@@ -52,6 +53,10 @@ function fixture() {
     },
     expire(at) {
       time = at;
+      for (const timer of [...timers.values()])
+        if (timer.at <= at) timer.callback();
+    },
+    expireWall(at) {
       for (const timer of [...timers.values()])
         if (timer.at <= at) timer.callback();
     },
@@ -145,6 +150,26 @@ test('missing moveEnd frames fail without waiting for a render callback', async 
   f.expire(500);
   const result = await f.observation;
   assert.match(result.error, /moveEnd.*500 ms/);
+  assert.equal(arrivalRotationPassed(result), false);
+  assert.equal(f.resources.listeners, 0);
+  assert.equal(f.resources.timers, 0);
+});
+
+test('slow rendering uses evidence time while retaining a separate wall watchdog', async () => {
+  const f = fixture({ watchdogMs: 10_000 });
+  f.frame(80, { shown: true, rotationError: 0 });
+  f.expireWall(500); // No 500 ms wall timer when the caller owns evidence time.
+  assert.equal(f.resources.listeners, 1);
+  f.frame(160, { shown: true, rotationError: 0 });
+  assert.equal(arrivalRotationPassed(await f.observation), true);
+});
+
+test('stalled rendering fails its wall watchdog even when evidence time is frozen', async () => {
+  const f = fixture({ watchdogMs: 10_000 });
+  f.expireWall(10_000);
+  const result = await f.observation;
+  assert.match(result.error, /render watchdog exceeded 10000 ms/);
+  assert.equal(result.elapsedMs, 0);
   assert.equal(arrivalRotationPassed(result), false);
   assert.equal(f.resources.listeners, 0);
   assert.equal(f.resources.timers, 0);

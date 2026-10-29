@@ -260,13 +260,13 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   assert.equal(first.manifestSha256, second.manifestSha256);
   assert.equal(
     first.manifestSha256,
-    '96c0023d391fd0d3fd96140e718a18a7c49a2f92f44c1c09c513ca0959d38200',
+    '995f07f490493cad0a444afbdbf67884006d07467e9c1c30e87252c4204df4ab',
   );
   assert.deepEqual(first.manifestBytes, second.manifestBytes);
   assert.equal(first.manifest.totalBytes, second.manifest.totalBytes);
-  assert.equal(first.manifest.totalBytes, 5_886_509);
+  assert.equal(first.manifest.totalBytes, 21_921_481);
   assert.ok(first.manifest.totalBytes <= MAP_STREAMING_MAX_BYTES);
-  assert.equal(first.manifest.assetCount, 1_994);
+  assert.equal(first.manifest.assetCount, 13_940);
   assert.ok(first.manifest.assetCount <= MAP_STREAMING_MAX_ASSETS);
   const legacyImageryRows = first.manifest.assets
     .filter(
@@ -299,9 +299,10 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
       level,
       tiles.length,
     ]),
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368, 1395].map(
-      (count, level) => [level, count],
-    ),
+    [
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 9, 30, 108, 368, 1395, 594, 2288,
+      9064,
+    ].map((count, level) => [level, count]),
   );
   assert.deepEqual(
     first.manifest.coverage.terrain.map(({ level, tiles }) => [
@@ -312,7 +313,7 @@ test('map streaming fixture generation is stable, bounded, and route-indexed', a
   );
   assert.equal(
     first.manifest.geometry.imageryRouteCoverageKind,
-    'route-bbox tiles only',
+    'route-bbox levels 0-16; fixed-camera bbox levels 17-19',
   );
   assert.equal(
     first.manifest.geometry.imageryDependencyCoverage.provider,
@@ -551,9 +552,9 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   const rows = fixture.manifest.assets.filter((row) =>
     ['textured-glb', '3d-tiles-1.1'].includes(row.kind),
   );
-  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v5');
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v6');
   assert.equal(fixture.manifest.schema, 'gev-map-streaming-fixture/v5');
-  assert.equal(fixture.manifest.generatorVersion, '5.0.0');
+  assert.equal(fixture.manifest.generatorVersion, '6.0.0');
   assert.equal(
     MAP_STREAMING_CANONICAL_TILE_ORIGIN.sourceManifestSha256,
     '36eb2997bb092b029a541b810f92d7c19d982010e763129948acb438c18a277f',
@@ -566,7 +567,7 @@ test('canonical 3D Tiles corpus is immutable, bounded, and fail-closed', async (
   );
   assert.equal(
     fixture.manifestSha256,
-    '96c0023d391fd0d3fd96140e718a18a7c49a2f92f44c1c09c513ca0959d38200',
+    '995f07f490493cad0a444afbdbf67884006d07467e9c1c30e87252c4204df4ab',
   );
   assert.equal(validatePinnedMapTileRows(rows), true);
 
@@ -702,7 +703,7 @@ test('native DPR route requests have level-16 imagery without changing existing 
       `Existing pattern ${row.patternId} remains byte-identical`,
     );
   assert.equal(
-    fixture.assets.has('imagery/17/29970/53962.png'),
+    fixture.assets.has('imagery/20/239760/431696.png'),
     false,
     'Undeclared levels still fail closed',
   );
@@ -744,12 +745,12 @@ test('pinned high-LOD PNG templates preserve every route pixel and identity', as
     (row) => row.kind === 'webmercator-imagery-png' && row.identity.level >= 13,
   );
   assert.deepEqual(
-    [13, 14, 15, 16].map(
+    [13, 14, 15, 16, 17, 18, 19].map(
       (level) => highRows.filter((row) => row.identity.level === level).length,
     ),
-    [30, 108, 368, 1395],
+    [30, 108, 368, 1395, 594, 2288, 9064],
   );
-  assert.equal(highRows.length, 1_901);
+  assert.equal(highRows.length, 13_847);
   for (const row of highRows) {
     const seed =
       seedFromId(
@@ -1010,14 +1011,14 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
   await withFixtureServer(fixture, {}, async (baseUrl, server) => {
     const imageryProvider = new Cesium.UrlTemplateImageryProvider({
       url: `${baseUrl}imagery/{z}/{x}/{y}.png`,
-      maximumLevel: 16,
+      maximumLevel: 19,
       tileWidth: 256,
       tileHeight: 256,
     });
     assert.equal(imageryProvider.tileWidth, 256);
     assert.equal(imageryProvider.tileHeight, 256);
     assert.equal(imageryProvider.minimumLevel, 0);
-    assert.equal(imageryProvider.maximumLevel, 16);
+    assert.equal(imageryProvider.maximumLevel, 19);
     const arcgisMetadataRow = fixture.manifest.assets.find(
       (row) => row.kind === 'arcgis-mapserver-metadata-json',
     );
@@ -1045,7 +1046,7 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
       assert.equal(arcgisProvider.usingPrecachedTiles, true);
       assert.equal(arcgisProvider.tileWidth, 256);
       assert.equal(arcgisProvider.tileHeight, 256);
-      assert.equal(arcgisProvider.maximumLevel, 16);
+      assert.equal(arcgisProvider.maximumLevel, 19);
       assert.ok(
         arcgisProvider.tilingScheme instanceof Cesium.WebMercatorTilingScheme,
       );
@@ -1246,21 +1247,25 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         `${row.path} must decode to varied map pixels`,
       );
     }
-    const imageryLevel12 = fixture.manifest.coverage.imagery.at(-1);
+    // The high-detail camera window is narrower than the wider route. Check
+    // ancestors from every declared coverage level, not only the deepest one.
+    const declaredImagery = fixture.manifest.coverage.imagery.flatMap(
+      ({ tiles }) => tiles,
+    );
+    const imageryIds = new Set(
+      imageryRows.map(
+        (row) => `${row.identity.level}/${row.identity.x}/${row.identity.y}`,
+      ),
+    );
     const imageryAncestors = new Set();
-    for (const terminal of imageryLevel12.tiles)
+    for (const terminal of declaredImagery)
       for (let level = 0; level <= terminal.level; level += 1) {
         const scale = 2 ** (terminal.level - level);
         const x = Math.floor(terminal.x / scale);
         const y = Math.floor(terminal.y / scale);
         imageryAncestors.add(`${level}/${x}/${y}`);
         assert.ok(
-          imageryRows.some(
-            (row) =>
-              row.identity.level === level &&
-              row.identity.x === x &&
-              row.identity.y === y,
-          ),
+          imageryIds.has(`${level}/${x}/${y}`),
           `imagery ancestor ${level}/${x}/${y} must be present`,
         );
       }
@@ -1824,4 +1829,69 @@ test('Cesium rejects truncated quantized-mesh and GLB HTTP responses', async () 
       loader.unload();
     },
   );
+});
+
+test('render-demand missing level-17 requests are pinned decodable manifest assets', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const [x, y] of [
+    [29947, 53962],
+    [29947, 53963],
+    [29947, 53961],
+    [29947, 53959],
+    [29947, 53960],
+    [29952, 53959],
+    [29952, 53960],
+    [29952, 53961],
+  ]) {
+    const path = `imagery/17/${x}/${y}.png`;
+    const row = fixture.manifest.assets.find((entry) => entry.path === path);
+    assert.ok(row, path);
+    assert.equal(digest(fixture.assets.get(path)), row.sha256);
+    const metadata = await sharp(fixture.assets.get(path)).metadata();
+    assert.deepEqual([metadata.width, metadata.height], [256, 256]);
+  }
+});
+
+test('render-demand level-18 camera requests have checksum-bound decodable imagery', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const [x, y] of [
+    [59899, 107923],
+    [59899, 107924],
+    [59899, 107922],
+    [59898, 107923],
+    [59898, 107924],
+    [59898, 107922],
+    [59899, 107920],
+    [59899, 107921],
+  ]) {
+    const path = `imagery/18/${x}/${y}.png`;
+    const row = fixture.manifest.assets.find((entry) => entry.path === path);
+    assert.ok(row, path);
+    assert.equal(digest(fixture.assets.get(path)), row.sha256);
+    const metadata = await sharp(fixture.assets.get(path)).metadata();
+    assert.deepEqual([metadata.width, metadata.height], [256, 256]);
+  }
+});
+
+test('render-demand level-19 requests are covered only within the declared camera window', async () => {
+  const fixture = await createDeterministicMapStreamingFixture();
+  for (const [x, y] of [
+    [119797, 215848],
+    [119797, 215849],
+    [119798, 215848],
+    [119798, 215849],
+    [119796, 215848],
+    [119796, 215849],
+    [119797, 215850],
+    [119797, 215851],
+  ]) {
+    const path = `imagery/19/${x}/${y}.png`;
+    const row = fixture.manifest.assets.find((entry) => entry.path === path);
+    assert.ok(row, path);
+    assert.equal(digest(fixture.assets.get(path)), row.sha256);
+    const metadata = await sharp(fixture.assets.get(path)).metadata();
+    assert.deepEqual([metadata.width, metadata.height], [256, 256]);
+  }
+  assert.equal(fixture.assets.has('imagery/19/0/0.png'), false);
+  assert.equal(fixture.assets.has('imagery/20/239760/431696.png'), false);
 });

@@ -51,7 +51,9 @@ import {
   stopOwnedRecoveryProcessTree,
 } from './performance/profileRecoveryPageOwnership.mjs';
 import { readHostEnvironment } from './performance/rendererEvidence.mjs';
-export { captureCctvFixtureResponse } from './performance/cctvFixtureResponse.mjs';
+import { captureCctvFixtureResponse } from './performance/cctvFixtureResponse.mjs';
+
+export { captureCctvFixtureResponse };
 
 const SCRIPT_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

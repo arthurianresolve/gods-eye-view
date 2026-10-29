@@ -4,11 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 
-export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v5';
+export const MAP_STREAMING_FIXTURE_ID = 'austin-map-streaming-synthetic-v6';
 export const MAP_STREAMING_FIXTURE_SCHEMA = 'gev-map-streaming-fixture/v5';
-export const MAP_STREAMING_GENERATOR_VERSION = '5.0.0';
-export const MAP_STREAMING_MAX_BYTES = 8 * 1024 * 1024;
-export const MAP_STREAMING_MAX_ASSETS = 2_100;
+export const MAP_STREAMING_GENERATOR_VERSION = '6.0.0';
+export const MAP_STREAMING_MAX_BYTES = 32 * 1024 * 1024;
+export const MAP_STREAMING_MAX_ASSETS = 16_000;
 
 const IMAGERY_TEMPLATE_INDEX_BYTE_LENGTH = 30_064;
 const IMAGERY_TEMPLATE_INDEX_SHA256 =
@@ -279,8 +279,18 @@ const ROUTE = Object.freeze({
   east: -97.58,
   north: 30.34,
 });
+// High-detail imagery is limited to the fixed low-altitude render-demand view.
+// The wider multi-stack route retains its original level 0-16 coverage.
+const HIGH_DETAIL_BOUNDS = Object.freeze({
+  west: -97.77,
+  south: 30.24,
+  east: -97.71,
+  north: 30.3,
+});
+const imageryBoundsForLevel = (level) =>
+  level > 16 ? HIGH_DETAIL_BOUNDS : ROUTE;
 const IMAGERY_LEVELS = Object.freeze(
-  Array.from({ length: 17 }, (_, level) => level),
+  Array.from({ length: 20 }, (_, level) => level),
 );
 const TERRAIN_LEVELS = Object.freeze(
   Array.from({ length: 11 }, (_, level) => level),
@@ -1346,7 +1356,7 @@ export async function createDeterministicMapStreamingFixture() {
   );
   const imageryCoverage = IMAGERY_LEVELS.map((level) => ({
     level,
-    tiles: tileCoordinates(imageryScheme, ROUTE, level),
+    tiles: tileCoordinates(imageryScheme, imageryBoundsForLevel(level), level),
   }));
   const routeImageryIds = new Set(
     imageryCoverage.flatMap(({ level, tiles }) =>
@@ -1665,7 +1675,9 @@ export async function createDeterministicMapStreamingFixture() {
         'route-clipped quantized mesh within available tiles',
       imageryFormat: 'PNG indexed-color 256x256',
       imageryTilingScheme: 'WebMercator XYZ',
-      imageryRouteCoverageKind: 'route-bbox tiles only',
+      imageryHighDetailBoundsDegrees: HIGH_DETAIL_BOUNDS,
+      imageryRouteCoverageKind:
+        'route-bbox levels 0-16; fixed-camera bbox levels 17-19',
       imageryDependencyCoverage: IMAGERY_SKELETON_DEPENDENCY_DESCRIPTOR,
       imageryLevels: IMAGERY_LEVELS,
       tilesetVersion: '3D Tiles 1.1',
@@ -1767,7 +1779,10 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     fixture.manifest.geometry?.imageryFormat !== 'PNG indexed-color 256x256' ||
     fixture.manifest.geometry?.imageryTilingScheme !== 'WebMercator XYZ' ||
     fixture.manifest.geometry?.imageryRouteCoverageKind !==
-      'route-bbox tiles only' ||
+      'route-bbox levels 0-16; fixed-camera bbox levels 17-19' ||
+    !stableJson(
+      fixture.manifest.geometry?.imageryHighDetailBoundsDegrees,
+    ).equals(stableJson(HIGH_DETAIL_BOUNDS)) ||
     !stableJson(fixture.manifest.geometry?.imageryDependencyCoverage).equals(
       stableJson(IMAGERY_SKELETON_DEPENDENCY_DESCRIPTOR),
     )
@@ -1775,7 +1790,11 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     throw new Error('Map streaming imagery route or geometry is invalid.');
   const expectedImageryCoverage = IMAGERY_LEVELS.map((level) => ({
     level,
-    tiles: tileCoordinates(new Cesium.WebMercatorTilingScheme(), ROUTE, level),
+    tiles: tileCoordinates(
+      new Cesium.WebMercatorTilingScheme(),
+      imageryBoundsForLevel(level),
+      level,
+    ),
   }));
   if (
     !stableJson(fixture.manifest.coverage?.imagery).equals(
@@ -1821,9 +1840,11 @@ export function validateDeterministicMapStreamingFixture(fixture) {
     IMAGERY_LEVELS.map((level) => [
       level,
       new Map(
-        tileCoordinates(new Cesium.WebMercatorTilingScheme(), ROUTE, level).map(
-          (tile) => [`${tile.level}/${tile.x}/${tile.y}`, tile],
-        ),
+        tileCoordinates(
+          new Cesium.WebMercatorTilingScheme(),
+          imageryBoundsForLevel(level),
+          level,
+        ).map((tile) => [`${tile.level}/${tile.x}/${tile.y}`, tile]),
       ),
     ]),
   );

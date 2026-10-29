@@ -1914,7 +1914,7 @@ test('strict smoke journey rejection retains bounded observed route and transiti
         buildProfile: profile,
         mapStreamingCaptureModule,
       }),
-      /austin-map-streaming-synthetic-v5/,
+      /austin-map-streaming-synthetic-v6/,
       `Live smoke rejects historical ${historicalFixtureId} fixtures.`,
     );
   for (const [field, invalidValue] of [

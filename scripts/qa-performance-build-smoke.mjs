@@ -593,7 +593,7 @@ export async function runNativeMapJourneyForSmoke({
 }) {
   assertSha(revision, 'Map smoke revision');
   assert.ok(fixture && typeof fixture === 'object');
-  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v5');
+  assert.equal(fixture.id, 'austin-map-streaming-synthetic-v6');
   assert.match(fixture.manifestSha256 || '', /^[a-f0-9]{64}$/);
   assert.equal(
     typeof mapStreamingCaptureModule?.runNativeMapStreamingJourney,
