@@ -4,7 +4,40 @@ import {
   ARRIVAL_OBSERVATION_MS,
   arrivalRotationPassed,
   observeArrivalRotation,
+  withArrivalObservationRendering,
 } from './trackArrivalObservation.mjs';
+
+test('arrival rendering scope bounds pixels and restores the original resolution', async () => {
+  const viewer = { resolutionScale: 1.5 };
+  const result = await withArrivalObservationRendering(viewer, async () => {
+    assert.equal(viewer.resolutionScale, 0.25);
+    await Promise.resolve();
+    assert.equal(viewer.resolutionScale, 0.25);
+    return 'observed';
+  });
+  assert.equal(result, 'observed');
+  assert.equal(viewer.resolutionScale, 1.5);
+});
+
+test('arrival rendering scope restores resolution after an observation throws', async () => {
+  const viewer = { resolutionScale: 1 };
+  const failure = new Error('observation failed');
+  await assert.rejects(
+    withArrivalObservationRendering(viewer, () => {
+      throw failure;
+    }),
+    (error) => error === failure,
+  );
+  assert.equal(viewer.resolutionScale, 1);
+});
+
+test('arrival rendering scope never increases an already lower pixel budget', async () => {
+  const viewer = { resolutionScale: 0.1 };
+  await withArrivalObservationRendering(viewer, () => {
+    assert.equal(viewer.resolutionScale, 0.1);
+  });
+  assert.equal(viewer.resolutionScale, 0.1);
+});
 
 function fixture() {
   let time = 0;

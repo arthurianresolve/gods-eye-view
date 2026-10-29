@@ -2065,146 +2065,6 @@ async function main() {
       `flights=${ground.groundSnap?.ddtd} mil=${ground.milGroundSnap?.ddtd} takeoff=${ground.airSnap?.ddtd} landing=${ground.groundAgainSnap?.ddtd}`);
 
     // ============================================================
-    // CHANGE 4 (2026-07-03): arrival rotation freshness. Field test: "planes
-    // look weird when you first come to them — rotations are weird". Two
-    // repaired holes, both layers:
-    //   (a) SETTLE PASS — camera.moveEnd forces a full rotation pass on the
-    //       next frame (the pose-signature gate can eat a fly-to's settle:
-    //       the final easing frames land inside one 10 m/0.06° quantization
-    //       bucket, leaving mid-flight noses for up to ROTATION_REFRESH_MS).
-    //   (b) REVEAL PASS — a billboard flipping INTO view while the camera
-    //       idles gets its rotation refreshed the same tick (it used to
-    //       reappear wearing its stale/creation-north nose for up to 1 s).
-    // Staged deterministically: park the camera nadir over the synthetic
-    // cluster, let rotations settle, TAMPER a billboard's rotation, then
-    // trigger each path with the camera idle. The fleet runs every 80 ms,
-    // independently of rendered FPS. Observe the first completed settle and
-    // reveal frames within 500 ms of forcing moveEnd, before the 1 s idle
-    // rotation refresh can repair an incorrect first reveal.
-    // ============================================================
-    // Run the sub-second arrival observation before the heavy ground-model
-    // scenarios; shader/mesh work from those scenarios is not arrival latency.
-    console.log('\nChange 4 — arrival rotation: moveEnd settle pass + horizon-reveal pass');
-    const arrival = await evalPage(async () => {
-      const v = window.__godsEyeView.viewer;
-      const dm = window.__godsEyeView.dataManager;
-      const { screenProjectedRotation } = await import(`${window.__gevQaSourceBase || '/src'}/data/iconOrientation.js`);
-      const { observeArrivalRotation } = await import(`${window.__gevQaSourceBase || '/src'}/tooling/trackArrivalObservation.mjs`);
-      // 3D models OFF for this phase: a model-handed-off billboard is hidden
-      // and skips rotation updates entirely — the probes need live billboards
-      // (this is also the app's default state the field report came from).
-      const flightModule = dm.layers.get('flights').module;
-      const militaryModule = dm.layers.get('military').module;
-      const priorModels3d = {
-        flights: flightModule.getParams().models3d,
-        military: militaryModule.getParams().models3d,
-      };
-      try {
-      flightModule.setParams({ models3d: false });
-      militaryModule.setParams({ models3d: false });
-      const findBB = (id) => {
-        let found = null;
-        const walk = (coll) => {
-          const n = coll.length;
-          for (let i = 0; i < n; i++) {
-            let p;
-            try { p = coll.get(i); } catch { continue; }
-            if (!p) continue;
-            if (typeof p.length === 'number' && typeof p.get === 'function') { walk(p); continue; }
-            if (p.image !== undefined && p.alignedAxis !== undefined && p.id === id) found = p;
-          }
-        };
-        walk(v.scene.primitives);
-        return found;
-      };
-      const nextFrames = (n) => new Promise((res) => {
-        let count = 0;
-        let settled = false;
-        const finish = () => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timer);
-          rm();
-          res();
-        };
-        const rm = v.scene.postRender.addEventListener(() => {
-          if (++count >= n) {
-            finish();
-            return;
-          }
-          v.scene.requestRender();
-        });
-        const timer = setTimeout(finish, Math.max(10000, n * 1500));
-        v.scene.requestRender();
-      });
-      // Park the camera straight above the flights cluster (lift a live
-      // billboard's position radially — no Cesium global needed in-page) so
-      // every probe plane projects on-screen, then let rotations settle at
-      // the new pose (the setView pose change forces a pass on the next tick).
-      // aaa002 — aaa001 was evicted for good by the M3 age-out phase.
-      const anchor = findBB('aaa002');
-      if (!anchor) return { error: 'anchor aaa002 missing' };
-      const p = anchor.position;
-      const r = Math.hypot(p.x, p.y, p.z);
-      const k = (r + 25000) / r;
-      v.camera.cancelFlight();
-      v.camera.setView({
-        destination: { x: p.x * k, y: p.y * k, z: p.z * k },
-        orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
-      });
-      await nextFrames(3);
-      const angDiff = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
-      const probe = async (id, course) => {
-        const bb = findBB(id);
-        if (!bb || !bb.show) return { error: `${id} missing/hidden` };
-        const r0 = bb.rotation; // settled tamper origin; correctness uses a fresh projection below
-        const observed = await observeArrivalRotation({
-          scene: v.scene,
-          startMoveEnd() {
-            // Only moveEnd can repair the tampered angle at the idle pose.
-            bb.rotation = r0 + 1.5;
-            v.camera.moveEnd.raiseEvent();
-          },
-          startReveal() {
-            // Hide immediately after the confirmed settle frame. The next
-            // eligible fleet tick must reveal AND re-aim in that same tick.
-            bb.rotation = r0 + 1.5;
-            bb.show = false;
-          },
-          read() {
-            return {
-              shown: bb.show,
-              rotationError: angDiff(bb.rotation,
-                screenProjectedRotation(v.scene, bb.position, course, null)),
-            };
-          },
-        });
-        const hasModel = !!(window.__g3dFindModel && window.__g3dFindModel(id));
-        return { r0, ...observed, hasModel };
-      };
-      const flightCourse = window.__SYNTH.flights.find((f) => f.icao === 'aaa002')?.track ?? 0;
-      const militaryCourse = window.__SYNTH.military.find((m) => m.hex === 'bbb101')?.track ?? 0;
-      return {
-        flights: await probe('aaa002', flightCourse),
-        military: await probe('bbb101', militaryCourse),
-      };
-      } finally {
-        try {
-          flightModule.setParams({ models3d: priorModels3d.flights });
-        } finally {
-          militaryModule.setParams({ models3d: priorModels3d.military });
-        }
-      }
-    });
-    const fmtArr = (a) => (!a ? `no result (${arrival?.error || 'phase error'})` : a.error ? `${a.error}; elapsed=${Number(a.elapsedMs).toFixed(1)} ms`
-      : `settle-err=${(a.dMoveEnd * 180 / Math.PI).toFixed(1)}° reveal-err=${(a.dReveal * 180 / Math.PI).toFixed(1)}° shown=${a.shown} flipFrame=${a.flipFrame} settle=${a.moveEndMs.toFixed(1)} ms reveal=${a.revealMs.toFixed(1)} ms total=${a.elapsedMs.toFixed(1)} ms hasModel=${a.hasModel}`);
-    const TAMPER_DEG = 1.5 * 180 / Math.PI; // ≈ 86° — an uncorrected nose stays this far off
-    record(`arrival: moveEnd + first reveal both re-aim before idle refresh, flights (tamper was ${TAMPER_DEG.toFixed(0)}°)`,
-      arrivalRotationPassed(arrival.flights), fmtArr(arrival.flights));
-    record(`arrival: moveEnd + first reveal both re-aim before idle refresh, military (tamper was ${TAMPER_DEG.toFixed(0)}°)`,
-      arrivalRotationPassed(arrival.military), fmtArr(arrival.military));
-
-    // ============================================================
     // GROUND 3D (2026-07-03, owner decision LOCKED): "when I have 3D mode —
     // proximity or all — I want that respected regardless of whether a plane
     // is on the ground or in the air. No distinction."
@@ -2830,6 +2690,132 @@ async function main() {
       g3dCleanupFailure
         ? `cleanup failure: ${g3dCleanupFailure?.message || g3dCleanupFailure}`
         : (g3dSetup ? 'all owned fixture state released' : 'post-setup cleanup not required'));
+
+    // ============================================================
+    // CHANGE 4 (2026-07-03): arrival rotation freshness. Field test: "planes
+    // look weird when you first come to them — rotations are weird". Two
+    // repaired holes, both layers:
+    //   (a) SETTLE PASS — camera.moveEnd forces a full rotation pass on the
+    //       next frame (the pose-signature gate can eat a fly-to's settle:
+    //       the final easing frames land inside one 10 m/0.06° quantization
+    //       bucket, leaving mid-flight noses for up to ROTATION_REFRESH_MS).
+    //   (b) REVEAL PASS — a billboard flipping INTO view while the camera
+    //       idles gets its rotation refreshed the same tick (it used to
+    //       reappear wearing its stale/creation-north nose for up to 1 s).
+    // Staged deterministically: park the camera nadir over the synthetic
+    // cluster, let rotations settle, TAMPER a billboard's rotation, then
+    // trigger each path with the camera idle. The fleet runs every 80 ms,
+    // independently of rendered FPS. Observe the first completed settle and
+    // reveal frames within 500 ms of forcing moveEnd, before the 1 s idle
+    // rotation refresh can repair an incorrect first reveal.
+    // ============================================================
+    console.log('\nChange 4 — arrival rotation: moveEnd settle pass + horizon-reveal pass (fixture resolutionScale <= 0.25; not full-resolution latency)');
+    const arrival = await evalPage(async () => {
+      const v = window.__godsEyeView.viewer;
+      const dm = window.__godsEyeView.dataManager;
+      const { screenProjectedRotation } = await import(`${window.__gevQaSourceBase || '/src'}/data/iconOrientation.js`);
+      const { observeArrivalRotation, withArrivalObservationRendering } = await import(`${window.__gevQaSourceBase || '/src'}/tooling/trackArrivalObservation.mjs`);
+      return withArrivalObservationRendering(v, async () => {
+      // 3D models OFF for this phase: a model-handed-off billboard is hidden
+      // and skips rotation updates entirely — the probes need live billboards
+      // (this is also the app's default state the field report came from).
+      dm.layers.get('flights').module.setParams({ models3d: false });
+      dm.layers.get('military').module.setParams({ models3d: false });
+      const findBB = (id) => {
+        let found = null;
+        const walk = (coll) => {
+          const n = coll.length;
+          for (let i = 0; i < n; i++) {
+            let p;
+            try { p = coll.get(i); } catch { continue; }
+            if (!p) continue;
+            if (typeof p.length === 'number' && typeof p.get === 'function') { walk(p); continue; }
+            if (p.image !== undefined && p.alignedAxis !== undefined && p.id === id) found = p;
+          }
+        };
+        walk(v.scene.primitives);
+        return found;
+      };
+      const nextFrames = (n) => new Promise((res) => {
+        let count = 0;
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          rm();
+          res();
+        };
+        const rm = v.scene.postRender.addEventListener(() => {
+          if (++count >= n) {
+            finish();
+            return;
+          }
+          v.scene.requestRender();
+        });
+        const timer = setTimeout(finish, Math.max(10000, n * 1500));
+        v.scene.requestRender();
+      });
+      // Park the camera straight above the flights cluster (lift a live
+      // billboard's position radially — no Cesium global needed in-page) so
+      // every probe plane projects on-screen, then let rotations settle at
+      // the new pose (the setView pose change forces a pass on the next tick).
+      // aaa002 — aaa001 was evicted for good by the M3 age-out phase.
+      const anchor = findBB('aaa002');
+      if (!anchor) return { error: 'anchor aaa002 missing' };
+      const p = anchor.position;
+      const r = Math.hypot(p.x, p.y, p.z);
+      const k = (r + 25000) / r;
+      v.camera.cancelFlight();
+      v.camera.setView({
+        destination: { x: p.x * k, y: p.y * k, z: p.z * k },
+        orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
+      });
+      await nextFrames(3);
+      const angDiff = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b)));
+      const probe = async (id, course) => {
+        const bb = findBB(id);
+        if (!bb || !bb.show) return { error: `${id} missing/hidden` };
+        const r0 = bb.rotation; // settled tamper origin; correctness uses a fresh projection below
+        const observed = await observeArrivalRotation({
+          scene: v.scene,
+          startMoveEnd() {
+            // Only moveEnd can repair the tampered angle at the idle pose.
+            bb.rotation = r0 + 1.5;
+            v.camera.moveEnd.raiseEvent();
+          },
+          startReveal() {
+            // Hide immediately after the confirmed settle frame. The next
+            // eligible fleet tick must reveal AND re-aim in that same tick.
+            bb.rotation = r0 + 1.5;
+            bb.show = false;
+          },
+          read() {
+            return {
+              shown: bb.show,
+              rotationError: angDiff(bb.rotation,
+                screenProjectedRotation(v.scene, bb.position, course, null)),
+            };
+          },
+        });
+        const hasModel = !!(window.__g3dFindModel && window.__g3dFindModel(id));
+        return { r0, ...observed, hasModel };
+      };
+      const flightCourse = window.__SYNTH.flights.find((f) => f.icao === 'aaa002')?.track ?? 0;
+      const militaryCourse = window.__SYNTH.military.find((m) => m.hex === 'bbb101')?.track ?? 0;
+      return {
+        flights: await probe('aaa002', flightCourse),
+        military: await probe('bbb101', militaryCourse),
+      };
+      });
+    });
+    const fmtArr = (a) => (!a ? `no result (${arrival?.error || 'phase error'})` : a.error ? `${a.error}; elapsed=${Number(a.elapsedMs).toFixed(1)} ms`
+      : `settle-err=${(a.dMoveEnd * 180 / Math.PI).toFixed(1)}° reveal-err=${(a.dReveal * 180 / Math.PI).toFixed(1)}° shown=${a.shown} flipFrame=${a.flipFrame} settle=${a.moveEndMs.toFixed(1)} ms reveal=${a.revealMs.toFixed(1)} ms total=${a.elapsedMs.toFixed(1)} ms hasModel=${a.hasModel}`);
+    const TAMPER_DEG = 1.5 * 180 / Math.PI; // ≈ 86° — an uncorrected nose stays this far off
+    record(`arrival: moveEnd + first reveal both re-aim before idle refresh, flights (tamper was ${TAMPER_DEG.toFixed(0)}°)`,
+      arrivalRotationPassed(arrival.flights), fmtArr(arrival.flights));
+    record(`arrival: moveEnd + first reveal both re-aim before idle refresh, military (tamper was ${TAMPER_DEG.toFixed(0)}°)`,
+      arrivalRotationPassed(arrival.military), fmtArr(arrival.military));
 
     // ============================================================
     // DISPLAY FLOOR (2026-08-19): a grounded contact must never render below
