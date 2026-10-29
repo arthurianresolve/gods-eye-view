@@ -1247,21 +1247,25 @@ test('Cesium terrain and tileset parsers accept the generated local route corpus
         `${row.path} must decode to varied map pixels`,
       );
     }
-    const imageryLevel12 = fixture.manifest.coverage.imagery.at(-1);
+    // The high-detail camera window is narrower than the wider route. Check
+    // ancestors from every declared coverage level, not only the deepest one.
+    const declaredImagery = fixture.manifest.coverage.imagery.flatMap(
+      ({ tiles }) => tiles,
+    );
+    const imageryIds = new Set(
+      imageryRows.map(
+        (row) => `${row.identity.level}/${row.identity.x}/${row.identity.y}`,
+      ),
+    );
     const imageryAncestors = new Set();
-    for (const terminal of imageryLevel12.tiles)
+    for (const terminal of declaredImagery)
       for (let level = 0; level <= terminal.level; level += 1) {
         const scale = 2 ** (terminal.level - level);
         const x = Math.floor(terminal.x / scale);
         const y = Math.floor(terminal.y / scale);
         imageryAncestors.add(`${level}/${x}/${y}`);
         assert.ok(
-          imageryRows.some(
-            (row) =>
-              row.identity.level === level &&
-              row.identity.x === x &&
-              row.identity.y === y,
-          ),
+          imageryIds.has(`${level}/${x}/${y}`),
           `imagery ancestor ${level}/${x}/${y} must be present`,
         );
       }
