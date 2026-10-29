@@ -48,7 +48,7 @@ test('map delivery rejects missing native tiles before cleanup and preserves pen
     );
     assert.throws(
       () => assertMapStreamingDeliveryHealthy(delivery),
-      /Map fixture delivery failed: native-asset-not-in-manifest/,
+      /Map fixture delivery failed: native-asset-not-in-manifest.*Missing assets: imagery\/17\/29970\/53962\.png\./,
     );
     assert.equal(delivery.summary().status, 'active');
   } finally {

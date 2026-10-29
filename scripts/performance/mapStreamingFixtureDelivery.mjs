@@ -13,8 +13,15 @@ export function assertMapStreamingDeliveryHealthy(delivery) {
   const summary = delivery.summary();
   if (summary.errorObservationCount || summary.unexpectedFulfillmentCount) {
     const reason = summary.errors?.[0]?.code || 'unexpected-fulfillment';
+    const missingPaths = summary.missingAssetPathEvidence?.paths
+      ?.slice(0, 8)
+      .map(({ path }) => path)
+      .filter(isCanonicalMapStreamingAssetPath);
     throw new Error(
-      `Map fixture delivery failed: ${reason} (${summary.errorObservationCount} errors).`,
+      `Map fixture delivery failed: ${reason} (${summary.errorObservationCount} errors).` +
+        (missingPaths?.length
+          ? ` Missing assets: ${missingPaths.join(', ')}.`
+          : ''),
     );
   }
 }
