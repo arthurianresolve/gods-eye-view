@@ -2,21 +2,6 @@
 export const ARRIVAL_OBSERVATION_MS = 500;
 
 /**
- * Bound raster work for the rotation-correctness fixture on software renderers.
- * This is not a full-resolution latency measurement. Restore the caller's
- * rendering setting even when the observation fails.
- */
-export async function withArrivalObservationRendering(viewer, observe) {
-  const resolutionScale = viewer.resolutionScale;
-  try {
-    viewer.resolutionScale = Math.min(resolutionScale, 0.25);
-    return await observe();
-  } finally {
-    viewer.resolutionScale = resolutionScale;
-  }
-}
-
-/**
  * Observe the first completed moveEnd frame and the first subsequent reveal.
  * The deadline starts when moveEnd is forced, before its rotation baseline, so
  * waiting for either frame cannot let the one-second idle refresh mask a bug.
@@ -30,6 +15,7 @@ export function observeArrivalRotation({
   now = () => performance.now(),
   setTimer = setTimeout,
   clearTimer = clearTimeout,
+  watchdogMs = ARRIVAL_OBSERVATION_MS,
 }) {
   return new Promise((resolve, reject) => {
     const startedAt = now();
@@ -91,7 +77,12 @@ export function observeArrivalRotation({
         reject(error);
       }
     });
-    timer = setTimer(() => finish(expired()), ARRIVAL_OBSERVATION_MS);
+    timer = setTimer(() => finish({
+      ...expired(),
+      error: watchdogMs === ARRIVAL_OBSERVATION_MS
+        ? expired().error
+        : `arrival render watchdog exceeded ${watchdogMs} ms`,
+    }), watchdogMs);
     try {
       startMoveEnd();
       scene.requestRender();
