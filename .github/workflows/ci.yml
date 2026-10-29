@@ -682,7 +682,7 @@ jobs:
           retention-days: 3
 
   tracking-regression:
-    if: github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'tracking-regression'
+    if: (github.event_name == 'workflow_dispatch' && inputs.validation_mode == 'tracking-regression') || (github.event_name == 'pull_request' && github.event.pull_request.number == 9)
     name: Aircraft tracking regression
     runs-on: ubuntu-latest
     timeout-minutes: 15
