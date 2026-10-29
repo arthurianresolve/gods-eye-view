@@ -275,7 +275,7 @@ export function makeMapReport(
   { includeFrames = false, motionP95 } = {},
 ) {
   const fixture = {
-    id: 'austin-map-streaming-synthetic-v5',
+    id: 'austin-map-streaming-synthetic-v6',
     manifestSha256: 'f'.repeat(64),
   };
   const route = {
