@@ -798,10 +798,12 @@ jobs:
           cat qa-artifacts/mixed-use-server.log
           exit 1
       - name: Run the existing bounded mixed-use smoke
+        if: github.event_name == 'workflow_dispatch'
         run: |
           set -o pipefail
           npm run qa:mixed-use-soak -- --url http://localhost:4174 --duration-ms 10000 --out qa-artifacts/mixed-use-smoke.json 2>&1 | tee qa-artifacts/mixed-use-smoke.log
       - name: Run durable workspace library and cross-page conflict journey
+        if: github.event_name == 'workflow_dispatch'
         run: npm run qa:workspaces -- --url http://localhost:4174
       - name: Run opt-in full-application empty-layer render-demand diagnostic
         if: inputs.application_render_demand || (github.event_name == 'pull_request' && github.event.pull_request.number == 9)

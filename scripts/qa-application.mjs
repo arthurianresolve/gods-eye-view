@@ -357,6 +357,10 @@ async function runRenderDemandDiagnosticInner(browser, reportState) {
       // bounded, but leave enough time to collect the four consecutive state
       // samples that the acceptance contract actually requires.
       while (performance.now() - startedAt < 30_000) {
+        // Warm-up must process decoded imagery and quadtree work even when
+        // request-render mode has gone idle. Stop these explicit requests at
+        // settlement; the measured idle phase must rely on application demand.
+        viewer.scene.requestRender();
         const map = app.mapStackController.getState();
         const cartographic = viewer.camera.positionCartographic;
         if (!cartographic)

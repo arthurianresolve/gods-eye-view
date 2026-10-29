@@ -4,7 +4,10 @@ import {
   getMapFixtureBuildProfileGoogleApiKey,
   MAP_FIXTURE_BUILD_PROFILE_ID,
 } from './buildProvenance.mjs';
-import { validateDeterministicMapStreamingFixture } from './mapStreamingFixture.mjs';
+import {
+  MAP_STREAMING_MAX_ASSETS,
+  validateDeterministicMapStreamingFixture,
+} from './mapStreamingFixture.mjs';
 
 // Check between measured phases, without cancelling active requests or claiming
 // that delivery proves decoding/rendering. An invalid fixture must fail before
@@ -29,13 +32,11 @@ export const MAP_STREAMING_DELIVERY_SCHEMA =
   'gev-map-streaming-fixture-delivery/v1';
 export const MAP_STREAMING_FAULT_DELIVERY_SCHEMA =
   'gev-map-streaming-fault-delivery/v1';
-// One measured document traverses four native map stacks for a full minute.
-// Cesium can legitimately request the same fixture tile again when an imagery
-// layer is replaced, so the former 512-request ceiling could expire during
-// the first transition on hardware while every delivered response was valid.
-// Keep the owner bounded, but size the ceiling for the declared four-stack
-// route and the pinned fixture corpus rather than for startup-only traffic.
-export const MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT = 2_048;
+// One measured document traverses four native map stacks. Bound requests by
+// the complete fixture inventory per stack, including repeat tile requests
+// after imagery replacement, rather than by the former startup-only ceiling.
+export const MAP_STREAMING_MAX_REQUESTS_PER_DOCUMENT =
+  MAP_STREAMING_MAX_ASSETS * 4;
 export const MAP_STREAMING_MAX_ABORT_SIGNALS_PER_DOCUMENT = 8;
 export const MAP_STREAMING_MAX_ERROR_RECORDS = 8;
 export const MAP_STREAMING_MAX_ERROR_OBSERVATIONS_PER_DOCUMENT = 512;
